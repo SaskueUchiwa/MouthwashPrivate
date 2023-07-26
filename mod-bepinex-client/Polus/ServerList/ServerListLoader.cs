@@ -1,0 +1,73 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Threading.Tasks;
+using Il2CppSystem.Diagnostics;
+using Newtonsoft.Json;
+using Polus.Extensions;
+
+namespace Polus.ServerList
+{
+    public static class ServerListLoader
+    {
+        private static readonly HttpClient Client = new();
+        public static async Task<ServerModel[]> Load()
+        {
+            "LOADING SERVERS !!!".Log();
+            try
+            {
+                var successfulServers = new List<ServerModel>()
+                {
+                    new()
+                    {
+                        Address = "localhost",
+                        Region = "Local",
+                        Subregion = "Host",
+                        Name = "Localhost",
+                        Maintenance = false,
+                        Ip = "127.0.0.1"
+                    }
+                };
+                "LOADING SERVERS 2 !!!".Log();
+
+                var servers = JsonConvert.DeserializeObject<ServerModel[]>(
+                    await Client.GetStringAsync("https://serverlist.polus.gg/regions.json")
+                ) ?? Array.Empty<ServerModel>();
+
+                foreach (var server in servers)
+                {
+                    try
+                    {
+                        var ipAddr = (await Dns.GetHostAddressesAsync(server.Address)).FirstOrDefault();
+                        if (ipAddr is not null && !server.Maintenance)
+                        {
+                            server.Ip = ipAddr.ToString();
+                            successfulServers.Add(server);
+                        }
+                    }
+                    catch (Exception) { /* ignored */ }
+                }
+
+                "LOADING SERVERS 3 !!!".Log();
+                return successfulServers.ToArray();
+            }
+            catch (Exception) { /* ignored */ }
+
+
+            return new ServerModel[]
+            {
+                new()
+                {
+                    Address = "localhost",
+                    Region = "Local",
+                    Subregion = "Host",
+                    Name = "Localhost",
+                    Maintenance = false,
+                    Ip = "127.0.0.1"
+                }
+            };
+        }
+    }
+}

@@ -1,0 +1,56 @@
+{
+  "build": {
+    "beforeDevCommand": "yarn dev",
+    "beforeBuildCommand": "yarn build",
+    "devPath": "http://localhost:1420",
+    "distDir": "../dist",
+    "withGlobalTauri": false
+  },
+  "package": {
+    "productName": "Mouthwash Launcher",
+    "version": "1.0.0"
+  },
+  "tauri": {
+    "allowlist": {
+      "all": true,
+      "fs": {
+        "scope": ["**"]
+      },
+      "shell": {
+        "scope": [{
+          "cmd": "$APPDATA/depot/DepotDownloader.exe",
+          "name": "depot-downloader-download-au",
+          "args": true
+        }, {
+          "cmd": "cmd",
+          "name": "cmd",
+          "args": true
+        }]
+      }
+    },
+    "bundle": {
+      "active": true,
+      "targets": "all",
+      "identifier": "gg.mouthwash.launcher",
+      "icon": [
+        "icons/32x32.png",
+        "icons/128x128.png",
+        "icons/128x128@2x.png",
+        "icons/icon.icns",
+        "icons/icon.ico"
+      ]
+    },
+    "security": {
+      "csp": ""
+    },
+    "windows": [
+      {
+        "fullscreen": false,
+        "resizable": true,
+        "title": "Mouthwash.GG",
+        "width": 1400,
+        "height": 800
+      }
+    ]
+  }
+}
