@@ -15,7 +15,6 @@ namespace Polus.ServerList
         private static readonly HttpClient Client = new();
         public static async Task<ServerModel[]> Load()
         {
-            "LOADING SERVERS !!!".Log();
             try
             {
                 var successfulServers = new List<ServerModel>()
@@ -27,10 +26,9 @@ namespace Polus.ServerList
                         Subregion = "Host",
                         Name = "Localhost",
                         Maintenance = false,
-                        Ip = "127.0.0.1"
+                        Ip = "region.mouthwash.midlight.studio"
                     }
                 };
-                "LOADING SERVERS 2 !!!".Log();
 
                 var servers = JsonConvert.DeserializeObject<ServerModel[]>(
                     await Client.GetStringAsync("https://serverlist.polus.gg/regions.json")
@@ -50,7 +48,6 @@ namespace Polus.ServerList
                     catch (Exception) { /* ignored */ }
                 }
 
-                "LOADING SERVERS 3 !!!".Log();
                 return successfulServers.ToArray();
             }
             catch (Exception) { /* ignored */ }
@@ -65,7 +62,7 @@ namespace Polus.ServerList
                     Subregion = "Host",
                     Name = "Localhost",
                     Maintenance = false,
-                    Ip = "127.0.0.1"
+                    Ip = "region.mouthwash.midlight.studio"
                 }
             };
         }

@@ -86,13 +86,13 @@
 
         console.log("beginning download..");
         await Promise.all([
-            invoke("download_file_and_extract", { url: "http://65.109.160.245/DepotDownloader-windows-x64.zip", downloadId: "depot-downloader", folder: "depot" })
+            invoke("download_file_and_extract", { url: "https://files.mouthwash.midlight.studio/DepotDownloader-windows-x64.zip", downloadId: "depot-downloader", folder: "depot" })
                 .then(() => console.log("downloaded depot downloader")),
-            invoke("download_file_and_extract", { url: "http://65.109.160.245/BepInEx_UnityIL2CPP_x86_7f1f139_6.0.0-be.510.zip", downloadId: "bepinex", folder: "bepinex" })
+            invoke("download_file_and_extract", { url: "https://files.mouthwash.midlight.studio/BepInEx_UnityIL2CPP_x86_7f1f139_6.0.0-be.510.zip", downloadId: "bepinex", folder: "bepinex" })
                 .then(() => console.log("downloaded bepinex")),
-            invoke("download_file_and_extract", { url: "http://65.109.160.245/MouthwashGG.zip", downloadId: "plugin", folder: "plugin" })
+            invoke("download_file_and_extract", { url: "https://files.mouthwash.midlight.studio/MouthwashGG.zip", downloadId: "plugin", folder: "plugin" })
                 .then(() => console.log("downloaded mouthwash")),
-            invoke("download_file_and_extract", { url: "http://65.109.160.245/Json130r3.zip", downloadId: "dependencies", folder: "dependencies" })
+            invoke("download_file_and_extract", { url: "https://files.mouthwash.midlight.studio/Json130r3.zip", downloadId: "dependencies", folder: "dependencies" })
                 .then(() => console.log("downloaded dependencies"))
         ]);
         

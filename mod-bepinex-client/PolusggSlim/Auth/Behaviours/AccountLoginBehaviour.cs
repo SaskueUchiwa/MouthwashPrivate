@@ -121,7 +121,11 @@ namespace PolusggSlim.Auth.Behaviours
             _createAccountButton.MakePassiveButton(() => { Application.OpenURL("https://127.0.0.1:8000"); });
 
             _logOutButton = _loggedInMenu.FindRecursive(go => go.name.Contains("LogOut"));
+            
+            // MOUTHWASH PATCHES
             Destroy(_logOutButton);
+            Destroy(_createAccountButton);
+            Destroy(_openLogInModalButton);
             // _logOutButton.MakePassiveButton(LogOut);
         }
 

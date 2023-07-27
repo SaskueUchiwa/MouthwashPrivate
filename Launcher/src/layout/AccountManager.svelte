@@ -60,7 +60,7 @@
         signUpError = "";
 
         loadingSignUp = true;
-        const res = await fetch("http://127.0.0.1:8000/api/v1/accounts", {
+        const res = await fetch("http://accounts.mouthwash.midlight.studio/api/v1/accounts", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -111,7 +111,7 @@
         }
 
         loadingLogIn = true;
-        const res = await fetch("http://127.0.0.1:8000/api/v1/auth/token", {
+        const res = await fetch("http://accounts.mouthwash.midlight.studio/api/v1/auth/token", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -167,7 +167,7 @@
 
     async function attemptResendVerification() {
         loadingResendVerification = true;
-        const res = await fetch("http://127.0.0.1:8000/api/v1/accounts/resend_verification", {
+        const res = await fetch("http://accounts.mouthwash.midlight.studio/api/v1/accounts/resend_verification", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -194,7 +194,7 @@
     }
 
     async function checkLoginToken() {
-        const res = await fetch("http://127.0.0.1:8000/api/v1/auth/check", {
+        const res = await fetch("http://accounts.mouthwash.midlight.studio/api/v1/auth/check", {
             method: "POST",
             headers: {
                 "Client-ID": loginApiInfo.ClientIdString,
@@ -220,7 +220,7 @@
 
     async function attemptLogout() {
         loadingLogout = true;
-        const res = await fetch("http://127.0.0.1:8000/api/v1/auth/check", {
+        const res = await fetch("http://accounts.mouthwash.midlight.studio/api/v1/auth/check", {
             method: "POST",
             headers: {
                 "Client-ID": loginApiInfo.ClientIdString,

@@ -38,8 +38,8 @@ namespace Polus.Patches.Permanent {
             #if DEBUG
             if (!PogusPlugin.Revision.HasValue) {
                 newServers = newServers
-                    .AddItem(new StaticRegionInfo("Localhost", StringNames.NoTranslation, "127.0.0.1", new[] {
-                        new ServerInfo("Localhost", "127.0.0.1", 22023)
+                    .AddItem(new StaticRegionInfo("Localhost", StringNames.NoTranslation, "region.mouthwash.midlight.studio", new[] {
+                        new ServerInfo("Localhost", "region.mouthwash.midlight.studio", 22023)
                     }).Cast<IRegionInfo>());
                 if (File.Exists("newregion.txt")) {
                     newServers = newServers.Append(PggConstants.Region).ToArray();

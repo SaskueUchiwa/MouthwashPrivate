@@ -19,7 +19,7 @@ namespace Polus.Patches.Permanent {
         public static Sprite _crunchuSprite;
         private static CreditsMenuHolder _creditsMenu;
         private static WebClient client = new() {
-            BaseAddress = "http://127.0.0.1:8001"
+            BaseAddress = "https://assets.mouthwash.midlight.studio"
         };
 
         public static void Load() {
