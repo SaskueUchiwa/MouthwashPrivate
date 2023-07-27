@@ -1,5 +1,4 @@
-
-# Created by https://www.toptal.com/developers/gitignore/api/node,yarn,redis
+export default `# Created by https://www.toptal.com/developers/gitignore/api/node,yarn,redis
 # Edit at https://www.toptal.com/developers/gitignore?templates=node,yarn,redis
 
 ### Node ###
@@ -151,13 +150,5 @@ temp/
 
 # End of https://www.toptal.com/developers/gitignore/api/node,yarn,redis
 
-logs.txt
-!pages/Plugins
-banned_ips.json
-config.json
-docs
-
 # Ignore for webstorm
-/.idea
-!bin
-!config.json
+/.idea`;
