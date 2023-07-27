@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { exists } from "@tauri-apps/api/fs";
+    import { createDir, exists } from "@tauri-apps/api/fs";
     import { open as openFileDialog } from "@tauri-apps/api/dialog";
     import { createEventDispatcher, onMount } from "svelte";
     import Password from "../icons/Password.svelte";
@@ -7,7 +7,7 @@
     import UserCircle from "../icons/UserCircle.svelte";
     import Desktop from "../icons/Desktop.svelte";
     import OpenFolder from "../icons/OpenFolder.svelte";
-    import { appDataDir, join, resolve } from "@tauri-apps/api/path";
+    import { appDataDir, dirname, join, resolve } from "@tauri-apps/api/path";
     import { path } from "@tauri-apps/api";
     const dispatchEvent = createEventDispatcher();
 
@@ -21,15 +21,22 @@
     let resolvedLocation = "";
     let invalidInstallLocation = false;
 
-    export function open() {
+    export async function open() {
         isOpen = true;
         enterDetailsError = false;
+        await createDir(await appDataDir(), { recursive: true });
     }
 
     export async function getConfig() {
         await updateInstallLocationFromCache();
         await updateResolvedLocation();
-        return { username, password, installLocation: await join(resolvedLocation, "Mouthwash") };
+        return { username, password, installLocation: resolvedLocation };
+    }
+
+    export async function setCachedInstallationLocation(location: string) {
+        installLocation = location;
+        resolvedLocation = location;
+        localStorage.setItem("install-location", installLocation);
     }
 
     function cancelDownload() {
@@ -40,13 +47,15 @@
     async function finaliseConfig() {
         enterDetailsError = username === "" || password === "";
         await updateResolvedLocation();
-        invalidInstallLocation = resolvedLocation === "" || resolvedLocation === path.sep || !await exists(resolvedLocation) ;
+        invalidInstallLocation = resolvedLocation === ""
+            || resolvedLocation === path.sep
+            || (!await exists(resolvedLocation) && !await exists(await dirname(resolvedLocation)));
         if (enterDetailsError || invalidInstallLocation)
             return;
 
         isOpen = false;
-        dispatchEvent("finalise-config");
         localStorage.setItem("install-location", resolvedLocation);
+        dispatchEvent("finalise-config");
     }
 
     async function selectInstallationLocation() {
@@ -59,7 +68,7 @@
             return;
         }
 
-        installLocation = folder;
+        installLocation = await join(folder, "Mouthwash");
     }
 
     async function updateResolvedLocation() {
@@ -71,7 +80,7 @@
         const cachedInstallLocation = localStorage.getItem("install-location");
         if (cachedInstallLocation === null || !await exists(cachedInstallLocation)) {
             localStorage.removeItem("install-location");
-            installLocation = await appDataDir();
+            installLocation = await join(await appDataDir(), "Mouthwash");
             return;
         }
 
@@ -146,7 +155,8 @@
                 <!--<div class="text-[#8f75a1]"><QuestionMark size={14}/></div>-->
             </div>
             <p class="text-[#8f75a1] text-sm max-w-102">
-                Choose where you'd like to install the game. By default, this'll be in your AppData directory.
+                Choose where you'd like to install the game. By default, this'll be in your AppData directory. You can leave this as
+                it is if you're not sure - you can always move it later if you need to.
             </p>
             <div class="flex flex-col gap-2">
                 <div class="bg-[#2e1440] rounded-lg flex border-2"
@@ -162,7 +172,7 @@
                         bind:value={installLocation}
                     >
                 </div>
-                <p class="text-xs text-[#8f75a1] italic">Mouthwash will be installed to {resolvedLocation}Mouthwash</p>
+                <!--<p class="text-xs text-[#8f75a1] italic">Mouthwash will be installed to {resolvedLocation}</p>-->
                 <button
                     class="self-start px-2 py-1 bg-[#2e1440] text-[#8f75a1] hover:text-[#d0bfdb] transition-colors rounded-lg flex items-center justify-center gap-1"
                     on:click={selectInstallationLocation}

@@ -1,6 +1,7 @@
 <script lang="ts">
     import { appDataDir, join } from "@tauri-apps/api/path";
     import { createDir, exists, readDir, removeDir, renameFile } from "@tauri-apps/api/fs";
+    import { open as openFileDialog } from "@tauri-apps/api/dialog";
     import { Child, Command } from "@tauri-apps/api/shell";
     import { invoke } from "@tauri-apps/api";
 
@@ -11,15 +12,17 @@
     import DownloadConfig from "./lib/DownloadConfig.svelte";
     import SteamAuth from "./lib/SteamAuth.svelte";
     import { onMount } from "svelte";
-    import Lightning from "./icons/Lightning.svelte";
-    import ChevronDown from "./icons/ChevronDown.svelte";
-    import ChevronRight from "./icons/ChevronRight.svelte";
     import AccountManager from "./layout/AccountManager.svelte";
     import Adjustments from "./icons/Adjustments.svelte";
     import Rocket from "./icons/Rocket.svelte";
+    import InstallationConfig from "./lib/InstallationConfig.svelte";
+    import OpenFolder from "./icons/OpenFolder.svelte";
 
     let downloadConfig: DownloadConfig;
     let steamAuth: SteamAuth;
+    let installationConfig: InstallationConfig;
+
+    let isDownloading = false;
 
     let isDownloadingDepot: boolean;
     let hasDownloadedDepot: boolean;
@@ -28,6 +31,7 @@
     let depotDownloaderProcess: Child|undefined = undefined;
 
     let amongUsExePath: string|undefined = undefined;
+    let amongUsInstallationPath: string|undefined = undefined;
     let amongUsProcess: Child|undefined = undefined;
 
     let loginUsername: string|null|undefined;
@@ -70,11 +74,14 @@
         );
         
         await removeDir(dependenciesDirectory, { recursive: true });
+        await removeDir(await join(config.installLocation, ".DepotDownloader"), { recursive: true });
 
-        checkInstallation();
+        await checkInstallation();
+        isDownloading = false;
     }
 
     async function downloadSequence() {
+        isDownloading = true;
         const { username, password, installLocation } = await downloadConfig.getConfig();
 
         console.log("beginning download..");
@@ -166,11 +173,15 @@
     async function checkInstallation() {
         const config = await downloadConfig.getConfig();
         const checkAUPath = await join(config.installLocation, "Among Us.exe");
+        
+        console.log(await join(config.installLocation, "Among Us.exe"), config, checkAUPath);
 
         if (await exists(checkAUPath)) {
             amongUsExePath = checkAUPath;
+            amongUsInstallationPath = config.installLocation;
         } else {
             amongUsExePath = undefined;
+            amongUsInstallationPath = undefined;
         }
     }
 
@@ -190,10 +201,53 @@
             amongUsProcess = undefined;
         });
     }
+
+    async function uninstall() {
+        await removeDir(amongUsInstallationPath, { recursive: true });
+        await checkInstallation();
+    }
+
+    const requiredFiles = [ "Among Us_Data", "Among Us_Data/il2cpp_data", "BepInEx", "BepInEx/core", "BepInEx/plugins/Polus.dll", "BepInEx/plugins/PolusggSlim.dll",
+        "mono", "mono/Managed", "mono/MonoBleedingEdge", "Among Us.exe", "baselib.dll", "doorstop_config.ini", "GameAssembly.dll", "UnityPlayer.dll", "winhttp.dll" ];
+    async function verifyInstallation(installationPath: string) {
+        for (const requiredFile of requiredFiles) {
+            if (!await exists(await join(installationPath, requiredFile))) {
+                console.log("Missing file %s in installation", requiredFile);
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    let invalidInstallation = false;
+    async function locateInstallation() {
+        const config = await downloadConfig.getConfig();
+        const folder = await openFileDialog({
+            defaultPath: config.installLocation,
+            directory: true
+        });
+
+        if (folder === null || folder === "" || Array.isArray(folder)) {
+            return;
+        }
+
+        if (!await verifyInstallation(folder)) {
+            invalidInstallation = true;
+            return false;
+        }
+
+        invalidInstallation = false;
+        await downloadConfig.setCachedInstallationLocation(folder);
+        await checkInstallation();
+    }
 </script>
 
 <DownloadConfig bind:this={downloadConfig} on:finalise-config={downloadSequence}/>
 <SteamAuth bind:this={steamAuth} on:submit={onSteamAuthSubmit}/>
+{#if amongUsInstallationPath !== undefined}
+    <InstallationConfig bind:this={installationConfig} installLocation={amongUsInstallationPath} isGameOpen={amongUsProcess !== undefined} on:uninstall={uninstall}/>
+{/if}
 
 <main class="text-white h-full flex flex-col items-center pt-8 gap-2">
     <span class="text-5xl font-medium">Mouthwash.gg</span>
@@ -212,9 +266,10 @@
                         <br><br>
                         If there's anything you'd like to change about the installation, clicking the button will bring up some configuration settings.
                     </p>
-                    <div class="w-full flex flex-col items-center mt-8">
+                    <div class="w-full flex flex-col items-center mt-8 filter" class:grayscale={isDownloading}>
                         <div
-                            class="bg-[#1b0729] text-[#8f75a1] w-24 h-24 rounded-full flex items-center justify-center cursor-pointer peer hover:text-[#d0bfdb] transition-colors"
+                            class="bg-[#1b0729] text-[#8f75a1] w-24 h-24 rounded-full flex items-center justify-center cursor-pointer peer hover:text-[#d0bfdb] transition-colors filter"
+                            class:pointer-events-none={isDownloading}
                             on:click={() => downloadConfig.open()}
                             on:keypress={ev => ev.key === "Enter" && downloadConfig.open()}
                             role="button"
@@ -225,21 +280,35 @@
                         <span class="text-lg mt-4 text-[#8f75a1] peer-hover:text-[#d0bfdb] transition-colors">Download</span>
                     </div>
                 </div>
-                <div class="grid grid-cols-4 justify-center w-4/5 mt-8">
-                    <div class="flex flex-col gap-4">
-                        <DownloadController downloadId="depot-downloader" label="DepotDownloader"/>
-                        <DownloadPercentage
-                            speedBytesPerSecond={undefined}
-                            downloadProgress={depotDownloadProgress}
-                            isDownloading={isDownloadingDepot}
-                            hasDownloaded={hasDownloadedDepot}
-                            label="AU&nbsp;v2021.6.30"
-                        />
+                {#if isDownloading}
+                    <div class="grid grid-cols-4 justify-center w-4/5 mt-8">
+                        <div class="flex flex-col gap-4">
+                            <DownloadController downloadId="depot-downloader" label="DepotDownloader"/>
+                            <DownloadPercentage
+                                speedBytesPerSecond={undefined}
+                                downloadProgress={depotDownloadProgress}
+                                isDownloading={isDownloadingDepot}
+                                hasDownloaded={hasDownloadedDepot}
+                                label="AU&nbsp;v2021.6.30"
+                            />
+                        </div>
+                        <DownloadController downloadId="bepinex" label="BepInEx"/>
+                        <DownloadController downloadId="plugin" label="Mouthwash"/>
+                        <DownloadController downloadId="dependencies" label="Dependencies"/>
                     </div>
-                    <DownloadController downloadId="bepinex" label="BepInEx"/>
-                    <DownloadController downloadId="plugin" label="Mouthwash"/>
-                    <DownloadController downloadId="dependencies" label="Dependencies"/>
-                </div>
+                {:else}
+                    <!-- svelte-ignore a11y-invalid-attribute -->
+                    <a
+                        class="hover:underline mt-4 text-xs text-[#d0bfdb] italic"
+                        href="#"
+                        on:click={locateInstallation}
+                    >Already have Mouthwash installed? Click here to locate it.</a>
+                    {#if invalidInstallation}
+                        <p class="text-sm text-yellow-400 max-w-102 italic">
+                            The folder you selected doesn't seem like a Mouthwash installation, try another folder or download the game again.
+                        </p>
+                    {/if}
+                {/if}
             {:else}
                 <div class="flex flex-col gap-4">
                     <!-- svelte-ignore a11y-positive-tabindex -->
@@ -257,19 +326,16 @@
                         </div>
                         <span class="text-lg mt-4 text-[#8f75a1] group-hover:text-[#d0bfdb] transition-colors">Launch Game</span>
                     </div>
-                    <div class="flex items-center filter border-2 p-2 rounded-lg border-[#8f75a1] group cursor-pointer w-42 hover:bg-[#8f75a125]">
+                    <button
+                        class="flex items-center filter border-2 p-2 rounded-lg border-[#8f75a1] group cursor-pointer w-42 hover:bg-[#8f75a125]"
+                        on:click={() => installationConfig.open()}
+                    >
                         <!-- svelte-ignore a11y-positive-tabindex -->
-                        <div
-                            class="text-[#8f75a1] p-2 rounded-full flex items-center justify-center peer group-hover:text-[#d0bfdb] transition-colors"
-                            on:click={() => startGame()}
-                            on:keypress={ev => ev.key === "Enter" && startGame()}
-                            role="button"
-                            tabindex="3"
-                        >
+                        <div class="text-[#8f75a1] p-2 rounded-full flex items-center justify-center peer group-hover:text-[#d0bfdb] transition-colors">
                             <Adjustments size={16}/>
                         </div>
                         <span class="text-xs text-[#8f75a1] group-hover:text-[#d0bfdb] transition-colors text-center">Manage Installation</span>
-                    </div>
+                    </button>
                 </div>
                 <!-- <div class="flex flex-col items-start text-xs mt-8">
                     svelte-ignore a11y-positive-tabindex -->
