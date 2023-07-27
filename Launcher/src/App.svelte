@@ -159,11 +159,11 @@
             }
         });
 
-        (window as any).provideInput = (inp: string) => depotDownloaderProcess.write(inp + "\n");
+        (window as any).provideInput = (inp: string) => depotDownloaderProcess.write(inp + "\r\n");
     }
 
     function onSteamAuthSubmit(ev: CustomEvent<string>) {
-        depotDownloaderProcess?.write(ev.detail + "\n");
+        depotDownloaderProcess?.write(ev.detail + "\r\n");
         steamAuth.close();
     }
 
