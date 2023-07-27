@@ -1,11 +1,36 @@
-CREATE TABLE "user"(
-    "uuid" VARCHAR(255) NOT NULL,
-    "display_name" VARCHAR(255) NOT NULL,
-    "client_token" VARCHAR(255) NOT NULL,
-    "created_at" TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL,
-    "banned_until" TIMESTAMP(0) WITHOUT TIME ZONE NULL,
-    "muted_until" TIMESTAMP(0) WITHOUT TIME ZONE NULL,
-    "game_settings" JSON NOT NULL
+create table users
+(
+    client_id     uuid not null
+        constraint users_pk
+            primary key,
+    email         varchar,
+    password_hash text,
+    display_name  varchar,
+    created_at    timestamp,
+    banned_until  timestamp,
+    muted_until   timestamp,
+    game_settings json,
+    is_verified bool
 );
-ALTER TABLE
-    "user" ADD PRIMARY KEY("uuid");
+
+alter table users
+    owner to postgres;
+
+create unique index users_email_uindex
+    on users (email);
+
+create table sessions
+(
+    client_id    varchar,
+    client_token text not null
+        constraint sessions_pk
+            primary key,
+    ip           varchar
+);
+
+alter table sessions
+    owner to postgres;
+
+create index sessions_client_token_ip_index
+    on sessions (client_token, ip);
+

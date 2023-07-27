@@ -16,7 +16,7 @@
     import Adjustments from "./icons/Adjustments.svelte";
     import Rocket from "./icons/Rocket.svelte";
     import InstallationConfig from "./lib/InstallationConfig.svelte";
-    import OpenFolder from "./icons/OpenFolder.svelte";
+    import type { ApiKeyInfo } from "./vite-env";
 
     let downloadConfig: DownloadConfig;
     let steamAuth: SteamAuth;
@@ -34,7 +34,7 @@
     let amongUsInstallationPath: string|undefined = undefined;
     let amongUsProcess: Child|undefined = undefined;
 
-    let loginUsername: string|null|undefined;
+    let loginApiInfo: ApiKeyInfo|undefined = undefined;
 
     async function moveFilesInFolder(originPath: string, destPath: string) {
         const filesInOrigin = await readDir(originPath);
@@ -173,8 +173,6 @@
     async function checkInstallation() {
         const config = await downloadConfig.getConfig();
         const checkAUPath = await join(config.installLocation, "Among Us.exe");
-        
-        console.log(await join(config.installLocation, "Among Us.exe"), config, checkAUPath);
 
         if (await exists(checkAUPath)) {
             amongUsExePath = checkAUPath;
@@ -192,7 +190,7 @@
     async function startGame() {
         const command = new Command("cmd", [ "/C", amongUsExePath ], {
             env: {
-                LoginToken: "eyJDbGllbnRJZFN0cmluZyI6IjI5ZmIxMWE3LThlYTEtNDY2Yi1iYjM3LWI1OTIxNGZjOGY4NSIsIkNsaWVudFRva2VuIjoiN2U0MjdiMTM2NTA5NGFmOWFlN2IxNTgxNjk3ODdmOTU3ZDlmMjE2OWM1NjVmMzE3ZjRhMTk4MTdlOTdmYWIyMCIsIkRpc3BsYXlOYW1lIjoiZmVtYm95IiwiUGVya3MiOltdLCJMb2dnZWRJbkRhdGVUaW1lIjoiMjAyMy0wNy0yNVQyMzozODoxNS4yMjYxMTA4KzAxOjAwIn0="
+                LoginToken: btoa(JSON.stringify(loginApiInfo || null))
             }
         });
         amongUsProcess = await command.spawn();
@@ -255,7 +253,7 @@
         A revival of Polus.GG, a private server and client for Among Us with new gamemodes and cosmetics, unleashing thousands of new ways to play.
     </p>
     <div class="flex h-full w-full">
-        <AccountManager bind:loginUsername/>
+        <AccountManager bind:loginApiInfo isGameOpen={amongUsProcess !== undefined}/>
         <div class="w-0.25 bg-white my-8"></div>
         <div class="flex-1 p-4 flex flex-col items-center">
             <span class="text-4xl mt-8">Play</span>
@@ -310,12 +308,12 @@
                     {/if}
                 {/if}
             {:else}
-                <div class="flex flex-col gap-4">
+                <div class="flex flex-col gap-4 items-center">
                     <!-- svelte-ignore a11y-positive-tabindex -->
                     <div
                         class="flex flex-col items-center mt-8 filter border-2 p-4 rounded-lg border-[#8f75a1] group cursor-pointer w-42 transition-colors hover:bg-[#8f75a125]"
-                        class:grayscale={amongUsProcess !== undefined}
-                        class:pointer-events-none={amongUsProcess !== undefined}
+                        class:grayscale={amongUsProcess !== undefined || loginApiInfo === undefined || loginApiInfo === null}
+                        class:pointer-events-none={amongUsProcess !== undefined || loginApiInfo === undefined || loginApiInfo === null}
                         on:click={() => startGame()}
                         on:keypress={ev => ev.key === "Enter" && startGame()}
                         role="button"
@@ -326,6 +324,11 @@
                         </div>
                         <span class="text-lg mt-4 text-[#8f75a1] group-hover:text-[#d0bfdb] transition-colors">Launch Game</span>
                     </div>
+                    {#if loginApiInfo === null}
+                        <p class="text-sm text-yellow-400 italic">
+                            Login to an account before playing.
+                        </p>
+                    {/if}
                     <button
                         class="flex items-center filter border-2 p-2 rounded-lg border-[#8f75a1] group cursor-pointer w-42 hover:bg-[#8f75a125]"
                         on:click={() => installationConfig.open()}
@@ -368,6 +371,7 @@
         padding: 0;
         width: 100vw;
         height: 100vh;
+        overflow-x: hidden;
         background-color: #0c0213;
         font-family: "Josefin Sans", sans-serif;
     }

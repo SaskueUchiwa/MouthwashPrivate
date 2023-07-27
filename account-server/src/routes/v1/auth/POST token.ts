@@ -6,7 +6,7 @@ import bcrypt from "bcrypt";
 import { AccountServer } from "$/index";
 
 export default async function (server: AccountServer, req: express.Request, res: express.Response) {
-    const ip = req.header("X-Forwarded-For") || req.connection.remoteAddress;
+    const ip = req.header("X-Forwarded-For") || req.socket.remoteAddress;
 
     if (!req.body.email) {
         res.status(400).json({
@@ -50,6 +50,15 @@ export default async function (server: AccountServer, req: express.Request, res:
             code: 401,
             message: "UNAUTHORIZED",
             details: "Invalid credentials"
+        });
+        return;
+    }
+
+    if (!user.is_verified) {
+        res.status(403).json({
+            code: 403,
+            message: "FORBIDDEN",
+            details: "User email address not verified, check your emails"
         });
         return;
     }

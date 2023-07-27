@@ -3,11 +3,14 @@ import express from "express";
 import fs from "fs/promises";
 import bcrypt from "bcrypt";
 import path from "path";
+import FormData from "form-data";
+import Mailgun from "mailgun.js";
 import chalk from "chalk";
 
 import pg from "pg";
 
 import { AccountServerConfig } from "./interfaces";
+import { IMailgunClient } from "mailgun.js/Interfaces";
 
 export type RouteHandler = (server: AccountServer, req: express.Request, response: express.Response) => Promise<boolean|undefined>;
 
@@ -89,6 +92,7 @@ export class AccountServer {
     expressServer: express.Express;
     httpServer?: http.Server;
     postgresClient: pg.Client;
+    mgClient: IMailgunClient;
 
     constructor(public readonly config: AccountServerConfig) {
         this.expressServer = express();
@@ -100,6 +104,9 @@ export class AccountServer {
             password: config.postgres.password,
             database: config.postgres.database
         });
+
+        const mailgunInstance = new Mailgun(FormData);
+        this.mgClient = mailgunInstance.client({ username: "api", key: config.mailgun.api_key, url: "https://api.eu.mailgun.net/" });
     }
     
     private listen() {
@@ -114,12 +121,12 @@ export class AccountServer {
     async start() {
         await this.postgresClient.connect();
         try {
-            await this.postgresClient.query(
-                `
-                INSERT INTO users (client_id, email, password_hash, display_name, created_at, banned_until, muted_until, game_settings)
-                VALUES ('29fb11a7-8ea1-466b-bb37-b59214fc8f85', 'essmale2005@gmail.com', '${bcrypt.hashSync("femboy", 12)}', 'femboy', '2021-11-06T12:22:20.788Z', NULL, NULL, '{}')
-                `
-            );
+            // await this.postgresClient.query(
+            //     `
+            //     INSERT INTO users (client_id, email, password_hash, display_name, created_at, banned_until, muted_until, game_settings)
+            //     VALUES ('29fb11a7-8ea1-466b-bb37-b59214fc8f85', 'essmale2005@gmail.com', '${bcrypt.hashSync("femboy", 12)}', 'femboy', '2021-11-06T12:22:20.788Z', NULL, NULL, '{}')
+            //     `
+            // );
         } catch (e) {
             
         }
