@@ -1,6 +1,6 @@
 [package]
 name = "mouthwashgg-launcher"
-version = "0.0.2-alpha"
+version = "0.0.2"
 description = "A Tauri App"
 authors = ["you"]
 license = ""
