@@ -79,6 +79,7 @@
             signUpEmail = "";
             signUpConfirmEmail = "";
             signUpPassword = "";
+            signUpError = undefined;
             if (!json.is_verified) {
                 signUpError = "Created account. Check your emails to verify it to start playing! (You might need to check your spam folder)";
                 return;
@@ -150,6 +151,7 @@
         badLogInEmail = false;
         badLogInPassword = false;
         unverifiedLogInEmail = false;
+        loginError = undefined;
 
         loginEmail = "";
         loginPassword = "";
