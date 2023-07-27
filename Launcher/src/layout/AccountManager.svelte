@@ -136,7 +136,7 @@
                 } else if (badLogInEmail) {
                     badLogInEmail = true;
                 } else if (unverifiedLogInEmail) {
-                    loginError = "The email address for this account has not been verified.";
+                    loginError = "The email address for this account has not been verified. Check your emails to verify it to start playing! (You might need to check your spam folder)";
                     return;
                 }
 
