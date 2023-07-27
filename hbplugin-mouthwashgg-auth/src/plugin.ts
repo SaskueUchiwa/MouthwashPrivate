@@ -6,6 +6,9 @@ import {
 } from "@skeldjs/hindenburg";
 
 import got from "got";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 export interface UserAccountModel {
     client_id: string;

@@ -15,21 +15,21 @@ namespace Polus.ServerList
         private static readonly HttpClient Client = new();
         public static async Task<ServerModel[]> Load()
         {
+            var successfulServers = new List<ServerModel>()
+            {
+                new()
+                {
+                    Address = "region.mouthwash.midlight.studio",
+                    Region = "Solar System",
+                    Subregion = "Earth",
+                    Name = "Global",
+                    Maintenance = false,
+                    Ip = "65.109.160.245"
+                }
+            };
+            
             try
             {
-                var successfulServers = new List<ServerModel>()
-                {
-                    new()
-                    {
-                        Address = "region.mouthwash.midlight.studio",
-                        Region = "Solar System",
-                        Subregion = "Earth",
-                        Name = "Global",
-                        Maintenance = false,
-                        Ip = "65.109.160.245"
-                    }
-                };
-
                 var servers = JsonConvert.DeserializeObject<ServerModel[]>(
                     await Client.GetStringAsync("https://serverlist.polus.gg/regions.json")
                 ) ?? Array.Empty<ServerModel>();
@@ -51,20 +51,8 @@ namespace Polus.ServerList
                 return successfulServers.ToArray();
             }
             catch (Exception) { /* ignored */ }
-
-
-            return new ServerModel[]
-            {
-                new()
-                {
-                    Address = "localhost",
-                    Region = "Local",
-                    Subregion = "Host",
-                    Name = "Localhost",
-                    Maintenance = false,
-                    Ip = "region.mouthwash.midlight.studio"
-                }
-            };
+            
+            return successfulServers.ToArray();
         }
     }
 }
