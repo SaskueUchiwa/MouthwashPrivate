@@ -62,7 +62,7 @@ export class AssetReference {
     ) {}
 }
 
-const baseUrl = "http://127.0.0.1:8001/";
+const baseUrl = "https://assets.mouthwash.midlight.studio/";
 
 export class AssetBundle {
     static cachedBundles: Map<string, AssetBundle> = new Map;
@@ -82,7 +82,6 @@ export class AssetBundle {
             return cachedBundle;
         }
 
-        console.log(baseUrl + location + ".json");
         const response = await got.get(baseUrl + location + ".json")
             .json<GetAssetBundleDeclarationResponse>();
 
