@@ -152,7 +152,6 @@ temp/
 # End of https://www.toptal.com/developers/gitignore/api/node,yarn,redis
 
 logs.txt
-plugins
 !pages/Plugins
 banned_ips.json
 config.json

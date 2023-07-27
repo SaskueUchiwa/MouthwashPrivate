@@ -64,5 +64,6 @@
   ],
   "lint-staged": {
     "*.ts": "eslint src/**/*.ts"
-  }
+  },
+  "packageManager": "yarn@3.6.1"
 }

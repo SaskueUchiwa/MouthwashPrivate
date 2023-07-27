@@ -124,8 +124,8 @@ namespace PolusggSlim.Auth.Behaviours
             
             // MOUTHWASH PATCHES
             Destroy(_logOutButton);
-            Destroy(_createAccountButton);
-            Destroy(_openLogInModalButton);
+            // (_createAccountButton);
+            // Destroy(_openLogInModalButton);
             // _logOutButton.MakePassiveButton(LogOut);
         }
 
