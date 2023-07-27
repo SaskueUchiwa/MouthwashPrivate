@@ -21,12 +21,12 @@ namespace Polus.ServerList
                 {
                     new()
                     {
-                        Address = "localhost",
-                        Region = "Local",
-                        Subregion = "Host",
-                        Name = "Localhost",
+                        Address = "region.mouthwash.midlight.studio",
+                        Region = "Solar System",
+                        Subregion = "Earth",
+                        Name = "Global",
                         Maintenance = false,
-                        Ip = "region.mouthwash.midlight.studio"
+                        Ip = "65.109.160.245"
                     }
                 };
 
