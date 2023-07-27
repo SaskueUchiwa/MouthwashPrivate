@@ -1,0 +1,33 @@
+ManifestFileVersion: 0
+CRC: 4140296593
+Hashes:
+  AssetFileHash:
+    serializedVersion: 2
+    Hash: 289571800b1473523ca30b7c82b9624c
+  TypeTreeHash:
+    serializedVersion: 2
+    Hash: e13e02cf3bcb4f2e0cb7c7397335e8a2
+HashAppended: 0
+ClassTypes:
+- Class: 28
+  Script: {instanceID: 0}
+- Class: 74
+  Script: {instanceID: 0}
+- Class: 114
+  Script: {fileID: 11500000, guid: 33a85397cd7f8c75d94da833c4e725d7, type: 3}
+- Class: 115
+  Script: {instanceID: 0}
+- Class: 213
+  Script: {instanceID: 0}
+Assets:
+- Assets/Mods/CustomPlayers/Sheep/Walk.anim
+- Assets/Mods/CustomPlayers/Sheep/Idle.anim
+- Assets/Mods/CustomPlayers/Blob/Walk.anim
+- Assets/Mods/Celeste/CelesteHat.asset
+- Assets/Mods/Celeste/atlas.png
+- Assets/Mods/CustomPlayers/Blob/noshadow.png
+- Assets/Mods/CustomPlayers/Sheep/EnterVent.anim
+- Assets/Mods/CustomPlayers/Blob/Idle.anim
+- Assets/Mods/CustomPlayers/Blob/noshadowbigass.png
+- Assets/Mods/CustomPlayers/Sheep/ExitVent.anim
+Dependencies: []
