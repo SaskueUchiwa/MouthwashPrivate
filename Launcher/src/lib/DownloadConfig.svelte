@@ -7,7 +7,7 @@
     import UserCircle from "../icons/UserCircle.svelte";
     import Desktop from "../icons/Desktop.svelte";
     import OpenFolder from "../icons/OpenFolder.svelte";
-    import { appDataDir, dirname, join, resolve } from "@tauri-apps/api/path";
+    import { appDataDir, dirname, join } from "@tauri-apps/api/path";
     import { path } from "@tauri-apps/api";
     const dispatchEvent = createEventDispatcher();
 
