@@ -76,7 +76,7 @@
             </button>
             {#if isGameOpen}
                 <p class="text-sm text-yellow-400 max-w-102 italic">
-                    Close the running process to uninstall the game.
+                    The game is currently running, close it to be able to uninstall it.
                 </p>
             {/if}
         </div>
