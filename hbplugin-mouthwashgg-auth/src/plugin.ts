@@ -71,6 +71,10 @@ export class MouthwashAuthPlugin extends WorkerPlugin {
         this.connectionUserCache = new WeakMap;
     }
 
+    onPluginLoad() {
+        this.logger.info("Base accounts URL: %s", this.baseUrl);
+    }
+
     private getCached<K, T>(cache: Map<T, GenericCacheData<K>>, key: T) {
         const cachedData = cache.get(key);
         if (!cachedData)
@@ -96,21 +100,35 @@ export class MouthwashAuthPlugin extends WorkerPlugin {
     }
 
     async make<T>(method: "get"|"post"|"put"|"delete"|"patch", path: string, cacheExpiry: number, body?: any): Promise<GenericResponse<T>> {
-        const res = await got[method](this.baseUrl + path, {
-            body: body ? JSON.stringify(body) : undefined,
-            headers: {
-                "Authorization": this.internalAccessKey
-                    ? "Bearer " + this.internalAccessKey
-                    : undefined,
-                "Content-Type": "application/json"
+        try {
+            const res = await got[method](this.baseUrl + path, {
+                body: body ? JSON.stringify(body) : undefined,
+                headers: {
+                    "Authorization": this.internalAccessKey
+                        ? "Bearer " + this.internalAccessKey
+                        : undefined,
+                    "Content-Type": "application/json"
+                }
+            }).json<GenericResponse<T>>();
+    
+            if (!res.success) {
+                this.logger.warn("%s %s: (%s)", method.toUpperCase(), path, res.code);
             }
-        }).json<GenericResponse<T>>();
+            
+            return res;
+        } catch (e: any) {
+            if (e instanceof got.HTTPError) {
+                this.logger.warn("%s %s: (%s)", method.toUpperCase(), path, e.response.statusCode);
+                return {
+                    success: undefined,
+                    message: "",
+                    code: e.response.statusCode,
+                    details: ""
+                };
+            }
 
-        if (!res.success) {
-            this.logger.warn("%s %s: (%s)", method.toUpperCase(), path, res.code);
+            throw e;
         }
-
-        return res;
     }
 
     async getUser(clientId: string) {

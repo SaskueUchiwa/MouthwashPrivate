@@ -11,7 +11,10 @@ import {
     RegisterPrefab,
     Networkable,
     SendOption,
-    SpawnType
+    SpawnType,
+    HazelWriter,
+    DisconnectPacket,
+    DisconnectReason
 } from "@skeldjs/hindenburg";
 
 import {
@@ -143,7 +146,6 @@ export class MouthwashPlugin extends WorkerPlugin {
 
             const connection = this.worker.connections.get(rinfo.address + ":" + rinfo.port);
             const cachedSession = connection && this.authApi.connectionSessionCache.get(connection);
-
             const sessionInfo = (connection && cachedSession) || await this.authApi.getSession(uuid, rinfo.address);
 
             if (sessionInfo) {
@@ -156,6 +158,18 @@ export class MouthwashPlugin extends WorkerPlugin {
                 if (crypto.timingSafeEqual(hmacHash, signedMessage)) {
                     return this.worker.handleMessage(message.slice(37), rinfo);
                 }
+            } else {
+                if (connection) {
+                    await connection.disconnect("Invalid login, try logging in again through the launcher.");
+                } else {
+                    const disconnectPacket = new DisconnectPacket(DisconnectReason.Custom, "Invalid login, try logging in again through the launcher.");
+                    const writer = HazelWriter.alloc(64);
+                    writer.uint8(SendOption.Disconnect);
+                    writer.write(disconnectPacket);
+                    writer.realloc(writer.cursor);
+                    this.worker["_sendPacket"](rinfo, writer.buffer);
+                }
+                return;
             }
         }
     }

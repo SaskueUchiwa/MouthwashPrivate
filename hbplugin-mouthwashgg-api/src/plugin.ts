@@ -334,42 +334,42 @@ export class MouthwashApiPlugin extends RoomPlugin {
         }
 
         await this.nameService.updateAllNames();
-        
+    
         const connection = ev.room.connections.get(ev.player.clientId);
+        if (!connection) return;
 
-        if (!connection)
-            return;
-
-        if (!this.roomCreator)
-            this.roomCreator = connection;
+        if (!this.roomCreator) this.roomCreator = connection;
 
         if (ev.player.isHost) {
             if (this.authApi) {
                 const connectionUser = await this.authApi.getConnectionUser(connection);
+
+                if (!connectionUser) {
+                    await connection.disconnect("Invalid login");
+                    return;
+                }
     
-                if (connectionUser) {
-                    const keys = Object.keys(connectionUser.game_settings);
-                    for (let i = 0; i < keys.length; i++) {
-                        const gameOptionPath = keys[i];
-                        const gameOptionValue = connectionUser.game_settings[gameOptionPath];
-    
-                        if (gameOptionValue.type === "enum") {
-                            const gameOption = new EnumValue<string>(gameOptionValue.options, gameOptionValue.selectedIdx);
-                            this.gameOptions.cachedValues.set(gameOptionPath, gameOption);
-                        } else if (gameOptionValue.type === "boolean") {
-                            const gameOption = new BooleanValue(gameOptionValue.enabled);
-                            this.gameOptions.cachedValues.set(gameOptionPath, gameOption);
-                        } else if (gameOptionValue.type === "number") {
-                            const gameOption = new NumberValue(
-                                gameOptionValue.value,
-                                gameOptionValue.step,
-                                gameOptionValue.lower,
-                                gameOptionValue.upper,
-                                gameOptionValue.zeroIsInfinity,
-                                gameOptionValue.suffix,
-                            );
-                            this.gameOptions.cachedValues.set(gameOptionPath, gameOption);
-                        }
+                const keys = Object.keys(connectionUser.game_settings);
+                for (let i = 0; i < keys.length; i++) {
+                    const gameOptionPath = keys[i];
+                    const gameOptionValue = connectionUser.game_settings[gameOptionPath];
+
+                    if (gameOptionValue.type === "enum") {
+                        const gameOption = new EnumValue<string>(gameOptionValue.options, gameOptionValue.selectedIdx);
+                        this.gameOptions.cachedValues.set(gameOptionPath, gameOption);
+                    } else if (gameOptionValue.type === "boolean") {
+                        const gameOption = new BooleanValue(gameOptionValue.enabled);
+                        this.gameOptions.cachedValues.set(gameOptionPath, gameOption);
+                    } else if (gameOptionValue.type === "number") {
+                        const gameOption = new NumberValue(
+                            gameOptionValue.value,
+                            gameOptionValue.step,
+                            gameOptionValue.lower,
+                            gameOptionValue.upper,
+                            gameOptionValue.zeroIsInfinity,
+                            gameOptionValue.suffix,
+                        );
+                        this.gameOptions.cachedValues.set(gameOptionPath, gameOption);
                     }
                 }
             }

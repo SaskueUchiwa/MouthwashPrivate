@@ -275,6 +275,12 @@ __metadata:
   languageName: node
   linkType: soft
 
+"@skeldjs/hindenburg@link:../Hindenburg::locator=hbplugin-mouthwashgg-auth%40workspace%3Ahbplugin-mouthwashgg-auth":
+  version: 0.0.0-use.local
+  resolution: "@skeldjs/hindenburg@link:../Hindenburg::locator=hbplugin-mouthwashgg-auth%40workspace%3Ahbplugin-mouthwashgg-auth"
+  languageName: node
+  linkType: soft
+
 "@skeldjs/hindenburg@link:../Hindenburg::locator=hbplugin-mwgg-gamemode-town-of-polus%40workspace%3Ahbplugin-mwgg-gamemode-town-of-polus":
   version: 0.0.0-use.local
   resolution: "@skeldjs/hindenburg@link:../Hindenburg::locator=hbplugin-mwgg-gamemode-town-of-polus%40workspace%3Ahbplugin-mwgg-gamemode-town-of-polus"
@@ -1731,6 +1737,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"dotenv@npm:^16.3.1":
+  version: 16.3.1
+  resolution: "dotenv@npm:16.3.1"
+  checksum: 15d75e7279018f4bafd0ee9706593dd14455ddb71b3bcba9c52574460b7ccaf67d5cf8b2c08a5af1a9da6db36c956a04a1192b101ee102a3e0cf8817bbcf3dfd
+  languageName: node
+  linkType: hard
+
 "eastasianwidth@npm:^0.2.0":
   version: 0.2.0
   resolution: "eastasianwidth@npm:0.2.0"
@@ -2582,6 +2595,24 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "hbplugin-mouthwashgg-auth@link:../hbplugin-mouthwashgg-auth::locator=hbplugin-mouthwashgg-api%40workspace%3Ahbplugin-mouthwashgg-api"
   languageName: node
+  linkType: soft
+
+"hbplugin-mouthwashgg-auth@workspace:hbplugin-mouthwashgg-auth":
+  version: 0.0.0-use.local
+  resolution: "hbplugin-mouthwashgg-auth@workspace:hbplugin-mouthwashgg-auth"
+  dependencies:
+    "@skeldjs/events": ^2.13.10
+    "@skeldjs/hindenburg": "link:../Hindenburg"
+    "@types/got": ^9.6.12
+    "@types/node": latest
+    "@types/uuid": ^8.3.1
+    dotenv: ^16.3.1
+    got: ^11.8.2
+    mouthwash-types: "link:../mouthwash-types"
+    reflect-metadata: ^0.1.13
+    typescript: latest
+    uuid: ^8.3.2
+  languageName: unknown
   linkType: soft
 
 "hbplugin-mouthwashgg@link:../hbplugin-mouthwashgg::locator=mouthwash-types%40workspace%3Amouthwash-types":
@@ -3460,6 +3491,12 @@ __metadata:
 "mouthwash-types@link:../mouthwash-types::locator=hbplugin-mouthwashgg-api%40workspace%3Ahbplugin-mouthwashgg-api":
   version: 0.0.0-use.local
   resolution: "mouthwash-types@link:../mouthwash-types::locator=hbplugin-mouthwashgg-api%40workspace%3Ahbplugin-mouthwashgg-api"
+  languageName: node
+  linkType: soft
+
+"mouthwash-types@link:../mouthwash-types::locator=hbplugin-mouthwashgg-auth%40workspace%3Ahbplugin-mouthwashgg-auth":
+  version: 0.0.0-use.local
+  resolution: "mouthwash-types@link:../mouthwash-types::locator=hbplugin-mouthwashgg-auth%40workspace%3Ahbplugin-mouthwashgg-auth"
   languageName: node
   linkType: soft
 

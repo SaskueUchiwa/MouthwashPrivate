@@ -10,6 +10,7 @@
     "assets",
     "hbplugin-mouthwashgg",
     "hbplugin-mouthwashgg-api",
+    "hbplugin-mouthwashgg-auth",
     "hbplugin-mwgg-gamemode-town-of-polus",
     "hbplugin-mwgg-gamemode-vanilla",
     "mouthwash-types",

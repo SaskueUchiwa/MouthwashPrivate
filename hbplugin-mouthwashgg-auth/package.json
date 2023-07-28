@@ -10,8 +10,8 @@
     "devDependencies": {
         "@skeldjs/hindenburg": "link:../Hindenburg",
         "@types/got": "^9.6.12",
-        "@types/uuid": "^8.3.1",
         "@types/node": "latest",
+        "@types/uuid": "^8.3.1",
         "typescript": "latest"
     },
     "dependencies": {

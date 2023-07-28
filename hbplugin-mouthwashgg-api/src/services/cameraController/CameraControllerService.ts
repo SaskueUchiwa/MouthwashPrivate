@@ -47,7 +47,7 @@ export class CameraControllerService {
     
             await this.plugin.room.broadcastMessages([
                 new SpawnMessage(
-                    MouthwashSpawnType.CameraController,
+                    MouthwashSpawnType.CameraController as number,
                     player.clientId,
                     0,
                     [ 
