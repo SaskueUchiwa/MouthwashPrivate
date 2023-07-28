@@ -114,9 +114,18 @@ async fn download_file_and_extract(window: tauri::Window, url: String, folder: S
     return Some(true);
 }
 
+#[tauri::command]
+async fn is_dev() -> bool {
+    if cfg!(debug_assertions) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
 fn main() {
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![download_file_and_extract])
+        .invoke_handler(tauri::generate_handler![download_file_and_extract, is_dev])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

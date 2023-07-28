@@ -20,6 +20,8 @@
     import ArrowPath from "./icons/ArrowPath.svelte";
     import ArrowUp from "./icons/ArrowUp.svelte";
 
+    let isDev = false;
+
     let downloadConfig: DownloadConfig;
     let steamAuth: SteamAuth;
     let installationConfig: InstallationConfig;
@@ -262,6 +264,7 @@
     }
 
     onMount(async () => {
+        isDev = await invoke("is_dev");
         await checkInstallation();
     });
 
@@ -360,7 +363,10 @@
     />
 {/if}
 
-<main class="text-white h-full flex flex-col items-center pt-8 gap-2">
+<main class="text-white h-full flex flex-col items-center pt-8 gap-2 relative">
+    {#if isDev}
+        <div class="absolute left-1 top-1 text-xs text-white/50">DEVELOPMENT MODE</div>
+    {/if}
     <span class="text-5xl font-medium">Mouthwash.gg</span>
     <p class="text-[#d0bfdb] max-w-196">
         A revival of Polus.GG, a private server and client for Among Us with new gamemodes and cosmetics, unleashing thousands of new ways to play.
@@ -438,8 +444,8 @@
                         <!-- svelte-ignore a11y-positive-tabindex -->
                         <div
                             class="flex flex-col items-center mt-8 filter border-2 p-4 rounded-lg border-[#8f75a1] group cursor-pointer w-42 transition-colors hover:bg-[#8f75a125]"
-                            class:grayscale={amongUsProcess !== undefined || loginApiInfo === undefined || loginApiInfo === null}
-                            class:pointer-events-none={amongUsProcess !== undefined || loginApiInfo === undefined || loginApiInfo === null}
+                            class:grayscale={(amongUsProcess !== undefined && !isDev) || loginApiInfo === undefined || loginApiInfo === null}
+                            class:pointer-events-none={(amongUsProcess !== undefined && !isDev) || loginApiInfo === undefined || loginApiInfo === null}
                             on:click={() => startGame()}
                             on:keypress={ev => ev.key === "Enter" && startGame()}
                             role="button"
