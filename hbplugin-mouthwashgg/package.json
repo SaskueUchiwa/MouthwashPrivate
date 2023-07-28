@@ -13,6 +13,7 @@
     },
     "devDependencies": {
         "@skeldjs/hindenburg": "link:../Hindenburg",
-        "typescript": "^4.4.4"
+        "@types/node": "latest",
+        "typescript": "latest"
     }
 }

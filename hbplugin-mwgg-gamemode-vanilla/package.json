@@ -8,7 +8,8 @@
     },
     "devDependencies": {
         "@skeldjs/hindenburg": "link:../Hindenburg",
-        "typescript": "^4.4.4"
+        "@types/node": "latest",
+        "typescript": "latest"
     },
     "dependencies": {
         "hbplugin-mouthwashgg-api": "link:../hbplugin-mouthwashgg-api",

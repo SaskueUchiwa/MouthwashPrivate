@@ -9,8 +9,9 @@
   },
   "devDependencies": {
     "@skeldjs/hindenburg": "link:../Hindenburg",
+    "@types/node": "latest",
     "hbplugin-mouthwashgg": "link:../hbplugin-mouthwashgg",
-    "typescript": "^4.4.4"
+    "typescript": "latest"
   },
   "dependencies": {
     "@skeldjs/events": "^2.14.30"

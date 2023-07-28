@@ -11,7 +11,8 @@
         "@skeldjs/hindenburg": "link:../Hindenburg",
         "@types/got": "^9.6.12",
         "@types/uuid": "^8.3.1",
-        "typescript": "^4.4.2"
+        "@types/node": "latest",
+        "typescript": "latest"
     },
     "dependencies": {
         "@skeldjs/events": "^2.13.10",

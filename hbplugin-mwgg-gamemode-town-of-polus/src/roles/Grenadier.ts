@@ -10,12 +10,12 @@ import {
     AssetBundle,
     AssetReference,
     AudioAsset,
-    BaseRole,
     Button,
     ButtonFixedUpdateEvent,
     Crewmate,
     EmojiService,
     EventListener,
+    Impostor,
     ListenerType,
     MouthwashRole,
     RoleAlignment,
@@ -44,7 +44,7 @@ export const GrenadierOptionName = {
 
 @MouthwashRole("Grenadier", RoleAlignment.Impostor, grenadierColor, EmojiService.getEmoji("grenadier"))
 @RoleObjective("Use the flashbangs to blind the " + Crewmate.metadata.themeColor.text("Crewmates"))
-export class Grenadier extends BaseRole {
+export class Grenadier extends Impostor {
     static getGameOptions(gameOptions: Map<string, GameOption>) {
         const roleOptions = new Map<any, any>([]);
 

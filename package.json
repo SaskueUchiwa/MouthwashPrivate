@@ -4,5 +4,15 @@
   "license": "SSPL-1.0",
   "main": "index.js",
   "author": "Edward Smale <essmale2005@gmail.com>",
-  "packageManager": "yarn@3.6.1"
+  "packageManager": "yarn@3.6.1",
+  "workspaces": [
+    "account-server",
+    "assets",
+    "hbplugin-mouthwashgg",
+    "hbplugin-mouthwashgg-api",
+    "hbplugin-mwgg-gamemode-town-of-polus",
+    "hbplugin-mwgg-gamemode-vanilla",
+    "mouthwash-types",
+    "Hindenburg"
+  ]
 }

@@ -25,6 +25,15 @@ namespace Polus.ServerList
                     Name = "Global",
                     Maintenance = false,
                     Ip = "65.109.160.245"
+                },
+                new()
+                {
+                    Address = "localhost",
+                    Region = "My Computer",
+                    Subregion = "Windows Terminal",
+                    Name = "Localhost",
+                    Maintenance = false,
+                    Ip = "127.0.0.1"
                 }
             };
             
