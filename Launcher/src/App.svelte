@@ -1,6 +1,6 @@
 <script lang="ts">
     import { appDataDir, join } from "@tauri-apps/api/path";
-    import { createDir, exists, readDir, removeDir, renameFile } from "@tauri-apps/api/fs";
+    import { createDir, exists, readDir, readTextFile, removeDir, renameFile, writeTextFile } from "@tauri-apps/api/fs";
     import { open as openFileDialog } from "@tauri-apps/api/dialog";
     import { Child, Command } from "@tauri-apps/api/shell";
     import { invoke } from "@tauri-apps/api";
@@ -17,6 +17,8 @@
     import Rocket from "./icons/Rocket.svelte";
     import InstallationConfig from "./lib/InstallationConfig.svelte";
     import type { ApiKeyInfo } from "./vite-env";
+    import ArrowPath from "./icons/ArrowPath.svelte";
+    import ArrowUp from "./icons/ArrowUp.svelte";
 
     let downloadConfig: DownloadConfig;
     let steamAuth: SteamAuth;
@@ -35,6 +37,12 @@
     let amongUsProcess: Child|undefined = undefined;
 
     let loginApiInfo: ApiKeyInfo|undefined = undefined;
+
+    let localInstalledModVersion: string|undefined = undefined;
+    let updateAvailable: { mod_version: string; release_date: string; changelog: string[]; }|undefined = undefined;
+    let isCheckingForUpdates = false;
+
+    let isUpdating = false;
 
     async function moveFilesInFolder(originPath: string, destPath: string) {
         const filesInOrigin = await readDir(originPath);
@@ -174,14 +182,69 @@
         if (await exists(checkAUPath)) {
             amongUsExePath = checkAUPath;
             amongUsInstallationPath = config.installLocation;
+
+            await checkForUpdates();
         } else {
             amongUsExePath = undefined;
             amongUsInstallationPath = undefined;
         }
     }
 
+    async function checkForUpdates() {
+        isCheckingForUpdates = true;
+        updateAvailable = undefined;
+        const modVersionPath = await join(amongUsInstallationPath, "mod_version.txt");
+        if (!await exists(modVersionPath)) {
+            localInstalledModVersion = "Not found";
+            isCheckingForUpdates = false;
+            return;
+        }
+
+        const localModVersionInfo = await readTextFile(modVersionPath);
+        const localModVersionParts = localModVersionInfo.split(".");
+        if (localModVersionParts.length !== 3) {
+            localInstalledModVersion = "Not found";
+            isCheckingForUpdates = false;
+            return;
+        }
+
+        localInstalledModVersion = localModVersionInfo;
+
+        const [ localMajor, localMinor, localPatch ] = localModVersionParts.map(p => parseInt(p));
+
+        const res = await fetch("https://files.mouthwash.midlight.studio/mod_version.json");
+        if (!res.ok) {
+            isCheckingForUpdates = false;
+            return;
+        }
+
+        const remoteVersionInfo = await res.json();
+        const remoteModVersionParts = remoteVersionInfo.mod_version.split(".");
+        const [ remoteMajor, remoteMinor, remotePatch ] = remoteModVersionParts.map(p => parseInt(p));
+
+        if (localMajor > remoteMajor) {
+            isCheckingForUpdates = false;
+            return;
+        }
+        if (localMinor > remoteMinor) {
+            isCheckingForUpdates = false;
+            return;
+        }
+        if (localPatch > remotePatch) {
+            isCheckingForUpdates = false;
+            return;
+        }
+        if (localMajor === remoteMajor && localMinor === remoteMinor && localPatch === remotePatch) {
+            isCheckingForUpdates = false;
+            return;
+        }
+
+        updateAvailable = remoteVersionInfo;
+        isCheckingForUpdates = false;
+    }
+
     onMount(async () => {
-        checkInstallation();
+        await checkInstallation();
     });
 
     async function startGame() {
@@ -196,6 +259,34 @@
             amongUsProcess = undefined;
         });
     }
+    
+    async function attemptUpdate() {
+        if (!updateAvailable)
+            return;
+
+        const config = await downloadConfig.getConfig();
+        const pluginDirectory = await join(await appDataDir(), "plugin-" + updateAvailable.mod_version);
+
+        isUpdating = true;
+
+        await invoke("download_file_and_extract", {
+            url: "https://files.mouthwash.midlight.studio/MouthwashGG.zip",
+            downloadId: "plugin-" + updateAvailable.mod_version,
+            folder: "plugin-" + updateAvailable.mod_version
+        });
+
+        isUpdating = false;
+
+        const pluginsDir = await join(config.installLocation, "BepInEx", "plugins");
+        await createDir(pluginsDir, { recursive: true });
+        
+        await moveFilesInFolder(pluginDirectory, pluginsDir);
+        await removeDir(pluginDirectory, { recursive: true });
+
+        await writeTextFile(await join(config.installLocation, "mod_version.txt"), updateAvailable.mod_version);
+        
+        await checkForUpdates();
+    }
 
     async function uninstall() {
         await removeDir(amongUsInstallationPath, { recursive: true });
@@ -203,7 +294,8 @@
     }
 
     const requiredFiles = [ "Among Us_Data", "Among Us_Data/il2cpp_data", "BepInEx", "BepInEx/core", "BepInEx/plugins/Polus.dll", "BepInEx/plugins/PolusggSlim.dll",
-        "mono", "mono/Managed", "mono/MonoBleedingEdge", "Among Us.exe", "baselib.dll", "doorstop_config.ini", "GameAssembly.dll", "UnityPlayer.dll", "winhttp.dll" ];
+        "mono", "mono/Managed", "mono/MonoBleedingEdge", "Among Us.exe", "baselib.dll", "doorstop_config.ini", "GameAssembly.dll", "UnityPlayer.dll", "winhttp.dll",
+        "mod_version.txt" ];
     async function verifyInstallation(installationPath: string) {
         for (const requiredFile of requiredFiles) {
             if (!await exists(await join(installationPath, requiredFile))) {
@@ -241,7 +333,13 @@
 <DownloadConfig bind:this={downloadConfig} on:finalise-config={downloadSequence}/>
 <SteamAuth bind:this={steamAuth} on:submit={onSteamAuthSubmit}/>
 {#if amongUsInstallationPath !== undefined}
-    <InstallationConfig bind:this={installationConfig} installLocation={amongUsInstallationPath} isGameOpen={amongUsProcess !== undefined} on:uninstall={uninstall}/>
+    <InstallationConfig
+        bind:this={installationConfig}
+        installLocation={amongUsInstallationPath}
+        isGameOpen={amongUsProcess !== undefined}
+        localInstalledModVersion={localInstalledModVersion}
+        on:uninstall={uninstall}
+    />
 {/if}
 
 <main class="text-white h-full flex flex-col items-center pt-8 gap-2">
@@ -306,25 +404,71 @@
                 {/if}
             {:else}
                 <div class="flex flex-col gap-4 items-center">
-                    <!-- svelte-ignore a11y-positive-tabindex -->
-                    <div
-                        class="flex flex-col items-center mt-8 filter border-2 p-4 rounded-lg border-[#8f75a1] group cursor-pointer w-42 transition-colors hover:bg-[#8f75a125]"
-                        class:grayscale={amongUsProcess !== undefined || loginApiInfo === undefined || loginApiInfo === null}
-                        class:pointer-events-none={amongUsProcess !== undefined || loginApiInfo === undefined || loginApiInfo === null}
-                        on:click={() => startGame()}
-                        on:keypress={ev => ev.key === "Enter" && startGame()}
-                        role="button"
-                        tabindex="3"
-                    >
-                        <div class="bg-[#2e1440] text-[#8f75a1] w-24 h-24 rounded-full flex items-center justify-center peer group-hover:text-[#d0bfdb] border-[#8f75a1] transition-colors">
-                            <Rocket size={24}/>
+                    {#if isUpdating && updateAvailable}
+                        <!-- svelte-ignore a11y-positive-tabindex -->
+                        <div
+                            class="flex flex-col items-center mt-8 filter border-2 p-4 rounded-lg border-[#8f75a1] group cursor-pointer w-42 transition-colors hover:bg-[#8f75a125]"
+                            on:click={() => startGame()}
+                            on:keypress={ev => ev.key === "Enter" && startGame()}
+                            role="button"
+                            tabindex="3"
+                        >
+                            <DownloadController downloadId="plugin-{updateAvailable.mod_version}" label="" isBig={true}/>
+                            <span class="text-lg mt-4 text-[#8f75a1] group-hover:text-[#d0bfdb] transition-colors">Updating..</span>
                         </div>
-                        <span class="text-lg mt-4 text-[#8f75a1] group-hover:text-[#d0bfdb] transition-colors">Launch Game</span>
-                    </div>
+                    {:else}
+                        <!-- svelte-ignore a11y-positive-tabindex -->
+                        <div
+                            class="flex flex-col items-center mt-8 filter border-2 p-4 rounded-lg border-[#8f75a1] group cursor-pointer w-42 transition-colors hover:bg-[#8f75a125]"
+                            class:grayscale={amongUsProcess !== undefined || loginApiInfo === undefined || loginApiInfo === null}
+                            class:pointer-events-none={amongUsProcess !== undefined || loginApiInfo === undefined || loginApiInfo === null}
+                            on:click={() => startGame()}
+                            on:keypress={ev => ev.key === "Enter" && startGame()}
+                            role="button"
+                            tabindex="3"
+                        >
+                            <div class="bg-[#2e1440] text-[#8f75a1] w-24 h-24 rounded-full flex items-center justify-center peer group-hover:text-[#d0bfdb] border-[#8f75a1] transition-colors">
+                                <Rocket size={24}/>
+                            </div>
+                            <span class="text-lg mt-4 text-[#8f75a1] group-hover:text-[#d0bfdb] transition-colors">Launch Game</span>
+                        </div>
+                    {/if}
                     {#if loginApiInfo === null}
                         <p class="text-sm text-yellow-400 italic">
                             Login to an account before playing.
                         </p>
+                    {/if}
+                    {#if updateAvailable}
+                        <button
+                            class="flex items-center filter border-2 p-2 rounded-lg border-yellow-400 group cursor-pointer w-42 hover:bg-yellow-400/15"
+                            on:click={attemptUpdate}
+                            class:grayscale={isUpdating}
+                            class:pointer-events-none={isUpdating}
+                        >
+                            <!-- svelte-ignore a11y-positive-tabindex -->
+                            <div
+                                class="text-yellow-300 p-2 rounded-full flex items-center justify-center peer group-hover:text-yellow-400 transition-colors"
+                            >
+                                <ArrowUp size={16}/>
+                            </div>
+                            <span class="text-xs text-yellow-300 group-hover:text-yellow-400 transition-colors text-center">Update to v{updateAvailable.mod_version}</span>
+                        </button>
+                    {:else}
+                        <button
+                            class="flex items-center filter border-2 p-2 rounded-lg border-[#8f75a1] group cursor-pointer w-42 hover:bg-[#8f75a125]"
+                            class:grayscale={isCheckingForUpdates}
+                            class:pointer-events-none={isCheckingForUpdates}
+                            on:click={checkForUpdates}
+                        >
+                            <!-- svelte-ignore a11y-positive-tabindex -->
+                            <div
+                                class="text-[#8f75a1] p-2 rounded-full flex items-center justify-center peer group-hover:text-[#d0bfdb] transition-colors"
+                                class:animate-spin={isCheckingForUpdates}
+                            >
+                                <ArrowPath size={16}/>
+                            </div>
+                            <span class="text-xs text-[#8f75a1] group-hover:text-[#d0bfdb] transition-colors text-center">Check For Updates</span>
+                        </button>
                     {/if}
                     <button
                         class="flex items-center filter border-2 p-2 rounded-lg border-[#8f75a1] group cursor-pointer w-42 hover:bg-[#8f75a125]"

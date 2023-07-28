@@ -8,6 +8,7 @@
 
     export let installLocation: string;
     export let isGameOpen: boolean;
+    export let localInstalledModVersion: string;
 
     let isOpen = false;
     export function open() {
@@ -32,6 +33,7 @@
     role="none"
 >
     <div class="w-128 bg-[#1b0729] px-4 py-3 rounded-lg flex flex-col items-start gap-2 cursor-default text-white" on:click={ev => ev.stopPropagation()} on:keypress={ev => ev.stopPropagation()} role="none">
+        <p class="text-[#8f75a1] text-sm max-w-102">Mod version: {localInstalledModVersion}</p>
         <span class="text-2xl">Install Location</span>
         <div class="flex flex-col gap-2">
             <p class="text-[#8f75a1] text-sm max-w-102">

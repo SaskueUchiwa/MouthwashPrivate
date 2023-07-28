@@ -4,6 +4,7 @@
 
     export let label: string;
     export let downloadId = "";
+    export let isBig = false;
 
     let downloadProgress = 0;
     let isDownloading = false;
@@ -33,4 +34,4 @@
     });
 </script>
 
-<DownloadPercentage {speedBytesPerSecond} {downloadProgress} {isDownloading} {hasDownloaded} {label}/>
+<DownloadPercentage {speedBytesPerSecond} {downloadProgress} {isDownloading} {hasDownloaded} {label} {isBig}/>
