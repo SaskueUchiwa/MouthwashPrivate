@@ -498,8 +498,8 @@
                     {:else}
                         <button
                             class="flex items-center filter border-2 p-2 rounded-lg border-[#8f75a1] group cursor-pointer w-42 hover:bg-[#8f75a125]"
-                            class:grayscale={isCheckingForUpdates}
-                            class:pointer-events-none={isCheckingForUpdates}
+                            class:grayscale={isCheckingForUpdates || amongUsProcess !== undefined}
+                            class:pointer-events-none={isCheckingForUpdates || amongUsProcess !== undefined}
                             on:click={checkForUpdates}
                         >
                             <!-- svelte-ignore a11y-positive-tabindex -->
