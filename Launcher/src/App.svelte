@@ -86,6 +86,80 @@
         isDownloading = false;
     }
 
+    async function downloadDepotAndAmongUs(installLocation: string, username: string, password: string) {
+        await invoke("download_file_and_extract", { url: "https://files.mouthwash.midlight.studio/DepotDownloader.zip", downloadId: "depot-downloader", folder: "depot" });
+        
+        await new Promise<void>(async (res, rej) => {
+            isDownloadingDepot = true;
+            hasDownloadedDepot = false;
+
+            console.log("creating directory..");
+            await createDir(installLocation, { recursive: true });
+            const cmd = new Command("depot-downloader-download-au", [
+                "-app", "945360",
+                "-depot", "945361",
+                "-manifest", "3510344350358296660",
+                "-username", username,
+                "-password", password,
+                "-dir", installLocation
+            ]);
+
+            console.log("starting depot downloader..");
+            depotDownloaderProcess = await cmd.spawn();
+
+            cmd.stdout.on("data", async buf => {
+                const bufString: string = buf.toString();
+
+                console.log(bufString);
+
+                const percRegExp = /\d+(\.\d+)?%/;
+                if (percRegExp.test(bufString)) { // Download percentage
+                    const percentage = bufString.match(percRegExp);
+                    const numberPart = percentage[0].replace(/[^0-9.]/g, "");
+                    const percentageNumber = parseFloat(numberPart);
+
+                    depotDownloadProgress = percentageNumber / 100;
+                }
+
+                if (bufString.includes("into Steam")) { // Logging into Steam.
+                    steamAuth.open(false);
+                }
+
+                if (bufString.includes("licenses")) { // Logged into steam (contains number of game licenses)
+                    steamAuth.close();
+                }
+
+                if (bufString.includes("not available from this account")) { // user doesn't have Among Us bought
+                    // error
+                }
+
+                if (bufString.includes("Downloaded")) { // Game downloaded
+                    isDownloadingDepot = false;
+                    hasDownloadedDepot = true;
+                    await depotDownloaderProcess.kill();
+                    setTimeout(() => {
+                        res();
+                    }, 1000);
+                }
+            });
+            cmd.stderr.on("data", buf => {
+                const bufString: string = buf.toString();
+
+                console.log(bufString);
+
+                if (bufString.includes("STEAM GUARD") || "confirm") {
+                    // steamAuth.open();
+
+                    if (bufString.includes("is incorrect")) { // invalid steam auth
+                        steamAuth.open(true);
+                    }
+                }
+            });
+
+            (window as any).provideInput = (inp: string) => depotDownloaderProcess.write(inp + "\r\n");
+        });
+    }
+
     async function downloadSequence() {
         isDownloading = true;
         const { username, password, installLocation } = await downloadConfig.getConfig();
@@ -93,8 +167,7 @@
 
         console.log("beginning download..");
         await Promise.all([
-            invoke("download_file_and_extract", { url: "https://files.mouthwash.midlight.studio/DepotDownloader.zip", downloadId: "depot-downloader", folder: "depot" })
-                .then(() => console.log("downloaded depot downloader")),
+            downloadDepotAndAmongUs(installLocation, username, password).then(() => console.log("downloaded depot")),
             invoke("download_file_and_extract", { url: "https://files.mouthwash.midlight.studio/BepInEx.zip", downloadId: "bepinex", folder: "bepinex" })
                 .then(() => console.log("downloaded bepinex")),
             invoke("download_file_and_extract", { url: "https://files.mouthwash.midlight.studio/MouthwashGG.zip", downloadId: "plugin", folder: "plugin" })
@@ -103,73 +176,7 @@
                 .then(() => console.log("downloaded dependencies"))
         ]);
         
-        isDownloadingDepot = true;
-        hasDownloadedDepot = false;
-
-        console.log("creating directory..");
-        await createDir(installLocation, { recursive: true });
-        const cmd = new Command("depot-downloader-download-au", [
-            "-app", "945360",
-            "-depot", "945361",
-            "-manifest", "3510344350358296660",
-            "-username", username,
-            "-password", password,
-            "-dir", installLocation
-        ]);
-
-        console.log("starting depot downloader..");
-        depotDownloaderProcess = await cmd.spawn();
-
-        cmd.stdout.on("data", async buf => {
-            const bufString: string = buf.toString();
-
-            console.log(bufString);
-
-            const percRegExp = /\d+(\.\d+)?%/;
-            if (percRegExp.test(bufString)) { // Download percentage
-                const percentage = bufString.match(percRegExp);
-                const numberPart = percentage[0].replace(/[^0-9.]/g, "");
-                const percentageNumber = parseFloat(numberPart);
-
-                depotDownloadProgress = percentageNumber / 100;
-            }
-
-            if (bufString.includes("into Steam")) { // Logging into Steam.
-                steamAuth.open(false);
-            }
-
-            if (bufString.includes("licenses")) { // Logged into steam (contains number of game licenses)
-                steamAuth.close();
-            }
-
-            if (bufString.includes("not available from this account")) { // user doesn't have Among Us bought
-                // error
-            }
-
-            if (bufString.includes("Downloaded")) { // Game downloaded
-                isDownloadingDepot = false;
-                hasDownloadedDepot = true;
-                await depotDownloaderProcess.kill();
-                setTimeout(() => {
-                    onDepotDownload({ username, password, installLocation }, remoteVersionInfo?.mod_version);
-                }, 1000);
-            }
-        });
-        cmd.stderr.on("data", buf => {
-            const bufString: string = buf.toString();
-
-            console.log(bufString);
-
-            if (bufString.includes("STEAM GUARD") || "confirm") {
-                // steamAuth.open();
-
-                if (bufString.includes("is incorrect")) { // invalid steam auth
-                    steamAuth.open(true);
-                }
-            }
-        });
-
-        (window as any).provideInput = (inp: string) => depotDownloaderProcess.write(inp + "\r\n");
+        onDepotDownload({ username, password, installLocation }, remoteVersionInfo?.mod_version);
     }
 
     function onSteamAuthSubmit(ev: CustomEvent<string>) {
