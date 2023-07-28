@@ -19,7 +19,7 @@ namespace Polus.Patches.Permanent {
         public static Sprite _crunchuSprite;
         private static CreditsMenuHolder _creditsMenu;
         private static WebClient client = new() {
-            BaseAddress = "https://assets.mouthwash.midlight.studio"
+            BaseAddress = Environment.GetEnvironmentVariable("MWGG_ASSETS_URL")
         };
 
         public static void Load() {

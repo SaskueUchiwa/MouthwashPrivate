@@ -38,6 +38,7 @@
     let amongUsInstallationPath: string|undefined = undefined;
     let amongUsProcess: Child|undefined = undefined;
 
+    let baseAccountsApiUrl: string = "https://accounts.mouthwash.midlight.studio";
     let loginApiInfo: ApiKeyInfo|undefined = undefined;
 
     let localInstalledModVersion: string|undefined = undefined;
@@ -45,6 +46,8 @@
     let isCheckingForUpdates = false;
 
     let isUpdating = false;
+
+    $: isDev && localStorage.setItem("dev:base-api-url", baseAccountsApiUrl);
 
     async function moveFilesInFolder(originPath: string, destPath: string) {
         const filesInOrigin = await readDir(originPath);
@@ -265,13 +268,18 @@
 
     onMount(async () => {
         isDev = await invoke("is_dev");
+        if (isDev) {
+            baseAccountsApiUrl = localStorage.getItem("dev:base-api-url") || "https://accounts.mouthwash.midlight.studio";
+        }
         await checkInstallation();
     });
 
     async function startGame() {
         const command = new Command("cmd", [ "/C", amongUsExePath ], {
             env: {
-                LoginToken: btoa(JSON.stringify(loginApiInfo || null))
+                MWGG_LOGIN_TOKEN: btoa(JSON.stringify(loginApiInfo || null)),
+                MWGG_ACCOUNTS_URL: baseAccountsApiUrl,
+                MWGG_ASSETS_URL: "https://assets.mouthwash.midlight.studio"
             }
         });
         amongUsProcess = await command.spawn();
@@ -365,14 +373,24 @@
 
 <main class="text-white h-full flex flex-col items-center pt-8 gap-2 relative">
     {#if isDev}
-        <div class="absolute left-1 top-1 text-xs text-white/50">DEVELOPMENT MODE</div>
+        <div class="absolute left-1 top-1 text-xs opacity-50">
+            <div class="left-1 top-1 text-white">DEVELOPMENT MODE</div>
+            <span>Base API</span>
+            <div class="bg-[#2e1440] rounded-lg flex border-2">
+                <input
+                    class="bg-transparent px-4 py-1 w-72 flex-1"
+                    placeholder="Install Location"
+                    bind:value={baseAccountsApiUrl}
+                >
+            </div>
+        </div>
     {/if}
     <span class="text-5xl font-medium">Mouthwash.gg</span>
     <p class="text-[#d0bfdb] max-w-196">
         A revival of Polus.GG, a private server and client for Among Us with new gamemodes and cosmetics, unleashing thousands of new ways to play.
     </p>
     <div class="flex h-full w-full">
-        <AccountManager bind:loginApiInfo isGameOpen={amongUsProcess !== undefined}/>
+        <AccountManager bind:loginApiInfo isGameOpen={amongUsProcess !== undefined} baseApiUrl={baseAccountsApiUrl}/>
         <div class="w-0.25 bg-white my-8"></div>
         <div class="flex-1 p-4 flex flex-col items-center">
             <span class="text-4xl mt-8">Play</span>

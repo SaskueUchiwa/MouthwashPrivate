@@ -11,7 +11,6 @@ namespace Polus.Patches.Temporary {
             if (__instance.ParentId != 255) return true;
             __instance.GetComponent<PolusDeadBody>().OnReported();
             return false;
-
         }
     }
 }

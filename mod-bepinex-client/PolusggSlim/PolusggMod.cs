@@ -80,8 +80,7 @@ namespace PolusggSlim
         {
             PggLog.Message("Loading Polusgg mod");
 
-            string variableValue = Environment.GetEnvironmentVariable("LoginToken");
-            PggLog.Info($"ENV VAR: {variableValue}");
+            string variableValue = Environment.GetEnvironmentVariable("MWGG_LOGIN_TOKEN");
             if (!string.IsNullOrEmpty(variableValue))
             {
                 AuthContext.LoadFromTokenString(variableValue);
