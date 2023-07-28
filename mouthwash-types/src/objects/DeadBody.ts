@@ -1,14 +1,21 @@
 import {
+    BaseRpcMessage,
     HazelReader,
     HazelWriter,
     Networkable,
     NetworkableEvents,
+    PlayerData,
     Room,
+    RpcMessage,
     SpawnType
 } from "@skeldjs/hindenburg";
 
-import { BodyDirection } from "../enums";
+import { ExtractEventTypes } from "@skeldjs/events";
+
+import { BodyDirection, MouthwashRpcMessageTag } from "../enums";
 import { Palette, RGBA } from "../misc";
+import { ReportDeadBodyMessage } from "../packets";
+import { DeadBodyReportEvent } from "./events";
 
 export interface DeadBodyData {
     color: RGBA;
@@ -18,7 +25,11 @@ export interface DeadBodyData {
     bodyFacing: BodyDirection;
 }
 
-export class DeadBody extends Networkable<DeadBodyData, NetworkableEvents, Room> implements DeadBodyData {
+export type DeadBodyEvents = NetworkableEvents & ExtractEventTypes<[
+    DeadBodyReportEvent
+]>;
+
+export class DeadBody extends Networkable<DeadBodyData, DeadBodyEvents, Room> implements DeadBodyData {
     color: RGBA;
     shadowColor: RGBA;
     playerId: number;
@@ -40,6 +51,12 @@ export class DeadBody extends Networkable<DeadBodyData, NetworkableEvents, Room>
         this.playerId ??= 0xff;
         this.hasFallen ||= false;
         this.bodyFacing ||= BodyDirection.Left;
+    }
+
+    async HandleRpc(rpc: BaseRpcMessage): Promise<void> {
+        if (rpc.messageTag === MouthwashRpcMessageTag.ReportDeadBody) {
+            await this._handleReport(rpc as ReportDeadBodyMessage);
+        }
     }
     
     Deserialize(reader: HazelReader) {
@@ -74,5 +91,31 @@ export class DeadBody extends Networkable<DeadBodyData, NetworkableEvents, Room>
     setShadowColor(color: RGBA) {
         this.shadowColor = color;
         this.dirtyBit = 1;
+    }
+    
+    protected async _handleReport(rpc: ReportDeadBodyMessage) {
+        const player = this.room.getPlayerByNetId(rpc.reporterNetId);
+        if (player === undefined) return;
+        const ev = await this.emit(new DeadBodyReportEvent(this.room, this, rpc, player));
+        if (!ev.canceled) {
+            this._report();
+        }
+    }
+
+    protected _report() {
+        this.despawn();
+    }
+
+    protected _rpcReport(reporterPlayer: PlayerData<Room>) {
+        this.room.stream.push(new RpcMessage(this.netId, new ReportDeadBodyMessage(reporterPlayer.control!.netId)));
+    }
+
+    async report(reporterPlayer: PlayerData<Room>) {
+        if (!reporterPlayer.control) throw new Error("Player has no PlayerControl object to report from");
+        const ev = await this.emit(new DeadBodyReportEvent(this.room, this, undefined, reporterPlayer));
+        if (!ev.canceled) {
+            this.despawn();
+            this._rpcReport(reporterPlayer);
+        }
     }
 }

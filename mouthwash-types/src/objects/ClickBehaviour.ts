@@ -140,6 +140,7 @@ export class ClickBehaviour extends Networkable<ClickBehaviourData, ClickBehavio
     private async _handleClick(rpc: ClickMessage) {
         await this.emit(
             new ClickBehaviourClickEvent(
+                this.room,
                 this,
                 rpc
             )
@@ -149,6 +150,7 @@ export class ClickBehaviour extends Networkable<ClickBehaviourData, ClickBehavio
     async click() {
         await this.emit(
             new ClickBehaviourClickEvent(
+                this.room,
                 this,
                 undefined
             )

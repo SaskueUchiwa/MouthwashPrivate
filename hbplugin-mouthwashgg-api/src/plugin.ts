@@ -46,7 +46,8 @@ import {
     Palette,
     Priority,
     OverwriteGameOver,
-    WinSound
+    WinSound,
+    DeadBodyReportEvent
 } from "mouthwash-types";
 
 import {
@@ -396,7 +397,7 @@ export class MouthwashApiPlugin extends RoomPlugin {
         
         await this.cameraControllers.spawnCameraFor(ev.player);
         
-        if (this.room["actingHostWaitingFor"] === ev.player) {
+        if (this.room.actingHostWaitingFor === ev.player) {
             if (this.room.actingHostsEnabled) {
                 for (const actingHostId of this.room.actingHostIds) {
                     const actingHostConn = this.room.connections.get(actingHostId);
@@ -405,7 +406,7 @@ export class MouthwashApiPlugin extends RoomPlugin {
                     }
                 }
             }
-            this.room["actingHostWaitingFor"] = undefined;
+            this.room.actingHostWaitingFor = undefined;
         }
     }
 
@@ -862,5 +863,16 @@ export class MouthwashApiPlugin extends RoomPlugin {
             promises.push(deadBody.destroy("meeting"));
         }
         await Promise.all(promises);
+    }
+
+    @EventListener("mwgg.deadbody.report")
+    async onReportDeadBody(ev: DeadBodyReportEvent) {
+        const playerBody = this.room.getPlayerByPlayerId(ev.deadBody.playerId);
+        if (!playerBody) {
+            this.logger.warn("Got report for a dead body without a player (body netId=%s, playerId=%s)", ev.deadBody.netId, ev.deadBody.playerId);
+            return;
+        }
+
+        await this.room.getActingHosts()[0]?.control?.startMeeting(ev.reporterPlayer, playerBody);
     }
 }

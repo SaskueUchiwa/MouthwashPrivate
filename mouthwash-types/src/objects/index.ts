@@ -1,3 +1,4 @@
+export * from "./events";
 export * from "./CameraController";
 export * from "./ClickBehaviour";
 export * from "./CustomNetworkTransformGeneric";

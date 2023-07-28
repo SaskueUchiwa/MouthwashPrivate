@@ -52,6 +52,12 @@ namespace Polus.Behaviours.Inner {
             rend.material.SetColor("_VisorColor", secondColor);
         }
 
-        public void OnReported() => AmongUsClient.Instance.SendRpcImmediately(pno.NetId, (byte) PolusRpcCalls.ReportDeadBody);
+        public void OnReported(uint reporterNetId)
+        {
+            MessageWriter messageWriter = AmongUsClient.Instance.StartRpc(pno.NetId, (byte) PolusRpcCalls.ReportDeadBody);
+            messageWriter.WritePacked(reporterNetId);
+            messageWriter.EndMessage();
+            deadBody.Reported = true;
+        }
     }
 }
