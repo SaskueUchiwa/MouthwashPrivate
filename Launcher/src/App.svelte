@@ -59,7 +59,7 @@
         }
     }
 
-    async function onDepotDownload(config: { username: string; password: string; installLocation: string; }) {
+    async function onDepotDownload(config: { username: string; password: string; installLocation: string; }, version: string|undefined) {
         const depotDownloaderDirectory = await join(await appDataDir(), "depot");
         await removeDir(depotDownloaderDirectory, { recursive: true });
 
@@ -81,6 +81,7 @@
         await removeDir(dependenciesDirectory, { recursive: true });
         await removeDir(await join(config.installLocation, ".DepotDownloader"), { recursive: true });
 
+        await writeTextFile(await join(config.installLocation, "mod_version.txt"), version || "0.0.0");
         await checkInstallation();
         isDownloading = false;
     }
@@ -88,6 +89,7 @@
     async function downloadSequence() {
         isDownloading = true;
         const { username, password, installLocation } = await downloadConfig.getConfig();
+        const remoteVersionInfo = await getLatestRemoteVersion();
 
         console.log("beginning download..");
         await Promise.all([
@@ -149,7 +151,7 @@
                 hasDownloadedDepot = true;
                 await depotDownloaderProcess.kill();
                 setTimeout(() => {
-                    onDepotDownload({ username, password, installLocation });
+                    onDepotDownload({ username, password, installLocation }, remoteVersionInfo?.mod_version);
                 }, 1000);
             }
         });
@@ -190,6 +192,16 @@
         }
     }
 
+    async function getLatestRemoteVersion() {
+        const res = await fetch("https://files.mouthwash.midlight.studio/mod_version.json");
+        if (!res.ok) {
+            return undefined;
+        }
+
+        const remoteVersionInfo = await res.json();
+        return remoteVersionInfo;
+    }
+
     async function checkForUpdates() {
         isCheckingForUpdates = true;
         updateAvailable = undefined;
@@ -211,14 +223,13 @@
         localInstalledModVersion = localModVersionInfo;
 
         const [ localMajor, localMinor, localPatch ] = localModVersionParts.map(p => parseInt(p));
+        const remoteVersionInfo = await getLatestRemoteVersion();
 
-        const res = await fetch("https://files.mouthwash.midlight.studio/mod_version.json");
-        if (!res.ok) {
+        if (remoteVersionInfo === undefined) {
             isCheckingForUpdates = false;
             return;
         }
 
-        const remoteVersionInfo = await res.json();
         const remoteModVersionParts = remoteVersionInfo.mod_version.split(".");
         const [ remoteMajor, remoteMinor, remotePatch ] = remoteModVersionParts.map(p => parseInt(p));
 
