@@ -8,7 +8,7 @@
   },
   "package": {
     "productName": "Mouthwash Launcher",
-    "version": "0.0.5"
+    "version": "0.0.6"
   },
   "tauri": {
     "allowlist": {
@@ -26,6 +26,18 @@
           "name": "cmd",
           "args": true
         }]
+      }
+    },
+    "updater": {
+      "active": true,
+      "dialog": true,
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEU3RTFBNTg0MTk4MkE1RDYKUldUV3BZSVpoS1hoNXo2NktYM3pITkpuTnNML2dWR1RXVXA4QVJ1YWhhTlVxdXBOZGlsSjU5MnYK",
+      "endpoints": [
+        "https://files.mouthwash.midlight.studio/launcher_version.json"
+      ],
+      "windows": {
+        "installMode": "passive",
+        "installerArgs": []
       }
     },
     "bundle": {
