@@ -359,18 +359,6 @@
     }
 </script>
 
-<DownloadConfig bind:this={downloadConfig} on:finalise-config={downloadSequence}/>
-<SteamAuth bind:this={steamAuth} on:submit={onSteamAuthSubmit}/>
-{#if amongUsInstallationPath !== undefined}
-    <InstallationConfig
-        bind:this={installationConfig}
-        installLocation={amongUsInstallationPath}
-        isGameOpen={amongUsProcess !== undefined}
-        localInstalledModVersion={localInstalledModVersion}
-        on:uninstall={uninstall}
-    />
-{/if}
-
 <main class="text-white h-full flex flex-col items-center pt-8 gap-2 relative">
     {#if isDev}
         <div class="absolute left-1 top-1 text-xs opacity-50">
@@ -547,6 +535,18 @@
         </div>
     </div>
 </main>
+
+<DownloadConfig bind:this={downloadConfig} on:finalise-config={downloadSequence}/>
+<SteamAuth bind:this={steamAuth} on:submit={onSteamAuthSubmit}/>
+{#if amongUsInstallationPath !== undefined}
+    <InstallationConfig
+        bind:this={installationConfig}
+        installLocation={amongUsInstallationPath}
+        isGameOpen={amongUsProcess !== undefined}
+        localInstalledModVersion={localInstalledModVersion}
+        on:uninstall={uninstall}
+    />
+{/if}
 
 <style>
     :global(html, body, #app) {
