@@ -5,6 +5,9 @@
   "main": "index.js",
   "author": "Edward Smale <essmale2005@gmail.com>",
   "packageManager": "yarn@3.6.1",
+  "scripts": {
+    "build-all": "yarn workspaces foreach -ptv --exclude test run build"
+  },
   "workspaces": [
     "account-server",
     "assets",
