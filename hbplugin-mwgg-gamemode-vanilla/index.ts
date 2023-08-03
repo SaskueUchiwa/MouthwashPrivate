@@ -1,8 +1,5 @@
 import {
-    Color,
-    EventListener,
     HindenburgPlugin,
-    PlayerSetColorEvent,
     PreventLoad
 } from "@skeldjs/hindenburg";
 
@@ -20,8 +17,4 @@ import {
     author: "weakeyes"
 })
 @HindenburgPlugin("hbplugin-mwgg-gamemode-vanilla", "1.0.0", "none")
-export default class extends BaseGamemodePlugin {
-    getGameOptions() {
-        return new Map<any, any>([...this.api.createDefaultOptions()]);
-    }
-}
+export default class extends BaseGamemodePlugin { }

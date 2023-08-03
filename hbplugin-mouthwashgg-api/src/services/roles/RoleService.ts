@@ -17,6 +17,7 @@ import { MouthwashApiPlugin } from "../../plugin";
 import { DefaultRoomOptionName } from "../gameOptions";
 import { Impostor } from "./Impostor";
 import { Crewmate } from "./Crewmate";
+import { GamemodeRolesAssignedEvent } from "../../events";
 
 export interface RoleCount {
     role: typeof BaseRole;
@@ -148,6 +149,8 @@ export class RoleService {
         }
 
         await Promise.all(readyPromises);
+
+        await this.plugin.room.emit(new GamemodeRolesAssignedEvent());
     }
     
     async sendStartGameScreen(player: PlayerData, startGameScreen: StartGameScreen, allPlayers: PlayerData[]) {

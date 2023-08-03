@@ -78,7 +78,7 @@ export class Grenadier extends Impostor {
     }
 
     async onReady() {
-        await this.giveFakeTasks();
+        await this.markImpostor();
 
         this._throwButton = await this.spawnButton(
             "throw-button",

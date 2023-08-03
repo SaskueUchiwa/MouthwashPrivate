@@ -1,4 +1,4 @@
-import { BaseRpcMessage, HazelReader, HazelWriter, MessageDirection, PacketDecoder } from "@skeldjs/hindenburg";
+import { BaseRpcMessage, HazelReader, HazelWriter } from "@skeldjs/hindenburg";
 import { MouthwashRpcMessageTag } from "../../enums";
 
 export class ReportDeadBodyMessage extends BaseRpcMessage {

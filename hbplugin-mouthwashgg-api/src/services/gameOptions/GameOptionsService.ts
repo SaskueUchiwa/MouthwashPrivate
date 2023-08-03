@@ -228,7 +228,7 @@ export class GameOptionsService {
         return false;
     }
 
-    async syncFor(connection: Connection) {
+    async syncFor(connections: Connection[]) {
         const diffOptions = [];
 
         for (const [ , option ] of this.gameOptions) {
@@ -237,7 +237,7 @@ export class GameOptionsService {
         
         const chunkedArr = chunkArr(diffOptions, 8);
         for (const messageChunk of chunkedArr) {
-            await this.plugin.room.broadcastMessages([], messageChunk, [ connection ]);
+            await this.plugin.room.broadcastMessages([], messageChunk, connections);
         }
     }
 }

@@ -1,7 +1,7 @@
 import { WorkerEvents } from "@skeldjs/hindenburg";
 import { BasicEvent } from "@skeldjs/events";
 import { ListenerType } from "../enums";
-import { BaseRole } from "..";
+import { BaseRole, RoleCtr } from "..";
 
 const mouthwashEventListenersKey = Symbol("mouthwash:events");
 
@@ -58,17 +58,19 @@ export function EventListener(eventName?: any, listenerType?: ListenerType) {
             ? listenerType
             : eventName;
 
-        const paramType = Reflect.getMetadata("design:paramtypes", target, propertyKey)?.[0] as typeof BasicEvent|undefined;
+        const actualTarget = target.constructor.prototype;
+        const paramType = Reflect.getMetadata("design:paramtypes", actualTarget, propertyKey)?.[0] as typeof BasicEvent|undefined;
         const actualEventName = paramType?.eventName || eventName;
 
         if (!actualEventName) {
             throw new Error("No event name passed for event emitter, if you're in typescript, make sure 'emitDecoratorMetadata' is enabled in your tsconfig.json");
         }
 
-        const cachedSet: RoleRegisteredEventListenerInfo[]|undefined = Reflect.getMetadata(mouthwashEventListenersKey, target);
-        const eventListeners = cachedSet || [];
-        if (!cachedSet) {
-            Reflect.defineMetadata(mouthwashEventListenersKey, eventListeners, target);
+        const cachedSet: RoleRegisteredEventListenerInfo[]|undefined = Reflect.getOwnMetadata(mouthwashEventListenersKey, target);
+        const parentListeners: RoleRegisteredEventListenerInfo[]|undefined = Reflect.getMetadata(mouthwashEventListenersKey, target);
+        const eventListeners = cachedSet || (parentListeners ? [...parentListeners] : []);
+        if (cachedSet === undefined) {
+            Reflect.defineMetadata(mouthwashEventListenersKey, eventListeners, actualTarget);
         }
 
         eventListeners.push({
@@ -76,9 +78,18 @@ export function EventListener(eventName?: any, listenerType?: ListenerType) {
             handler: descriptor.value,
             eventName: actualEventName
         });
+        console.log(target.constructor.name, actualTarget, eventListeners);
     };
 }
 
 export function getRoleEventListeners(pluginCtr: BaseRole): RoleRegisteredEventListenerInfo[] {
-    return Reflect.getMetadata(mouthwashEventListenersKey, pluginCtr) || [];
+    let a = pluginCtr;
+    while (a !== null) {
+        const classListeners = Reflect.getOwnMetadata(mouthwashEventListenersKey, a);
+        if (classListeners !== undefined) {
+            return classListeners;
+        }
+        a = Object.getPrototypeOf(a);
+    }
+    return [];
 }

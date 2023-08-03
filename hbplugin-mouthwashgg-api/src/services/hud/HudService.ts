@@ -134,9 +134,10 @@ export class HudService {
             throw new TypeError("Expected array of players for 'setFor', got " + typeof setFor);
 
         if (!this.plugin.room.gameData)
-        return;
+            return;
 
         for (const player of setFor) {
+            console.log("Setting %s chat visible = ", player, visible);
             this.getPlayerHud(player).chatVisible = visible;
         }
         

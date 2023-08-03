@@ -11,6 +11,7 @@ import {
     AssetReference,
     BaseRole,
     Button,
+    Crewmate,
     EmojiService,
     EventListener,
     ListenerType,
@@ -38,7 +39,7 @@ export enum EngineerUses {
 
 @MouthwashRole("Engineer", RoleAlignment.Crewmate, engineerColor, EmojiService.getEmoji("engineer"))
 @RoleObjective("Fix sabotages and finish your tasks")
-export class Engineer extends BaseRole {
+export class Engineer extends Crewmate {
     static getGameOptions(gameOptions: Map<string, GameOption>) {
         const roleOptions = new Map<any, any>([]);
 

@@ -37,16 +37,8 @@ export const JesterOptionName = {
 export class Jester extends BaseRole {
     static getGameOptions(gameOptions: Map<string, GameOption>) {
         const roleOptions = new Map<any, any>([]);
-
-        const jesterProbability = gameOptions.get("");
-        if (jesterProbability && jesterProbability.getValue<NumberValue>().value > 0) {
-
-        }
-
         return roleOptions as Map<string, RoleGameOption>;
     }
-
-
 
     constructor(
         public readonly player: PlayerData<Room>

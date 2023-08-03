@@ -113,6 +113,11 @@ export class DeadBodyService {
         if (idx > -1) {
             this.plugin.room.objectList.splice(idx, 1);
         }
+        
+        const controller = new DeadBodyController(spawnedObject);
+        const ev = new DeadBodySpawnEvent(controller);
+        await this.plugin.room.emit(ev);
+        if (ev.canceled) return undefined;
 
         const dbWriter = HazelWriter.alloc(4);
         dbWriter.write(spawnedObject);
@@ -140,23 +145,20 @@ export class DeadBodyService {
             )
         ], undefined, connections);
 
-        const controller = new DeadBodyController(spawnedObject);
         this.deadBodies.set(spawnedObject.netId, controller);
 
         spawnedObject.on("component.despawn", () => {
             this.deadBodies.delete(spawnedObject.netId);
         });
-        
-        await this.plugin.room.emit(new DeadBodySpawnEvent(controller));
 
         return controller;
     }
 
     async spawnDeadBody(player: PlayerData|Partial<DeadBodySpawnInfo>) {
-        await this._spawnDeadBodyFor(player, undefined);
+        return await this._spawnDeadBodyFor(player, undefined);
     }
 
     async spawnDeadBodyFor(player: PlayerData|Partial<DeadBodySpawnInfo>, players: PlayerData[]) {
-        await this._spawnDeadBodyFor(player, players);
+        return await this._spawnDeadBodyFor(player, players);
     }
 }

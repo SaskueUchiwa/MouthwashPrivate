@@ -17,6 +17,7 @@ import {
     ButtonFixedUpdateEvent,
     EmojiService,
     EventListener,
+    Impostor,
     ListenerType,
     MouthwashRole,
     RoleAlignment,
@@ -54,7 +55,7 @@ const killDistanceToRange = {
 
 @MouthwashRole("Poisoner", RoleAlignment.Impostor, poisonerColor, EmojiService.getEmoji("poisoner"))
 @RoleObjective("Sabotage and poison the crewmates")
-export class Poisoner extends BaseRole {
+export class Poisoner extends Impostor {
     static getGameOptions(gameOptions: Map<string, GameOption>) {
         const roleOptions = new Map<any, any>([]);
 
@@ -73,7 +74,7 @@ export class Poisoner extends BaseRole {
     private _poisonerRange: number;
     
     private _poisonButton?: Button;
-    private _target?: PlayerData<Room>;
+    private _poisonTarget?: PlayerData<Room>;
 
     private _lastHudUpdate: number;
 
@@ -94,8 +95,7 @@ export class Poisoner extends BaseRole {
     }
 
     async onReady() {
-        await this.giveFakeTasks();
-        this.player.info?.setImpostor(true);
+        await this.markImpostor();
 
         this._poisonButton = await this.spawnButton(
             "poison-button",
@@ -109,11 +109,11 @@ export class Poisoner extends BaseRole {
         );
 
         this._poisonButton?.on("mwgg.button.click", ev => {
-            if (!this._poisonButton || this._poisonButton.currentTime > 0 || !this._target || this.player.info?.isDead)
+            if (!this._poisonButton || this._poisonButton.currentTime > 0 || !this._poisonTarget || this.player.info?.isDead)
                 return;
 
-            this.api.nameService.addColorFor(this._target, poisonerColor, [ this.player ]);
-            this.poisonedPlayers.set(this._target, this._poisonerDuration);
+            this.api.nameService.addColorFor(this._poisonTarget, poisonerColor, [ this.player ]);
+            this.poisonedPlayers.set(this._poisonTarget, this._poisonerDuration);
             this._poisonButton.setCurrentTime(this._poisonButton.maxTimer);
             this.updateTaskText(0);
         });
@@ -230,20 +230,20 @@ export class Poisoner extends BaseRole {
     }
 
     @EventListener("mwgg.button.fixedupdate", ListenerType.Room)
-    onButtonFixedUpdate(ev: ButtonFixedUpdateEvent) {
-        const oldTarget = this._target;
-        this._target = this.getTarget(ev.players);
+    onPoisonButtonFixedUpdate(ev: ButtonFixedUpdateEvent) {
+        const oldTarget = this._poisonTarget;
+        this._poisonTarget = this.getTarget(ev.players);
 
-        if (this._target !== oldTarget) {
+        if (this._poisonTarget !== oldTarget) {
             if (oldTarget) {
                 this.api.animationService.setOutlineFor(oldTarget, Palette.null, [ this.player ]);
             }
-            if (this._target) {
-                this.api.animationService.setOutlineFor(this._target, poisonerColor, [ this.player ]);
+            if (this._poisonTarget) {
+                this.api.animationService.setOutlineFor(this._poisonTarget, poisonerColor, [ this.player ]);
             }
         }
 
-        this._poisonButton?.setSaturated(!!this._target);
+        this._poisonButton?.setSaturated(!!this._poisonTarget);
     }
 
     @EventListener("room.fixedupdate", ListenerType.Room)

@@ -7,3 +7,5 @@ export * from "./ReportDeadBody";
 export * from "./SetChatVisibility";
 export * from "./SetOpacity";
 export * from "./SetOutline";
+export * from "./SetPlayerSpeedModifier";
+export * from "./SetPlayerVisionModifier";

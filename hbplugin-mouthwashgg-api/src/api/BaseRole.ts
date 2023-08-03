@@ -1,4 +1,4 @@
-import { PlayerData, Room, Vector2 } from "@skeldjs/hindenburg";
+import { AmongUsEndGames, MurderPlayerMessage, PlayerData, PlayerMurderEvent, Room, RpcMessage, Vector2 } from "@skeldjs/hindenburg";
 import { AnyGameOptionType, EdgeAlignment, GameOption, HudLocation, Palette, Priority } from "mouthwash-types";
 import { AssetBundle, AssetReference, ButtonSpawnInfo, RoleAssignment } from "../services";
 import { MouthwashApiPlugin } from "../plugin";
@@ -91,6 +91,31 @@ export class BaseRole {
             this.api.hudService.setTaskInteraction(this.player, false),
             this.api.hudService.setHudStringFor(HudLocation.TaskText, "fake-tasks", Palette.impostorRed.text("Fake tasks:"), Priority.Z, [ this.player ])
         ]);
+    }
+
+    /**
+     * There is a bug in SkeldJS in which the victim is not properly passed to the end game intent,
+     * so this method is a patch for the {@link PlayerControl.murderPlayer} method.
+     */
+    async patchMurderPlayer(murderer: PlayerData, victim: PlayerData) {
+        const murdererPlayerControl = murderer.control;
+        const victimPlayerControl = victim.control;
+        if (murdererPlayerControl === undefined || victimPlayerControl === undefined)
+            return;
+
+        const victimPlayerId = victim.playerId;
+        if (victimPlayerId === undefined)
+            return;
+
+        victim.control?.kill("murder");
+        await murderer.emit(new PlayerMurderEvent(this.room, murderer, undefined, victim));
+        murdererPlayerControl["_rpcMurderPlayer"](victim);
+        murdererPlayerControl["_checkMurderEndGame"](victim);
+    }
+
+    async quietMurder(victim: PlayerData) {
+        await this.patchMurderPlayer(this.player, victim);
+        this.room.endGameIntents = this.room.endGameIntents.filter(intent => intent.name !== AmongUsEndGames.PlayersKill || intent.metadata.victim !== victim);
     }
 
     getTeamPlayers() {

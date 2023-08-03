@@ -1,7 +1,7 @@
-import { BasicEvent } from "@skeldjs/events";
+import { CancelableEvent } from "@skeldjs/events";
 import { DeadBodyController } from "../services";
 
-export class DeadBodySpawnEvent extends BasicEvent {
+export class DeadBodySpawnEvent extends CancelableEvent {
     static eventName = "mwgg.deadbody.spawn" as const;
     eventName = "mwgg.deadbody.spawn" as const;
 

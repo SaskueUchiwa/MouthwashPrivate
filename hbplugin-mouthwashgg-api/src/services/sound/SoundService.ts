@@ -91,8 +91,6 @@ export class SoundService {
     
             const cntgWriter = HazelWriter.alloc(10);
             cntgWriter.write(spawnedObject.components[1]);
-
-            console.log(connections);
     
             await this.plugin.room.broadcastMessages([
                 new SpawnMessage(

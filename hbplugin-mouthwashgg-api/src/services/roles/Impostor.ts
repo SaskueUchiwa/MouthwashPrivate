@@ -1,5 +1,5 @@
 import { PlayerData, PlayerDieEvent, Room } from "@skeldjs/hindenburg";
-import { EnumValue, HudLocation, KeyCode, NumberValue, Palette, Priority } from "mouthwash-types";
+import { EnumValue, KeyCode, NumberValue, Palette } from "mouthwash-types";
 
 import {
     BaseRole,
@@ -28,9 +28,10 @@ const killDistanceToRange = {
 export class Impostor extends BaseRole {
     protected _killRange: number;
     protected _killCooldown: number;
-    protected _target?: PlayerData<Room>;
+    protected _killTarget?: PlayerData<Room>;
 
     protected _killButton?: Button;
+    protected _killButtonEnabled: boolean;
 
     constructor(player: PlayerData<Room>) {
         super(player);
@@ -38,13 +39,16 @@ export class Impostor extends BaseRole {
         this._killRange = killDistanceToRange[this.api.gameOptions.gameOptions.get(DefaultRoomOptionName.ImpostorKillDistance)?.getValue<EnumValue<AnyKillDistance>>().selectedOption || "Short"];
         this._killCooldown = this.api.gameOptions.gameOptions.get(DefaultRoomOptionName.ImpostorKillCooldown)?.getValue<NumberValue>().value || 45;
 
-        this._target = undefined;
+        this._killTarget = undefined;
+        this._killButtonEnabled = true;
     }
 
-    async onReady() {
+    async markImpostor() {
         this.giveFakeTasks();
         this.player.info?.setImpostor(true);
+    }
 
+    async createKillButton() {
         this._killButton = await this.spawnButton(
             "kill-button",
             new AssetReference("PggResources/Global", "Assets/Mods/OfficialAssets/KillButton.png"),
@@ -57,15 +61,21 @@ export class Impostor extends BaseRole {
         );
 
         this._killButton?.on("mwgg.button.click", ev => {
-            if (!this._killButton || this._killButton.currentTime > 0 || !this._target || this.player.info?.isDead)
+            if (!this._killButton || !this.isKillButtonEnabled() || this._killButton.currentTime > 0 || !this._killTarget || this.player.info?.isDead)
                 return;
 
-            if (this._target.transform) {
-                this.player.transform?.snapTo(this._target.transform.position);
+            if (this._killTarget.transform) {
+                this.player.transform?.snapTo(this._killTarget.transform.position);
             }
-            this._target.control?.murderPlayer(this._target);
+            this.patchMurderPlayer(this._killTarget, this._killTarget);
+            this._killTarget.control?.murderPlayer(this._killTarget);
             this._killButton.setCurrentTime(this._killButton.maxTimer);
         });
+    }
+
+    async onReady() {
+        await this.markImpostor();
+        await this.createKillButton();
     }
 
     getTarget(players: PlayerData<Room>[]) {
@@ -80,21 +90,37 @@ export class Impostor extends BaseRole {
         return this._killButton.getNearestPlayer(players, this._killRange);
     }
 
+    setKillButtonEnabled(enabled: boolean) {
+        this._killButtonEnabled = enabled;
+    }
+
+    isKillButtonEnabled() {
+        return this._killButtonEnabled;
+    }
+
     @EventListener("mwgg.button.fixedupdate", ListenerType.Room)
     onButtonFixedUpdate(ev: ButtonFixedUpdateEvent) {
-        const oldTarget = this._target;
-        this._target = this.getTarget(ev.players);
+        if (!this._killButton)
+            return;
 
-        if (this._target !== oldTarget) {
+        if (!this._killButtonEnabled) {
+            this._killButton?.setSaturated(false);
+            return;
+        }
+
+        const oldTarget = this._killTarget;
+        this._killTarget = this.getTarget(ev.players);
+
+        if (this._killTarget !== oldTarget) {
             if (oldTarget) {
                 this.api.animationService.setOutlineFor(oldTarget, Palette.null, [ this.player ]);
             }
-            if (this._target) {
-                this.api.animationService.setOutlineFor(this._target, Palette.impostorRed, [ this.player ]);
+            if (this._killTarget) {
+                this.api.animationService.setOutlineFor(this._killTarget, Palette.impostorRed, [ this.player ]);
             }
         }
 
-        this._killButton?.setSaturated(!!this._target);
+        this._killButton?.setSaturated(!!this._killTarget);
     }
     
     @EventListener("player.die", ListenerType.Player)

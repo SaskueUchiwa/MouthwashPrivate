@@ -78,7 +78,6 @@ export function EventListener(pluginClassOrEventName?: any, eventName?: any) {
         if (!actualEventName) {
             throw new Error("No event name passed for event emitter, if you're in typescript, make sure 'emitDecoratorMetadata' is enabled in your tsconfig.json");
         }
-
         const cachedSet: PluginRegisteredEventListenerInfo[]|undefined = Reflect.getMetadata(hindenburgEventListenersKey, actualTarget);
         const eventListeners = cachedSet || [];
         if (!cachedSet) {

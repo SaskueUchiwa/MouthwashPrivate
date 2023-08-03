@@ -14,6 +14,7 @@ import {
     BaseRole,
     Button,
     ButtonFixedUpdateEvent,
+    Crewmate,
     EmojiService,
     EndGameScreen,
     EventListener,
@@ -52,7 +53,7 @@ export const SheriffOptionName = {
 
 @MouthwashRole("Sheriff", RoleAlignment.Crewmate, sheriffColor, EmojiService.getEmoji("sheriff"))
 @RoleObjective("Kill the impostors and finish your tasks")
-export class Sheriff extends BaseRole {
+export class Sheriff extends Crewmate {
     static getGameOptions(gameOptions: Map<string, GameOption>) {
         const roleOptions = new Map<any, any>([]);
 

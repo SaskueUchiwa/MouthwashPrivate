@@ -8,7 +8,6 @@ import {
     PlayerSendChatEvent,
     PlayerJoinEvent,
     PlayerLeaveEvent,
-    PlayerData,
     PlayerCheckNameEvent,
     RoomSelectImpostorsEvent,
     RoomGameStartEvent,
@@ -392,7 +391,7 @@ export class MouthwashApiPlugin extends RoomPlugin {
 
             this.updateDefaultSettings();
         } else {
-            this.gameOptions.syncFor(connection);
+            this.gameOptions.syncFor([ connection ]);
         }
         
         await this.cameraControllers.spawnCameraFor(ev.player);
@@ -530,7 +529,7 @@ export class MouthwashApiPlugin extends RoomPlugin {
 
     @EventListener("room.endgameintent")
     onEndGameIntent(ev: RoomEndGameIntentEvent<Room>) {
-        if (ev.metadata.endGameScreen)
+        if (ev.metadata.endGameScreen || ev.canceled)
             return;
 
         ev.cancel();
@@ -683,7 +682,7 @@ export class MouthwashApiPlugin extends RoomPlugin {
 
     @EventListener("room.gameend")
     async onGameEnd(ev: RoomGameEndEvent) {
-        const intent = ev.intent as EndGameIntent<{ endGameScreen: Map<number, EndGameScreen> }>|undefined;
+        const intent = ev.intent as EndGameIntent<{ endGameScreen: Map<number, EndGameScreen>|undefined }|undefined>|undefined;
 
         if (!intent)
             return;
@@ -804,7 +803,6 @@ export class MouthwashApiPlugin extends RoomPlugin {
                 }
             }
         }
-
         if (totalTasks > 0 && completeTasks >= totalTasks) {
             const players = this.getEndgamePlayers();
             this.room.registerEndGameIntent(
