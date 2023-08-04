@@ -111,11 +111,11 @@ export class Swooper extends Impostor {
         }
 
         this.api.animationService.beginPlayerAnimationFor(this.player, [
-            new PlayerAnimationKeyframe(0, 50, { opacity: 0.3, petOpacity: 0.3, nameOpacity: 0.3 })
+            new PlayerAnimationKeyframe(0, 50, { opacity: 0.3, hatOpacity: 0.3, skinOpacity: 0.3, petOpacity: 0.3, nameOpacity: 0.3 })
         ], false, deadPlayersOrSelf);
 
         this.api.animationService.beginPlayerAnimationFor(this.player, [
-            new PlayerAnimationKeyframe(0, 50, { opacity: 0, petOpacity: 0, nameOpacity: 0 })
+            new PlayerAnimationKeyframe(0, 50, { opacity: 0, hatOpacity: 0, skinOpacity: 0, petOpacity: 0, nameOpacity: 0 })
         ], false, alivePlayers);
     }
 
@@ -124,7 +124,7 @@ export class Swooper extends Impostor {
         this.api.targettableService.setTargettable(this.player, true);
 
         this.api.animationService.beginPlayerAnimation(this.player, [
-            new PlayerAnimationKeyframe(0, 50, { opacity: 1, petOpacity: 1, nameOpacity: 1 })
+            new PlayerAnimationKeyframe(0, 50, { opacity: 1, hatOpacity: 1, skinOpacity: 1, petOpacity: 1, nameOpacity: 1 })
         ], false);
     }
 

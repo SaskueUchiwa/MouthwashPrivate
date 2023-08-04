@@ -67,7 +67,7 @@ export class Hider extends Crewmate {
         const chatAccess = this.api.gameOptions.gameOptions.get(HnSOptionName.ChatAccess)?.getValue<EnumValue<"Off"|"Hiders Only"|"Everyone">>().selectedOption;
 
         this.api.animationService.beginPlayerAnimation(this.player, [
-            new PlayerAnimationKeyframe(0, 0, { petOpacity: 0, skinOpacity: 0, opacity: 0, nameOpacity: 0 })
+            new PlayerAnimationKeyframe(0, 0, { petOpacity: 0, skinOpacity: 0, hatOpacity: 0, opacity: 0, nameOpacity: 0 })
         ], false);
 
         if (chatAccess !== "Off") {
@@ -86,14 +86,14 @@ export class Hider extends Crewmate {
         const clampedOpacity = Vector2.clamp(opacity, 0, 0.7);
 
         this.api.animationService.beginPlayerAnimation(this.player, [
-            new PlayerAnimationKeyframe(0, 100, { petOpacity: clampedOpacity, skinOpacity: clampedOpacity, opacity: clampedOpacity, nameOpacity: clampedOpacity })
+            new PlayerAnimationKeyframe(0, 100, { petOpacity: clampedOpacity, hatOpacity: clampedOpacity, skinOpacity: clampedOpacity, opacity: clampedOpacity, nameOpacity: clampedOpacity })
         ], false);
     }
 
     @EventListener("player.die", ListenerType.Player)
     async onPlayerDie(ev: PlayerDieEvent) {
         this.api.animationService.beginPlayerAnimation(this.player, [
-            new PlayerAnimationKeyframe(0, 100, { petOpacity: 1, skinOpacity: 1, opacity: 1, nameOpacity: 1 })
+            new PlayerAnimationKeyframe(0, 100, { petOpacity: 1, hatOpacity: 1, skinOpacity: 1, opacity: 1, nameOpacity: 1 })
         ], false);
     }
 }
