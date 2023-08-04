@@ -39,11 +39,12 @@ import { BooleanValue, EnumValue, GameOption, HudItem, HudLocation, NumberValue,
 import { Hider, Seeker, hiderColor, seekerColor } from "./roles";
 
 export const HnSOptionName = {
-    NumSeekers: "Number of Seekers",
+    NumSeekers: "Seeker Count",
     ChatAccess: "Chat",
     GameDuration: "Game Duration",
     TaskCompletion: "Task Completion",
-    AdminTable: "Admin Table"
+    AdminTable: "Admin Table",
+    ShowDeadBodies: "Show Dead Bodies"
 } as const;
 
 @PreventLoad
@@ -86,6 +87,7 @@ export class HideAndSeekGamemodePlugin extends BaseGamemodePlugin {
         defaultOptions.set(HnSOptionName.ChatAccess, new GameOption(DefaultRoomCategoryName.Config, HnSOptionName.ChatAccess, new EnumValue([ "Off", "Only Hiders", "Everyone" ], 1), Priority.G));
         defaultOptions.set(HnSOptionName.GameDuration, new GameOption(DefaultRoomCategoryName.Config, HnSOptionName.GameDuration, new NumberValue(5, 1, 0, 15, true, "{0}m"), Priority.G + 1));
         defaultOptions.set(HnSOptionName.AdminTable, new GameOption(DefaultRoomCategoryName.Config, HnSOptionName.AdminTable, new BooleanValue(false), Priority.G + 2));
+        defaultOptions.set(HnSOptionName.ShowDeadBodies, new GameOption(DefaultRoomCategoryName.Config, HnSOptionName.ShowDeadBodies, new BooleanValue(true), Priority.G + 3));
 
         return defaultOptions;
     }
@@ -467,7 +469,10 @@ export class HideAndSeekGamemodePlugin extends BaseGamemodePlugin {
 
     @EventListener("mwgg.deadbody.spawn")
     onDeadBodySpawn(ev: DeadBodySpawnEvent) {
-        ev.cancel();
+        const showDeadBodies = this.api.gameOptions.gameOptions.get(HnSOptionName.ShowDeadBodies)?.getValue<BooleanValue>().enabled!;
+        if (!showDeadBodies) {
+            ev.cancel();
+        }
     }
 
     @EventListener("player.reportbody")
