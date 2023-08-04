@@ -6,7 +6,11 @@ import {
     DeleteGameOptionMessage,
     AnyGameOptionType,
     MouthwashRootMessageTag,
-    Palette
+    Palette,
+    BooleanValue,
+    NumberValue,
+    EnumValue,
+    GameOptionType
 } from "mouthwash-types";
 
 import { chunkArr } from "../../util/chunkArr";
@@ -77,7 +81,32 @@ export class GameOptionsService {
     async createOption(option: GameOption) {
         const cachedValue = this.getCachedValue(option);
         if (cachedValue) {
-            option.setValue(cachedValue);
+            if (cachedValue.optionType === GameOptionType.Boolean) {
+                const existingOption = option.getValue<BooleanValue>();
+                if (existingOption.optionType === GameOptionType.Boolean) {
+                    option.setValue(cachedValue);
+                }
+            } else if (cachedValue.optionType === GameOptionType.Enum) {
+                const existingOption = option.getValue<EnumValue<string>>();
+                if (existingOption.optionType === GameOptionType.Enum) {
+                    const selectedIdx = cachedValue.selectedIdx < 0
+                        ? 0
+                        : cachedValue.selectedIdx >= existingOption.options.length
+                            ? existingOption.options.length - 1
+                            : cachedValue.selectedIdx;
+                    option.setValue(new EnumValue(existingOption.options, selectedIdx));
+                }
+            } else if (cachedValue.optionType === GameOptionType.Number) {
+                const existingOption = option.getValue<NumberValue>();
+                if (existingOption.optionType === GameOptionType.Number) {
+                    const value = cachedValue.value < existingOption.lower
+                        ? existingOption.lower
+                        : cachedValue.value > existingOption.upper
+                            ? existingOption.upper
+                            : cachedValue.value;
+                    option.setValue(new NumberValue(value, existingOption.step, existingOption.lower, existingOption.upper, existingOption.zeroIsInfinity, existingOption.suffix));
+                }
+            }
         }
 
         this.gameOptions.set(option.key, option);

@@ -2,7 +2,7 @@ import { HazelReader, HazelWriter } from "@skeldjs/hindenburg";
 import { GameOptionType } from "./enums";
 
 export class EnumValue<T extends string> {
-    optionType = GameOptionType.Enum;
+    optionType = GameOptionType.Enum as const;;
 
     constructor(
         public readonly options: T[],
@@ -79,7 +79,7 @@ export class EnumValue<T extends string> {
 }
 
 export class BooleanValue {
-    optionType = GameOptionType.Boolean;
+    optionType = GameOptionType.Boolean as const;;
 
     constructor(
         public readonly enabled: boolean
@@ -114,7 +114,7 @@ export class BooleanValue {
 
 const stepPrecisionLambda = 1e-5;
 export class NumberValue {
-    optionType = GameOptionType.Number;
+    optionType = GameOptionType.Number as const;
 
     constructor(
         public readonly value: number,
