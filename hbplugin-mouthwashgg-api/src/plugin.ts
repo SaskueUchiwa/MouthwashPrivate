@@ -830,7 +830,7 @@ export class MouthwashApiPlugin extends RoomPlugin {
 
     @EventListener("player.murder")
     async onPlayerMurder(ev: PlayerMurderEvent<Room>) {
-        await this.deadBodyService.spawnDeadBody(ev.player);
+        await this.deadBodyService.spawnDeadBody(ev.victim);
     }
 
     @EventListener("player.die")
