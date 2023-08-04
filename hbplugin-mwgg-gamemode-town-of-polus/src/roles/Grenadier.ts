@@ -78,7 +78,7 @@ export class Grenadier extends Impostor {
     }
 
     async onReady() {
-        await this.markImpostor();
+        await super.onReady();
 
         this._throwButton = await this.spawnButton(
             "throw-button",
@@ -88,7 +88,7 @@ export class Grenadier extends Impostor {
                 isCountingDown: true,
                 saturated: true,
                 currentTime: 10,
-                keys: [ KeyCode.Q ]
+                keys: [ KeyCode.X ]
             }
         );
 

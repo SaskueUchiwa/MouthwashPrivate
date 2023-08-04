@@ -95,7 +95,7 @@ export class IdentityThief extends BaseRole {
                 isCountingDown: true,
                 saturated: false,
                 currentTime: 10,
-                keys: [ KeyCode.Q ]
+                keys: [ KeyCode.X ]
             }
         );
 
