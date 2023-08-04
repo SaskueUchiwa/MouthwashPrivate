@@ -95,11 +95,12 @@ export class MouthwashPlugin extends WorkerPlugin {
         clearInterval(this.worker.pingInterval);
         
         this.worker.pingInterval = setInterval(() => {
+            const dateNow = Date.now();
             for (const [ , connection ] of this.worker.connections) {
-                if (connection.sentPackets.length === 8 && connection.sentPackets.every(packet => !packet.acked)) {
+                if (connection.sentPackets.length === 8 && connection.sentPackets.every(packet => (dateNow - packet.sentAt) > 1500 && !packet.acked)) {
                     this.logger.warn("%s failed to acknowledge any of the last 8 reliable packets sent, presumed dead",
                         connection);
-
+    
                     connection.disconnect();
                     continue;
                 }
