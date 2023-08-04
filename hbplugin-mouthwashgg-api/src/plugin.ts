@@ -30,7 +30,9 @@ import {
     PlayerCompleteTaskEvent,
     FinalTaskState,
     PlayerMurderEvent,
-    PlayerStartMeetingEvent
+    PlayerStartMeetingEvent,
+    GameDataAddPlayerEvent,
+    PlayerData
 } from "@skeldjs/hindenburg";
 
 import { MouthwashAuthPlugin } from "hbplugin-mouthwashgg-auth";
@@ -305,8 +307,42 @@ export class MouthwashApiPlugin extends RoomPlugin {
         await this.authApi.updateUserSettings(clientId, gameSettings);
     }
 
+    async updateUserCosmetics(connection: Connection) {
+        if (!this.authApi) return;
+
+        const player = connection.getPlayer();
+        if (!player) return;
+
+        const playerInfo = player.info;
+        if (!playerInfo) return;
+
+        const connectionUser = await this.authApi.getConnectionUser(connection);
+        if (!connectionUser) return;
+
+        if (connectionUser.cosmetic_hat !== playerInfo.hat || connectionUser.cosmetic_pet !== playerInfo.pet || connectionUser.cosmetic_skin !== playerInfo.skin) {
+            await this.authApi.updateUserCosmetics(connectionUser.client_id, playerInfo.hat, playerInfo.pet, playerInfo.skin);
+        }
+    }
+
+    async loadPlayerCosmetics(player: PlayerData<Room>) {
+        if (!this.authApi) return;
+        const playerControl = player.control;
+        if (!playerControl) return;
+
+        const connection = player.room.connections.get(player.clientId);
+        if (!connection) return;
+
+        const connectionUser = await this.authApi.getConnectionUser(connection);
+        if (!connectionUser) return;
+
+        playerControl.setHat(connectionUser.cosmetic_hat);
+        playerControl.setPet(connectionUser.cosmetic_pet);
+        playerControl.setSkin(connectionUser.cosmetic_skin);
+    }
+
     @EventListener("client.leave")
     async onClientLeave(ev: ClientLeaveEvent) {
+        await this.updateUserCosmetics(ev.client);
         if (ev.client === this.roomCreator && this.authApi) {
             const connectionUser = await this.authApi.getConnectionUser(ev.client);
             if (connectionUser) {
@@ -318,9 +354,7 @@ export class MouthwashApiPlugin extends RoomPlugin {
     @EventListener("player.leave")
     async onPlayerLeave(ev: PlayerLeaveEvent<Room>) {
         const connection = this.room.connections.get(ev.player.clientId);
-
-        if (!connection)
-            return;
+        if (!connection) return;
 
         this.cameraControllers.despawnCamera(ev.player);
     }
@@ -407,6 +441,28 @@ export class MouthwashApiPlugin extends RoomPlugin {
             }
             this.room.actingHostWaitingFor = undefined;
         }
+
+        await this.loadPlayerCosmetics(ev.player);
+    }
+
+    @EventListener("gamedata.addplayer")
+    async onGamedataAddPlayer(ev: GameDataAddPlayerEvent<Room>) {
+        // if (!this.authApi) return;
+
+        // const player = ev.room.getPlayerByPlayerId(ev.player.playerId);
+        // if (!player) return;
+
+        // const connection = ev.room.connections.get(player.clientId);
+        // if (!connection) return;
+
+        // const connectionUser = await this.authApi.getConnectionUser(connection);
+        // if (!connectionUser) return;
+
+        // ev.player.setHat(connectionUser.cosmetic_hat);
+        // ev.player.setPet(connectionUser.cosmetic_pet);
+        // ev.player.setSkin(connectionUser.cosmetic_skin);
+
+        // console.log(ev.player);
     }
 
     @EventListener("room.fixedupdate")
@@ -489,12 +545,25 @@ export class MouthwashApiPlugin extends RoomPlugin {
 
     @EventListener("room.gamestart")
     async onGameStart(ev: RoomGameStartEvent) {
+        if (!this.room.gameData) {
+            this.logger.warn("No gamedata for room!");
+            return;
+        }
+        
         this.updateDefaultSettings();
         
-        if (this.authApi && this.roomCreator && !this.roomCreator.sentDisconnect) {
-            const connectionUser = await this.authApi.getConnectionUser(this.roomCreator);
-            if (connectionUser) {
-                await this.updateUserSettings(connectionUser.client_id);
+        if (this.authApi) {
+            const promises = [];
+            for (const [ , connection ] of this.room.connections) {
+                promises.push(this.updateUserCosmetics(connection));
+            }
+            await Promise.all(promises);
+
+            if (this.roomCreator && !this.roomCreator.sentDisconnect) {
+                const connectionUser = await this.authApi.getConnectionUser(this.roomCreator);
+                if (connectionUser) {
+                    await this.updateUserSettings(connectionUser.client_id);
+                }
             }
         }
 

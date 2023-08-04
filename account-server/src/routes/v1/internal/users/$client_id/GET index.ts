@@ -35,7 +35,10 @@ export default async function (server: AccountServer, req: express.Request, res:
             created_at: user.created_at,
             banned_until: user.banned_until,
             muted_until: user.muted_until,
-            game_settings: user.game_settings
+            game_settings: user.game_settings,
+            cosmetic_hat: user.cosmetic_hat,
+            cosmetic_pet: user.cosmetic_pet,
+            cosmetic_skin: user.cosmetic_skin
         }
     });
 }

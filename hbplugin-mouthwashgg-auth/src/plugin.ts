@@ -19,6 +19,9 @@ export interface UserAccountModel {
     banned_until: string|null;
     muted_until: string|null;
     game_settings: any;
+    cosmetic_hat: number;
+    cosmetic_pet: number;
+    cosmetic_skin: number;
 }
 
 export interface UserSessionModel {
@@ -191,6 +194,20 @@ export class MouthwashAuthPlugin extends WorkerPlugin {
         const cachedUser = this.getCached(this.userCache, clientId);
         if (cachedUser) {
             cachedUser.game_settings = gameSettings;
+        }
+    }
+
+    async updateUserCosmetics(clientId: string, hatId: number, petId: number, skinId: number) {
+        await this.make("put", "/api/v1/internal/users/" + clientId + "/cosmetics", 0, {
+            cosmetic_hat: hatId,
+            cosmetic_pet: petId,
+            cosmetic_skin: skinId
+        });
+        const cachedUser = this.getCached(this.userCache, clientId);
+        if (cachedUser) {
+            cachedUser.cosmetic_hat = hatId;
+            cachedUser.cosmetic_pet = petId;
+            cachedUser.cosmetic_skin = skinId;
         }
     }
 }

@@ -110,10 +110,10 @@ export default async function (server: AccountServer, req: express.Request, res:
     const passwordHash = await bcrypt.hash(req.body.password, 12);
 
     const { rows: createdUsers } = await server.postgresClient.query(`
-        INSERT INTO users(client_id, email, password_hash, display_name, created_at, banned_until, muted_until, game_settings, is_verified)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        INSERT INTO users(client_id, email, password_hash, display_name, created_at, banned_until, muted_until, game_settings, is_verified, cosmetic_hat, cosmetic_pet, cosmetic_skin)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
         RETURNING *
-    `, [ crypto.randomUUID(), req.body.email, passwordHash, req.body.display_name, new Date(), null, null, {}, false ]);
+    `, [ crypto.randomUUID(), req.body.email, passwordHash, req.body.display_name, new Date(), null, null, {}, false, 0, 0, 0 ]);
     
     const createdUser = createdUsers?.[0];
 

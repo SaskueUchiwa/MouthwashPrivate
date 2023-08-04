@@ -3,11 +3,25 @@ import express from "express";
 import { AccountServer } from "$/index";
 
 export default async function (server: AccountServer, req: express.Request, res: express.Response) {
-    if (!req.body.game_settings) {
+    if (!req.body.cosmetic_hat) {
         return res.status(400).json({
             code: 400,
             message: "BAD_REQUEST",
-            details: "Expected 'game_settings' as part of the json request body"
+            details: "Expected 'cosmetic_hat' as part of the json request body"
+        });
+    }
+    if (!req.body.cosmetic_pet) {
+        return res.status(400).json({
+            code: 400,
+            message: "BAD_REQUEST",
+            details: "Expected 'cosmetic_pet' as part of the json request body"
+        });
+    }
+    if (!req.body.cosmetic_skin) {
+        return res.status(400).json({
+            code: 400,
+            message: "BAD_REQUEST",
+            details: "Expected 'cosmetic_skin' as part of the json request body"
         });
     }
 
@@ -21,10 +35,10 @@ export default async function (server: AccountServer, req: express.Request, res:
     
     const rowsUpdated = await server.postgresClient.query(`
         UPDATE users
-        SET game_settings = $1
-        WHERE client_id = $2
+        SET cosmetic_hat = $1, cosmetic_pet = $2, cosmetic_skin = $3
+        WHERE client_id = $4
         RETURNING *
-    `, [ req.body.game_settings, req.params.client_id ]);
+    `, [ req.body.cosmetic_hat, req.body.cosmetic_pet, req.body.cosmetic_skin, req.params.client_id ]);
 
     if (rowsUpdated.rowCount <= 0) {
         return res.status(404).json({
