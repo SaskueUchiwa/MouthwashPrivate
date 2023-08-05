@@ -11,7 +11,6 @@ interface LoadedCosmetic {
     resource_id: number;
     resource_path: string;
     bundle_path: string;
-    author_id: string;
     type: "HAT"|"PET";
     is_owned: boolean;
 }
@@ -71,7 +70,6 @@ export class CosmeticsService {
                 resource_id: loadedCosmetic.resource_id,
                 resource_path: loadedCosmetic.resource_path,
                 bundle_path: loadedCosmetic.bundle_path,
-                author_id: loadedCosmetic.author_id,
                 type: loadedCosmetic.type,
                 is_owned: false
             });
@@ -133,7 +131,6 @@ export class CosmeticsService {
                     resource_id: ownedCosmetic.resource_id,
                     resource_path: ownedCosmetic.resource_path,
                     bundle_path: ownedCosmetic.bundle_path,
-                    author_id: ownedCosmetic.author_id,
                     type: ownedCosmetic.type,
                     is_owned: false
                 });

@@ -34,11 +34,9 @@ export interface BundleItemModel {
     id: string;
     name: string;
     among_us_id: number;
-    thumbnail_url: string;
     resource_path: string;
     resource_id: number;
     bundle_path: string;
-    author_id: string;
     type: "HAT"|"PET";
 }
 
