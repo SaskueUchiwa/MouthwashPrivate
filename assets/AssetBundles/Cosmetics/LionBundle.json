@@ -1,0 +1,31 @@
+{
+  "assetBundleId": 1000,
+  "hash": "021330319F6C5D8B13175E6D1F3A859419AF0B80C72F6AE3348EDBE3E8ECE1A7",
+  "assets": [
+    {
+      "type": 0,
+      "path": "Assets/Mods/BundleCosmetics/Jungle/Hippopotamus/HippopotamusHat.asset",
+      "details": null
+    },
+    {
+      "type": 0,
+      "path": "Assets/Mods/BundleCosmetics/Jungle/Koala/KoalaBundle.asset",
+      "details": null
+    },
+    {
+      "type": 0,
+      "path": "Assets/Mods/BundleCosmetics/Jungle/Lion/LionHat.asset",
+      "details": null
+    },
+    {
+      "type": 0,
+      "path": "Assets/Mods/BundleCosmetics/Jungle/Monkey/MonkeyHat.asset",
+      "details": null
+    },
+    {
+      "type": 0,
+      "path": "Assets/Mods/BundleCosmetics/Jungle/Snake/SnakeHat.asset",
+      "details": null
+    }
+  ]
+}

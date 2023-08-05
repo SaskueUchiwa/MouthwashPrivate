@@ -1,0 +1,10 @@
+{
+  "baseId": 1100,
+  "assets": [
+    "Assets/Mods/BundleCosmetics/Japanese/Bonsai/BonsaiHat.asset",
+    "Assets/Mods/BundleCosmetics/Japanese/Geisha/GeishaHat.asset",
+    "Assets/Mods/BundleCosmetics/Japanese/Koi/KoiHat.asset",
+    "Assets/Mods/BundleCosmetics/Japanese/Origami/OrigamiHat.asset",
+    "Assets/Mods/BundleCosmetics/Japanese/Sushi/SushiHat.asset"
+  ]
+}
