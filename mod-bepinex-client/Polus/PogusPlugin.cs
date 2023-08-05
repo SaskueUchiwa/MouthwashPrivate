@@ -78,15 +78,16 @@ namespace Polus {
             try {
                 CatchHelper.Init();
 
-                CatchHelper.TryCatch(() => {
-                    if (File.Exists("modpackage.manifest.json")) {
-                        //todo move to a version management class and periodically check for updates :)
-                        ModPackage modPackage = JsonConvert.DeserializeObject<ModPackage>(File.ReadAllText("modpackage.manifest.json"));
-                        if (modPackage != null) {
-                            Revision = modPackage.Version;
-                        }
-                    }
-                });
+                // CatchHelper.TryCatch(() => {
+                //     if (File.Exists("modpackage.manifest.json")) {
+                //         //todo move to a version management class and periodically check for updates :)
+                //         ModPackage modPackage = JsonConvert.DeserializeObject<ModPackage>(File.ReadAllText("modpackage.manifest.json"));
+                //         if (modPackage != null) {
+                //             Revision = modPackage.Version;
+                //         }
+                //     }
+                // });
+                Revision = 3;
 
                 ObjectManager = new PggObjectManager();
 
