@@ -40,9 +40,7 @@ export default async function (server: AccountServer, req: express.Request, res:
 
     const foundExistingVerification = foundExistingVerifications?.[0];
 
-    console.log(foundExistingVerification);
     if (foundExistingVerification) {
-        console.log(foundExistingVerification, foundExistingVerification.last_sent?.getTime(), Date.now());
         if (foundExistingVerification.last_sent !== null && foundExistingVerification.last_sent.getTime() + 2 * 60 * 1000 /* 2 minutes */ > Date.now()) {
             res.status(429).json({
                 code: 429,

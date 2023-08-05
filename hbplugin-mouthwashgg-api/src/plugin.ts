@@ -446,26 +446,6 @@ export class MouthwashApiPlugin extends RoomPlugin {
         }
     }
 
-    @EventListener("gamedata.addplayer")
-    async onGamedataAddPlayer(ev: GameDataAddPlayerEvent<Room>) {
-        // if (!this.authApi) return;
-
-        // const player = ev.room.getPlayerByPlayerId(ev.player.playerId);
-        // if (!player) return;
-
-        // const connection = ev.room.connections.get(player.clientId);
-        // if (!connection) return;
-
-        // const connectionUser = await this.authApi.getConnectionUser(connection);
-        // if (!connectionUser) return;
-
-        // ev.player.setHat(connectionUser.cosmetic_hat);
-        // ev.player.setPet(connectionUser.cosmetic_pet);
-        // ev.player.setSkin(connectionUser.cosmetic_skin);
-
-        // console.log(ev.player);
-    }
-
     @EventListener("room.fixedupdate")
     async onRoomFixedUpdate(ev: RoomFixedUpdateEvent<Room>) {
         const players = [];

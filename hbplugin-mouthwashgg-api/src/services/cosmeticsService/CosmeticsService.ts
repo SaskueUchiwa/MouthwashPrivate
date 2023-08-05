@@ -181,7 +181,6 @@ export class CosmeticsService {
                 new RpcMessage(playerControl.netId, new SetPetMessage(playerInfo.pet)),
                 new RpcMessage(playerControl.netId, new SetSkinMessage(playerInfo.skin))
             );
-            console.log(playerControl.netId, playerInfo.hat, playerInfo.pet, playerInfo.skin);
         }
 
         const chunked = chunkArr(rpcs, 20);

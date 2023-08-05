@@ -137,7 +137,6 @@ export class HudService {
             return;
 
         for (const player of setFor) {
-            console.log("Setting %s chat visible = ", player, visible);
             this.getPlayerHud(player).chatVisible = visible;
         }
         

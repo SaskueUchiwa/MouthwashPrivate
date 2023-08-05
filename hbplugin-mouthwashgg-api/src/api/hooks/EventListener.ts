@@ -78,7 +78,6 @@ export function EventListener(eventName?: any, listenerType?: ListenerType) {
             handler: descriptor.value,
             eventName: actualEventName
         });
-        console.log(target.constructor.name, actualTarget, eventListeners);
     };
 }
 
