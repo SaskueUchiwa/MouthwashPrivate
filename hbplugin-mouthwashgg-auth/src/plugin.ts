@@ -236,7 +236,7 @@ export class MouthwashAuthPlugin extends WorkerPlugin {
             return cachedCosmetics;
         }
 
-        const res = await this.make<BundleItemModel[]>("get", "/api/v1/internal/users/" + clientId + "/owned");
+        const res = await this.make<BundleItemModel[]>("get", "/api/v1/internal/users/" + clientId + "/owned_cosmetics");
         if (res.success) {
             this.setCached(this.userOwnedItemsCache, clientId, res.data, 3600);
             return res.data;
