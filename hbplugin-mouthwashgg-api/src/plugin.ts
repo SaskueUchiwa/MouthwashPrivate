@@ -49,7 +49,8 @@ import {
     Priority,
     OverwriteGameOver,
     WinSound,
-    DeadBodyReportEvent
+    DeadBodyReportEvent,
+    RGBA
 } from "mouthwash-types";
 
 import {
@@ -348,25 +349,34 @@ export class MouthwashApiPlugin extends RoomPlugin {
     async onCheckName(ev: PlayerCheckNameEvent<Room>) {
         ev.cancel();
 
-        if (ev.player.info) {
-            ev.player.info.name = ev.alteredName;
-        }
-
-        await this.nameService.updateAllNames();
+        if (!this.authApi) return;
     
         const connection = ev.room.connections.get(ev.player.clientId);
         if (!connection) return;
+        const connectionUser = await this.authApi.getConnectionUser(connection);
+        if (!connectionUser) {
+            await connection.disconnect("Invalid login");
+            return;
+        }
 
         if (!this.roomCreator) this.roomCreator = connection;
+        
+        if (ev.player.info) {
+            ev.player.info.name = connectionUser.display_name;
+        }
+
+        await this.nameService.updateAllNames();
+
+        const perks = await this.authApi.getPerks(connectionUser.client_id);
+        if (perks) {
+            const coloredNamePerk = perks.find(perk => perk.id === "NAME_COLOR");
+            if (coloredNamePerk) {
+                await this.nameService.addColor(ev.player, new RGBA(coloredNamePerk.config.rgba));
+            }
+        }
 
         if (ev.player.isHost) {
             if (this.authApi) {
-                const connectionUser = await this.authApi.getConnectionUser(connection);
-
-                if (!connectionUser) {
-                    await connection.disconnect("Invalid login");
-                    return;
-                }
     
                 const keys = Object.keys(connectionUser.game_settings);
                 for (let i = 0; i < keys.length; i++) {

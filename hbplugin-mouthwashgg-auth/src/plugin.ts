@@ -42,6 +42,11 @@ export interface BundleItemModel {
     type: "HAT"|"PET";
 }
 
+export interface PerkModel {
+    id: string;
+    config: any;
+}
+
 export interface GenericCacheData<T> {
     expiresAt: number;
     data: T;
@@ -66,7 +71,8 @@ export class MouthwashAuthPlugin extends WorkerPlugin {
     internalAccessKey: string;
 
     userCache: Map<string, GenericCacheData<UserAccountModel>>;
-    userOwnedItems: Map<string, GenericCacheData<BundleItemModel[]>>;
+    userOwnedItemsCache: Map<string, GenericCacheData<BundleItemModel[]>>;
+    userPerksCache: Map<string, GenericCacheData<PerkModel[]>>;
     sessionCache: Map<string, GenericCacheData<UserSessionModel>>;
 
     connectionSessionCache: WeakMap<Connection, UserSessionModel>;
@@ -81,7 +87,8 @@ export class MouthwashAuthPlugin extends WorkerPlugin {
         this.internalAccessKey = process.env.MWGG_ACCOUNT_SERVER_INTERNAL_ACCESS_KEY || "";
 
         this.userCache = new Map;
-        this.userOwnedItems = new Map;
+        this.userOwnedItemsCache = new Map;
+        this.userPerksCache = new Map;
         this.sessionCache = new Map;
 
         this.connectionSessionCache = new WeakMap;
@@ -226,14 +233,28 @@ export class MouthwashAuthPlugin extends WorkerPlugin {
     }
 
     async getOwnedCosmetics(clientId: string) {
-        const cachedCosmetics = this.getCached(this.userOwnedItems, clientId);
+        const cachedCosmetics = this.getCached(this.userOwnedItemsCache, clientId);
         if (cachedCosmetics) {
             return cachedCosmetics;
         }
 
         const res = await this.make<BundleItemModel[]>("get", "/api/v1/internal/users/" + clientId + "/owned");
         if (res.success) {
-            this.setCached(this.userOwnedItems, clientId, res.data, 3600);
+            this.setCached(this.userOwnedItemsCache, clientId, res.data, 3600);
+            return res.data;
+        }
+        return undefined;
+    }
+
+    async getPerks(clientId: string) {
+        const cachedPerks = this.getCached(this.userPerksCache, clientId);
+        if (cachedPerks) {
+            return cachedPerks;
+        }
+
+        const res = await this.make<PerkModel[]>("get", "/api/v1/internal/users/" + clientId + "/perks");
+        if (res.success) {
+            this.setCached(this.userPerksCache, clientId, res.data, 3600);
             return res.data;
         }
         return undefined;
