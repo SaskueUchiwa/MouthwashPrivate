@@ -32,7 +32,8 @@ import {
     PlayerMurderEvent,
     PlayerStartMeetingEvent,
     GameDataAddPlayerEvent,
-    PlayerData
+    PlayerData,
+    WorkerBeforeJoinEvent
 } from "@skeldjs/hindenburg";
 
 import { MouthwashAuthPlugin } from "hbplugin-mouthwashgg-auth";
@@ -293,10 +294,7 @@ export class MouthwashApiPlugin extends RoomPlugin {
         if (!connection)
             return;
             
-        await this.assetLoader.assertLoaded(
-            connection,
-            this.assetLoader.globalAssets!
-        );
+        await this.assetLoader.assertLoaded(connection, this.assetLoader.globalAssets!);
     }
 
     async updateUserSettings(clientId: string) {
@@ -429,7 +427,13 @@ export class MouthwashApiPlugin extends RoomPlugin {
             this.room.actingHostWaitingFor = undefined;
         }
 
-        await this.cosmeticsService.loadClientCosmeticsToRoom(connection, ev.player.control);
+        const playerControl = ev.player.control;
+        if (playerControl) {
+            await this.cosmeticsService.loadClientCosmeticsToRoom(connection);
+            await this.cosmeticsService.loadRoomCosmeticsForClient(connection);
+            await this.cosmeticsService.updatePlayerCosmetics(connection, playerControl);
+            await this.cosmeticsService.updateRoomCosmeticsForClient(connection);
+        }
     }
 
     @EventListener("gamedata.addplayer")

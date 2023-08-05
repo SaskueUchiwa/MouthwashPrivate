@@ -207,8 +207,4 @@ export class MouthwashPlugin extends WorkerPlugin {
             )
         );
     }
-
-    async getUser(client_id: string) {
-
-    }
 }
