@@ -30,6 +30,18 @@ export interface UserSessionModel {
     ip: string;
 }
 
+export interface BundleItemModel {
+    id: string;
+    name: string;
+    among_us_id: number;
+    thumbnail_url: string;
+    resource_path: string;
+    resource_id: number;
+    bundle_path: string;
+    author_id: string;
+    type: "HAT"|"PET";
+}
+
 export interface GenericCacheData<T> {
     expiresAt: number;
     data: T;
@@ -54,6 +66,7 @@ export class MouthwashAuthPlugin extends WorkerPlugin {
     internalAccessKey: string;
 
     userCache: Map<string, GenericCacheData<UserAccountModel>>;
+    userOwnedItems: Map<string, GenericCacheData<BundleItemModel[]>>;
     sessionCache: Map<string, GenericCacheData<UserSessionModel>>;
 
     connectionSessionCache: WeakMap<Connection, UserSessionModel>;
@@ -68,6 +81,7 @@ export class MouthwashAuthPlugin extends WorkerPlugin {
         this.internalAccessKey = process.env.MWGG_ACCOUNT_SERVER_INTERNAL_ACCESS_KEY || "";
 
         this.userCache = new Map;
+        this.userOwnedItems = new Map;
         this.sessionCache = new Map;
 
         this.connectionSessionCache = new WeakMap;
@@ -102,7 +116,7 @@ export class MouthwashAuthPlugin extends WorkerPlugin {
         return this.config.baseUrl || "http://127.0.0.1:8000";
     }
 
-    async make<T>(method: "get"|"post"|"put"|"delete"|"patch", path: string, cacheExpiry: number, body?: any): Promise<GenericResponse<T>> {
+    async make<T>(method: "get"|"post"|"put"|"delete"|"patch", path: string, body?: any): Promise<GenericResponse<T>> {
         try {
             const res = await got[method](this.baseUrl + path, {
                 body: body ? JSON.stringify(body) : undefined,
@@ -140,10 +154,10 @@ export class MouthwashAuthPlugin extends WorkerPlugin {
             return cachedUser;
         }
 
-        const res = await this.make<UserAccountModel>("get", "/api/v1/internal/users/" + clientId, 30);
+        const res = await this.make<UserAccountModel>("get", "/api/v1/internal/users/" + clientId);
 
         if (res.success) {
-            this.setCached(this.userCache, clientId, res.data, 30);
+            this.setCached(this.userCache, clientId, res.data, 3600);
             return res.data;
         }
 
@@ -177,10 +191,10 @@ export class MouthwashAuthPlugin extends WorkerPlugin {
             return cachedSession;
         }
 
-        const res = await this.make<UserSessionModel>("get", "/api/v1/internal/users/" + clientId + "/sessions/" + ipAddress, 30);
+        const res = await this.make<UserSessionModel>("get", "/api/v1/internal/users/" + clientId + "/sessions/" + ipAddress);
 
         if (res.success) {
-            this.setCached(this.sessionCache, clientId, res.data, 30);
+            this.setCached(this.sessionCache, clientId, res.data, 60);
             return res.data;
         }
 
@@ -188,7 +202,7 @@ export class MouthwashAuthPlugin extends WorkerPlugin {
     }
 
     async updateUserSettings(clientId: string, gameSettings: any) {
-        await this.make("put", "/api/v1/internal/users/" + clientId + "/game_settings", 0, {
+        await this.make("put", "/api/v1/internal/users/" + clientId + "/game_settings", {
             game_settings: gameSettings
         });
         const cachedUser = this.getCached(this.userCache, clientId);
@@ -198,7 +212,7 @@ export class MouthwashAuthPlugin extends WorkerPlugin {
     }
 
     async updateUserCosmetics(clientId: string, hatId: number, petId: number, skinId: number) {
-        await this.make("put", "/api/v1/internal/users/" + clientId + "/cosmetics", 0, {
+        await this.make("put", "/api/v1/internal/users/" + clientId + "/cosmetics", {
             cosmetic_hat: hatId,
             cosmetic_pet: petId,
             cosmetic_skin: skinId
@@ -209,5 +223,19 @@ export class MouthwashAuthPlugin extends WorkerPlugin {
             cachedUser.cosmetic_pet = petId;
             cachedUser.cosmetic_skin = skinId;
         }
+    }
+
+    async getOwnedCosmetics(clientId: string) {
+        const cachedCosmetics = this.getCached(this.userOwnedItems, clientId);
+        if (cachedCosmetics) {
+            return cachedCosmetics;
+        }
+
+        const res = await this.make<BundleItemModel[]>("get", "/api/v1/internal/users/" + clientId + "/owned");
+        if (res.success) {
+            this.setCached(this.userOwnedItems, clientId, res.data, 3600);
+            return res.data;
+        }
+        return undefined;
     }
 }

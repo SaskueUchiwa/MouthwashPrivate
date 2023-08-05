@@ -307,7 +307,8 @@ namespace Polus {
                     });
                     break;
                 }
-                case PolusRootPackets.LoadHat: {
+                case PolusRootPackets.LoadHat:
+                {
                     int hatId = (int) reader.ReadPackedUInt32();
                     uint resourceId = reader.ReadPackedUInt32();
                     bool isFree = reader.ReadBoolean();

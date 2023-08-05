@@ -88,6 +88,7 @@ import {
     MouthwashEndGames,
     RoleAlignment
 } from "./api";
+import { CosmeticsService } from "./services/cosmeticsService";
 
 const mapNameToNumber = {
     "The Skeld": GameMap.TheSkeld,
@@ -117,6 +118,7 @@ export class MouthwashApiPlugin extends RoomPlugin {
     assetLoader: AssetLoaderService;
     cameraControllers: CameraControllerService;
     chatService: ChatService;
+    cosmeticsService: CosmeticsService;
     deadBodyService: DeadBodyService;
     gameOptions: GameOptionsService;
     hudService: HudService;
@@ -142,6 +144,7 @@ export class MouthwashApiPlugin extends RoomPlugin {
         this.assetLoader = new AssetLoaderService(this);
         this.cameraControllers = new CameraControllerService(this);
         this.chatService = new ChatService(this);
+        this.cosmeticsService = new CosmeticsService(this);
         this.deadBodyService = new DeadBodyService(this);
         this.gameOptions = new GameOptionsService(this);
         this.hudService = new HudService(this);
@@ -324,22 +327,6 @@ export class MouthwashApiPlugin extends RoomPlugin {
         }
     }
 
-    async loadPlayerCosmetics(player: PlayerData<Room>) {
-        if (!this.authApi) return;
-        const playerControl = player.control;
-        if (!playerControl) return;
-
-        const connection = player.room.connections.get(player.clientId);
-        if (!connection) return;
-
-        const connectionUser = await this.authApi.getConnectionUser(connection);
-        if (!connectionUser) return;
-
-        playerControl.setHat(connectionUser.cosmetic_hat);
-        playerControl.setPet(connectionUser.cosmetic_pet);
-        playerControl.setSkin(connectionUser.cosmetic_skin);
-    }
-
     @EventListener("client.leave")
     async onClientLeave(ev: ClientLeaveEvent) {
         await this.updateUserCosmetics(ev.client);
@@ -442,7 +429,7 @@ export class MouthwashApiPlugin extends RoomPlugin {
             this.room.actingHostWaitingFor = undefined;
         }
 
-        await this.loadPlayerCosmetics(ev.player);
+        await this.cosmeticsService.loadClientCosmeticsToRoom(connection, ev.player.control);
     }
 
     @EventListener("gamedata.addplayer")

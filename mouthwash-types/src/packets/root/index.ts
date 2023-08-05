@@ -4,6 +4,8 @@ export * from "./DeleteGameOption";
 export * from "./DisplayStartGameScreen";
 export * from "./DisplaySystemAnnouncement";
 export * from "./FetchResource";
+export * from "./LoadHat";
+export * from "./LoadPet";
 export * from "./ModstampSetString";
 export * from "./OverwriteGameOver";
 export * from "./SetChatMessage";

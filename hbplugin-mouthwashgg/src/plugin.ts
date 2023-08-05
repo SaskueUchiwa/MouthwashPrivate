@@ -32,6 +32,8 @@ import {
     DisplaySystemAnnouncementMessage,
     FetchResourceMessage,
     Graphic,
+    LoadHatMessage,
+    LoadPetMessage,
     ModstampSetStringMessage,
     MouthwashMeetingHud,
     MouthwashSpawnType,
@@ -75,6 +77,8 @@ import { MouthwashApiPlugin, ClientFetchResourceResponseEvent } from "hbplugin-m
 @RegisterMessage(SetOpacityMessage)
 @RegisterMessage(SetQrContentsMessage)
 @RegisterMessage(ReportDeadBodyMessage)
+@RegisterMessage(LoadHatMessage)
+@RegisterMessage(LoadPetMessage)
 @RegisterPrefab(SpawnType.MeetingHud, [ MouthwashMeetingHud ])
 @RegisterPrefab(MouthwashSpawnType.Button, [ CustomNetworkTransformGeneric, Graphic, ClickBehaviour ] as typeof Networkable[])
 @RegisterPrefab(MouthwashSpawnType.DeadBody, [ DeadBody, CustomNetworkTransformGeneric ] as typeof Networkable[])
