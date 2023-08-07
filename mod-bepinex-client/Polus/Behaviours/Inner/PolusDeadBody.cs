@@ -33,6 +33,7 @@ namespace Polus.Behaviours.Inner {
             netTransform = GetComponent<PolusNetworkTransform>();
             clickBehaviour = GetComponent<PolusClickBehaviour>();
             netTransform.ManuallyUsesPosition = true;
+            gameObject.transform.position = netTransform.Position;
         }
 
         private void FixedUpdate() {

@@ -78,6 +78,7 @@ import {
 import {
     ButtonFixedUpdateEvent,
     ClientFetchResourceResponseEvent,
+    GamemodeBeforeRolesAssignedEvent,
     MouthwashUpdateGameOptionEvent
 } from "./events";
 
@@ -561,7 +562,8 @@ export class MouthwashApiPlugin extends RoomPlugin {
 
         sleep(500).then(async () => {
             const roleAssignments = this.roleService.getRoleAssignments(this.gamemode?.getRoleCounts() || []);
-            await this.roleService.assignAllRoles(roleAssignments);
+            const ev = await this.room.emit(new GamemodeBeforeRolesAssignedEvent(roleAssignments));
+            await this.roleService.assignAllRoles(ev.alteredRolesAssigned);
         });
     }
 

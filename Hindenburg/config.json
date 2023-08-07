@@ -1,7 +1,8 @@
 {
     "$schema": "misc\\config.schema.json",
     "versions": [
-        "2021.6.30"
+        "2021.6.30",
+        "2021.4.25.0"
     ],
     "clusterName": "Capybara",
     "nodeId": 0,
@@ -16,7 +17,10 @@
         "ip": "auto"
     },
     "plugins": {
-        "loadDirectory": true
+        "loadDirectory": true,
+        "hbplugin-mouthwashgg-auth": {
+            "baseUrl": "https://accounts.mouthwash.midlight.studio"
+        }
     },
     "anticheat": {
         "penalty": {

@@ -1,9 +1,10 @@
 import { RoomGameStartEvent as SkeldjsRoomGameStartEvent } from "@skeldjs/core";
-import { CancelableEvent } from "@skeldjs/events";
+import { CancelableEvent, RevertableEvent } from "@skeldjs/events";
 import { Room } from "../../../Room";
 
-export class RoomGameStartEvent extends SkeldjsRoomGameStartEvent implements CancelableEvent {
+export class RoomGameStartEvent extends SkeldjsRoomGameStartEvent implements CancelableEvent, RevertableEvent {
     canceled: boolean;
+    reverted: boolean;
 
     constructor(
         public readonly room: Room
@@ -11,6 +12,11 @@ export class RoomGameStartEvent extends SkeldjsRoomGameStartEvent implements Can
         super(room);
 
         this.canceled = false;
+        this.reverted = false;
+    }
+
+    revert(): void {
+        this.reverted = true;
     }
 
     cancel(): void {

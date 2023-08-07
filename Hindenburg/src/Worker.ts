@@ -1513,7 +1513,6 @@ export class Worker extends EventEmitter<WorkerEvents> {
             }
 
             const parsedReliable = parsedPacket as ReliableSerializable;
-
             const cachedConnection = this.connections.get(rinfo.address + ":" + rinfo.port);
 
             try {

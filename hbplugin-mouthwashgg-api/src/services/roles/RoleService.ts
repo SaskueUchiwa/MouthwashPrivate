@@ -150,7 +150,7 @@ export class RoleService {
 
         await Promise.all(readyPromises);
 
-        await this.plugin.room.emit(new GamemodeRolesAssignedEvent());
+        await this.plugin.room.emit(new GamemodeRolesAssignedEvent);
     }
     
     async sendStartGameScreen(player: PlayerData, startGameScreen: StartGameScreen, allPlayers: PlayerData[]) {

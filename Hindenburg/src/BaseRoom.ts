@@ -1207,7 +1207,9 @@ export class BaseRoom extends SkeldjsStateManager<RoomEvents> {
 
         const ev = await this.emit(new RoomGameStartEvent(this));
 
-        if (ev.canceled) {
+        if (ev.canceled) return;
+
+        if (ev.reverted) {
             this.state = GameState.NotStarted;
             if (this.actingHostsEnabled) {
                 for (const actingHostId of this.actingHostIds) {

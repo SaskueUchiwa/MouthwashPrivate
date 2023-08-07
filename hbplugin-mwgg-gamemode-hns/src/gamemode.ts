@@ -35,7 +35,20 @@ import {
     RoleService
 } from "hbplugin-mouthwashgg-api";
 
-import { BooleanValue, EnumValue, GameOption, HudItem, HudLocation, NumberValue, Palette, Priority, SetPlayerSpeedModifierMessage, SetPlayerVisionModifierMessage, WinSound } from "mouthwash-types";
+import {
+    BooleanValue,
+    EnumValue,
+    GameOption,
+    HudItem,
+    HudLocation,
+    NumberValue,
+    Palette,
+    Priority,
+    SetPlayerSpeedModifierMessage,
+    SetPlayerVisionModifierMessage,
+    WinSound
+} from "mouthwash-types";
+
 import { Hider, Seeker, hiderColor, seekerColor } from "./roles";
 
 export const HnSOptionName = {

@@ -224,39 +224,46 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@skeldjs/constant@npm:2.15.49, @skeldjs/constant@npm:^2.14.35":
-  version: 2.15.49
-  resolution: "@skeldjs/constant@npm:2.15.49"
+"@skeldjs/constant@npm:2.14.35":
+  version: 2.14.35
+  resolution: "@skeldjs/constant@npm:2.14.35"
   dependencies:
-    "@skeldjs/util": 2.15.49
-  checksum: 81915f6f094e88138c325841a189560ee22d3c09f5e53dca2e7438869069d44ba83d3c3ae2e7dea647bfc9c941558e6a638303db32db1083b7c313c0da3af207
+    "@skeldjs/util": 2.14.35
+  checksum: 82e9c2d844e14feda9bdb1e9886d5b29e9fce8b8cffcceadc48588cf1a5ee34a1f4bbebfc8362e0bf9e26541153b5194ebee98032219d9fd575de3b5d9d5de28
   languageName: node
   linkType: hard
 
-"@skeldjs/core@npm:2.15.49, @skeldjs/core@npm:^2.14.35":
-  version: 2.15.49
-  resolution: "@skeldjs/core@npm:2.15.49"
+"@skeldjs/core@npm:2.14.35":
+  version: 2.14.35
+  resolution: "@skeldjs/core@npm:2.14.35"
   dependencies:
-    "@skeldjs/constant": 2.15.49
-    "@skeldjs/data": 2.15.49
-    "@skeldjs/events": 2.15.49
-    "@skeldjs/protocol": 2.15.49
-    "@skeldjs/util": 2.15.49
-  checksum: ad45017e76ec354a396a2d955939506f9abe92bbc5b432227aeaf79fdf6ebbec4cdc34054b993e4c97e2b7f051536c7001c7834f3513da28ff0c0dd1b0acb36f
+    "@skeldjs/constant": 2.14.35
+    "@skeldjs/data": 2.14.35
+    "@skeldjs/events": 2.14.35
+    "@skeldjs/protocol": 2.14.35
+    "@skeldjs/util": 2.14.35
+  checksum: d964ea15e37eba1f13588534fd7b895639df826c5c80fe02e77a521b41f01a6fd34a7268821188af4fc0d978ec9599b7f2e74180c944c4c5a91d5cfe26d6d45b
   languageName: node
   linkType: hard
 
-"@skeldjs/data@npm:2.15.49, @skeldjs/data@npm:^2.14.35":
-  version: 2.15.49
-  resolution: "@skeldjs/data@npm:2.15.49"
+"@skeldjs/data@npm:2.14.35":
+  version: 2.14.35
+  resolution: "@skeldjs/data@npm:2.14.35"
   dependencies:
-    "@skeldjs/constant": 2.15.49
-    "@skeldjs/util": 2.15.49
-  checksum: f909c79034ebe92fb779b63474424751ab29d7e6534b78e78e64418bb1953d76877ec0386aba02876225f9e059f0241563b549f1ecf2fe61bb338df45923fee2
+    "@skeldjs/constant": 2.14.35
+    "@skeldjs/util": 2.14.35
+  checksum: 3302bf3e0454815ac67a712b29637a195d128bd4e30461c9bb5e74ccc573c1f96822e3a5dbdbdc61d2677378cc238f05d3368f414ca3de6ada7dd9b30c35452e
   languageName: node
   linkType: hard
 
-"@skeldjs/events@npm:2.15.49, @skeldjs/events@npm:^2.13.10, @skeldjs/events@npm:^2.14.30, @skeldjs/events@npm:^2.14.35":
+"@skeldjs/events@npm:2.14.35":
+  version: 2.14.35
+  resolution: "@skeldjs/events@npm:2.14.35"
+  checksum: 5622d79b531cbb291bd2a7c1046d716dbbc90931ee49bbb4bbf27d2c63da31a912354f6ceb28c223a932409ca52019ea3e8dbbca66f8cc758743b8f3f8e75580
+  languageName: node
+  linkType: hard
+
+"@skeldjs/events@npm:^2.13.10, @skeldjs/events@npm:^2.14.30":
   version: 2.15.49
   resolution: "@skeldjs/events@npm:2.15.49"
   checksum: fc7f2411c106d88e9dee7a3065d36736ba9b7fccb292bab95e5ee3777473c1c534b8ea9217c0b7f435a5171679056bc9108340ad805464424afef781989b2f48
@@ -299,6 +306,12 @@ __metadata:
   languageName: node
   linkType: soft
 
+"@skeldjs/hindenburg@link:../Hindenburg::locator=hbplugin-mwgg-gamemode-zombies%40workspace%3Ahbplugin-mwgg-gamemode-zombies":
+  version: 0.0.0-use.local
+  resolution: "@skeldjs/hindenburg@link:../Hindenburg::locator=hbplugin-mwgg-gamemode-zombies%40workspace%3Ahbplugin-mwgg-gamemode-zombies"
+  languageName: node
+  linkType: soft
+
 "@skeldjs/hindenburg@link:../Hindenburg::locator=mouthwash-types%40workspace%3Amouthwash-types":
   version: 0.0.0-use.local
   resolution: "@skeldjs/hindenburg@link:../Hindenburg::locator=mouthwash-types%40workspace%3Amouthwash-types"
@@ -309,15 +322,15 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@skeldjs/hindenburg@workspace:Hindenburg"
   dependencies:
-    "@skeldjs/constant": ^2.14.35
-    "@skeldjs/core": ^2.14.35
-    "@skeldjs/data": ^2.14.35
-    "@skeldjs/events": ^2.14.35
-    "@skeldjs/protocol": ^2.14.35
-    "@skeldjs/reactor": ^2.14.35
-    "@skeldjs/state": ^2.14.35
-    "@skeldjs/text": ^2.14.35
-    "@skeldjs/util": ^2.14.35
+    "@skeldjs/constant": 2.14.35
+    "@skeldjs/core": 2.14.35
+    "@skeldjs/data": 2.14.35
+    "@skeldjs/events": 2.14.35
+    "@skeldjs/protocol": 2.14.35
+    "@skeldjs/reactor": 2.14.35
+    "@skeldjs/state": 2.14.35
+    "@skeldjs/text": 2.14.35
+    "@skeldjs/util": 2.14.35
     "@types/chalk": ^2.2.0
     "@types/cli-spinner": ^0.2.1
     "@types/minimatch": ^3.0.5
@@ -351,51 +364,51 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@skeldjs/protocol@npm:2.15.49, @skeldjs/protocol@npm:^2.14.35":
-  version: 2.15.49
-  resolution: "@skeldjs/protocol@npm:2.15.49"
+"@skeldjs/protocol@npm:2.14.35":
+  version: 2.14.35
+  resolution: "@skeldjs/protocol@npm:2.14.35"
   dependencies:
-    "@skeldjs/constant": 2.15.49
-    "@skeldjs/util": 2.15.49
-  checksum: a921c75a7cd4a8e68d61a431585640a1fbb22adccc792367b21de0eb269290c1280dc75704e17ecddf3d9c8924e3b03fec499241ad356107404de6dd6b5e5fd4
+    "@skeldjs/constant": 2.14.35
+    "@skeldjs/util": 2.14.35
+  checksum: 31115ca10147221e8c827655483fe0e7c8bfb6fe6c60d16cf660dacd5252ef360034f2eec0e46d68c4b987d4b4aa007cabf7101032546c7146e29a264f128100
   languageName: node
   linkType: hard
 
-"@skeldjs/reactor@npm:^2.14.35":
-  version: 2.15.49
-  resolution: "@skeldjs/reactor@npm:2.15.49"
+"@skeldjs/reactor@npm:2.14.35":
+  version: 2.14.35
+  resolution: "@skeldjs/reactor@npm:2.14.35"
   dependencies:
-    "@skeldjs/constant": 2.15.49
-    "@skeldjs/protocol": 2.15.49
-    "@skeldjs/util": 2.15.49
+    "@skeldjs/constant": 2.14.35
+    "@skeldjs/protocol": 2.14.35
+    "@skeldjs/util": 2.14.35
   peerDependencies:
     "@skeldjs/client": "*"
-  checksum: 12959be14e99c50f349604c252f48d2444178e3a01e916721551371a349d724878b813ec2d9245867c208e260d8a83816ab9ab24343e57e6f97278bfc70e5630
+  checksum: e81ffd71df56f78aaf2d22c66a041425deb6af824d42d66a7fca92793552f4b12b4cbe8a1407675e2f1f7a631bbaba2452f8cb1d52203387dc24b28da8bec74a
   languageName: node
   linkType: hard
 
-"@skeldjs/state@npm:^2.14.35":
-  version: 2.15.49
-  resolution: "@skeldjs/state@npm:2.15.49"
+"@skeldjs/state@npm:2.14.35":
+  version: 2.14.35
+  resolution: "@skeldjs/state@npm:2.14.35"
   dependencies:
-    "@skeldjs/core": 2.15.49
-    "@skeldjs/protocol": 2.15.49
-    "@skeldjs/util": 2.15.49
-  checksum: 355b0218346c7db1623ff530b9663ce83998ae5398a964d32dd1f6b6f26be88666382749e86d72a0c1f50fcc223bbf2b6b015b1083b1104899598ea0905d3343
+    "@skeldjs/core": 2.14.35
+    "@skeldjs/protocol": 2.14.35
+    "@skeldjs/util": 2.14.35
+  checksum: 509b6e5dad0685998940ff9439b41fa3a59935f70cf5922a330e04cf047efd13150a3c28488d64293259ffd719237226557c38439dae49739306e1d55596924a
   languageName: node
   linkType: hard
 
-"@skeldjs/text@npm:^2.14.35":
-  version: 2.15.49
-  resolution: "@skeldjs/text@npm:2.15.49"
-  checksum: a7532703aefe47356fdc048cf170e9bcd25317e251854f15ce275851a8e76bce499aea621c1d68c4526e77ece264a57d7641c5bae9e3423c90dd86441c4c1294
+"@skeldjs/text@npm:2.14.35":
+  version: 2.14.35
+  resolution: "@skeldjs/text@npm:2.14.35"
+  checksum: 1740fdb9e1f941a4b8ced7efabcd4b8e6f523d68c9692e41ab4b7031814031a3b0d512557f93260595960ab962269f50c3166ed8d98692624c0a0d2072c5190e
   languageName: node
   linkType: hard
 
-"@skeldjs/util@npm:2.15.49, @skeldjs/util@npm:^2.14.35":
-  version: 2.15.49
-  resolution: "@skeldjs/util@npm:2.15.49"
-  checksum: 6a65bdd787c48b2c36d05040172dd430fa0387cf5fd4d495c56394985a458819a951e63f4052176014c241627a66316ef2c0fae27db738995e50253bbeb89e64
+"@skeldjs/util@npm:2.14.35":
+  version: 2.14.35
+  resolution: "@skeldjs/util@npm:2.14.35"
+  checksum: de4008628c03127e839bd9616e4307c00afa0601026abee27b99670b2940b32c6f1b9c44519f0bf47fa588c827cf6b872c2cdb2600363233ebdb344a1f40e880
   languageName: node
   linkType: hard
 
@@ -2579,6 +2592,12 @@ __metadata:
   languageName: node
   linkType: soft
 
+"hbplugin-mouthwashgg-api@link:../hbplugin-mouthwashgg-api::locator=hbplugin-mwgg-gamemode-zombies%40workspace%3Ahbplugin-mwgg-gamemode-zombies":
+  version: 0.0.0-use.local
+  resolution: "hbplugin-mouthwashgg-api@link:../hbplugin-mouthwashgg-api::locator=hbplugin-mwgg-gamemode-zombies%40workspace%3Ahbplugin-mwgg-gamemode-zombies"
+  languageName: node
+  linkType: soft
+
 "hbplugin-mouthwashgg-api@workspace:hbplugin-mouthwashgg-api":
   version: 0.0.0-use.local
   resolution: "hbplugin-mouthwashgg-api@workspace:hbplugin-mouthwashgg-api"
@@ -2677,6 +2696,17 @@ __metadata:
     hbplugin-mouthwashgg-api: "link:../hbplugin-mouthwashgg-api"
     mouthwash-types: "link:../mouthwash-types"
     typescript: latest
+  languageName: unknown
+  linkType: soft
+
+"hbplugin-mwgg-gamemode-zombies@workspace:hbplugin-mwgg-gamemode-zombies":
+  version: 0.0.0-use.local
+  resolution: "hbplugin-mwgg-gamemode-zombies@workspace:hbplugin-mwgg-gamemode-zombies"
+  dependencies:
+    "@skeldjs/hindenburg": "link:../Hindenburg"
+    hbplugin-mouthwashgg-api: "link:../hbplugin-mouthwashgg-api"
+    mouthwash-types: "link:../mouthwash-types"
+    typescript: ^4.4.4
   languageName: unknown
   linkType: soft
 
@@ -3538,6 +3568,12 @@ __metadata:
 "mouthwash-types@link:../mouthwash-types::locator=hbplugin-mwgg-gamemode-vanilla%40workspace%3Ahbplugin-mwgg-gamemode-vanilla":
   version: 0.0.0-use.local
   resolution: "mouthwash-types@link:../mouthwash-types::locator=hbplugin-mwgg-gamemode-vanilla%40workspace%3Ahbplugin-mwgg-gamemode-vanilla"
+  languageName: node
+  linkType: soft
+
+"mouthwash-types@link:../mouthwash-types::locator=hbplugin-mwgg-gamemode-zombies%40workspace%3Ahbplugin-mwgg-gamemode-zombies":
+  version: 0.0.0-use.local
+  resolution: "mouthwash-types@link:../mouthwash-types::locator=hbplugin-mwgg-gamemode-zombies%40workspace%3Ahbplugin-mwgg-gamemode-zombies"
   languageName: node
   linkType: soft
 

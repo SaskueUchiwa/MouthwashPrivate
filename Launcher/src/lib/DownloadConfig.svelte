@@ -113,7 +113,7 @@
             </div>
             <p class="text-[#8f75a1] text-sm max-w-102">
                 Neither your steam username or password are shared with Mouthwash servers. To download an older version of Among Us,
-                <a class="hover:underline text-[#d0bfdb]" href="https://github.com/SteamRE/DepotDownloader">DepotDownloader</a> is used to connect with the steam servers to
+                <a class="hover:underline text-[#d0bfdb]" href="https://github.com/SteamRE/DepotDownloader" target="_blank">DepotDownloader</a> is used to connect with the steam servers to
                 verify your license to own the game.
             </p>
             <div class="flex flex-col gap-2">
