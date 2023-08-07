@@ -2,7 +2,13 @@
 # Manual changes might be lost - proceed with caution!
 
 __metadata:
-  version: 4
+  version: 6
+
+"hbplugin-mouthwashgg-anti-cheat@link:../../hbplugin-mouthwashgg-anti-cheat::locator=root-workspace-0b6124%40workspace%3A.":
+  version: 0.0.0-use.local
+  resolution: "hbplugin-mouthwashgg-anti-cheat@link:../../hbplugin-mouthwashgg-anti-cheat::locator=root-workspace-0b6124%40workspace%3A."
+  languageName: node
+  linkType: soft
 
 "hbplugin-mouthwashgg-api@link:../../hbplugin-mouthwashgg-api::locator=root-workspace-0b6124%40workspace%3A.":
   version: 0.0.0-use.local
@@ -19,6 +25,12 @@ __metadata:
 "hbplugin-mouthwashgg@link:../../hbplugin-mouthwashgg::locator=root-workspace-0b6124%40workspace%3A.":
   version: 0.0.0-use.local
   resolution: "hbplugin-mouthwashgg@link:../../hbplugin-mouthwashgg::locator=root-workspace-0b6124%40workspace%3A."
+  languageName: node
+  linkType: soft
+
+"hbplugin-mwgg-gamemode-hns@link:../../hbplugin-mwgg-gamemode-hns::locator=root-workspace-0b6124%40workspace%3A.":
+  version: 0.0.0-use.local
+  resolution: "hbplugin-mwgg-gamemode-hns@link:../../hbplugin-mwgg-gamemode-hns::locator=root-workspace-0b6124%40workspace%3A."
   languageName: node
   linkType: soft
 
@@ -39,8 +51,10 @@ __metadata:
   resolution: "root-workspace-0b6124@workspace:."
   dependencies:
     hbplugin-mouthwashgg: "link:../../hbplugin-mouthwashgg"
+    hbplugin-mouthwashgg-anti-cheat: "link:../../hbplugin-mouthwashgg-anti-cheat"
     hbplugin-mouthwashgg-api: "link:../../hbplugin-mouthwashgg-api"
     hbplugin-mouthwashgg-auth: "link:../../hbplugin-mouthwashgg-auth"
+    hbplugin-mwgg-gamemode-hns: "link:../../hbplugin-mwgg-gamemode-hns"
     hbplugin-mwgg-gamemode-town-of-polus: "link:../../hbplugin-mwgg-gamemode-town-of-polus"
     hbplugin-mwgg-gamemode-vanilla: "link:../../hbplugin-mwgg-gamemode-vanilla"
   languageName: unknown

@@ -1,6 +1,7 @@
 {
     "dependencies": {
         "hbplugin-mouthwashgg": "link:../../hbplugin-mouthwashgg",
+        "hbplugin-mouthwashgg-anti-cheat": "link:../../hbplugin-mouthwashgg-anti-cheat",
         "hbplugin-mouthwashgg-api": "link:../../hbplugin-mouthwashgg-api",
         "hbplugin-mouthwashgg-auth": "link:../../hbplugin-mouthwashgg-auth",
         "hbplugin-mwgg-gamemode-hns": "link:../../hbplugin-mwgg-gamemode-hns",
