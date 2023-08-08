@@ -139,6 +139,7 @@ export class Worker extends EventEmitter<WorkerEvents> {
     pluginLoader: PluginLoader;
 
     loadedPlugins: Map<string, WorkerPlugin>;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     reactorRpcHandlers: Map<`${string}:${number}`, ((component: Networkable, rpc: BaseReactorRpcMessage) => any)[]>;
 
     /**
@@ -1503,6 +1504,12 @@ export class Worker extends EventEmitter<WorkerEvents> {
      * @param rinfo Information about the remote that sent this data.
      */
     async handleMessage(buffer: Buffer, rinfo: dgram.RemoteInfo) {
+        if (buffer.byteLength > this.config.rateLimit.maxPacketSizeBytes) {
+            this.logger.info("Connection at %s:%s sent packet of size %s (%s over maximum)",
+                rinfo.address, rinfo.port, buffer.byteLength, (buffer.byteLength - this.config.rateLimit.maxPacketSizeBytes));
+            return;
+        }
+
         try {
             const parsedPacket = this.decoder.parse(buffer, MessageDirection.Serverbound);
 
@@ -1517,8 +1524,32 @@ export class Worker extends EventEmitter<WorkerEvents> {
 
             try {
                 if (cachedConnection) {
+                    const date = Date.now();
                     const isReliable = parsedReliable.nonce !== undefined && parsedPacket.messageTag !== SendOption.Acknowledge;
                     if (isReliable) {
+                        if (cachedConnection.reliableRecordTimestamp + this.config.rateLimit.windowReliableMs < date) {
+                            cachedConnection.reliableRecordTimestamp = Date.now();
+                            if (cachedConnection.numReliableSent > this.config.rateLimit.reliableNum) {
+                                const numSent = cachedConnection.numReliableSent;
+                                while (cachedConnection.numReliableSent > this.config.rateLimit.reliableNum) {
+                                    cachedConnection.packetLimitWarningTimestamps.push(date);
+                                    cachedConnection.packetLimitWarningTimestamps = cachedConnection.packetLimitWarningTimestamps
+                                        .filter(ts => date - this.config.rateLimit.warningsWindowMs <= ts);
+                                    cachedConnection.numReliableSent = 0;
+                                }
+                                this.logger.info("Connection %s sent %s reliable packets in the last %sms (%s warning%s)",
+                                    cachedConnection, numSent, this.config.rateLimit.windowReliableMs,
+                                    cachedConnection.packetLimitWarningTimestamps.length, cachedConnection.packetLimitWarningTimestamps.length === 1 ? "" : "s");
+                                if (cachedConnection.packetLimitWarningTimestamps.length > this.config.rateLimit.maxWarnings) {
+                                    cachedConnection.disconnect("Too many packets");
+                                    return;
+                                }
+                            } else {
+                                cachedConnection.numReliableSent = 0;
+                            }
+                        }
+                        cachedConnection.numReliableSent++;
+
                         cachedConnection.receivedPackets.unshift(parsedReliable.nonce);
                         cachedConnection.receivedPackets.splice(8);
 
@@ -1547,6 +1578,29 @@ export class Worker extends EventEmitter<WorkerEvents> {
                         }
 
                         cachedConnection.nextExpectedNonce++;
+                    } else {
+                        if (cachedConnection.unreliableRecordTimestamp + this.config.rateLimit.windowUnreliableMs < date) {
+                            cachedConnection.unreliableRecordTimestamp = Date.now();
+                            if (cachedConnection.numUnreliableSent > this.config.rateLimit.unreliableNum) {
+                                const numSent = cachedConnection.numUnreliableSent;
+                                while (cachedConnection.numUnreliableSent > this.config.rateLimit.unreliableNum) {
+                                    cachedConnection.packetLimitWarningTimestamps.push(date);
+                                    cachedConnection.packetLimitWarningTimestamps = cachedConnection.packetLimitWarningTimestamps
+                                        .filter(ts => date - this.config.rateLimit.warningsWindowMs <= ts);
+                                    cachedConnection.numUnreliableSent = 0;
+                                }
+                                this.logger.info("Connection %s sent %s unreliable packets in the last %sms (%s warning%s)",
+                                    cachedConnection, numSent, this.config.rateLimit.windowUnreliableMs,
+                                    cachedConnection.packetLimitWarningTimestamps.length, cachedConnection.packetLimitWarningTimestamps.length === 1 ? "" : "s");
+                                if (cachedConnection.packetLimitWarningTimestamps.length > this.config.rateLimit.maxWarnings) {
+                                    cachedConnection.disconnect("Too many packets");
+                                    return;
+                                }
+                            } else {
+                                cachedConnection.numUnreliableSent = 0;
+                            }
+                        }
+                        cachedConnection.numUnreliableSent++;
                     }
 
                     await this.decoder.emitDecoded(parsedPacket, MessageDirection.Serverbound, {

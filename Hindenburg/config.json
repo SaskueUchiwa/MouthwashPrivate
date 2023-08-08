@@ -17,7 +17,7 @@
         "ip": "auto"
     },
     "plugins": {
-        "loadDirectory": true,
+        "loadDirectory": false,
         "hbplugin-mouthwashgg-auth": {
             "baseUrl": "https://accounts.mouthwash.midlight.studio"
         }
@@ -56,7 +56,7 @@
             ]
         }
     },
-    "reactor": true,
+    "reactor": false,
     "rooms": {
         "checkChatMode": false,
         "chatCommands": false,

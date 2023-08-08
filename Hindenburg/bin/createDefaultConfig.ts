@@ -15,6 +15,15 @@ export function createDefaultConfig(): HindenburgConfig {
             messageOrdering: false,
             ip: "auto"
         },
+        rateLimit: {
+            maxPacketSizeBytes: 1024 * 4, // 4KB
+            windowReliableMs: 4000,
+            reliableNum: 20,
+            windowUnreliableMs: 1000,
+            unreliableNum: 10,
+            warningsWindowMs: 120000,
+            maxWarnings: 3
+        },
         plugins: {
             loadDirectory: true
         },

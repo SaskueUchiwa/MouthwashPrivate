@@ -184,6 +184,14 @@ export class Connection {
      */
     room?: Room;
 
+    unreliableRecordTimestamp: number;
+    numUnreliableSent: number;
+
+    reliableRecordTimestamp: number;
+    numReliableSent: number;
+
+    packetLimitWarningTimestamps: number[];
+
     constructor(
         /**
          * The server that this client is connected to.
@@ -217,6 +225,14 @@ export class Connection {
 
         this.roundTripPing = 0;
         this.unorderedMessageMap = new Map;
+
+        this.unreliableRecordTimestamp = Date.now();
+        this.numUnreliableSent = 0;
+
+        this.reliableRecordTimestamp = this.unreliableRecordTimestamp;
+        this.numReliableSent = 0;
+
+        this.packetLimitWarningTimestamps = [];
     }
 
     [Symbol.for("nodejs.util.inspect.custom")]() {

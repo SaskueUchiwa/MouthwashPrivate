@@ -308,6 +308,19 @@ export interface ServerPlayerOptions {
     skin?: string;
 }
 
+export interface RateLimitConfig {
+    maxPacketSizeBytes: number;
+
+    windowReliableMs: number;
+    reliableNum: number;
+
+    windowUnreliableMs: number;
+    unreliableNum: number;
+
+    maxWarnings: number;
+    warningsWindowMs: number;
+}
+
 export interface HindenburgConfig {
     /**
      * An array of game versions that Hindenburg will accept.
@@ -348,6 +361,7 @@ export interface HindenburgConfig {
      * Options regarding the socket that the server listens on.
      */
     socket: SocketConfig;
+    rateLimit: RateLimitConfig;
     /**
      * Options regarding plugins, such as disabling them or passing configuration
      * options.
