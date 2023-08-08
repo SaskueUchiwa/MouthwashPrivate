@@ -1,4 +1,18 @@
 {
   "name": "hbplugin-mouthwashgg-anti-cheat",
-  "packageManager": "yarn@3.0.2"
+  "license": "SSPL-1.0",
+  "packageManager": "yarn@3.0.0-rc.13",
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "tsc -p ./"
+  },
+  "dependencies": {
+    "hbplugin-mouthwashgg-api": "link:../hbplugin-mouthwashgg-api",
+    "mouthwash-types": "link:../mouthwash-types"
+  },
+  "devDependencies": {
+    "@skeldjs/hindenburg": "link:../Hindenburg",
+    "@types/node": "latest",
+    "typescript": "latest"
+  }
 }

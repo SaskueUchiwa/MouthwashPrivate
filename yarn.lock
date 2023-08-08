@@ -276,6 +276,12 @@ __metadata:
   languageName: node
   linkType: soft
 
+"@skeldjs/hindenburg@link:../Hindenburg::locator=hbplugin-mouthwashgg-anti-cheat%40workspace%3Ahbplugin-mouthwashgg-anti-cheat":
+  version: 0.0.0-use.local
+  resolution: "@skeldjs/hindenburg@link:../Hindenburg::locator=hbplugin-mouthwashgg-anti-cheat%40workspace%3Ahbplugin-mouthwashgg-anti-cheat"
+  languageName: node
+  linkType: soft
+
 "@skeldjs/hindenburg@link:../Hindenburg::locator=hbplugin-mouthwashgg-api%40workspace%3Ahbplugin-mouthwashgg-api":
   version: 0.0.0-use.local
   resolution: "@skeldjs/hindenburg@link:../Hindenburg::locator=hbplugin-mouthwashgg-api%40workspace%3Ahbplugin-mouthwashgg-api"
@@ -303,12 +309,6 @@ __metadata:
 "@skeldjs/hindenburg@link:../Hindenburg::locator=hbplugin-mwgg-gamemode-vanilla%40workspace%3Ahbplugin-mwgg-gamemode-vanilla":
   version: 0.0.0-use.local
   resolution: "@skeldjs/hindenburg@link:../Hindenburg::locator=hbplugin-mwgg-gamemode-vanilla%40workspace%3Ahbplugin-mwgg-gamemode-vanilla"
-  languageName: node
-  linkType: soft
-
-"@skeldjs/hindenburg@link:../Hindenburg::locator=hbplugin-mwgg-gamemode-zombies%40workspace%3Ahbplugin-mwgg-gamemode-zombies":
-  version: 0.0.0-use.local
-  resolution: "@skeldjs/hindenburg@link:../Hindenburg::locator=hbplugin-mwgg-gamemode-zombies%40workspace%3Ahbplugin-mwgg-gamemode-zombies"
   languageName: node
   linkType: soft
 
@@ -2568,9 +2568,27 @@ __metadata:
   languageName: node
   linkType: hard
 
+"hbplugin-mouthwashgg-anti-cheat@workspace:hbplugin-mouthwashgg-anti-cheat":
+  version: 0.0.0-use.local
+  resolution: "hbplugin-mouthwashgg-anti-cheat@workspace:hbplugin-mouthwashgg-anti-cheat"
+  dependencies:
+    "@skeldjs/hindenburg": "link:../Hindenburg"
+    "@types/node": latest
+    hbplugin-mouthwashgg-api: "link:../hbplugin-mouthwashgg-api"
+    mouthwash-types: "link:../mouthwash-types"
+    typescript: latest
+  languageName: unknown
+  linkType: soft
+
 "hbplugin-mouthwashgg-api@link:../hbplugin-mouthwashgg-api::locator=hbplugin-mouthwashgg%40workspace%3Ahbplugin-mouthwashgg":
   version: 0.0.0-use.local
   resolution: "hbplugin-mouthwashgg-api@link:../hbplugin-mouthwashgg-api::locator=hbplugin-mouthwashgg%40workspace%3Ahbplugin-mouthwashgg"
+  languageName: node
+  linkType: soft
+
+"hbplugin-mouthwashgg-api@link:../hbplugin-mouthwashgg-api::locator=hbplugin-mouthwashgg-anti-cheat%40workspace%3Ahbplugin-mouthwashgg-anti-cheat":
+  version: 0.0.0-use.local
+  resolution: "hbplugin-mouthwashgg-api@link:../hbplugin-mouthwashgg-api::locator=hbplugin-mouthwashgg-anti-cheat%40workspace%3Ahbplugin-mouthwashgg-anti-cheat"
   languageName: node
   linkType: soft
 
@@ -2589,12 +2607,6 @@ __metadata:
 "hbplugin-mouthwashgg-api@link:../hbplugin-mouthwashgg-api::locator=hbplugin-mwgg-gamemode-vanilla%40workspace%3Ahbplugin-mwgg-gamemode-vanilla":
   version: 0.0.0-use.local
   resolution: "hbplugin-mouthwashgg-api@link:../hbplugin-mouthwashgg-api::locator=hbplugin-mwgg-gamemode-vanilla%40workspace%3Ahbplugin-mwgg-gamemode-vanilla"
-  languageName: node
-  linkType: soft
-
-"hbplugin-mouthwashgg-api@link:../hbplugin-mouthwashgg-api::locator=hbplugin-mwgg-gamemode-zombies%40workspace%3Ahbplugin-mwgg-gamemode-zombies":
-  version: 0.0.0-use.local
-  resolution: "hbplugin-mouthwashgg-api@link:../hbplugin-mouthwashgg-api::locator=hbplugin-mwgg-gamemode-zombies%40workspace%3Ahbplugin-mwgg-gamemode-zombies"
   languageName: node
   linkType: soft
 
@@ -2696,17 +2708,6 @@ __metadata:
     hbplugin-mouthwashgg-api: "link:../hbplugin-mouthwashgg-api"
     mouthwash-types: "link:../mouthwash-types"
     typescript: latest
-  languageName: unknown
-  linkType: soft
-
-"hbplugin-mwgg-gamemode-zombies@workspace:hbplugin-mwgg-gamemode-zombies":
-  version: 0.0.0-use.local
-  resolution: "hbplugin-mwgg-gamemode-zombies@workspace:hbplugin-mwgg-gamemode-zombies"
-  dependencies:
-    "@skeldjs/hindenburg": "link:../Hindenburg"
-    hbplugin-mouthwashgg-api: "link:../hbplugin-mouthwashgg-api"
-    mouthwash-types: "link:../mouthwash-types"
-    typescript: ^4.4.4
   languageName: unknown
   linkType: soft
 
@@ -3541,6 +3542,12 @@ __metadata:
   languageName: node
   linkType: soft
 
+"mouthwash-types@link:../mouthwash-types::locator=hbplugin-mouthwashgg-anti-cheat%40workspace%3Ahbplugin-mouthwashgg-anti-cheat":
+  version: 0.0.0-use.local
+  resolution: "mouthwash-types@link:../mouthwash-types::locator=hbplugin-mouthwashgg-anti-cheat%40workspace%3Ahbplugin-mouthwashgg-anti-cheat"
+  languageName: node
+  linkType: soft
+
 "mouthwash-types@link:../mouthwash-types::locator=hbplugin-mouthwashgg-api%40workspace%3Ahbplugin-mouthwashgg-api":
   version: 0.0.0-use.local
   resolution: "mouthwash-types@link:../mouthwash-types::locator=hbplugin-mouthwashgg-api%40workspace%3Ahbplugin-mouthwashgg-api"
@@ -3568,12 +3575,6 @@ __metadata:
 "mouthwash-types@link:../mouthwash-types::locator=hbplugin-mwgg-gamemode-vanilla%40workspace%3Ahbplugin-mwgg-gamemode-vanilla":
   version: 0.0.0-use.local
   resolution: "mouthwash-types@link:../mouthwash-types::locator=hbplugin-mwgg-gamemode-vanilla%40workspace%3Ahbplugin-mwgg-gamemode-vanilla"
-  languageName: node
-  linkType: soft
-
-"mouthwash-types@link:../mouthwash-types::locator=hbplugin-mwgg-gamemode-zombies%40workspace%3Ahbplugin-mwgg-gamemode-zombies":
-  version: 0.0.0-use.local
-  resolution: "mouthwash-types@link:../mouthwash-types::locator=hbplugin-mwgg-gamemode-zombies%40workspace%3Ahbplugin-mwgg-gamemode-zombies"
   languageName: node
   linkType: soft
 
