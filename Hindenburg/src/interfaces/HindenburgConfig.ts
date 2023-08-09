@@ -389,11 +389,6 @@ export interface OptimizationsConfig {
      * most likely to put a lot of strain on the server.
      */
     movement: MovementOptimizations;
-    /**
-     * Whether or not to completely disable the perspective API for Hindenburg.
-     * @default false
-     */
-    disablePerspectives: boolean;
 }
 
 export interface HindenburgConfig {

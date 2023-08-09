@@ -1,7 +1,7 @@
 import dgram from "dgram";
 import chalk from "chalk";
 
-import { DisconnectReason, Platform, QuickChatMode, GameKeyword } from "@skeldjs/constant";
+import { DisconnectReason, Platform, QuickChatMode, Language } from "@skeldjs/constant";
 import { DisconnectMessages } from "@skeldjs/data";
 import { VersionInfo } from "@skeldjs/util";
 
@@ -29,22 +29,22 @@ export class SentPacket {
 }
 
 export const logLanguages = {
-    [GameKeyword.English]: "english",
-    [GameKeyword.SpanishAmericas]: "spanish (latin america)",
-    [GameKeyword.PortugueseBrazil]: "portuguese (brazil)",
-    [GameKeyword.Portuguese]: "portuguese",
-    [GameKeyword.Korean]: "korean",
-    [GameKeyword.Russian]: "russian",
-    [GameKeyword.Dutch]: "netherlands",
-    [GameKeyword.Filipino]: "filipino",
-    [GameKeyword.French]: "french",
-    [GameKeyword.German]: "german",
-    [GameKeyword.Italian]: "italian",
-    [GameKeyword.Japanese]: "japanese",
-    [GameKeyword.Spanish]: "spanish",
-    [GameKeyword.ChineseSimplified]: "chinese (simplified)",
-    [GameKeyword.ChineseTraditional]: "chinese (traditional)",
-    [GameKeyword.Irish]: "irish"
+    [Language.English]: "english",
+    [Language.SpanishAmericas]: "spanish (latin america)",
+    [Language.PortugueseBrazil]: "portuguese (brazil)",
+    [Language.Portuguese]: "portuguese",
+    [Language.Korean]: "korean",
+    [Language.Russian]: "russian",
+    [Language.Dutch]: "netherlands",
+    [Language.Filipino]: "filipino",
+    [Language.French]: "french",
+    [Language.German]: "german",
+    [Language.Italian]: "italian",
+    [Language.Japanese]: "japanese",
+    [Language.Spanish]: "spanish",
+    [Language.ChineseSimplified]: "chinese (simplified)",
+    [Language.ChineseTraditional]: "chinese (traditional)",
+    [Language.Irish]: "irish"
 };
 
 export const logPlatforms = {
@@ -60,22 +60,22 @@ export const logPlatforms = {
 };
 
 export const locales = {
-    [GameKeyword.English]: "en",
-    [GameKeyword.SpanishAmericas]: "es_US",
-    [GameKeyword.PortugueseBrazil]: "pt_BR",
-    [GameKeyword.Portuguese]: "pt",
-    [GameKeyword.Korean]: "ko",
-    [GameKeyword.Russian]: "ru",
-    [GameKeyword.Dutch]: "nl",
-    [GameKeyword.Filipino]: "fil",
-    [GameKeyword.French]: "fr",
-    [GameKeyword.German]: "de",
-    [GameKeyword.Italian]: "it",
-    [GameKeyword.Japanese]: "ja",
-    [GameKeyword.Spanish]: "es_ES",
-    [GameKeyword.ChineseSimplified]: "zh",
-    [GameKeyword.ChineseTraditional]: "zh",
-    [GameKeyword.Irish]: "ga"
+    [Language.English]: "en",
+    [Language.SpanishAmericas]: "es_US",
+    [Language.PortugueseBrazil]: "pt_BR",
+    [Language.Portuguese]: "pt",
+    [Language.Korean]: "ko",
+    [Language.Russian]: "ru",
+    [Language.Dutch]: "nl",
+    [Language.Filipino]: "fil",
+    [Language.French]: "fr",
+    [Language.German]: "de",
+    [Language.Italian]: "it",
+    [Language.Japanese]: "ja",
+    [Language.Spanish]: "es_ES",
+    [Language.ChineseSimplified]: "zh",
+    [Language.ChineseTraditional]: "zh",
+    [Language.Irish]: "ga"
 };
 
 export class Connection {
@@ -109,7 +109,7 @@ export class Connection {
     /**
      * The language that the client identified with.
      */
-    language: GameKeyword;
+    language: Language;
 
     /**
      * The version of the client's game. Sent with the {@link Connection.hasIdentified identify}
@@ -189,7 +189,7 @@ export class Connection {
         this.sentDisconnect = false;
         this.username = "";
         this.chatMode = QuickChatMode.FreeChat;
-        this.language = GameKeyword.English;
+        this.language = Language.English;
         this.clientVersion = new VersionInfo(2021, 11, 9);
         this.playerLevel = 0;
 
@@ -250,13 +250,6 @@ export class Connection {
      * ```
      */
     getPlayer() {
-        if (!this.worker.config.optimizations.disablePerspectives) {
-            const playerPerspective = this.room?.playerPerspectives.get(this.clientId);
-            if (playerPerspective) {
-                return playerPerspective.players.get(this.clientId);
-            }
-        }
-
         return this.room?.players.get(this.clientId);
     }
 
@@ -363,7 +356,7 @@ export class Connection {
         this.sentDisconnect = true;
         this.hasIdentified = false;
         this.username = "";
-        this.language = GameKeyword.English;
+        this.language = Language.English;
         this.clientVersion = new VersionInfo(2021, 11, 9);
         this.playerLevel = 0;
 

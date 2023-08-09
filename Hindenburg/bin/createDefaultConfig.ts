@@ -84,8 +84,7 @@ export function createDefaultConfig(): HindenburgConfig {
                 updateRate: 1,
                 visionChecks: false,
                 deadChecks: true
-            },
-            disablePerspectives: false
+            }
         }
     };
 }
