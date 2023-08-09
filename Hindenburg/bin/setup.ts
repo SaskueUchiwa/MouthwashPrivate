@@ -1,5 +1,5 @@
-(async () => {
-    const { default: setupScript } = await import("./_setup");
+import setupScript from "./_setup";
 
-    await setupScript(false);
+(async () => {
+    await setupScript(process.argv.includes("--default") || process.argv.includes("-d"));
 })();

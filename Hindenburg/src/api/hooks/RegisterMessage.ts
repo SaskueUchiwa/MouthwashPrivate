@@ -1,9 +1,12 @@
 import { Deserializable } from "@skeldjs/protocol";
-import { WorkerPlugin, RoomPlugin } from "../../handlers";
+import { SomePluginCtr } from "../../handlers";
+import { ClassDecorator } from "../types";
 
 const hindenburgRegisterMessageKey = Symbol("hindenburg:registermessage");
 
-export function RegisterMessage<T extends Deserializable>(deserializable: T) {
+export function RegisterMessage<T extends Deserializable>(deserializable: T): ClassDecorator;
+export function RegisterMessage<T extends Deserializable>(deserializable: T[]): ClassDecorator;
+export function RegisterMessage<T extends Deserializable>(deserializable: T|T[]) {
     return function (target: any) {
         const cachedSet: Deserializable[]|undefined = Reflect.getMetadata(hindenburgRegisterMessageKey, target);
         const messagesToRegister = cachedSet || [];
@@ -11,10 +14,14 @@ export function RegisterMessage<T extends Deserializable>(deserializable: T) {
             Reflect.defineMetadata(hindenburgRegisterMessageKey, messagesToRegister, target);
         }
 
-        messagesToRegister.push(deserializable);
+        if (Array.isArray(deserializable)) {
+            messagesToRegister.push(...deserializable);
+        } else {
+            messagesToRegister.push(deserializable);
+        }
     };
 }
 
-export function getPluginRegisteredMessages(pluginCtr: typeof WorkerPlugin|typeof RoomPlugin): Deserializable[] {
+export function getPluginRegisteredMessages(pluginCtr: SomePluginCtr): Deserializable[] {
     return Reflect.getMetadata(hindenburgRegisterMessageKey, pluginCtr) || [];
 }

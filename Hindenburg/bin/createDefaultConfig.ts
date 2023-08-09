@@ -1,19 +1,22 @@
+import { Hat, Skin } from "@skeldjs/constant";
 import { HindenburgConfig } from "../src";
 
 export function createDefaultConfig(): HindenburgConfig {
     return {
-        versions: ["2021.6.30"],
         clusterName: "Capybara",
         nodeId: 0,
         checkForUpdates: true,
         autoUpdate: false,
         exitConfirmation: true,
         defaultLanguage: "en",
+        acceptedVersions: [ "2022.9.2.0" ],
         socket: {
             port: 22023,
-            broadcastUnknownGamedata: false,
+            additionalPorts: [],
+            acceptUnknownGameData: false,
             messageOrdering: false,
-            ip: "auto"
+            ip: "auto",
+            useDtlsLayout: false
         },
         rateLimit: {
             maxPacketSizeBytes: 1024 * 4, // 4KB
@@ -23,6 +26,12 @@ export function createDefaultConfig(): HindenburgConfig {
             unreliableNum: 10,
             warningsWindowMs: 120000,
             maxWarnings: 3
+        },
+        gameListing: {
+            ignorePrivacy: false,
+            ignoreSearchTerms: false,
+            maxResults: 10,
+            requirePefectMatches: false
         },
         plugins: {
             loadDirectory: true
@@ -43,18 +52,11 @@ export function createDefaultConfig(): HindenburgConfig {
                 format: ["id", "ip", "ping", "room"]
             },
             rooms: {
-                format: ["players", "map"]
+                format: ["players", "map", "issaah", "privacy"]
             },
             players: {
                 format: ["id", "ping", "ishost"]
             }
-        },
-        reactor: {
-            blockClientSideOnly: true,
-            mods: {},
-            allowExtraMods: true,
-            requireHostMods: true,
-            allowNormalClients: true
         },
         rooms: {
             checkChatMode: false,
@@ -65,13 +67,25 @@ export function createDefaultConfig(): HindenburgConfig {
             gameCodes: "v2",
             enforceSettings: {},
             serverAsHost: false,
+            advanced: {
+                unknownObjects: false
+            },
             serverPlayer: {
                 name: "<color=yellow>[Server]</color>",
                 color: "Yellow",
-                hat: "None",
-                skin: "None"
+                hat: Hat.None,
+                skin: Skin.None
             },
             createTimeout: 10
+        },
+        optimizations: {
+            movement: {
+                reuseBuffer: true,
+                updateRate: 1,
+                visionChecks: false,
+                deadChecks: true
+            },
+            disablePerspectives: false
         }
     };
 }

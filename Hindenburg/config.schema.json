@@ -1,0 +1,1 @@
+{"allOf":[{"$ref":"/E:\\Projects\\AmongUsProjects\\Mouthwash\\private\\Hindenburg\\misc\\config.schema.json"}],"properties":{"plugins":{"properties":{"hbplugin-ban-textfile":{"anyOf":[{"type":"object"},{"type":"boolean"}]}}}}}

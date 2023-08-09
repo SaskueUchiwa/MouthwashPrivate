@@ -2,46 +2,20 @@
 # Manual changes might be lost - proceed with caution!
 
 __metadata:
-  version: 4
+  version: 6
+  cacheKey: 8
 
-"hbplugin-mouthwashgg-api@link:../../hbplugin-mouthwashgg-api::locator=root-workspace-0b6124%40workspace%3A.":
-  version: 0.0.0-use.local
-  resolution: "hbplugin-mouthwashgg-api@link:../../hbplugin-mouthwashgg-api::locator=root-workspace-0b6124%40workspace%3A."
+"hbplugin-ban-textfile@npm:latest":
+  version: 1.0.5
+  resolution: "hbplugin-ban-textfile@npm:1.0.5"
+  checksum: b5d2f043f55f76108db2695d5638b8b2c854f69fb710bb120505805490b8a4cd15543499280dc753a1e47e68a3e1c0b74f12d8da6895aa2bbd893c39223bd2d7
   languageName: node
-  linkType: soft
-
-"hbplugin-mouthwashgg-auth@link:../../hbplugin-mouthwashgg-auth::locator=root-workspace-0b6124%40workspace%3A.":
-  version: 0.0.0-use.local
-  resolution: "hbplugin-mouthwashgg-auth@link:../../hbplugin-mouthwashgg-auth::locator=root-workspace-0b6124%40workspace%3A."
-  languageName: node
-  linkType: soft
-
-"hbplugin-mouthwashgg@link:../../hbplugin-mouthwashgg::locator=root-workspace-0b6124%40workspace%3A.":
-  version: 0.0.0-use.local
-  resolution: "hbplugin-mouthwashgg@link:../../hbplugin-mouthwashgg::locator=root-workspace-0b6124%40workspace%3A."
-  languageName: node
-  linkType: soft
-
-"hbplugin-mwgg-gamemode-town-of-polus@link:../../hbplugin-mwgg-gamemode-town-of-polus::locator=root-workspace-0b6124%40workspace%3A.":
-  version: 0.0.0-use.local
-  resolution: "hbplugin-mwgg-gamemode-town-of-polus@link:../../hbplugin-mwgg-gamemode-town-of-polus::locator=root-workspace-0b6124%40workspace%3A."
-  languageName: node
-  linkType: soft
-
-"hbplugin-mwgg-gamemode-vanilla@link:../../hbplugin-mwgg-gamemode-vanilla::locator=root-workspace-0b6124%40workspace%3A.":
-  version: 0.0.0-use.local
-  resolution: "hbplugin-mwgg-gamemode-vanilla@link:../../hbplugin-mwgg-gamemode-vanilla::locator=root-workspace-0b6124%40workspace%3A."
-  languageName: node
-  linkType: soft
+  linkType: hard
 
 "root-workspace-0b6124@workspace:.":
   version: 0.0.0-use.local
   resolution: "root-workspace-0b6124@workspace:."
   dependencies:
-    hbplugin-mouthwashgg: "link:../../hbplugin-mouthwashgg"
-    hbplugin-mouthwashgg-api: "link:../../hbplugin-mouthwashgg-api"
-    hbplugin-mouthwashgg-auth: "link:../../hbplugin-mouthwashgg-auth"
-    hbplugin-mwgg-gamemode-town-of-polus: "link:../../hbplugin-mwgg-gamemode-town-of-polus"
-    hbplugin-mwgg-gamemode-vanilla: "link:../../hbplugin-mwgg-gamemode-vanilla"
+    hbplugin-ban-textfile: latest
   languageName: unknown
   linkType: soft

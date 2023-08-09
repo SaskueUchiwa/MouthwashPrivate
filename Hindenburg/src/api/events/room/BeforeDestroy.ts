@@ -1,14 +1,14 @@
 import { DisconnectReason } from "@skeldjs/constant";
 import { CancelableEvent } from "@skeldjs/events";
-import { Room } from "../../../Room";
+import { Hostable } from "@skeldjs/core";
 
 /**
  * Emitted just before a room is destroyed.
- * 
+ *
  * See {@link RoomDestroyEvent} to guarantee that the room has been destroyed
  * and cannot be brought back.
  */
-export class RoomBeforeDestroyEvent extends CancelableEvent {
+export class RoomBeforeDestroyEvent<RoomType extends Hostable = Hostable> extends CancelableEvent {
     static eventName = "room.beforedestroy" as const;
     eventName = "room.beforedestroy" as const;
 
@@ -16,7 +16,7 @@ export class RoomBeforeDestroyEvent extends CancelableEvent {
         /**
          * The room that is being destroyed.
          */
-        public readonly room: Room,
+        public readonly room: RoomType,
         /**
          * Reason for why the room will be destroyed.
          */

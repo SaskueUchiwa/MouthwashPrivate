@@ -1,6 +1,6 @@
 import { CancelableEvent } from "@skeldjs/events";
-import { Connection } from "../../../Connection";
-import { Room } from "../../../Room";
+import { Hostable } from "@skeldjs/core";
+import { Connection } from "../../../worker";
 
 /**
  * Emitted when the room selects the next host in the room.
@@ -8,14 +8,14 @@ import { Room } from "../../../Room";
  * Can be used to change the default host selection, especially combined with the
  * {@link RoomSelectHostEvent.isActingHost} and {@link RoomSelectHostEvent.isJoining} flags.
  */
-export class RoomSelectHostEvent extends CancelableEvent {
+export class RoomSelectHostEvent<RoomType extends Hostable = Hostable> extends CancelableEvent {
     static eventName = "room.selecthost" as const;
     eventName = "room.selecthost" as const;
 
     private _alteredSelected: Connection;
 
     constructor(
-        public readonly room: Room,
+        public readonly room: RoomType,
         /**
          * Whether or not this is for an acting host (in server-as-a-host).
          */
