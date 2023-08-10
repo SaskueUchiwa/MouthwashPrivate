@@ -11,6 +11,7 @@
         "@skeldjs/hindenburg": "link:../Hindenburg",
         "@types/got": "^9.6.12",
         "@types/node": "latest",
+        "@types/promise.allsettled": "^1.0.3",
         "@types/uuid": "^8.3.1",
         "typescript": "latest"
     },
@@ -19,6 +20,7 @@
         "got": "^11.8.2",
         "hbplugin-mouthwashgg-auth": "link:../hbplugin-mouthwashgg-auth",
         "mouthwash-types": "link:../mouthwash-types",
+        "promise.allsettled": "^1.0.6",
         "reflect-metadata": "^0.1.13",
         "uuid": "^8.3.2"
     }

@@ -1,7 +1,8 @@
 import { ClientDisconnectEvent, Connection, PlayerData, ReliablePacket } from "@skeldjs/hindenburg";
 import { FetchResourceMessage, FetchResponseType, ResourceType } from "mouthwash-types";
+import allSettled from "promise.allsettled";
 
-import { ClientFetchResourceResponseEvent } from "../..";
+import { ClientFetchResourceResponseEvent } from "../../events";
 import { MouthwashApiPlugin } from "../../plugin";
 import { AssetBundle, AssetReference } from "./AssetBundle";
 
@@ -57,7 +58,6 @@ export class AssetLoaderService {
             return;
 
         const waitingFor = this.getWaitingFor(connection);
-
         if (waitingFor.has(assetBundle.bundleId))
             return;
 
@@ -74,7 +74,6 @@ export class AssetLoaderService {
                 ]
             )
         );
-
         waitingFor.set(assetBundle.bundleId, assetBundle);
     }
 
@@ -133,11 +132,18 @@ export class AssetLoaderService {
         const asset = assetBundle.getAssetSafe(assetRef.assetPath);
 
         const promises = [];
+        const connections = [];
         for (const [ , connection ] of this.plugin.room.connections) {
-            await this.assertLoaded(connection, assetBundle);
-            promises.push(this.waitForLoaded(connection, assetBundle));
+            promises.push(this.assertLoaded(connection, assetBundle).then(() => this.waitForLoaded(connection, assetBundle)));
+            connections.push(connection);
         }
-        await Promise.all(promises);
+        const results = await allSettled(promises);
+        for (let i = 0; i < results.length; i++) {
+            const result = results[i];
+            if (result.status === "rejected") {
+                this.plugin.logger.warn("Failed to load asset %s for %s: %s", assetRef.assetPath, connections[i], result.reason);
+            }
+        }
         
         return asset;
     }
@@ -153,10 +159,15 @@ export class AssetLoaderService {
 
         const promises = [];
         for (const connection of connections) {
-            await this.assertLoaded(connection, assetBundle);
-            promises.push(this.waitForLoaded(connection, assetBundle));
+            promises.push(this.assertLoaded(connection, assetBundle).then(() => this.waitForLoaded(connection, assetBundle)));
         }
-        await Promise.all(promises);
+        const results = await allSettled(promises);
+        for (let i = 0; i < results.length; i++) {
+            const result = results[i];
+            if (result.status === "rejected") {
+                this.plugin.logger.warn("Failed to load asset %s for %s: %s", assetRef.assetPath, connections[i], result.reason);
+            }
+        }
         
         return asset;
     }

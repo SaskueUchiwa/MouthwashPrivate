@@ -553,7 +553,7 @@ export class MouthwashApiPlugin extends RoomPlugin {
             for (const [ , connection ] of this.room.connections) {
                 for (const assetBundle of this.gamemode.registeredBundles) {
                     await this.assetLoader.assertLoaded(connection, assetBundle);
-                    promises.push(this.assetLoader.waitForLoaded(connection, assetBundle));
+                    promises.push(this.assetLoader.waitForLoaded(connection, assetBundle).catch(() => {}));
                 }
             }
             await Promise.all(promises);

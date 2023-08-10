@@ -59,10 +59,11 @@ export class CosmeticsService {
             const assetBundle = await AssetBundle.loadFromUrl(loadedCosmetic.bundle_path, false);
             await this.plugin.assetLoader.assertLoaded(connection, assetBundle);
 
-            promises.push(this.plugin.assetLoader.waitForLoaded(connection, assetBundle));
-            messages.push(loadedCosmetic.type === "HAT"
+            promises.push(this.plugin.assetLoader.waitForLoaded(connection, assetBundle).then(() => {
+                messages.push(loadedCosmetic.type === "HAT"
                     ? new LoadHatMessage(loadedCosmetic.among_us_id, loadedCosmetic.resource_id, ownedCosmeticIdsSet.has(loadedCosmetic.id))
                     : new LoadPetMessage(loadedCosmetic.among_us_id, loadedCosmetic.resource_id, ownedCosmeticIdsSet.has(loadedCosmetic.id)));
+            }).catch(() => {}));
 
             recipLoadedCosmetics.set(loadedCosmetic.id, {
                 id: loadedCosmetic.id,
@@ -120,10 +121,11 @@ export class CosmeticsService {
                 const assetBundle = await AssetBundle.loadFromUrl(ownedCosmetic.bundle_resource_path, false);
                 await this.plugin.assetLoader.assertLoaded(connection, assetBundle);
 
-                promises.push(this.plugin.assetLoader.waitForLoaded(connection, assetBundle));
-                messages.push(ownedCosmetic.type === "HAT"
+                promises.push(this.plugin.assetLoader.waitForLoaded(connection, assetBundle).then(() => {
+                    messages.push(ownedCosmetic.type === "HAT"
                         ? new LoadHatMessage(ownedCosmetic.among_us_id, ownedCosmetic.resource_id, client === connection)
                         : new LoadPetMessage(ownedCosmetic.among_us_id, ownedCosmetic.resource_id, client === connection));
+                }).catch(() => {}));
                         
                 this.roomLoadedCosmetics.set(ownedCosmetic.id, {
                     id: ownedCosmetic.id,
