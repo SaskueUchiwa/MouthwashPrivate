@@ -81,9 +81,7 @@ export class SoundService {
             this.plugin.room.objectList.splice(idx, 1);
         }
 
-        const connections = players
-            .map(player => this.plugin.room.connections.get(player.clientId))
-            .filter(_ => _ !== undefined) as Connection[];
+        const connections = this.plugin.room.getConnections(players, true);
         
         if (connections.length) {
             const ssWriter = HazelWriter.alloc(24);

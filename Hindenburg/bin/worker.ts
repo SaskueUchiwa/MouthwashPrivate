@@ -25,13 +25,34 @@ type DeepPartial<T> = {
     [K in keyof T]?: DeepPartial<T[K]>|undefined
 };
 
-const configFile = process.env.HINDENBURG_CONFIG || path.join(process.cwd(), "./config.json");
-async function resolveConfig(logger: Logger): Promise<DeepPartial<HindenburgConfig>> {
+const configFilename = process.env.HINDENBURG_CONFIG || path.join(process.cwd(), "./config.json");
+async function resolveConfig(logger: Logger, configFilename: string, performSetup: boolean): Promise<DeepPartial<HindenburgConfig>> {
     try {
-        return JSON.parse(await fs.readFile(configFile, "utf8"));
+        const configJson: DeepPartial<HindenburgConfig> = JSON.parse(await fs.readFile(configFilename, "utf8"));
+
+        if (configJson.extends) {
+            const extendedFrom: DeepPartial<HindenburgConfig> = {};
+
+            if (Array.isArray(configJson.extends)) {
+                for (const extendedFilename of configJson.extends) {
+                    if (extendedFilename) {
+                        const resolvedExtended = await resolveConfig(logger, path.resolve(path.dirname(configFilename), extendedFilename), false);
+                        recursiveAssign(extendedFrom, resolvedExtended);
+                    }
+                }
+            } else {
+                const resolvedExtended = await resolveConfig(logger, path.resolve(path.dirname(configFilename), configJson.extends), false);
+                recursiveAssign(extendedFrom, resolvedExtended);
+            }
+
+            recursiveAssign(extendedFrom, configJson);
+            return extendedFrom;
+        }
+
+        return configJson;
     } catch (e) {
         const err = e as { code: string };
-        if (err.code === "ENOENT") {
+        if (err.code === "ENOENT" && performSetup) {
             logger.warn("No config file found; performing first-time setup accepting all defaults..");
             return (await (await import("./_setup")).default(true)) as DeepPartial<HindenburgConfig>;
         }
@@ -70,14 +91,21 @@ function applyCommandLineArgs(config: HindenburgConfig) {
 
     for (let i = 0; i < argv.length; i++) {
         if (argv[i].startsWith("--")) {
-            const configPath = argv[i].substr(2);
+            const configPath = argv[i].substring(2);
             const cmdValue = argv[i + 1];
 
             if (!cmdValue) {
                 continue;
             }
 
-            const configValue = JSON.parse(cmdValue);
+            const configValue = cmdValue === "false"
+                ? false
+                : cmdValue === "true"
+                    ? true
+                    : cmdValue.startsWith("[")
+                        ? JSON.parse(cmdValue)
+                        : Number(cmdValue)
+                        || cmdValue;
 
             const pathParts = [];
             let acc = "";
@@ -241,6 +269,9 @@ export interface ChangelogJson {
 }
 
 async function checkForUpdates(logger: Logger, autoUpdate: boolean) {
+    if (process.env.IS_PKG)
+        return logger.warn("Auto-updating disabled when using server executable");
+
     const versionSpinner = new Spinner("Checking for updates.. %s").start();
 
     try {
@@ -275,21 +306,51 @@ async function checkForUpdates(logger: Logger, autoUpdate: boolean) {
     } catch (e) {
         versionSpinner.fail();
         logger.error("Failed to check for updates, nevermind");
+        logger.error("Error: %s", e as Error);
     }
 }
 
+async function checkConfigDeprecations(config: HindenburgConfig, configFilename: string, logger: Logger) {
+    let flag = false;
+    if ("broadcastUnknownGameData" in config.socket) {
+        config.socket.acceptUnknownGameData = (config as any).socket.broadcastUnknownGameData;
+        delete (config as any).socket.broadcastUnknownGameData;
+        logger.warn("Config deprecation: 'socket.broadcastUnknownGameData' has been renamed to 'socket.acceptUnknownGameData' to better reflect its purpose");
+        flag = true;
+    }
+    if (config.rooms.advanced.unknownObjects && config.rooms.serverAsHost) {
+        logger.warn("Server-as-a-Host may not function properly with unknown objects allowed; consider writing object logic with a plugin or remove rooms.advanced.unknownObjects in the config");
+    }
+    if (flag) {
+        const configSpinner = new Spinner("Writing config to reflect deprecations.. %s");
+        try {
+            await fs.writeFile(
+                configFilename,
+                JSON.stringify({ $schema: "./config.schema.json", ...config }, undefined, 4),
+                "utf8"
+            );
+            configSpinner.success();
+        } catch (e) {
+            configSpinner.fail();
+            logger.error("Failed to update config.json: %s", (e as { code: string }).code || e);
+        }
+    }
+    return;
+}
+
 (async () => {
-    const logger = new Logger;
+    const logger = new Logger("Startup");
     const internalIp = await getInternalIp();
 
     const workerConfig = createDefaultConfig();
-    const resolvedConfig = await resolveConfig(logger);
+    const resolvedConfig = await resolveConfig(logger, configFilename, true);
     recursiveAssign(workerConfig, resolvedConfig || {});
     applyCommandLineArgs(workerConfig);
     const externalIp = await fetchExternalIp(logger);
     if (workerConfig.socket.ip === "auto") {
         workerConfig.socket.ip = externalIp;
     }
+    checkConfigDeprecations(workerConfig, configFilename, logger);
 
     if (workerConfig.checkForUpdates) {
         await checkForUpdates(logger, workerConfig.autoUpdate);
@@ -302,23 +363,24 @@ async function checkForUpdates(logger: Logger, autoUpdate: boolean) {
         worker.logger.warn("Cannot open config file; using default config");
     }
 
-    const port = worker.config.socket.port;
-    await worker.listen(port);
-
+    worker.listen();
+    worker.logger.info("");
     worker.logger.info("Listening on:");
 
+    const listeningPort = worker.config.socket.port;
     if (!worker.config.logging.hideSensitiveInfo) {
-        worker.logger.info(chalk.grey`External: ${chalk.white(externalIp)}:${port}`);
+        worker.logger.info(chalk.grey`External: ${chalk.white(externalIp)}:${listeningPort}`);
     }
-    worker.logger.info(chalk.grey`Internal: ${chalk.white(internalIp)}:${port}`);
-    worker.logger.info(chalk.grey`   Local: ${chalk.white("127.0.0.1")}:${port}`);
+    worker.logger.info(chalk.grey`Internal: ${chalk.white(internalIp)}:${listeningPort}`);
+    worker.logger.info(chalk.grey`   Local: ${chalk.white("localhost")}:${listeningPort}`);
+    worker.logger.info("");
 
     if (worker.config.plugins.loadDirectory) {
-        await worker.pluginLoader.importFromDirectory();
+        await worker.pluginLoader.importFromDirectories();
         await worker.pluginLoader.loadAllWorkerPlugins();
     }
 
-    const configWatch = chokidar.watch(configFile, {
+    const configWatch = chokidar.watch(configFilename, {
         persistent: false
     });
 
@@ -326,7 +388,7 @@ async function checkForUpdates(logger: Logger, autoUpdate: boolean) {
         worker.logger.info("Config file updated, reloading..");
         try {
             const workerConfig = createDefaultConfig();
-            const updatedConfig = JSON.parse(await fs.readFile(configFile, "utf8"));
+            const updatedConfig = JSON.parse(await fs.readFile(configFilename, "utf8"));
             recursiveAssign(workerConfig, updatedConfig || {});
             applyCommandLineArgs(workerConfig);
             if (workerConfig.socket.ip === "auto") {

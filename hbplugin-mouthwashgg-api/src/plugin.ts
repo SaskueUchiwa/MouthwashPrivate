@@ -30,10 +30,7 @@ import {
     PlayerCompleteTaskEvent,
     FinalTaskState,
     PlayerMurderEvent,
-    PlayerStartMeetingEvent,
-    GameDataAddPlayerEvent,
-    PlayerData,
-    WorkerBeforeJoinEvent
+    PlayerStartMeetingEvent
 } from "@skeldjs/hindenburg";
 
 import { MouthwashAuthPlugin } from "hbplugin-mouthwashgg-auth";
@@ -162,18 +159,20 @@ export class MouthwashApiPlugin extends RoomPlugin {
     }
     
     get authApi() {
-        this._authApi ??= this.worker.loadedPlugins.get("hbplugin-mouthwashgg-auth") as MouthwashAuthPlugin|undefined;
+        this._authApi ??= this.worker.loadedPlugins.get("hbplugin-mouthwashgg-auth")?.pluginInstance as MouthwashAuthPlugin|undefined;
         return this._authApi;
     }
 
     async onPluginLoad() {
         if (!this.room.config.serverAsHost)
-            this.room.setSaaHEnabled(true);
+            this.room.setSaaHEnabled(true, true);
 
-        for (const [ , importedPlugin ] of this.worker.pluginLoader.roomPlugins) {
-            if (isMouthwashGamemode(importedPlugin)) {
-                const gamemodePlugin = importedPlugin as typeof BaseGamemodePlugin;
-                this.allGamemodes.set(gamemodePlugin.gamemodeMetadata.name, gamemodePlugin);
+        for (const [ , importedPlugin ] of this.worker.pluginLoader.importedPlugins) {
+            if (importedPlugin.isRoomPlugin()) {
+                if (isMouthwashGamemode(importedPlugin.pluginCtr)) {
+                    const gamemodePlugin = importedPlugin.pluginCtr as typeof BaseGamemodePlugin;
+                    this.allGamemodes.set(gamemodePlugin.gamemodeMetadata.name, gamemodePlugin);
+                }
             }
         }
 
@@ -209,7 +208,7 @@ export class MouthwashApiPlugin extends RoomPlugin {
             this.worker.pluginLoader.unloadPlugin(this.gamemode, this.room);
         }
 
-        const gamemodePlugin = await this.worker.pluginLoader.loadPlugin(gamemodePluginCtr, this.room) as BaseGamemodePlugin;
+        const gamemodePlugin = await this.worker.pluginLoader.loadPlugin(gamemodePluginCtr.meta.id, this.room) as BaseGamemodePlugin;
 
         const registeredRoles = getRegisteredRoles(gamemodePluginCtr);
         for (const registeredRole of registeredRoles) {
@@ -354,6 +353,7 @@ export class MouthwashApiPlugin extends RoomPlugin {
     
         const connection = ev.room.connections.get(ev.player.clientId);
         if (!connection) return;
+
         const connectionUser = await this.authApi.getConnectionUser(connection);
         if (!connectionUser) {
             await connection.disconnect("Invalid login");
@@ -378,7 +378,6 @@ export class MouthwashApiPlugin extends RoomPlugin {
 
         if (ev.player.isHost) {
             if (this.authApi) {
-    
                 const keys = Object.keys(connectionUser.game_settings);
                 for (let i = 0; i < keys.length; i++) {
                     const gameOptionPath = keys[i];
@@ -414,7 +413,6 @@ export class MouthwashApiPlugin extends RoomPlugin {
             );
 
             const selectedGamemode = this.allGamemodes.get(gamemodeOption.getValue<EnumValue<string>>()!.selectedOption);
-
             if (selectedGamemode) {
                 await this.setGamemode(selectedGamemode, true);
             }
@@ -426,16 +424,17 @@ export class MouthwashApiPlugin extends RoomPlugin {
         
         await this.cameraControllers.spawnCameraFor(ev.player);
         
-        if (this.room.actingHostWaitingFor === ev.player) {
+        const waitingForPlayerIdx = this.room.actingHostWaitingFor.indexOf(ev.player);
+        if (waitingForPlayerIdx > -1) {
             if (this.room.actingHostsEnabled) {
                 for (const actingHostId of this.room.actingHostIds) {
                     const actingHostConn = this.room.connections.get(actingHostId);
                     if (actingHostConn) {
-                        await this.room.updateHost(actingHostId, actingHostConn);
+                        await this.room.updateHostForClient(actingHostId, actingHostConn);
                     }
                 }
             }
-            this.room.actingHostWaitingFor = undefined;
+            this.room.actingHostWaitingFor.splice(waitingForPlayerIdx, 1);
         }
 
         const playerControl = ev.player.control;

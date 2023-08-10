@@ -1,13 +1,10 @@
 export * from "./api";
+export * from "./components";
 export * from "./handlers";
 export * from "./interfaces";
 export * from "./logger";
-export * from "./packets";
 
-export * from "./Connection";
-export * from "./Perspective";
-export * from "./Room";
-export * from "./Worker";
+export * from "./worker";
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore typescript doesn't let you re-export

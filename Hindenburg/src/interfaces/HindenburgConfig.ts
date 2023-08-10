@@ -1,4 +1,47 @@
 import { AllGameSettings } from "@skeldjs/protocol";
+import { HostableOptions } from "@skeldjs/core";
+
+export interface PluginConfig {
+    /**
+     * Whether to load all plugins in the plugin directory.
+     * @default true
+     */
+    loadDirectory: boolean;
+    [key: string]: boolean|Record<string, unknown>;
+}
+
+export interface SocketConfig {
+    /**
+     * The port to listen on.
+     * @default 22023
+     */
+    port: number;
+    /**
+     * Any additional ports for Hindenburg to listen on.
+     * @default []
+     */
+    additionalPorts: number[];
+    /**
+     * Whether or not to broadcast gamedata messages that don't get handled by the server.
+     * @default false
+     */
+    acceptUnknownGameData: boolean;
+    /**
+     * Whether to order reliable packets received from clients.
+     * @default false
+     */
+    messageOrdering: boolean;
+    /**
+     * The IP address of this node, set to `auto` for it to get auto-discovered.
+     * @default "auto"
+     */
+    ip: string;
+    /**
+     * Whether or not to use the DTLS transport layout when listening for Hello packets.
+     * @default false
+     */
+    useDtlsLayout: boolean;
+}
 
 export interface AnticheatPenalty {
     /**
@@ -52,45 +95,14 @@ export interface AnticheatRuleConfig {
     rules: Record<string, AnticheatRuleConfig|string|number|boolean>;
 }
 
-export interface PluginConfig {
-    /**
-     * Whether to load all plugins in the plugin directory.
-     * @default true
-     */
-    loadDirectory: boolean;
-    [key: string]: boolean|Record<string, unknown>;
-}
-
-export interface SocketConfig {
-    /**
-     * The port to listen on.
-     * @default 22023
-     */
-    port: number;
-    /**
-     * Whether or not to broadcast gamedata messages that don't get handled by the server.
-     * @default false
-     */
-    broadcastUnknownGamedata: boolean;
-    /**
-     * Whether to order reliable packets received from clients.
-     * @default false
-     */
-    messageOrdering: boolean;
-    /**
-     * The IP address of this node, set to `auto` for it to get auto-discovered.
-     * @default "auto"
-     */
-    ip: string;
-}
-
-export type ConnectionsFormatOptions = "id"|"ip"|"ping"|"room"|"language";
-export type RoomFormatOptions = "players"|"map";
-export type PlayerFormatOptions = "id"|"ping"|"ishost";
+export type ConnectionsFormatOptions = "id"|"ip"|"ping"|"room"|"level"|"version"|"language";
+export type RoomFormatOptions = "players"|"map"|"issaah"|"privacy";
+export type PlayerFormatOptions = "id"|"ping"|"level"|"ishost"|"language";
 
 export interface LoggingConfig {
     /**
      * Whether to hide sensitive information from logging, such as ip addresses.
+     * @default false
      */
     hideSensitiveInfo: boolean;
     /**
@@ -143,7 +155,7 @@ export interface LoggingConfig {
          * // => ABCDEF
          * ```
          *
-         * @default ["players", "map", "saah"]
+         * @default ["players", "map", "issaah", "privacy"]
          */
         format?: RoomFormatOptions[]
     };
@@ -176,61 +188,36 @@ export interface LoggingConfig {
     };
 }
 
-export interface ReactorModConfig {
-    /**
-     * Whether this mod is optional, and clients can connect without it. If the
-     * client does have this mod, then it still must be the same version as the
-     * one specified in {@link ReactorModConfig.version}.
-     * @default false
-     */
-    optional: boolean;
-    /**
-     * Whether this mod is banned, only really applies when {@link ReactorConfig.allowExtraMods}
-     * is enabled, as otherwise, only mods in the {@link ReactorConfig.mods} would
-     * be accepted anyway.
-     * @default false
-     */
-    banned: boolean;
-    /**
-     * Enforce a specific version glob for this mod.
-     * @default *
-     */
-    version: string;
-    /**
-     * Whether to broadcast messages sent by this mod.
-     * @default true
-     */
-    doNetworking: boolean;
-}
+export type ValidSearchTerm = "map"|"impostors"|"chat"|"chatType";
 
-export interface ReactorConfig {
+export interface GameListingConfig {
     /**
-     * Whether to block reactor RPCs from mods that are declared as being client-side-only.
-     * @default true
-     */
-    blockClientSideOnly: boolean;
-    /**
-     * Individual configuration for each mod in regards to how Hindenburg should
-     * treat them.
-     */
-    mods: Record<string, ReactorModConfig|boolean>;
-    /**
-     * Whether to allow extra mods aside from those in {@link ReactorConfig.mods},
-     * which would still be used to enforce certain version of mods, and to require
-     * certain mods.
-     * @default true
-     */
-    allowExtraMods: boolean;
-    /**
-     * Whether to allow normal clients to connect.
+     * Whether to ignore the privacy of a room, and return even private ones.
      * @default false
      */
-    allowNormalClients: boolean;
+    ignorePrivacy: boolean;
     /**
-     * Whether or not to require joining clients to have the same mods as the host.
-     * @default true
+     * Whether to ignore filtering for game listings, and just list every game
+     * on the server.
+     *
+     * Or specify which search terms (`"map"`, `"impostors"`, `"chat"`, `"chatType"`)
+     * to ignore by passing an array.
+     * @default false
      */
-    requireHostMods: boolean;
+    ignoreSearchTerms: boolean|ValidSearchTerm[];
+    /**
+     * The maximum number of results to return to a client at once. Set to `0`
+     * or `"all"` for this to be infinite
+     * @default 10
+     */
+    maxResults: number|"all";
+    /**
+     * Whether to only return results that are a perfect match to all of the sort
+     * terms. Otherwise, Hindenburg will sort results by relevance to the search
+     * terms.
+     * @default false
+     */
+    requirePefectMatches: boolean;
 }
 
 export interface ChatCommandConfig {
@@ -246,7 +233,80 @@ export interface ChatCommandConfig {
     helpCommand: boolean;
 }
 
-export interface RoomsConfig {
+export interface ServerPlayerOptions {
+    /**
+     * The name of the player for a message sent by the server in game chat
+     * @default "<color=yellow>[Server]</color>"
+     */
+    name?: string;
+    /**
+     * The name of the color of the player for a message sent by the server in game chat.
+     *
+     * Check out the [Official Wiki page for colors](https://among-us.fandom.com/wiki/Colors)
+     * for names to use.
+     */
+    color?: string;
+    /**
+     * The ID of the hat of the player for a message sent by the server in game chat.
+     *
+     * Check out the [Official Wiki page for hats](https://among-us.fandom.com/wiki/Hats)
+     * for IDs to use.
+     */
+    hat?: number;
+    /**
+     * The ID of the skin of the player for a message sent by the server in game chat.
+     *
+     * Check out the [Official Wiki page for skins](https://among-us.fandom.com/wiki/Skins)
+     * for IDs to use.
+     */
+    skin?: number;
+    /**
+     * The ID of the visor of the player for a message sent by the server in game chat.
+     *
+     * Check out the [Official Wiki page for visors](https://among-us.fandom.com/wiki/Visors)
+     * for IDs to use.
+     */
+    visor?: number;
+}
+
+export interface RateLimitConfig {
+    maxPacketSizeBytes: number;
+
+    windowReliableMs: number;
+    reliableNum: number;
+
+    windowUnreliableMs: number;
+    unreliableNum: number;
+
+    maxWarnings: number;
+    warningsWindowMs: number;
+}
+
+export interface AdvancedRoomOptions {
+    /**
+     * In-game object types for Hindenburg to ignore and treat as unknown
+     * objects.
+     *
+     * Pass `false` to ignore no object types and ban uknown object types,
+     * or 'true' for Hindenburg to ignore any unknown objects.
+     *
+     * Pass `all` to ignore _every_ object type and treat all of them as uknown,
+     * including standard Among Us objects.
+     *
+     * Alternatively, pass an array of either spawn type ids or members of the
+     * {@link SpawnType} enum of the objects to ignore and treat as unknown.
+     *
+     * This will allow objects with a spawn type unknown to Hindenburg to spawn,
+     * making it useful for custom modded maps or mods that use custom objects that
+     * aren't implemented on the server. Note that any of these objects spawned
+     * can't be handled by Hindenburg, so they will be incompatible with
+     * {@link RoomsConfig.serverAsHost}.
+     * @default false
+     */
+    unknownObjects: "all"|boolean|(string|number)[];
+}
+
+export interface RoomsConfig extends HostableOptions {
     /**
      * Whether or not to make sure players have the same chat mode as the host
      * before joining.
@@ -259,10 +319,6 @@ export interface RoomsConfig {
      */
     chatCommands: boolean|ChatCommandConfig;
     /**
-     * Options regarding room plugins.
-     */
-    plugins: PluginConfig;
-    /**
      * The type of game code to generate for rooms, "v1" for a 4-letter code and
      * "v2" for a 6-letter code.
      * @default "v2"
@@ -272,6 +328,10 @@ export interface RoomsConfig {
      * Enforce certain settings, preventing the host from changing them.
      */
     enforceSettings: Partial<AllGameSettings>;
+    /**
+     * Options regarding room plugins.
+     */
+    plugins: PluginConfig;
     /**
      * Whether the server should act as the host of the room. (experimental)
      * @default false
@@ -287,33 +347,55 @@ export interface RoomsConfig {
      * @default 10
      */
     createTimeout: number;
+    /**
+     * Advanced room options for mod and plugin developers, or knowledgeable
+     * server owners.
+     */
+    advanced: AdvancedRoomOptions;
 }
 
-export interface ServerPlayerOptions {
+export interface MovementOptimizations {
     /**
-     * The name of the player for a message sent by the server in game chat
+     * Whether or not to re-use the buffer to send to every client, instead of
+     * re-constructing the packet each time.
+     * @default true
      */
-    name?: string;
+    reuseBuffer: boolean;
     /**
-     * The color of the player for a message sent by the server in game chat
+     * How often to actually broadcast movement packets from a single player,
+     * should be a very low number, between 1 and 3, where 1 is the most frequent
+     * (every packet is broadcasted) and 3 is the least frequent.
+     * @default 1
      */
-    color?: string;
+    updateRate: number;
     /**
-     * The hat of the player for a message sent by the server in game chat
+     * Whether or not to check whether or not the player receiving each movement
+     * packet is in the vision of the player that moved, so-as to only send movement
+     * packets to those who can see it.
+     * @default false
      */
-    hat?: string;
+    visionChecks: boolean;
     /**
-     * The skin of the player for a message sent by the server in game chat
+     * Whether or not to check whether the sender and the reciever are dead so as to not
+     * send movement packets from alive players to dead players.
+     * @default true
      */
-    skin?: string;
+    deadChecks: boolean;
+}
+
+export interface OptimizationsConfig {
+    /**
+     * Options regarding movement packets, since they are the most frequent and
+     * most likely to put a lot of strain on the server.
+     */
+    movement: MovementOptimizations;
 }
 
 export interface HindenburgConfig {
     /**
-     * An array of game versions that Hindenburg will accept.
-     * @default ["2021.6.30"]
+     * Relative or absolute path to other Hindenburg config(s) to base this one off, to extend all values from.
      */
-    versions: string[];
+    extends?: string|string[];
     /**
      * The name of the cluster that this node belongs to.
      * @default "Capybara"
@@ -345,9 +427,18 @@ export interface HindenburgConfig {
      */
     defaultLanguage: string;
     /**
+     * Accepted game versions that clients can connect with.
+     */
+    acceptedVersions: string[];
+    /**
      * Options regarding the socket that the server listens on.
      */
     socket: SocketConfig;
+    rateLimit: RateLimitConfig;
+    /**
+     * Options regarding fine-tuning the results of game listings.
+     */
+    gameListing: GameListingConfig;
     /**
      * Options regarding plugins, such as disabling them or passing configuration
      * options.
@@ -362,13 +453,12 @@ export interface HindenburgConfig {
      */
     logging: LoggingConfig;
     /**
-     * Options for Hindenburg's reactor integration. Set to `true` to force
-     * reactor, allow any mods and require clients joining a room to have the
-     * same mods as the host.
-     */
-    reactor: ReactorConfig|boolean;
-    /**
      * Configuration for rooms, such as enabling/disabling features
      */
     rooms: RoomsConfig;
+    /**
+     * Options regarding different optimisations that Hindenburg can use to perform
+     * better in high-load scenarios.
+     */
+    optimizations: OptimizationsConfig
 }

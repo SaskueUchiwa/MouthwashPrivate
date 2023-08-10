@@ -1,5 +1,6 @@
-import { PlayerData } from "@skeldjs/core";
+import { PlayerData, Hostable } from "@skeldjs/core";
 import { Color, Hat, Skin } from "@skeldjs/constant";
+import { BaseRoom } from "../worker";
 
 export enum MessageSide {
     Left,
@@ -10,7 +11,7 @@ export enum MessageSide {
  * Options regarding sending a chat message into the room as the server, see
  * {@link Room.sendChat}
  */
-export interface SendChatOptions {
+export interface SendChatOptions<HostableType extends Hostable> {
     /**
      * The side of the chat box for the message to appear on for each player. Can only
      * send on the left side if there are at least 2 players in the room.
@@ -42,7 +43,7 @@ export interface SendChatOptions {
      * }
      * ```
      */
-    targets: PlayerData[]|undefined;
+    targets: PlayerData<HostableType>[]|undefined;
     /**
      * The name of the player to appear as.
      * @example

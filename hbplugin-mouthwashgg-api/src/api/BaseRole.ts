@@ -32,7 +32,7 @@ export class BaseRole {
         public readonly player: PlayerData<Room>
     ) {
         this.room = player.room;
-        this.api = player.room.loadedPlugins.get("hbplugin-mouthwashgg-api") as MouthwashApiPlugin;
+        this.api = player.room.loadedPlugins.get("hbplugin-mouthwashgg-api")?.pluginInstance as MouthwashApiPlugin;
 
         this.registeredEventListeners = [];
 
@@ -97,7 +97,7 @@ export class BaseRole {
      * There is a bug in SkeldJS in which the victim is not properly passed to the end game intent,
      * so this method is a patch for the {@link PlayerControl.murderPlayer} method.
      */
-    async patchMurderPlayer(murderer: PlayerData, victim: PlayerData) {
+    async patchMurderPlayer(murderer: PlayerData<Room>, victim: PlayerData<Room>) {
         const murdererPlayerControl = murderer.control;
         const victimPlayerControl = victim.control;
         if (murdererPlayerControl === undefined || victimPlayerControl === undefined)
@@ -113,7 +113,7 @@ export class BaseRole {
         murdererPlayerControl["_checkMurderEndGame"](victim);
     }
 
-    async quietMurder(victim: PlayerData) {
+    async quietMurder(victim: PlayerData<Room>) {
         await this.patchMurderPlayer(this.player, victim);
         this.room.endGameIntents = this.room.endGameIntents.filter(intent => intent.name !== AmongUsEndGames.PlayersKill || intent.metadata.victim !== victim);
     }

@@ -1,17 +1,17 @@
 import { CancelableEvent } from "@skeldjs/events";
 import { BaseGameDataMessage, BaseRootMessage } from "@skeldjs/protocol";
-import { Room } from "../../../Room";
-import { Connection } from "../../../Connection";
+import { Hostable } from "@skeldjs/core";
+import { Connection } from "../../../worker";
 import { ClientEvent } from "./ClientEvent";
 
-export class ClientBroadcastEvent extends CancelableEvent implements ClientEvent {
+export class ClientBroadcastEvent<RoomType extends Hostable = Hostable> extends CancelableEvent implements ClientEvent {
     static eventName = "client.broadcast" as const;
     eventName = "client.broadcast" as const;
 
     private _alteredGameData: BaseGameDataMessage[];
 
     constructor(
-        public readonly room: Room,
+        public readonly room: RoomType,
         /**
          * The client that connected to the server, fully identified.
          */
@@ -27,7 +27,7 @@ export class ClientBroadcastEvent extends CancelableEvent implements ClientEvent
     get alteredGameData() {
         return this._alteredGameData;
     }
-    
+
     setGameData(gamedata: BaseGameDataMessage[]) {
         this._alteredGameData = gamedata;
     }

@@ -1,7 +1,7 @@
 import { CancelableEvent } from "@skeldjs/events";
 import { GameSettings } from "@skeldjs/protocol";
+import { Connection } from "../../../worker";
 import { Code2Int } from "@skeldjs/util";
-import { Connection } from "../../../Connection";
 
 /**
  * Emitted before a player successfully or unsuccessfully creates a room.
@@ -15,7 +15,7 @@ import { Connection } from "../../../Connection";
  * onWorkerBeforeCreate(ev: WorkerBeforeCreateEvent) {
  *   if (ev.client.mods.size > 0) {
  *     ev.cancel();
- *     return ev.client.joinError("You cannot create a room with Reactor enabled!!!");
+ *     return ev.client.disconnect("You cannot create a room with Reactor enabled!!!");
  *   }
  * }
  * ```

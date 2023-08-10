@@ -6,7 +6,6 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     strategy:
@@ -18,7 +17,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - uses: textbook/git-checkout-submodule-action@master
+      with:
+        submodules: recursive
 
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v1
@@ -32,5 +32,6 @@ jobs:
       uses: Cecilapp/GitHub-Pages-deploy@3.1.0
       with:
         email: essmale2005@gmail.com
+        cname: hindenburg.js.org
         build_dir: docs
         branch: gh-pages

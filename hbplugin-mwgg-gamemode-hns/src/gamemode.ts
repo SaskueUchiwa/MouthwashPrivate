@@ -1,24 +1,20 @@
 import {
+    Connection,
     EndGameIntent,
     EventListener,
-    FinalTaskState,
     GameDataSetTasksEvent,
     GameOverReason,
     HindenburgPlugin,
     PlayerData,
     PlayerDieEvent,
-    PlayerInfo,
     PlayerLeaveEvent,
     PlayerReportDeadBodyEvent,
-    PresetFilter,
     PreventLoad,
     Room,
     RoomDestroyEvent,
     RoomEndGameIntentEvent,
     RoomGameEndEvent,
-    RoomGameStartEvent,
-    RpcMessage,
-    SyncSettingsMessage
+    RpcMessage
 } from "@skeldjs/hindenburg";
 
 import {
@@ -172,7 +168,7 @@ export class HideAndSeekGamemodePlugin extends BaseGamemodePlugin {
                     )
                 ],
                 [],
-                this.room.getConnections([ seeker ]),
+                this.room.getConnections([ seeker ], true),
                 undefined,
                 true
             );
@@ -253,7 +249,7 @@ export class HideAndSeekGamemodePlugin extends BaseGamemodePlugin {
                     )
                 ],
                 [],
-                this.room.getConnections([ seeker ]),
+                this.room.getConnections([ seeker ], true),
                 undefined,
                 true
             );

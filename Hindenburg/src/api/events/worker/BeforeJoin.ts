@@ -1,18 +1,17 @@
 import { CancelableEvent } from "@skeldjs/events";
-import { Connection } from "../../../Connection";
-import { Room } from "../../../Room";
+import { Connection, Room } from "../../../worker";
 
 /**
  * Emitted before a player successfully or unsuccessfully joins a room on the
  * server.
- * 
+ *
  * This event allows you to redirect the player to another game, or to completely
  * prevent them from joining.
- * 
+ *
  * A better event to use for when a player has successfully joined a room is
  * the [`player.join`](https://skeld.js.org/classes/core.playerjoinevent.html)
  * event.
- * 
+ *
  * @example
  * ```ts
  * .@EventListener("worker.beforejoin")
@@ -20,7 +19,7 @@ import { Room } from "../../../Room";
  *   for (const [ netId, mod ] of ev.client.mods) {
  *     if (mod.modid === "com.andruzzzhka.customserversclient") {
  *       ev.cancel();
- *       return ev.client.joinError("Do not join with custom servers client!!!");
+ *       return ev.client.disconnect("Do not join with custom servers client!!!");
  *     }
  *   }
  * }

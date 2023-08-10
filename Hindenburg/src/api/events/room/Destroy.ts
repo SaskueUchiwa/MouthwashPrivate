@@ -1,12 +1,12 @@
 import { BasicEvent } from "@skeldjs/events";
-import { Room } from "../../../Room";
+import { Hostable } from "@skeldjs/core";
 
 /**
  * Emitted after a room has been destroyed.
- * 
+ *
  * See {@link RoomBeforeDestroyEvent} for a hookable destroy event.
  */
-export class RoomDestroyEvent extends BasicEvent {
+export class RoomDestroyEvent<RoomType extends Hostable = Hostable> extends BasicEvent {
     static eventName = "room.destroy" as const;
     eventName = "room.destroy" as const;
 
@@ -14,7 +14,7 @@ export class RoomDestroyEvent extends BasicEvent {
         /**
          * The room that was destroyed.
          */
-        public readonly room: Room
+        public readonly room: RoomType
     ) {
         super();
     }
