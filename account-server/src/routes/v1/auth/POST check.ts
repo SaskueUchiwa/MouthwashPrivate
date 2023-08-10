@@ -25,8 +25,8 @@ export default async function (server: AccountServer, req: express.Request, res:
 
     const { rows: foundSessions } = await server.postgresClient.query(`
         SELECT * 
-        FROM sessions
-        WHERE client_id = $1
+        FROM session
+        WHERE user_id = $1
         AND client_token = $2
     `, [ clientId, clientToken.split(" ")[1] ]);
 
@@ -36,7 +36,7 @@ export default async function (server: AccountServer, req: express.Request, res:
         res.status(401).json({
             code: 401,
             message: "UNAUTHORIZED",
-            details: "No session with that client_id and client_token was found"
+            details: "No session with that user_id and client_token was found"
         });
         return;
     }
@@ -44,8 +44,8 @@ export default async function (server: AccountServer, req: express.Request, res:
     const { rows: foundUsers } = await server.postgresClient.query(`
         SELECT *
         FROM users
-        WHERE client_id = $1
-    `, [ session.client_id ]);
+        WHERE id = $1
+    `, [ session.user_id ]);
     
     const user = foundUsers?.[0];
 
@@ -53,7 +53,7 @@ export default async function (server: AccountServer, req: express.Request, res:
         res.status(401).json({
             code: 401,
             message: "UNAUTHORIZED",
-            details: "No user with that client_id was found"
+            details: "No user with that user_id was found"
         });
         return;
     }
@@ -61,7 +61,7 @@ export default async function (server: AccountServer, req: express.Request, res:
     return res.status(200).json({
         success: true,
         data: {
-            client_id: user.client_id,
+            user_id: user.user_id,
             client_token: session.client_token,
             email: user.email,
             display_name: user.display_name,

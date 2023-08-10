@@ -3,19 +3,19 @@ import express from "express";
 import { AccountServer } from "$/index";
 
 export default async function (server: AccountServer, req: express.Request, res: express.Response) {
-    if (!req.params.client_id) {
+    if (!req.params.user_id) {
         return res.status(400).json({
             code: 400,
             message: "BAD_REQUEST",
-            details: "Expected 'client_id' as part of request endpoint"
+            details: "Expected 'user_id' as part of request endpoint"
         });
     }
     
     const { rows } = await server.postgresClient.query(`
         SELECT *
         FROM users
-        WHERE client_id = $1
-    `, [ req.params.client_id ]);
+        WHERE id = $1
+    `, [ req.params.user_id ]);
 
     const user = rows[0];
     if (!user) {
@@ -29,7 +29,7 @@ export default async function (server: AccountServer, req: express.Request, res:
     return res.status(200).json({
         success: true,
         data: {
-            client_id: user.client_id,
+            id: user.id,
             email: user.email,
             display_name: user.display_name,
             created_at: user.created_at,

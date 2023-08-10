@@ -129,7 +129,7 @@ export class AccountServer {
         try {
             // await this.postgresClient.query(
             //     `
-            //     INSERT INTO users (client_id, email, password_hash, display_name, created_at, banned_until, muted_until, game_settings)
+            //     INSERT INTO userss (user_id, email, password_hash, display_name, created_at, banned_until, muted_until, game_settings)
             //     VALUES ('29fb11a7-8ea1-466b-bb37-b59214fc8f85', 'essmale2005@gmail.com', '${bcrypt.hashSync("femboy", 12)}', 'femboy', '2021-11-06T12:22:20.788Z', NULL, NULL, '{}')
             //     `
             // );

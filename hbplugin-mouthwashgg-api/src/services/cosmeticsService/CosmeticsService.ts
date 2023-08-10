@@ -41,9 +41,9 @@ export class CosmeticsService {
         const clientUser = await this.plugin.authApi.getConnectionUser(connection);
         if (!clientUser) return;
 
-        const ownedCosmetics = await this.plugin.authApi.getOwnedCosmetics(clientUser.client_id);
+        const ownedCosmetics = await this.plugin.authApi.getOwnedCosmetics(clientUser.id);
         if (!ownedCosmetics) {
-            this.plugin.logger.warn("Failed to get owned cosmetics for user with client id %s", clientUser.client_id);
+            this.plugin.logger.warn("Failed to get owned cosmetics for user with client id %s", clientUser.id);
             return;
         }
 
@@ -90,9 +90,9 @@ export class CosmeticsService {
         const clientUser = await this.plugin.authApi.getConnectionUser(client);
         if (!clientUser) return;
 
-        const ownedCosmetics = await this.plugin.authApi.getOwnedCosmetics(clientUser.client_id);
+        const ownedCosmetics = await this.plugin.authApi.getOwnedCosmetics(clientUser.id);
         if (!ownedCosmetics) {
-            this.plugin.logger.warn("Failed to get owned cosmetics for user with client id %s", clientUser.client_id);
+            this.plugin.logger.warn("Failed to get owned cosmetics for user with client id %s", clientUser.id);
             return;
         }
 
@@ -117,7 +117,7 @@ export class CosmeticsService {
                     }
                 }
 
-                const assetBundle = await AssetBundle.loadFromUrl(ownedCosmetic.bundle_path, false);
+                const assetBundle = await AssetBundle.loadFromUrl(ownedCosmetic.bundle_resource_path, false);
                 await this.plugin.assetLoader.assertLoaded(connection, assetBundle);
 
                 promises.push(this.plugin.assetLoader.waitForLoaded(connection, assetBundle));
@@ -130,7 +130,7 @@ export class CosmeticsService {
                     among_us_id: ownedCosmetic.among_us_id,
                     resource_id: ownedCosmetic.resource_id,
                     resource_path: ownedCosmetic.resource_path,
-                    bundle_path: ownedCosmetic.bundle_path,
+                    bundle_path: ownedCosmetic.bundle_resource_path,
                     type: ownedCosmetic.type,
                     is_owned: false
                 });

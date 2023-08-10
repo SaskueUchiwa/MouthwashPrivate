@@ -5,14 +5,13 @@ import {
     WorkerPlugin
 } from "@skeldjs/hindenburg";
 
-import got from "got";
+import undici from "undici";
 import dotenv from "dotenv";
 
 dotenv.config();
 
 export interface UserAccountModel {
-    client_id: string;
-    client_token: string;
+    id: string;
     email: string;
     display_name: string;
     created_at: string;
@@ -25,7 +24,7 @@ export interface UserAccountModel {
 }
 
 export interface UserSessionModel {
-    client_id: string;
+    user_id: string;
     client_token: string;
     ip: string;
 }
@@ -36,7 +35,7 @@ export interface BundleItemModel {
     among_us_id: number;
     resource_path: string;
     resource_id: number;
-    bundle_path: string;
+    bundle_resource_path: string;
     type: "HAT"|"PET";
 }
 
@@ -121,35 +120,39 @@ export class MouthwashAuthPlugin extends WorkerPlugin {
         return this.config.baseUrl || "http://127.0.0.1:8000";
     }
 
-    async make<T>(method: "get"|"post"|"put"|"delete"|"patch", path: string, body?: any): Promise<GenericResponse<T>> {
-        try {
-            const res = await got[method](this.baseUrl + path, {
-                body: body ? JSON.stringify(body) : undefined,
-                headers: {
-                    "Authorization": this.internalAccessKey
-                        ? "Bearer " + this.internalAccessKey
-                        : undefined,
-                    "Content-Type": "application/json"
-                }
-            }).json<GenericResponse<T>>();
-    
-            if (!res.success) {
-                this.logger.warn("%s %s: (%s)", method.toUpperCase(), path, res.code);
+    async make<T>(method: "GET"|"POST"|"PUT"|"DELETE"|"PATCH", path: string, body?: any): Promise<GenericResponse<T>> {
+        const res = await undici.request(this.baseUrl + path, {
+            method,
+            body: body ? JSON.stringify(body) : undefined,
+            headers: {
+                "Authorization": this.internalAccessKey
+                    ? "Bearer " + this.internalAccessKey
+                    : undefined,
+                "Content-Type": "application/json"
             }
-            
-            return res;
-        } catch (e: any) {
-            if (e instanceof got.HTTPError) {
-                this.logger.warn("%s %s: (%s)", method.toUpperCase(), path, e.response.statusCode);
+        });
+        
+        try {
+            const json = await res.body.json() as GenericResponse<T>;
+            if (res.statusCode >= 300) {
+                this.logger.warn("%s %s: (%s)", method.toUpperCase(), path, res.statusCode);
                 return {
                     success: undefined,
                     message: "",
-                    code: e.response.statusCode,
+                    code: res.statusCode,
                     details: ""
                 };
             }
-
-            throw e;
+    
+            return json;
+        } catch (e: any) {
+            this.logger.warn("%s %s: (%s)", method.toUpperCase(), path, e);
+            return {
+                success: undefined,
+                message: "",
+                code: res.statusCode,
+                details: ""
+            };
         }
     }
 
@@ -159,8 +162,7 @@ export class MouthwashAuthPlugin extends WorkerPlugin {
             return cachedUser;
         }
 
-        const res = await this.make<UserAccountModel>("get", "/api/v1/internal/users/" + clientId);
-
+        const res = await this.make<UserAccountModel>("GET", "/api/v1/internal/users/" + clientId);
         if (res.success) {
             this.setCached(this.userCache, clientId, res.data, 3600);
             return res.data;
@@ -177,7 +179,7 @@ export class MouthwashAuthPlugin extends WorkerPlugin {
             if (!cachedSession)
                 return undefined;
 
-            const user = await this.getUser(cachedSession.client_id);
+            const user = await this.getUser(cachedSession.user_id);
             if (!user) {
                 return undefined;
             }
@@ -196,8 +198,7 @@ export class MouthwashAuthPlugin extends WorkerPlugin {
             return cachedSession;
         }
 
-        const res = await this.make<UserSessionModel>("get", "/api/v1/internal/users/" + clientId + "/sessions/" + ipAddress);
-
+        const res = await this.make<UserSessionModel>("GET", "/api/v1/internal/users/" + clientId + "/sessions/" + ipAddress);
         if (res.success) {
             this.setCached(this.sessionCache, clientId, res.data, 60);
             return res.data;
@@ -207,9 +208,10 @@ export class MouthwashAuthPlugin extends WorkerPlugin {
     }
 
     async updateUserSettings(clientId: string, gameSettings: any) {
-        await this.make("put", "/api/v1/internal/users/" + clientId + "/game_settings", {
+        await this.make("PUT", "/api/v1/internal/users/" + clientId + "/game_settings", {
             game_settings: gameSettings
         });
+
         const cachedUser = this.getCached(this.userCache, clientId);
         if (cachedUser) {
             cachedUser.game_settings = gameSettings;
@@ -217,11 +219,12 @@ export class MouthwashAuthPlugin extends WorkerPlugin {
     }
 
     async updateUserCosmetics(clientId: string, hatId: number, petId: number, skinId: number) {
-        await this.make("put", "/api/v1/internal/users/" + clientId + "/cosmetics", {
+        await this.make("PUT", "/api/v1/internal/users/" + clientId + "/cosmetics", {
             cosmetic_hat: hatId,
             cosmetic_pet: petId,
             cosmetic_skin: skinId
         });
+
         const cachedUser = this.getCached(this.userCache, clientId);
         if (cachedUser) {
             cachedUser.cosmetic_hat = hatId;
@@ -236,7 +239,7 @@ export class MouthwashAuthPlugin extends WorkerPlugin {
             return cachedCosmetics;
         }
 
-        const res = await this.make<BundleItemModel[]>("get", "/api/v1/internal/users/" + clientId + "/owned_cosmetics");
+        const res = await this.make<BundleItemModel[]>("GET", "/api/v1/internal/users/" + clientId + "/owned_cosmetics");
         if (res.success) {
             this.setCached(this.userOwnedItemsCache, clientId, res.data, 3600);
             return res.data;
@@ -250,7 +253,7 @@ export class MouthwashAuthPlugin extends WorkerPlugin {
             return cachedPerks;
         }
 
-        const res = await this.make<PerkModel[]>("get", "/api/v1/internal/users/" + clientId + "/perks");
+        const res = await this.make<PerkModel[]>("GET", "/api/v1/internal/users/" + clientId + "/perks");
         if (res.success) {
             this.setCached(this.userPerksCache, clientId, res.data, 3600);
             return res.data;

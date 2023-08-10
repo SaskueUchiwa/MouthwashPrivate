@@ -35,8 +35,8 @@ export default async function (server: AccountServer, req: express.Request, res:
     const { rows: foundExistingVerifications } = await server.postgresClient.query(`
         SELECT * 
         FROM email_verification
-        WHERE client_id = $1
-    `, [ foundUser.client_id ]);
+        WHERE user_id = $1
+    `, [ foundUser.id ]);
 
     const foundExistingVerification = foundExistingVerifications?.[0];
 
@@ -85,15 +85,15 @@ export default async function (server: AccountServer, req: express.Request, res:
     if (foundExistingVerification) {
         await server.postgresClient.query(`
             UPDATE email_verification
-            SET last_sent = NOW(), verification_id = $1
-            WHERE client_id = $2
-        `, [ sha256Hash, foundExistingVerification.client_id ]);
+            SET last_sent = NOW(), id = $1, num_retries = num_retries + 1
+            WHERE user_id = $2
+        `, [ sha256Hash, foundExistingVerification.user_id ]);
     } else {
         await server.postgresClient.query(`
-            INSERT INTO email_verification(verification_id, client_id, last_sent)
-            VALUES ($1, $2, $3)
+            INSERT INTO email_verification(id, user_id, last_sent, num_retries, verified_at)
+            VALUES ($1, $2, $3, $4, $5)
             RETURNING *
-        `, [ sha256Hash, foundUser.client_id, new Date ]);
+        `, [ sha256Hash, foundUser.user_id, new Date, 0, null ]);
     }
 
     return res.status(200).json({

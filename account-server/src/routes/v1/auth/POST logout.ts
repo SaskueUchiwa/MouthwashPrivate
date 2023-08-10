@@ -25,8 +25,8 @@ export default async function (server: AccountServer, req: express.Request, res:
 
     const { rows: foundSessions } = await server.postgresClient.query(`
         DELETE
-        FROM sessions
-        WHERE client_id = $1
+        FROM session
+        WHERE user_id = $1
         AND client_token = $2
     `, [ clientId, clientToken.split(" ")[1] ]);
 
@@ -36,7 +36,7 @@ export default async function (server: AccountServer, req: express.Request, res:
         res.status(401).json({
             code: 401,
             message: "UNAUTHORIZED",
-            details: "No session with that client_id and client_token was found"
+            details: "No session with that user_id and client_token was found"
         });
         return;
     }

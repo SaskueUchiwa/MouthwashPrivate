@@ -9,9 +9,10 @@ export default async function (server: AccountServer, req: express.Request, res:
     }
     
     const { rows: foundVerifications } = await server.postgresClient.query(`
-        SELECT * 
-        FROM email_verification
-        WHERE verification_id = $1
+        UPDATE email_verification
+        SET verified_at = NOW()
+        WHERE id = $1
+        RETURNING *
     `, [ verificationIdQuery ]);
 
     const foundVerification = foundVerifications?.[0];
@@ -21,10 +22,10 @@ export default async function (server: AccountServer, req: express.Request, res:
 
     const { rows: foundAccounts } = await server.postgresClient.query(`
         UPDATE users
-        SET is_verified = TRUE
-        WHERE client_id = $1
+        SET email_verified = TRUE
+        WHERE id = $1
         RETURNING *
-    `, [ foundVerification.client_id ]);
+    `, [ foundVerification.user_id ]);
 
     const foundAccount = foundAccounts?.[0];
     if (!foundAccount) {

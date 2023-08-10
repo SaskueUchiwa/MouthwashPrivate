@@ -159,7 +159,7 @@
 
         const json = await res.json();
         loginApiInfo = {
-            ClientIdString: json.data.client_id,
+            ClientIdString: json.data.user_id,
             ClientToken: json.data.client_token,
             DisplayName: json.data.display_name,
             LoggedInDateTime: new Date().toISOString(),
@@ -212,7 +212,7 @@
 
         const json = await res.json();
         loginApiInfo = {
-            ClientIdString: json.data.client_id,
+            ClientIdString: json.data.user_id,
             ClientToken: json.data.client_token,
             DisplayName: json.data.display_name,
             LoggedInDateTime: new Date().toISOString(),
@@ -223,7 +223,7 @@
 
     async function attemptLogout() {
         loadingLogout = true;
-        const res = await fetch(baseApiUrl + "/api/v1/auth/check", {
+        const res = await fetch(baseApiUrl + "/api/v1/auth/logout", {
             method: "POST",
             headers: {
                 "Client-ID": loginApiInfo.ClientIdString,

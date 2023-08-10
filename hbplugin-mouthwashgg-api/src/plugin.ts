@@ -322,7 +322,7 @@ export class MouthwashApiPlugin extends RoomPlugin {
         if (!connectionUser) return;
 
         if (connectionUser.cosmetic_hat !== playerInfo.hat || connectionUser.cosmetic_pet !== playerInfo.pet || connectionUser.cosmetic_skin !== playerInfo.skin) {
-            await this.authApi.updateUserCosmetics(connectionUser.client_id, playerInfo.hat, playerInfo.pet, playerInfo.skin);
+            await this.authApi.updateUserCosmetics(connectionUser.id, playerInfo.hat, playerInfo.pet, playerInfo.skin);
         }
     }
 
@@ -332,7 +332,7 @@ export class MouthwashApiPlugin extends RoomPlugin {
         if (ev.client === this.roomCreator && this.authApi) {
             const connectionUser = await this.authApi.getConnectionUser(ev.client);
             if (connectionUser) {
-                await this.updateUserSettings(connectionUser.client_id);
+                await this.updateUserSettings(connectionUser.id);
             }
         }
     }
@@ -368,7 +368,7 @@ export class MouthwashApiPlugin extends RoomPlugin {
 
         await this.nameService.updateAllNames();
 
-        const perks = await this.authApi.getPerks(connectionUser.client_id);
+        const perks = await this.authApi.getPerks(connectionUser.id);
         if (perks) {
             const coloredNamePerk = perks.find(perk => perk.id === "NAME_COLOR");
             if (coloredNamePerk) {
@@ -543,7 +543,7 @@ export class MouthwashApiPlugin extends RoomPlugin {
             if (this.roomCreator && !this.roomCreator.sentDisconnect) {
                 const connectionUser = await this.authApi.getConnectionUser(this.roomCreator);
                 if (connectionUser) {
-                    await this.updateUserSettings(connectionUser.client_id);
+                    await this.updateUserSettings(connectionUser.id);
                 }
             }
         }

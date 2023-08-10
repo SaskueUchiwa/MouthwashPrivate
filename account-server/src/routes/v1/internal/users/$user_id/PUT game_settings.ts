@@ -11,20 +11,20 @@ export default async function (server: AccountServer, req: express.Request, res:
         });
     }
 
-    if (!req.params.client_id) {
+    if (!req.params.user_id) {
         return res.status(400).json({
             code: 400,
             message: "BAD_REQUEST",
-            details: "Expected 'client_id' as part of request endpoint"
+            details: "Expected 'user_id' as part of request endpoint"
         });
     }
     
     const rowsUpdated = await server.postgresClient.query(`
         UPDATE users
         SET game_settings = $1
-        WHERE client_id = $2
+        WHERE id = $2
         RETURNING *
-    `, [ req.body.game_settings, req.params.client_id ]);
+    `, [ req.body.game_settings, req.params.user_id ]);
 
     if (rowsUpdated.rowCount <= 0) {
         return res.status(404).json({

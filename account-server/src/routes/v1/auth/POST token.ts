@@ -54,7 +54,7 @@ export default async function (server: AccountServer, req: express.Request, res:
         return;
     }
 
-    if (!user.is_verified) {
+    if (!user.email_verified) {
         res.status(403).json({
             code: 403,
             message: "FORBIDDEN",
@@ -65,10 +65,10 @@ export default async function (server: AccountServer, req: express.Request, res:
 
     const { rows: foundSessions } = await server.postgresClient.query(`
         SELECT * 
-        FROM sessions
-        WHERE client_id = $1
+        FROM session
+        WHERE user_id = $1
         AND ip = $2
-    `, [ user.client_id, ip ]);
+    `, [ user.user_id, ip ]);
 
     const session = foundSessions?.[0];
     let clientToken = session?.client_token;
@@ -78,9 +78,9 @@ export default async function (server: AccountServer, req: express.Request, res:
         const sha256Hash = crypto.createHash("sha256").update(randomBytes).digest("hex");
         
         await server.postgresClient.query(`
-            INSERT INTO sessions (client_id, client_token, ip)
-            VALUES ($1, $2, $3)
-        `, [ user.client_id, sha256Hash, ip ]);
+            INSERT INTO session (id, user_id, client_token, ip)
+            VALUES ($1, $2, $3, $4)
+        `, [ crypto.randomUUID(), user.id, sha256Hash, ip ]);
 
         clientToken = sha256Hash;
     }
@@ -88,7 +88,7 @@ export default async function (server: AccountServer, req: express.Request, res:
     return res.status(200).json({
         success: true,
         data: {
-            client_id: user.client_id,
+            user_id: user.id,
             client_token: clientToken,
             email: user.email,
             display_name: user.display_name,

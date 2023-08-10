@@ -965,7 +965,6 @@ export class Worker extends EventEmitter<WorkerEvents> {
                 return;
 
             const player = ctx.sender.getPlayer();
-
             if (!ctx.sender.room || !player)
                 return;
 
@@ -977,11 +976,11 @@ export class Worker extends EventEmitter<WorkerEvents> {
                 return;
             }
 
-            if (player.room.config.serverAsHost && message.recipientid !== SpecialClientId.Temp) {
-                const client = player.room.players.get(message.recipientid);
-                player.room.logger.warn("Got recipient of game data from %s to %s despite room being in Server-as-a-Host",
-                    ctx.sender, client || "id " + message.recipientid);
-            }
+            // if (player.room.config.serverAsHost && message.recipientid !== SpecialClientId.Temp) {
+            //     const client = player.room.players.get(message.recipientid);
+            //     player.room.logger.warn("Got recipient of game data from %s to %s despite room being in Server-as-a-Host",
+            //         ctx.sender, client || "id " + message.recipientid);
+            // }
 
             const connection = player.room.connections.get(message.recipientid);
             if (!connection) {
@@ -1378,7 +1377,6 @@ export class Worker extends EventEmitter<WorkerEvents> {
             }
 
             const parsedReliable = parsedPacket as ReliableSerializable;
-
             const cachedConnection = this.connections.get(rinfo.address + ":" + rinfo.port);
 
             try {

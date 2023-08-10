@@ -3,11 +3,11 @@ import express from "express";
 import { AccountServer } from "$/index";
 
 export default async function (server: AccountServer, req: express.Request, res: express.Response) {
-    if (!req.params.client_id) {
+    if (!req.params.user_id) {
         return res.status(400).json({
             code: 400,
             message: "BAD_REQUEST",
-            details: "Expected 'client_id' as part of request endpoint"
+            details: "Expected 'user_id' as part of request endpoint"
         });
     }
 
@@ -21,10 +21,10 @@ export default async function (server: AccountServer, req: express.Request, res:
     
     const { rows: foundSessions } = await server.postgresClient.query(`
         SELECT * 
-        FROM sessions
-        WHERE client_id = $1
+        FROM session
+        WHERE user_id = $1
         AND ip = $2
-    `, [ req.params.client_id, req.params.ip ]);
+    `, [ req.params.user_id, req.params.ip ]);
 
     const session = foundSessions?.[0];
 
@@ -32,7 +32,7 @@ export default async function (server: AccountServer, req: express.Request, res:
         res.status(401).json({
             code: 401,
             message: "UNAUTHORIZED",
-            details: "No session with that client_id and ip was found"
+            details: "No session with that user_id and ip was found"
         });
         return;
     }
@@ -40,7 +40,7 @@ export default async function (server: AccountServer, req: express.Request, res:
     return res.status(200).json({
         success: true,
         data: {
-            client_id: session.client_id,
+            user_id: session.user_id,
             client_token: session.client_token || ""
         }
     });
