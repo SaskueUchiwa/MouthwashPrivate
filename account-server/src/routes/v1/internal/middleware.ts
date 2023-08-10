@@ -14,6 +14,13 @@ export default [
                 });
                 return;
             }
+        } else {
+            res.status(403).json({
+                code: 403,
+                message: "FORBIDDEN",
+                details: "You are forbidden from accessing this resource"
+            });
+            return;
         }
         return true;
     }
