@@ -8,9 +8,9 @@
     "build": "tsc -p ./"
   },
   "devDependencies": {
-    "@skeldjs/hindenburg": "link:../Hindenburg",
+    "@skeldjs/hindenburg": "workspace:*",
     "@types/node": "latest",
-    "hbplugin-mouthwashgg": "link:../hbplugin-mouthwashgg",
+    "hbplugin-mouthwashgg": "workspace:*",
     "typescript": "latest"
   },
   "dependencies": {

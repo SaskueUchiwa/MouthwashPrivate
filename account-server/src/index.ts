@@ -1,7 +1,6 @@
 import http from "http";
 import express from "express";
 import fs from "fs/promises";
-import bcrypt from "bcrypt";
 import path from "path";
 import FormData from "form-data";
 import Mailgun from "mailgun.js";

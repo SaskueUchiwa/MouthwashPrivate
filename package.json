@@ -14,6 +14,7 @@
     "hbplugin-mouthwashgg",
     "hbplugin-mouthwashgg-api",
     "hbplugin-mouthwashgg-auth",
+    "hbplugin-mouthwashgg-metrics",
     "hbplugin-mwgg-gamemode-hns",
     "hbplugin-mwgg-gamemode-town-of-polus",
     "hbplugin-mwgg-gamemode-vanilla",
