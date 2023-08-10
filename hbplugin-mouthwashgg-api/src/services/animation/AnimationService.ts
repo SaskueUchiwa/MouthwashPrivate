@@ -38,7 +38,7 @@ export class AnimationService {
         if (!playerControl)
             throw new Error("Player has no player control");
 
-        const connections = this.plugin.room.getConnections(sendTo);
+        const connections = sendTo ? this.plugin.room.getConnections(sendTo, true) : undefined;
 
         await this.plugin.room.broadcastMessages([
             new RpcMessage(
@@ -77,7 +77,7 @@ export class AnimationService {
         if (!component)
             return;
             
-        const connections = this.plugin.room.getConnections(sendTo);
+        const connections = sendTo ? this.plugin.room.getConnections(sendTo, true) : undefined;
 
         await this.plugin.room.broadcastMessages([
             new RpcMessage(
@@ -118,7 +118,7 @@ export class AnimationService {
         if (!component)
             return;
 
-        const connections = this.plugin.room.getConnections(sendTo);
+        const connections = sendTo ? this.plugin.room.getConnections(sendTo, true) : undefined;
             
         await this.plugin.room.broadcastMessages([
             new RpcMessage(

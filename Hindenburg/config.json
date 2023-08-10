@@ -34,7 +34,7 @@
         "requirePefectMatches": false
     },
     "plugins": {
-        "loadDirectory": false,
+        "loadDirectory": true,
         "hbplugin-mouthwashgg-auth": {
             "baseUrl": "https://accounts.mouthwash.midlight.studio"
         }
@@ -49,7 +49,7 @@
         },
         "rules": {}
     },
-    "reactor": false,
+    "reactor": true,
     "logging": {
         "hideSensitiveInfo": false,
         "connections": {
@@ -84,7 +84,7 @@
         },
         "gameCodes": "v2",
         "enforceSettings": {},
-        "serverAsHost": false,
+        "serverAsHost": true,
         "advanced": {
             "unknownObjects": false
         },

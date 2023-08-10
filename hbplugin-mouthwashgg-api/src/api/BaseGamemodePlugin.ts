@@ -26,7 +26,7 @@ export class BaseGamemodePlugin extends RoomPlugin {
     ) {
         super(room, config);
 
-        this.api = room.loadedPlugins.get("hbplugin-mouthwashgg-api") as MouthwashApiPlugin;
+        this.api = room.loadedPlugins.get("hbplugin-mouthwashgg-api")?.pluginInstance as MouthwashApiPlugin;
         this.registeredRoles = [];
         this.registeredBundles = [];
     }

@@ -27,7 +27,6 @@ import {
     GameListing,
     GameSettings,
     GetGameListMessage,
-    HelloPacket,
     HostGameMessage,
     JoinGameMessage,
     KickPlayerMessage,

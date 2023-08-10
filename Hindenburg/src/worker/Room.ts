@@ -1,4 +1,4 @@
-import { Networkable, PlayerData } from "@skeldjs/core";
+import { Networkable, PlayerData, PlayerReadyEvent } from "@skeldjs/core";
 import { GameSettings } from "@skeldjs/protocol";
 
 import chalk from "chalk";

@@ -106,7 +106,7 @@ export class HudService {
         if (!Array.isArray(sendTo))
             throw new TypeError("Expected array of players for 'sendTo', got " + typeof sendTo);
 
-        const connections = this.plugin.room.getConnections(sendTo);
+        const connections = this.plugin.room.getConnections(sendTo, true);
 
         await this.plugin.room.broadcastMessages([], [
             new DisplaySystemAnnouncementMessage(content)
@@ -140,7 +140,7 @@ export class HudService {
             this.getPlayerHud(player).chatVisible = visible;
         }
         
-        const connections = this.plugin.room.getConnections(setFor);
+        const connections = this.plugin.room.getConnections(setFor, true);
 
         await this.plugin.room.broadcastMessages([
             new RpcMessage(
@@ -169,7 +169,7 @@ export class HudService {
         if (!this.plugin.room.gameData)
             return;
             
-        const connections = this.plugin.room.getConnections(closeFor);
+        const connections = this.plugin.room.getConnections(closeFor, true);
 
         await this.plugin.room.broadcastMessages([
             new RpcMessage(
@@ -200,7 +200,7 @@ export class HudService {
             this.getPlayerHud(player).hudItemVisibility.set(item, visible);
         }
         
-        const connections = this.plugin.room.getConnections(setFor);
+        const connections = this.plugin.room.getConnections(setFor, true);
 
         await this.plugin.room.broadcastMessages([], [
             new SetHudVisibility(

@@ -349,7 +349,6 @@ export class BaseRoom extends Hostable<RoomEvents> {
             if (this.config.enforceSettings) {
                 ev.setSettings(this.config.enforceSettings);
             }
-            this.logger.info("settings updated");
         });
 
         this.on("player.startmeeting", ev => {
@@ -790,7 +789,19 @@ export class BaseRoom extends Hostable<RoomEvents> {
      * @param players The players to get connections for.
      * @returns A list of connections for the players, in the same order.
      */
-    getConnections(players: PlayerDataResolvable[]) {
+    getConnections(players: PlayerDataResolvable[], filter: true): Connection[];
+    getConnections(players: PlayerDataResolvable[], filter: false): (Connection|undefined)[];
+    getConnections(players: PlayerDataResolvable[], filter: boolean) {
+        if (filter) {
+            const connections = [];
+            for (let i = 0; i < players.length; i++) {
+                const connection = this.getConnection(players[i]);
+                if (connection) {
+                    connections.push(connection);
+                }
+            }
+            return connections;
+        }
         return players.map(player => this.getConnection(player));
     }
 
@@ -1698,19 +1709,6 @@ export class BaseRoom extends Hostable<RoomEvents> {
         this.logger.info("Game started");
 
         if (this.hostIsMe) {
-            if (this.lobbyBehaviour)
-                this.despawnComponent(this.lobbyBehaviour);
-
-            const ship_prefabs = [
-                SpawnType.ShipStatus,
-                SpawnType.Headquarters,
-                SpawnType.PlanetMap,
-                SpawnType.AprilShipStatus,
-                SpawnType.Airship
-            ];
-
-            this.spawnPrefab(ship_prefabs[this.settings?.map] || 0, -2);
-
             this.logger.info("Waiting for players to ready up..");
 
             await Promise.race([
@@ -1754,7 +1752,20 @@ export class BaseRoom extends Hostable<RoomEvents> {
                 );
             }
 
+            if (this.lobbyBehaviour)
+                this.despawnComponent(this.lobbyBehaviour);
+
+            const ship_prefabs = [
+                SpawnType.ShipStatus,
+                SpawnType.Headquarters,
+                SpawnType.PlanetMap,
+                SpawnType.AprilShipStatus,
+                SpawnType.Airship
+            ];
+
+            this.spawnPrefab(ship_prefabs[this.settings?.map] || 0, -2);
             this.logger.info("Assigning tasks..");
+            await this.shipStatus?.selectImpostors();
             await this.shipStatus?.assignTasks();
 
             if (this.shipStatus) {
@@ -1762,7 +1773,7 @@ export class BaseRoom extends Hostable<RoomEvents> {
                     this.shipStatus.spawnPlayer(player, true);
                 }
             }
-        }
+        }   
     }
 
     async startGame() {

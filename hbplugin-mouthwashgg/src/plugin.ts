@@ -93,8 +93,10 @@ export class MouthwashPlugin extends WorkerPlugin {
     ) {
         super(worker, config);
 
-        this.worker.socket.removeAllListeners();
-        this.worker.socket.on("message", this.handlePossiblySignedMessage.bind(this));
+        for (const [ , socket ] of this.worker.listenSockets) {
+            socket.removeAllListeners();
+            socket.on("message", this.handlePossiblySignedMessage.bind(this, socket));
+        }
 
         clearInterval(this.worker.pingInterval);
         
@@ -114,7 +116,7 @@ export class MouthwashPlugin extends WorkerPlugin {
                     const sent = connection.sentPackets[i];
                     if (!sent.acked) {
                         if (Date.now() - sent.sentAt > 1500) {
-                            this.worker["_sendPacket"](connection.remoteInfo, sent.buffer);
+                            this.worker.sendRawPacket(connection.listenSocket, connection.remoteInfo, sent.buffer);
                             sent.sentAt = Date.now();
                         }
                     }
@@ -124,20 +126,20 @@ export class MouthwashPlugin extends WorkerPlugin {
     }
 
     get authApi() {
-        this._authApi ??= this.worker.loadedPlugins.get("hbplugin-mouthwashgg-auth") as MouthwashAuthPlugin;
+        this._authApi ??= this.worker.loadedPlugins.get("hbplugin-mouthwashgg-auth")?.pluginInstance as MouthwashAuthPlugin;
         return this._authApi;
     }
 
-    async handlePossiblySignedMessage(message: Buffer, rinfo: dgram.RemoteInfo) {
+    async handlePossiblySignedMessage(listenSocket: dgram.Socket, message: Buffer, rinfo: dgram.RemoteInfo) {
         if (!this.authApi) {
             if (message[0] === 0x80) {
-                return this.worker.handleMessage(message.slice(37), rinfo);
+                return this.worker.handleMessage(listenSocket, message.slice(37), rinfo);
             }
-            return this.worker.handleMessage(message, rinfo);
+            return this.worker.handleMessage(listenSocket, message, rinfo);
         }
 
         if (message[0] === SendOption.Acknowledge) {
-            return this.worker.handleMessage(message, rinfo);
+            return this.worker.handleMessage(listenSocket, message, rinfo);
         }
 
         if (message[0] !== 0x80) {
@@ -163,7 +165,7 @@ export class MouthwashPlugin extends WorkerPlugin {
                 const hmacHash = message.slice(17, 37);
                 const signedMessage = crypto.createHmac("sha1", sessionInfo.client_token).update(message.slice(37)).digest();
                 if (crypto.timingSafeEqual(hmacHash, signedMessage)) {
-                    return this.worker.handleMessage(message.slice(37), rinfo);
+                    return this.worker.handleMessage(listenSocket, message.slice(37), rinfo);
                 }
             } else {
                 if (connection) {
@@ -174,7 +176,7 @@ export class MouthwashPlugin extends WorkerPlugin {
                     writer.uint8(SendOption.Disconnect);
                     writer.write(disconnectPacket);
                     writer.realloc(writer.cursor);
-                    this.worker["_sendPacket"](rinfo, writer.buffer);
+                    this.worker.sendRawPacket(listenSocket, rinfo, writer.buffer);
                 }
                 return;
             }
@@ -183,17 +185,23 @@ export class MouthwashPlugin extends WorkerPlugin {
 
     @MessageHandler(SetGameOptionMessage)
     async onSetGameOption(message: SetGameOptionMessage, context: PacketContext) {
+        if (!context.sender)
+            return;
+
         const room = context.sender.room;
 
         if (!room)
             return;
 
-        const roomApi = room.loadedPlugins.get("hbplugin-mouthwashgg-api") as MouthwashApiPlugin;
+        const roomApi = room.loadedPlugins.get("hbplugin-mouthwashgg-api")?.pluginInstance as MouthwashApiPlugin;
         roomApi.gameOptions.handleMessage(message, context.sender);
     }
 
     @MessageHandler(FetchResourceMessage)
     async onFetchResourceResponse(message: FetchResourceMessage, context: PacketContext) {
+        if (!context.sender)
+            return;
+
         const room = context.sender.room;
 
         if (!room)

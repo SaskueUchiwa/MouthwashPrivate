@@ -1,5 +1,10 @@
 {
     "dependencies": {
-        "hbplugin-ban-textfile": "latest"
+        "hbplugin-mouthwashgg": "link:../../hbplugin-mouthwashgg",
+        "hbplugin-mouthwashgg-api": "link:../../hbplugin-mouthwashgg-api",
+        "hbplugin-mouthwashgg-auth": "link:../../hbplugin-mouthwashgg-auth",
+        "hbplugin-mwgg-gamemode-hns": "link:../../hbplugin-mwgg-gamemode-hns",
+        "hbplugin-mwgg-gamemode-town-of-polus": "link:../../hbplugin-mwgg-gamemode-town-of-polus",
+        "hbplugin-mwgg-gamemode-vanilla": "link:../../hbplugin-mwgg-gamemode-vanilla"
     }
 }

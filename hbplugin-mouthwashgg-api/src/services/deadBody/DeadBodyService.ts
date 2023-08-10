@@ -125,7 +125,7 @@ export class DeadBodyService {
         const cntWriter = HazelWriter.alloc(10);
         cntWriter.write(spawnedObject.components[1]);
 
-        const connections = this.plugin.room.getConnections(players);
+        const connections = players ? this.plugin.room.getConnections(players, true) : undefined;
 
         await this.plugin.room.broadcastMessages([
             new SpawnMessage(
