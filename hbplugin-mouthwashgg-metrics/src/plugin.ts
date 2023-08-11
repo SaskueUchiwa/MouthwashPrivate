@@ -1,6 +1,7 @@
 import {
     EventListener,
     HindenburgPlugin,
+    Int2Code,
     Room,
     RoomCreateEvent,
     RoomDestroyEvent,
@@ -10,6 +11,7 @@ import {
     WorkerPlugin
 } from "@skeldjs/hindenburg";
 
+import * as ioredis from "ioredis";
 import pg from "pg";
 import * as crypto from "crypto";
 
@@ -27,6 +29,8 @@ export interface MouthwashggMetricsPluginConfig {
 export class MouthwashggMetricsPlugin extends WorkerPlugin {
     protected _authApi?: MouthwashAuthPlugin;
     protected postgresClient: pg.Client;
+    protected redisClient: ioredis.Redis;
+    protected _uploadLobbiesInterval: NodeJS.Timeout|undefined;
 
     lobbyIds: WeakMap<Room, string>;
     lobbyCurrentGameIds: WeakMap<Room, string>;
@@ -34,13 +38,20 @@ export class MouthwashggMetricsPlugin extends WorkerPlugin {
     constructor(public readonly worker: Worker, public readonly config: MouthwashggMetricsPluginConfig) {
         super(worker, config);
 
-        const [ hostName, port ] = (process.env.MWGG_METRICS_POSTGRES_HOST as string).split(":");
+        const [ postgresHostName, postgresPort ] = (process.env.MWGG_METRICS_POSTGRES_HOST as string).split(":");
         this.postgresClient = new pg.Client({
             user: process.env.MWGG_METRICS_POSTGRES_USER,
-            host: hostName,
-            port: parseInt(port),
+            host: postgresHostName,
+            port: parseInt(postgresPort),
             database: process.env.MWGG_METRICS_POSTGRES_DATABASE,
             password: process.env.MWGG_METRICS_POSTGRES_PASSWORD
+        });
+        
+        const [ redisHostName, redisPort ] = (process.env.MWGG_METRICS_REDIS_HOST as string).split(":");
+        this.redisClient = new ioredis.Redis(parseInt(redisPort) || 6379, redisHostName, {
+            username: process.env.MWGG_METRICS_REDIS_USERNAME,
+            password: process.env.MWGG_METRICS_REDIS_PASSWORD,
+            lazyConnect: true
         });
 
         this.lobbyIds = new WeakMap;
@@ -54,7 +65,43 @@ export class MouthwashggMetricsPlugin extends WorkerPlugin {
 
     async onPluginLoad() {
         await this.postgresClient.connect();
-        this.logger.info("Connected to postgres database");
+        await this.redisClient.connect();
+        this.logger.info("Connected to Postgres and Redis database");
+        
+        this._uploadLobbiesInterval = setInterval(async () => {
+            await this.uploadAllRoomsToRedis();
+            await this.uploadAllClientsToRedis();
+        }, 10000);
+    }
+
+    async onPluginUnload() {
+        await this.postgresClient.end();
+        await this.redisClient.disconnect();
+        if (this._uploadLobbiesInterval !== undefined) {
+            clearInterval(this._uploadLobbiesInterval);
+        }
+    }
+
+    async uploadAllRoomsToRedis() {
+        if (!this.authApi)
+            return;
+
+        for (const [ , room ] of this.worker.rooms) {
+            await this.redisClient.set(`ROOM:${Int2Code(room.code)}`, "", "EX", 15);
+        }
+    }
+
+    async uploadAllClientsToRedis() {
+        if (!this.authApi)
+            return;
+
+        for (const [ , client ] of this.worker.connections) {
+            const connectionUser = await this.authApi.getConnectionUser(client);
+            if (!connectionUser)
+                continue;
+
+            await this.redisClient.set(`CLIENT:${connectionUser.id}[${this.worker.config.nodeId},${client.clientId}]`, "", "EX", 15);
+        }
     }
 
     @EventListener()

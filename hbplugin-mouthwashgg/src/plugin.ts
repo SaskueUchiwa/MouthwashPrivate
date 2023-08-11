@@ -163,6 +163,7 @@ export class MouthwashPlugin extends WorkerPlugin {
                 }
 
                 const hmacHash = message.slice(17, 37);
+                console.log(sessionInfo.client_token);
                 const signedMessage = crypto.createHmac("sha1", sessionInfo.client_token).update(message.slice(37)).digest();
                 if (crypto.timingSafeEqual(hmacHash, signedMessage)) {
                     return this.worker.handleMessage(listenSocket, message.slice(37), rinfo);
