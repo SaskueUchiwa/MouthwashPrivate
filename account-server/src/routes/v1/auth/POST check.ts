@@ -61,7 +61,7 @@ export default async function (server: AccountServer, req: express.Request, res:
     return res.status(200).json({
         success: true,
         data: {
-            user_id: user.user_id,
+            user_id: user.id,
             client_token: session.client_token,
             email: user.email,
             display_name: user.display_name,
