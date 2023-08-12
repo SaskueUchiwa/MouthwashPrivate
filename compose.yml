@@ -37,7 +37,7 @@ services:
     environment:
       REDIS_ADDR: redis://mwgg-redis:6379
       REDIS_EXPORTER_COUNT_KEYS: ROOM:*,CLIENT:*
-    
+
   mwgg-prometheus:
     image: prom/prometheus
     networks:
@@ -51,7 +51,7 @@ services:
     image: mouthwashgg-account-server
     build:
       context: ./account-server
-      dockerfile: ./account-server/Dockerfile
+      dockerfile: ./Dockerfile
     networks:
       - app
     ports:
@@ -61,7 +61,7 @@ services:
     depends_on:
       mwgg-postgres:
         condition: service_healthy
-  
+
   mwgg-master:
     image: mouthwashgg-master
     build:
