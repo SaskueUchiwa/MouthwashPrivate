@@ -567,4 +567,5 @@ db
 depot
 openwt.bat
 misc
-Hindenburg2
+# postgres data
+data
