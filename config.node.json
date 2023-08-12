@@ -1,5 +1,4 @@
 {
-    "$schema": "./config.schema.json",
     "clusterName": "Capybara",
     "nodeId": 0,
     "checkForUpdates": true,
@@ -15,7 +14,7 @@
         "additionalPorts": [],
         "acceptUnknownGameData": false,
         "messageOrdering": false,
-        "ip": "auto",
+        "ip": "127.0.0.1",
         "useDtlsLayout": false
     },
     "rateLimit": {
@@ -36,8 +35,15 @@
     "plugins": {
         "loadDirectory": true,
         "hbplugin-mouthwashgg-auth": {
-            "baseUrl": "http://127.0.0.1:8000"
-        }
+            "baseUrl": "http://mwgg-account-server:8000"
+        },
+        "hbplugin-mouthwashgg-master": false,
+        "hbplugin-mouthwashgg": true,
+        "hbplugin-mouthwashgg-api": true,
+        "hbplugin-mouthwashgg-metrics": true,
+        "hbplugin-mwgg-gamemode-hns": true,
+        "hbplugin-mwgg-gamemode-town-of-polus": true,
+        "hbplugin-mwgg-gamemode-vanilla": true
     },
     "anticheat": {
         "penalty": {

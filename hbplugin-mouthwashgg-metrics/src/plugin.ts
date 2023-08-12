@@ -68,6 +68,8 @@ export class MouthwashggMetricsPlugin extends WorkerPlugin {
         await this.redisClient.connect();
         this.logger.info("Connected to Postgres and Redis database");
         
+        await this.uploadAllRoomsToRedis();
+        await this.uploadAllClientsToRedis();
         this._uploadLobbiesInterval = setInterval(async () => {
             await this.uploadAllRoomsToRedis();
             await this.uploadAllClientsToRedis();
@@ -87,8 +89,21 @@ export class MouthwashggMetricsPlugin extends WorkerPlugin {
             return;
 
         for (const [ , room ] of this.worker.rooms) {
-            await this.redisClient.set(`ROOM:${Int2Code(room.code)}`, "", "EX", 15);
+            const lobbyId = this.lobbyIds.get(room);
+            const gameCode = Int2Code(room.code);
+            await this.redisClient.set(`ROOM:${gameCode}`, JSON.stringify({
+                nodeId: this.worker.config.nodeId,
+                gameCode,
+                lobbyId
+            }), "EX", 15);
         }
+        await this.redisClient.set(`NODE:${this.worker.config.nodeId}`, JSON.stringify({
+            nodeId: this.worker.config.nodeId,
+            externalIp: this.worker.config.socket.ip,
+            port: this.worker.config.socket.port,
+            numRooms: this.worker.rooms.size,
+            numConnections: this.worker.connections.size
+        }), "EX", 15);
     }
 
     async uploadAllClientsToRedis() {
@@ -100,7 +115,11 @@ export class MouthwashggMetricsPlugin extends WorkerPlugin {
             if (!connectionUser)
                 continue;
 
-            await this.redisClient.set(`CLIENT:${connectionUser.id}[${this.worker.config.nodeId},${client.clientId}]`, "", "EX", 15);
+            await this.redisClient.set(`CLIENT:${connectionUser.id}[${this.worker.config.nodeId},${client.clientId}]`, JSON.stringify({
+                userId: connectionUser.id,
+                nodeId: this.worker.config.nodeId,
+                clientId: client.clientId
+            }), "EX", 15);
         }
     }
 
@@ -121,10 +140,10 @@ export class MouthwashggMetricsPlugin extends WorkerPlugin {
         }
 
         const { rows: createdLobbies } = await this.postgresClient.query(`
-            INSERT INTO lobby(id, creator_id, created_at, host_server_id, destroyed_at)
-            VALUES($1, $2, NOW(), $3, NULL)
+            INSERT INTO lobby(id, creator_id, created_at, host_server_id, destroyed_at, game_code)
+            VALUES($1, $2, NOW(), $3, NULL, $4)
             RETURNING *
-        `, [ lobbyId, connectionUser.id, this.worker.config.nodeId ]);
+        `, [ lobbyId, connectionUser.id, this.worker.config.nodeId, Int2Code(ev.room.code) ]);
 
         if (createdLobbies.length > 0) {
             this.lobbyIds.set(ev.room, lobbyId);
@@ -200,7 +219,7 @@ export class MouthwashggMetricsPlugin extends WorkerPlugin {
         }
         await this.postgresClient.query(`
             INSERT INTO player(id, game_id, user_id)
-            VALUES ${userIds.map((userId, i) => `($${(i * 3 + 1)}, $${(i * 3) + 2}, $${(i * 3) + 3})`).join(",")}
+            VALUES ${userIds.map((_, i) => `($${(i * 3 + 1)}, $${(i * 3) + 2}, $${(i * 3) + 3})`).join(",")}
             RETURNING *
         `, params);
 

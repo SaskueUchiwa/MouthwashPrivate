@@ -1,0 +1,83 @@
+services:
+  mwgg-postgres:
+    image: postgres
+    networks:
+      - app
+    env_file:
+      - ./.env
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: Mouthwash
+    ports:
+      - 5432:5432
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  mwgg-redis:
+    image: redis
+    networks:
+      - app
+    volumes:
+      - ./redis-conf:/usr/local/etc/redis
+    ports:
+      - 6379:6379/tcp
+    command: redis-server /usr/local/etc/redis/redis.conf
+
+  mwgg-prometheus-redis-exporter:
+    image: oliver006/redis_exporter
+    networks:
+      - app
+    ports:
+      - 9121:9121/tcp
+    env_file:
+      - ./.env
+    environment:
+      REDIS_ADDR: redis://mwgg-redis:6379
+      REDIS_EXPORTER_COUNT_KEYS: ROOM:*,CLIENT:*
+    
+  mwgg-prometheus:
+    image: prom/prometheus
+    networks:
+      - app
+    ports:
+      - 9090:9090/tcp
+    volumes:
+      - ./prom-conf:/etc/prometheus
+
+  mwgg-account-server:
+    image: mouthwashgg-account-server
+    build:
+      context: ./account-server
+      dockerfile: ./account-server/Dockerfile
+    networks:
+      - app
+    ports:
+      - 8000:8000/tcp
+    env_file:
+      - ./account-server/.env
+    depends_on:
+      mwgg-postgres:
+        condition: service_healthy
+  
+  mwgg-master:
+    image: mouthwashgg-master
+    build:
+      context: .
+      dockerfile: ./Dockerfile.Master
+    networks:
+      - app
+    ports:
+      - 22023:22023/udp
+    cpu_count: 1
+    env_file:
+      - ./.env
+    depends_on:
+      mwgg-postgres:
+        condition: service_healthy
+
+networks:
+  app:
+    driver: bridge

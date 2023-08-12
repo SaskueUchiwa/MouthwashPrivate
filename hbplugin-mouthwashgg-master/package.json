@@ -1,5 +1,5 @@
 {
-  "name": "hbplugin-mouthwashgg-metrics",
+  "name": "hbplugin-mouthwashgg-master",
   "packageManager": "yarn@3.6.1",
   "version": "1.0.0",
   "description": "My cool Hindenburg plugin",
@@ -33,17 +33,16 @@
     "hindenburg": "1.2.*"
   },
   "devDependencies": {
-    "@skeldjs/hindenburg": "workspace:*",
-    "@types/pg": "^8.10.2",
+    "@skeldjs/hindenburg": "link:workspace:*",
     "typescript": "latest"
   },
   "plugin": {
-    "loadOrder": "last"
+    "loadOrder": "none",
+    "defaultConfig": {
+      "message": "Hello, world!"
+    }
   },
   "dependencies": {
-    "dotenv": "^16.3.1",
-    "hbplugin-mouthwashgg-api": "workspace:*",
-    "ioredis": "^5.3.2",
-    "pg": "^8.11.2"
+    "ioredis": "^5.3.2"
   }
 }
