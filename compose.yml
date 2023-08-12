@@ -16,7 +16,7 @@ services:
       timeout: 5s
       retries: 5
     volumes:
-      ./data/pg:/var/lib/postgresql/data
+      - ./data/pg:/var/lib/postgresql/data
 
   mwgg-redis:
     image: redis
