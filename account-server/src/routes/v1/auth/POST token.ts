@@ -68,7 +68,7 @@ export default async function (server: AccountServer, req: express.Request, res:
         FROM session
         WHERE user_id = $1
         AND ip = $2
-    `, [ user.user_id, ip ]);
+    `, [ user.id, ip ]);
 
     const session = foundSessions?.[0];
     let clientToken = session?.client_token;

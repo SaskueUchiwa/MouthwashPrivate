@@ -25,6 +25,8 @@ services:
     ports:
       - 6379:6379/tcp
     command: redis-server /usr/local/etc/redis/redis.conf
+    healthcheck:
+      test: "exit 0"
 
   mwgg-prometheus-redis-exporter:
     image: oliver006/redis_exporter
@@ -35,8 +37,11 @@ services:
     env_file:
       - ./.env
     environment:
-      REDIS_ADDR: redis://mwgg-redis:6379
+      REDIS_ADDR: mwgg-redis:6379
       REDIS_EXPORTER_COUNT_KEYS: ROOM:*,CLIENT:*
+    depends_on:
+      mwgg-redis:
+        condition: service_healthy
 
   mwgg-prometheus:
     image: prom/prometheus
@@ -80,4 +85,4 @@ services:
 
 networks:
   app:
-    driver: bridge
+    driver: host
