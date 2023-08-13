@@ -71,41 +71,6 @@ create table game
 alter table game
     owner to postgres;
 
-create table bundle
-(
-    id                uuid         not null
-        primary key,
-    name              varchar      not null,
-    bundle_asset_path varchar      not null,
-    thumbnail_url     varchar      not null,
-    author_id         uuid         not null
-        constraint bundle_author_id_foreign
-            references users,
-    base_resource_id  integer      not null,
-    price_usd         integer      not null,
-    added_at          timestamp(0) not null
-);
-
-alter table bundle
-    owner to postgres;
-
-create table bundle_item
-(
-    id            uuid    not null
-        primary key,
-    bundle_id     uuid    not null
-        constraint bundle_item_bundle_id_foreign
-            references bundle,
-    name          varchar not null,
-    among_us_id   bigint  not null,
-    resource_path varchar not null,
-    type          varchar not null,
-    resource_id   integer not null
-);
-
-alter table bundle_item
-    owner to postgres;
-
 create table player_infraction
 (
     id          uuid         not null
@@ -159,6 +124,68 @@ alter table email_verification
 create index email_verification_user_id_index
     on email_verification (user_id);
 
+create table user_perk
+(
+    id            uuid    not null
+        primary key,
+    user_id       uuid    not null
+        constraint user_perk_user_id_foreign
+            references users,
+    perk_id       varchar not null,
+    perk_settings json    not null
+);
+
+alter table user_perk
+    owner to postgres;
+
+create table asset_bundle
+(
+    bundle_asset_path varchar not null
+        constraint asset_bundle_pk
+            primary key,
+    url               varchar
+);
+
+alter table asset_bundle
+    owner to postgres;
+
+create table bundle
+(
+    id                uuid         not null
+        primary key,
+    name              varchar      not null,
+    bundle_asset_path varchar      not null
+        constraint bundle_asset_bundle_bundle_asset_path_fk
+            references asset_bundle,
+    thumbnail_url     varchar      not null,
+    author_id         uuid         not null
+        constraint bundle_author_id_foreign
+            references users,
+    base_resource_id  integer      not null,
+    price_usd         integer      not null,
+    added_at          timestamp(0) not null
+);
+
+alter table bundle
+    owner to postgres;
+
+create table bundle_item
+(
+    id            uuid    not null
+        primary key,
+    bundle_id     uuid    not null
+        constraint bundle_item_bundle_id_foreign
+            references bundle,
+    name          varchar not null,
+    among_us_id   bigint  not null,
+    resource_path varchar not null,
+    type          varchar not null,
+    resource_id   integer not null
+);
+
+alter table bundle_item
+    owner to postgres;
+
 create table user_owned_item
 (
     id        uuid         not null
@@ -178,16 +205,3 @@ create table user_owned_item
 alter table user_owned_item
     owner to postgres;
 
-create table user_perk
-(
-    id            uuid    not null
-        primary key,
-    user_id       uuid    not null
-        constraint user_perk_user_id_foreign
-            references users,
-    perk_id       varchar not null,
-    perk_settings json    not null
-);
-
-alter table user_perk
-    owner to postgres;
