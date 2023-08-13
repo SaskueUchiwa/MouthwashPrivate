@@ -26,7 +26,7 @@ yarn
 yarn build-all
 
 mkdir -p data/prometheus
-mkdir -p pg
+mkdir -p data/pg
 
 chown 65534:65534 /data/prometheus
 
