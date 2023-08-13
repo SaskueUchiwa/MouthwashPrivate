@@ -1,23 +1,4 @@
 services:
-  mwgg-postgres:
-    image: postgres
-    networks:
-      - app
-    env_file:
-      - ./.env
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_DB: Mouthwash
-    ports:
-      - 5432:5432
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    volumes:
-      - ./data/pg:/var/lib/postgresql/data
-
   mwgg-redis:
     image: redis
     networks:
@@ -55,21 +36,6 @@ services:
       - ./prom-conf:/etc/prometheus
       - ./data/prometheus:/prometheus
 
-  mwgg-account-server:
-    image: mouthwashgg-account-server
-    build:
-      context: ./account-server
-      dockerfile: ./Dockerfile
-    networks:
-      - app
-    ports:
-      - 8000:8000/tcp
-    env_file:
-      - ./account-server/.env
-    depends_on:
-      mwgg-postgres:
-        condition: service_healthy
-
   mwgg-master:
     image: mouthwashgg-master
     build:
@@ -84,10 +50,8 @@ services:
     cpu_count: 1
     env_file:
       - ./.env
-    depends_on:
-      mwgg-postgres:
-        condition: service_healthy
 
 networks:
   app:
-    driver: bridge
+    external:
+      name: mwgg_app

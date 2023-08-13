@@ -1,0 +1,1 @@
+docker compose -f accounts.compose.yml -p mwgg-accounts up -d
