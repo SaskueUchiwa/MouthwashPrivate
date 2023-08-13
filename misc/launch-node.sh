@@ -1,0 +1,1 @@
+docker run -d -e HINDENBURG_CLI_ARGS="--socket.port 22123 --nodeId 1" --env-file .env --network mwggprov_app mouthwashgg-node

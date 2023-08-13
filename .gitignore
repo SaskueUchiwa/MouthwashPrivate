@@ -566,6 +566,5 @@ dist
 db
 depot
 openwt.bat
-misc
 # postgres data
 data

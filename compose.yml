@@ -88,4 +88,4 @@ services:
 
 networks:
   app:
-    driver: host
+    driver: bridge
