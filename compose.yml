@@ -79,6 +79,8 @@ services:
       - app
     ports:
       - 22023:22023/udp
+    environment:
+      HINDENBURG_CLI_ARGS: "--socket.ip 'auto'"
     cpu_count: 1
     env_file:
       - ./.env
