@@ -55,7 +55,7 @@ export default async function (server: AccountServer, req: express.Request, res:
     const sha256Hash = crypto.createHash("sha256").update(randomBytes).digest("hex");
 
     try {
-        const verifyUrl = server.config.base_account_server_url + "/v1/verify?t=" + sha256Hash;
+        const verifyUrl = server.config.base_account_server_url + "/api/v1/verify?t=" + sha256Hash;
         
         const sendEmail = await server.mgClient.messages.create(server.config.mailgun.domain, {
             from: `Mouthwash.gg Accounts <accounts@${server.config.mailgun.domain}>`,
