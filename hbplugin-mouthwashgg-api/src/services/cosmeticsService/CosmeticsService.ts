@@ -10,7 +10,7 @@ interface LoadedCosmetic {
     among_us_id: number;
     resource_id: number;
     resource_path: string;
-    bundle_path: string;
+    asset_bundle_url: string;
     type: "HAT"|"PET";
     is_owned: boolean;
 }
@@ -56,7 +56,7 @@ export class CosmeticsService {
             if (recipLoadedCosmetics.has(cosmeticId))
                 continue;
 
-            const assetBundle = await AssetBundle.loadFromUrl(loadedCosmetic.bundle_path, false);
+            const assetBundle = await AssetBundle.loadFromUrl(loadedCosmetic.asset_bundle_url, false);
             await this.plugin.assetLoader.assertLoaded(connection, assetBundle);
 
             promises.push(this.plugin.assetLoader.waitForLoaded(connection, assetBundle).then(() => {
@@ -70,7 +70,7 @@ export class CosmeticsService {
                 among_us_id: loadedCosmetic.among_us_id,
                 resource_id: loadedCosmetic.resource_id,
                 resource_path: loadedCosmetic.resource_path,
-                bundle_path: loadedCosmetic.bundle_path,
+                asset_bundle_url: loadedCosmetic.asset_bundle_url,
                 type: loadedCosmetic.type,
                 is_owned: false
             });
@@ -118,7 +118,7 @@ export class CosmeticsService {
                     }
                 }
 
-                const assetBundle = await AssetBundle.loadFromUrl(ownedCosmetic.bundle_resource_path, false);
+                const assetBundle = await AssetBundle.loadFromUrl(ownedCosmetic.asset_bundle_url, false);
                 await this.plugin.assetLoader.assertLoaded(connection, assetBundle);
 
                 promises.push(this.plugin.assetLoader.waitForLoaded(connection, assetBundle).then(() => {
@@ -132,7 +132,7 @@ export class CosmeticsService {
                     among_us_id: ownedCosmetic.among_us_id,
                     resource_id: ownedCosmetic.resource_id,
                     resource_path: ownedCosmetic.resource_path,
-                    bundle_path: ownedCosmetic.bundle_resource_path,
+                    asset_bundle_url: ownedCosmetic.asset_bundle_url,
                     type: ownedCosmetic.type,
                     is_owned: false
                 });

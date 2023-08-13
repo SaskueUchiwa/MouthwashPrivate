@@ -62,8 +62,6 @@ export class AssetReference {
     ) {}
 }
 
-const baseUrl = "https://assets.mouthwash.midlight.studio/";
-
 export class AssetBundle {
     static cachedBundles: Map<string, AssetBundle> = new Map;
     assets: Map<string, Asset>;
@@ -82,10 +80,10 @@ export class AssetBundle {
             return cachedBundle;
         }
 
-        const response = await got.get(baseUrl + location + ".json")
+        const response = await got.get(location + ".json")
             .json<GetAssetBundleDeclarationResponse>();
 
-        const assetBundle = new AssetBundle(baseUrl + location, Buffer.from(response.hash, "hex"), response.assetBundleId);
+        const assetBundle = new AssetBundle(location, Buffer.from(response.hash, "hex"), response.assetBundleId);
 
         for (let i = 0; i < response.assets.length; i++) {
             const asset = response.assets[i];

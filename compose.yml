@@ -80,7 +80,7 @@ services:
     ports:
       - 22023:22023/udp
     environment:
-      HINDENBURG_CLI_ARGS: "--socket.ip 'auto'"
+      HINDENBURG_CLI_ARGS: "--socket.ip 'auto' --plugins[hbplugin-mouthwashgg-auth].baseUrl 'http://mwgg-account-server:8000'"
     cpu_count: 1
     env_file:
       - ./.env

@@ -35,7 +35,7 @@ export interface BundleItemModel {
     among_us_id: number;
     resource_path: string;
     resource_id: number;
-    bundle_resource_path: string;
+    asset_bundle_url: string;
     type: "HAT"|"PET";
 }
 

@@ -140,9 +140,10 @@ alter table user_perk
 
 create table asset_bundle
 (
-    bundle_asset_path varchar not null
+    id                uuid not null
         constraint asset_bundle_pk
             primary key,
+    bundle_asset_path varchar,
     url               varchar
 );
 
@@ -151,19 +152,19 @@ alter table asset_bundle
 
 create table bundle
 (
-    id                uuid         not null
+    id               uuid         not null
         primary key,
-    name              varchar      not null,
-    bundle_asset_path varchar      not null
-        constraint bundle_asset_bundle_bundle_asset_path_fk
-            references asset_bundle,
-    thumbnail_url     varchar      not null,
-    author_id         uuid         not null
+    name             varchar      not null,
+    thumbnail_url    varchar      not null,
+    author_id        uuid         not null
         constraint bundle_author_id_foreign
             references users,
-    base_resource_id  integer      not null,
-    price_usd         integer      not null,
-    added_at          timestamp(0) not null
+    base_resource_id integer      not null,
+    price_usd        integer      not null,
+    added_at         timestamp(0) not null,
+    asset_bundle_id  uuid
+        constraint bundle_asset_bundle_id_fk
+            references asset_bundle
 );
 
 alter table bundle
@@ -177,7 +178,7 @@ create table bundle_item
         constraint bundle_item_bundle_id_foreign
             references bundle,
     name          varchar not null,
-    among_us_id   bigint  not null,
+    among_us_id   integer not null,
     resource_path varchar not null,
     type          varchar not null,
     resource_id   integer not null
@@ -204,4 +205,7 @@ create table user_owned_item
 
 alter table user_owned_item
     owner to postgres;
+
+create unique index asset_bundle_bundle_asset_path_uindex
+    on asset_bundle (bundle_asset_path);
 

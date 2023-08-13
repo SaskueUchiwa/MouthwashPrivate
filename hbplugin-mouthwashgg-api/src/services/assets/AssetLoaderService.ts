@@ -6,6 +6,11 @@ import { ClientFetchResourceResponseEvent } from "../../events";
 import { MouthwashApiPlugin } from "../../plugin";
 import { AssetBundle, AssetReference } from "./AssetBundle";
 
+export const AssetBundleIds = { // TODO: Move to database
+    "PggResources/Global": "https://jhwupengaqaqjewreahz.supabase.co/storage/v1/object/public/MouthwashAssets/016c9f28-ed8f-49cd-b819-fa993e4e3267",
+    "PggResources/TownOfPolus": "https://jhwupengaqaqjewreahz.supabase.co/storage/v1/object/public/MouthwashAssets/943eb535-3ba9-48b0-9470-80af80235842"
+} as Record<string, string>;
+
 export class AssetLoaderService {
     globalAssets?: AssetBundle;
     
@@ -20,7 +25,7 @@ export class AssetLoaderService {
     }
 
     async loadGlobalAsset() {
-        this.globalAssets = await AssetBundle.loadFromUrl("PggResources/Global", false);
+        this.globalAssets = await AssetBundle.loadFromUrl(AssetBundleIds["PggResources/Global"], false);
     }
 
     getLoadedBundles(connection: Connection) {
@@ -128,7 +133,7 @@ export class AssetLoaderService {
     }
 
     async resolveAssetReference(assetRef: AssetReference) {
-        const assetBundle = await AssetBundle.loadFromUrl(assetRef.bundleLocation, false);
+        const assetBundle = await AssetBundle.loadFromUrl(AssetBundleIds[assetRef.bundleLocation], false);
         const asset = assetBundle.getAssetSafe(assetRef.assetPath);
 
         const promises = [];
@@ -149,7 +154,7 @@ export class AssetLoaderService {
     }
 
     async resolveAssetReferenceFor(assetRef: AssetReference, setFor: PlayerData[]) {
-        const assetBundle = await AssetBundle.loadFromUrl(assetRef.bundleLocation, false);
+        const assetBundle = await AssetBundle.loadFromUrl(AssetBundleIds[assetRef.bundleLocation], false);
         const asset = assetBundle.getAssetSafe(assetRef.assetPath);
 
         const connections = this.plugin.room.getConnections(setFor, true);
