@@ -1,7 +1,10 @@
 {
     "properties": {
-        "message": {
-            "type": "string"
+        "pullNodesInterval": {
+            "type": "number"
+        },
+        "nodeExpireTimeout": {
+            "type": "number"
         }
     }
 }

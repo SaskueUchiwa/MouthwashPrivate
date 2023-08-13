@@ -26,7 +26,7 @@ yarn build-all
 mkdir -p data/prometheus
 mkdir -p data/pg
 
-chown 65534:65534 /data/prometheus
+chown 65534:65534 data/prometheus
 
 rm /etc/nginx/sites-enabled/default
 echo "server {

@@ -39,7 +39,8 @@
   "plugin": {
     "loadOrder": "none",
     "defaultConfig": {
-      "message": "Hello, world!"
+      "pullNodesInterval": 10000,
+      "nodeExpireTimeout": 15000
     }
   },
   "dependencies": {

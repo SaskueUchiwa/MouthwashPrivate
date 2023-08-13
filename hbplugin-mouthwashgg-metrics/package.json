@@ -38,7 +38,11 @@
     "typescript": "latest"
   },
   "plugin": {
-    "loadOrder": "last"
+    "loadOrder": "last",
+    "defaultConfig": {
+      "pushNodeInterval": 10000,
+      "nodeExpireTimeout": 15000
+    }
   },
   "dependencies": {
     "dotenv": "^16.3.1",

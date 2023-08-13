@@ -22,7 +22,8 @@ import { MouthwashAuthPlugin } from "hbplugin-mouthwashgg-auth";
 import { MouthwashApiPlugin } from "hbplugin-mouthwashgg-api";
 
 export interface MouthwashggMetricsPluginConfig {
-
+    pushNodeInterval: number;
+    nodeExpireTimeout: number;
 }
 
 @HindenburgPlugin("hbplugin-mouthwashgg-metrics")
@@ -71,9 +72,8 @@ export class MouthwashggMetricsPlugin extends WorkerPlugin {
         await this.uploadAllRoomsToRedis();
         await this.uploadAllClientsToRedis();
         this._uploadLobbiesInterval = setInterval(async () => {
-            await this.uploadAllRoomsToRedis();
-            await this.uploadAllClientsToRedis();
-        }, 10000);
+            await this.pushNodeInformation();
+        }, this.config.pushNodeInterval);
     }
 
     async onPluginUnload() {
@@ -82,6 +82,27 @@ export class MouthwashggMetricsPlugin extends WorkerPlugin {
         if (this._uploadLobbiesInterval !== undefined) {
             clearInterval(this._uploadLobbiesInterval);
         }
+    }
+
+    onConfigUpdate(oldConfig: any, newConfig: any) {
+        if (oldConfig.pushNodeInterval !== newConfig.pushNodeInterval && this._uploadLobbiesInterval !== undefined) {
+            clearInterval(this._uploadLobbiesInterval);
+            this._uploadLobbiesInterval = setInterval(async () => {
+                await this.pushNodeInformation();
+            }, this.config.pushNodeInterval);
+        }
+    }
+
+    async pushNodeInformation() {
+        await this.uploadAllRoomsToRedis();
+        await this.uploadAllClientsToRedis();
+        await this.redisClient.set(`NODE:${this.worker.config.nodeId}`, JSON.stringify({
+            nodeId: this.worker.config.nodeId,
+            externalIp: this.worker.config.socket.ip,
+            port: this.worker.config.socket.port,
+            numRooms: this.worker.rooms.size,
+            numConnections: this.worker.connections.size
+        }), "PX", this.config.nodeExpireTimeout);
     }
 
     async uploadAllRoomsToRedis() {
@@ -95,15 +116,8 @@ export class MouthwashggMetricsPlugin extends WorkerPlugin {
                 nodeId: this.worker.config.nodeId,
                 gameCode,
                 lobbyId
-            }), "EX", 15);
+            }), "PX", this.config.nodeExpireTimeout);
         }
-        await this.redisClient.set(`NODE:${this.worker.config.nodeId}`, JSON.stringify({
-            nodeId: this.worker.config.nodeId,
-            externalIp: this.worker.config.socket.ip,
-            port: this.worker.config.socket.port,
-            numRooms: this.worker.rooms.size,
-            numConnections: this.worker.connections.size
-        }), "EX", 15);
     }
 
     async uploadAllClientsToRedis() {
@@ -119,7 +133,7 @@ export class MouthwashggMetricsPlugin extends WorkerPlugin {
                 userId: connectionUser.id,
                 nodeId: this.worker.config.nodeId,
                 clientId: client.clientId
-            }), "EX", 15);
+            }), "PX", this.config.nodeExpireTimeout);
         }
     }
 

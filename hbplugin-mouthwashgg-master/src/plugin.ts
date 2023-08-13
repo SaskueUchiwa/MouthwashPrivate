@@ -14,7 +14,8 @@ import {
 import * as ioredis from "ioredis";
 
 export interface MouthwashggMasterPluginConfig {
-
+    pullNodesInterval: number;
+    nodeExpireTimeout: number;
 }
 
 export interface NodeInformation {
@@ -23,6 +24,7 @@ export interface NodeInformation {
     port: number;
     numRooms: number;
     numConnections: number;
+    recordedAt: number;
 }
 
 @HindenburgPlugin("hbplugin-mouthwashgg-master")
@@ -50,13 +52,22 @@ export class MouthwashggMasterPlugin extends WorkerPlugin {
         await this.pullNodesFromRedis();
         this.pullInterval = setInterval(async () => {
             await this.pullNodesFromRedis();
-        }, 10000);
+        }, this.config.pullNodesInterval);
     }
 
     async onPluginUnload() {
         await this.redisClient.quit();
         if (this.pullInterval !== undefined) {
             clearInterval(this.pullInterval);
+        }
+    }
+
+    onConfigUpdate(oldConfig: any, newConfig: any) {
+        if (oldConfig.checkForUpdatesInterval !== newConfig.checkForUpdatesInterval && this.pullInterval !== undefined) {
+            clearInterval(this.pullInterval);
+            this.pullInterval = setInterval(async () => {
+                await this.pullNodesFromRedis();
+            }, this.config.pullNodesInterval);
         }
     }
 
@@ -78,9 +89,9 @@ export class MouthwashggMasterPlugin extends WorkerPlugin {
 
     protected recordNodeInformation(nodeKeyValue: string) {
         try {
-            const json = JSON.parse(nodeKeyValue);
-            this.cachedNodes.set(json.nodeId, json);
-            return json as NodeInformation;
+            const json = JSON.parse(nodeKeyValue) as Omit<NodeInformation, "recordedAt">;
+            this.cachedNodes.set(json.nodeId, { ...json, recordedAt: Date.now() });
+            return json;
         } catch (e: any) {
             this.logger.warn("Failed to record node information '%s': %s", nodeKeyValue, e);
             return undefined;
@@ -89,7 +100,7 @@ export class MouthwashggMasterPlugin extends WorkerPlugin {
 
     async getNodeInformation(nodeId: number) {
         const cachedNodeInfo = this.cachedNodes.get(nodeId);
-        if (!cachedNodeInfo) {
+        if (!cachedNodeInfo || cachedNodeInfo.recordedAt < Date.now() - this.config.nodeExpireTimeout) {
             const nodeKeyValue = await this.redisClient.get("NODE:" + nodeId);
             if (nodeKeyValue === null) {
                 return undefined;
