@@ -1,6 +1,7 @@
 import * as crypto from "crypto";
 import { AccountServer } from "../AccountServer";
 import { Unauthorized } from "../errors";
+import { Transaction } from "mouthwash-mediator";
 
 export interface Session {
     id: string;
@@ -12,15 +13,15 @@ export interface Session {
 export class SessionsController {
     constructor(public readonly server: AccountServer) {}
 
-    async getClientSession(userId: string, authorization: string) {
+    async getClientSession(authorization: string) {
         const [ tokenType, token ] = authorization.split(" ");
         if (tokenType !== "Bearer" || !token) throw new Unauthorized();
 
         const { rows: foundSessions } = await this.server.postgresClient.query(`
             SELECT *
             FROM session
-            WHERE user_id = $1 AND client_token = $2
-        `, [ userId, token ]);
+            WHERE client_token = $1
+        `, [token ]);
 
         return foundSessions[0] as Session|undefined;
     }
@@ -46,5 +47,11 @@ export class SessionsController {
         `, [ crypto.randomUUID(), userId, sha256Hash, ip ]);
 
         return createdSessions[0] as Session|undefined;
+    }
+
+    async validateAuthorization(transaction: Transaction<any>) {
+        const authorization = transaction.req.header("Authorization");
+
+        
     }
 }

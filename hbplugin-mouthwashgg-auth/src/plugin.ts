@@ -41,7 +41,11 @@ export interface BundleItemModel {
 
 export interface PerkModel {
     id: string;
-    config: any;
+    settings: any;
+}
+export type InternalUserInformationModel = UserAccountModel & {
+    owned_cosmetics: BundleItemModel[];
+    perks: PerkModel[];
 }
 
 export interface GenericCacheData<T> {
@@ -67,13 +71,13 @@ export interface MouthwashAuthPluginConfig {
 export class MouthwashAuthPlugin extends WorkerPlugin {
     internalAccessKey: string;
 
-    userCache: Map<string, GenericCacheData<UserAccountModel>>;
+    userCache: Map<string, GenericCacheData<InternalUserInformationModel>>;
     userOwnedItemsCache: Map<string, GenericCacheData<BundleItemModel[]>>;
     userPerksCache: Map<string, GenericCacheData<PerkModel[]>>;
     sessionCache: Map<string, GenericCacheData<UserSessionModel>>;
 
     connectionSessionCache: WeakMap<Connection, UserSessionModel>;
-    connectionUserCache: WeakMap<Connection, UserAccountModel>;
+    connectionUserCache: WeakMap<Connection, InternalUserInformationModel>;
 
     constructor(
         public readonly worker: Worker,
@@ -126,7 +130,7 @@ export class MouthwashAuthPlugin extends WorkerPlugin {
             body: body ? JSON.stringify(body) : undefined,
             headers: {
                 "Authorization": this.internalAccessKey
-                    ? "Bearer " + this.internalAccessKey
+                    ? "Service " + this.internalAccessKey
                     : undefined,
                 "Content-Type": "application/json"
             }
@@ -162,7 +166,7 @@ export class MouthwashAuthPlugin extends WorkerPlugin {
             return cachedUser;
         }
 
-        const res = await this.make<UserAccountModel>("GET", "/api/v2/internal/users/" + clientId);
+        const res = await this.make<InternalUserInformationModel>("GET", "/api/v2/internal/users/" + clientId);
         if (res.success) {
             this.setCached(this.userCache, clientId, res.data, 3600);
             return res.data;
@@ -231,33 +235,5 @@ export class MouthwashAuthPlugin extends WorkerPlugin {
             cachedUser.cosmetic_pet = petId;
             cachedUser.cosmetic_skin = skinId;
         }
-    }
-
-    async getOwnedCosmetics(clientId: string) {
-        const cachedCosmetics = this.getCached(this.userOwnedItemsCache, clientId);
-        if (cachedCosmetics) {
-            return cachedCosmetics;
-        }
-
-        const res = await this.make<BundleItemModel[]>("GET", "/api/v2/internal/users/" + clientId + "/owned_cosmetics");
-        if (res.success) {
-            this.setCached(this.userOwnedItemsCache, clientId, res.data, 3600);
-            return res.data;
-        }
-        return undefined;
-    }
-
-    async getPerks(clientId: string) {
-        const cachedPerks = this.getCached(this.userPerksCache, clientId);
-        if (cachedPerks) {
-            return cachedPerks;
-        }
-
-        const res = await this.make<PerkModel[]>("GET", "/api/v2/internal/users/" + clientId + "/perks");
-        if (res.success) {
-            this.setCached(this.userPerksCache, clientId, res.data, 3600);
-            return res.data;
-        }
-        return undefined;
     }
 }

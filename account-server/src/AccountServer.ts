@@ -4,14 +4,15 @@ import FormData from "form-data";
 import Mailgun from "mailgun.js";
 
 import { IMailgunClient } from "mailgun.js/Interfaces";
-import { BaseRoute } from "./routes/BaseRoute";
 import { AccountServerConfig } from "./interfaces";
 import { AccountsController, CosmeticsController, InternalController, SessionsController } from "./controllers";
+import { BaseRoute } from "./routes/BaseRoute";
 import { AuthRoute } from "./routes/v2/auth";
 import { AccountsRoute } from "./routes/v2/accounts";
 import { UsersRoute } from "./routes/v2/internal/users";
 import { SessionsRoute } from "./routes/v2/internal/sessions";
 import { VerifyRoute } from "./routes/v2/verify";
+import { BundlesRoute } from "./routes/v2/bundles";
 
 export class AccountServer {
     mediatorServer: mediator.MediatorServer<typeof BaseRoute>;
@@ -27,7 +28,7 @@ export class AccountServer {
         this.mediatorServer = new mediator.MediatorServer({
             development: process.env.NODE_ENV === "development",
             crossDomains: ["*"],
-            allowedHeaders: ["Authorization", "Client-Id", "Content-Type"],
+            allowedHeaders: ["Authorization", "Content-Type"],
             pathPrefix: config.path_prefix
         }, "account-server", this);
 
@@ -58,6 +59,7 @@ export class AccountServer {
         this.mediatorServer.registerRoute(UsersRoute);
         this.mediatorServer.registerRoute(SessionsRoute);
         this.mediatorServer.registerRoute(VerifyRoute);
+        this.mediatorServer.registerRoute(BundlesRoute);
 
         this.mediatorServer.listen(this.config.port);
     }

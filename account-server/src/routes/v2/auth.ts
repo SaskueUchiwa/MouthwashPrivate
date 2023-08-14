@@ -13,13 +13,10 @@ export const createTokenRequestValidator = ark.type({
 export class AuthRoute extends BaseRoute {
     @mediator.Endpoint(mediator.HttpMethod.POST, "/v2/auth/check")
     async onCheckAuth(transaction: mediator.Transaction<{}>) {
-        const clientId = transaction.req.header("Client-ID");
         const clientToken = transaction.req.header("Authorization");
-
-        if (clientId === undefined) throw new MissingHeaderError("Client-ID");
         if (clientToken === undefined) throw new MissingHeaderError("Authorization");
 
-        const session = await this.server.sessionsController.getClientSession(clientId, clientToken);
+        const session = await this.server.sessionsController.getClientSession(clientToken);
         if (session === undefined) throw new Unauthorized();
 
         const user = await this.server.accountsController.getUserById(session.user_id);
@@ -37,13 +34,10 @@ export class AuthRoute extends BaseRoute {
 
     @mediator.Endpoint(mediator.HttpMethod.POST, "/v2/auth/logout")
     async onLogout(transaction: mediator.Transaction<{}>) {
-        const clientId = transaction.req.header("Client-ID");
         const clientToken = transaction.req.header("Authorization");
-
-        if (clientId === undefined) throw new MissingHeaderError("Client-ID");
         if (clientToken === undefined) throw new MissingHeaderError("Authorization");
 
-        const session = await this.server.sessionsController.getClientSession(clientId, clientToken);
+        const session = await this.server.sessionsController.getClientSession(clientToken);
         if (session === undefined) throw new Unauthorized();
 
         transaction.respondJson({});

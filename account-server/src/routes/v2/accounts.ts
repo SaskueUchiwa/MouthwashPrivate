@@ -65,4 +65,9 @@ export class AccountsRoute extends BaseRoute {
 
         transaction.respondNoContent();
     }
+
+    @mediator.Endpoint(mediator.HttpMethod.GET, "/v2/accounts/owned_bundles")
+    async getOwnedBundles(transaction: mediator.Transaction<{}>) {
+        
+    }
 }

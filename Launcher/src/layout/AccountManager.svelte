@@ -200,7 +200,6 @@
         const res = await fetch(baseApiUrl + "/api/v2/auth/check", {
             method: "POST",
             headers: {
-                "Client-ID": loginApiInfo.ClientIdString,
                 "Authorization": "Bearer " + loginApiInfo.ClientToken
             }
         });
@@ -226,7 +225,6 @@
         const res = await fetch(baseApiUrl + "/api/v2/auth/logout", {
             method: "POST",
             headers: {
-                "Client-ID": loginApiInfo.ClientIdString,
                 "Authorization": "Bearer " + loginApiInfo.ClientToken
             }
         });

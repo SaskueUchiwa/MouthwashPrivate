@@ -1,5 +1,17 @@
 import { AccountServer } from "../AccountServer";
 
+
+export interface Bundle {
+    id: string;
+    name: string;
+    thumbnail_url: string;
+    author_id: string;
+    base_resource_id: number;
+    price_usd: number;
+    added_at: Date;
+    asset_bundle_id: string;
+}
+
 export interface BundleItem {
     id: string;
     bundle_id: number;
@@ -57,5 +69,14 @@ export class CosmeticsController {
         `, [ hatId, petId, skinId, userId ]);
 
         return rowsUpdated.rowCount > 0;
+    }
+
+    async getAllAvailableBundles() {
+        const { rows: availableBundles } = await this.server.postgresClient.query(`
+            SELECT *
+            FROM bundle
+        `);
+
+        return availableBundles as Bundle[];
     }
 }

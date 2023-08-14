@@ -41,13 +41,7 @@ export class CosmeticsService {
         const clientUser = await this.plugin.authApi.getConnectionUser(connection);
         if (!clientUser) return;
 
-        const ownedCosmetics = await this.plugin.authApi.getOwnedCosmetics(clientUser.id);
-        if (!ownedCosmetics) {
-            this.plugin.logger.warn("Failed to get owned cosmetics for user with client id %s", clientUser.id);
-            return;
-        }
-
-        const ownedCosmeticIdsSet = new Set(ownedCosmetics.map(cosmetic => cosmetic.id));
+        const ownedCosmeticIdsSet = new Set(clientUser.owned_cosmetics.map(cosmetic => cosmetic.id));
 
         const messages: (LoadHatMessage|LoadPetMessage)[] = [];
         const promises = [];
@@ -91,15 +85,9 @@ export class CosmeticsService {
         const clientUser = await this.plugin.authApi.getConnectionUser(client);
         if (!clientUser) return;
 
-        const ownedCosmetics = await this.plugin.authApi.getOwnedCosmetics(clientUser.id);
-        if (!ownedCosmetics) {
-            this.plugin.logger.warn("Failed to get owned cosmetics for user with client id %s", clientUser.id);
-            return;
-        }
-
         const connectionMessages: Map<Connection, (LoadHatMessage|LoadPetMessage)[]> = new Map;
         const promises = [];
-        for (const ownedCosmetic of ownedCosmetics) {
+        for (const ownedCosmetic of clientUser.owned_cosmetics) {
             if (this.roomLoadedCosmetics.get(ownedCosmetic.id))
                 continue;
 

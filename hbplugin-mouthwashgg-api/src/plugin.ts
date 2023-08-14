@@ -368,12 +368,9 @@ export class MouthwashApiPlugin extends RoomPlugin {
 
         await this.nameService.updateAllNames();
 
-        const perks = await this.authApi.getPerks(connectionUser.id);
-        if (perks) {
-            const coloredNamePerk = perks.find(perk => perk.id === "NAME_COLOR");
-            if (coloredNamePerk) {
-                await this.nameService.addColor(ev.player, new RGBA(coloredNamePerk.config.rgba));
-            }
+        const coloredNamePerk = connectionUser.perks.find(perk => perk.id === "NAME_COLOR");
+        if (coloredNamePerk) {
+            await this.nameService.addColor(ev.player, new RGBA(coloredNamePerk.settings.rgba));
         }
 
         if (ev.player.isHost) {
