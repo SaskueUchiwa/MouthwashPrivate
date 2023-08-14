@@ -4,11 +4,11 @@ import { Unauthorized } from "../../../errors";
 import { InternalController } from "../../../controllers";
 
 export class SessionsRoute extends BaseRoute {
-    @mediator.Endpoint(mediator.HttpMethod.GET, "/v2/internal/users/:user_id/sessions/:ip")
+    @mediator.Endpoint(mediator.HttpMethod.GET, "/v2/internal/users/:user_id/session")
     @mediator.Middleware(InternalController.validateInternalAccess)
-    async getUserSession(transaction: mediator.Transaction<{ user_id: string; ip: string; }>) {
-        const { user_id, ip } = transaction.getParams();
-        const session = await this.server.sessionsController.getConnectionSession(user_id, ip);
+    async getUserSession(transaction: mediator.Transaction<{ user_id: string; }>) {
+        const { user_id } = transaction.getParams();
+        const session = await this.server.sessionsController.getConnectionSession(user_id);
         if (session === undefined) throw new Unauthorized();
         
         transaction.respondJson(session);

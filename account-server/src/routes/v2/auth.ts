@@ -45,9 +45,6 @@ export class AuthRoute extends BaseRoute {
 
     @mediator.Endpoint(mediator.HttpMethod.POST, "/v2/auth/token")
     async onCreateToken(transaction: mediator.Transaction<{}>) {
-        const ip = transaction.req.header("X-Forwarded-For") || transaction.req.socket.remoteAddress;
-        if (ip === undefined) throw new mediator.InternalServerError(new Error("IP address could not be deduced."));
-
         const { data, problems } = createTokenRequestValidator(transaction.getBody());
         if (data === undefined) throw new InvalidBodyError(problems);
 
@@ -59,10 +56,10 @@ export class AuthRoute extends BaseRoute {
 
         if (!user.email_verified) throw new ForbiddenError("NOT_VERIFIED");
 
-        const existingSession = await this.server.sessionsController.getConnectionSession(user.id, ip || "");
-        const session = existingSession || await this.server.sessionsController.createSession(user.id, ip || "");
+        const existingSession = await this.server.sessionsController.getConnectionSession(user.id);
+        const session = existingSession || await this.server.sessionsController.createSession(user.id);
 
-        if (session === undefined) throw new mediator.InternalServerError(new Error(`Failed to create session (user_id=${user.id} ip=${ip})`));
+        if (session === undefined) throw new mediator.InternalServerError(new Error(`Failed to create session (user_id=${user.id})`));
 
         transaction.respondJson<SafeUser & { client_token: string }>({
             ...user,

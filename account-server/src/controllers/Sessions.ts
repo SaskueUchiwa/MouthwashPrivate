@@ -26,25 +26,25 @@ export class SessionsController {
         return foundSessions[0] as Session|undefined;
     }
 
-    async getConnectionSession(userId: string, ipAddress: string) {
+    async getConnectionSession(userId: string) {
         const { rows: foundSessions } = await this.server.postgresClient.query(`
             SELECT *
             FROM session
-            WHERE user_id = $1 AND ip = $2
-        `, [ userId, ipAddress ]);
+            WHERE user_id = $1
+        `, [ userId ]);
 
         return foundSessions[0] as Session|undefined;
     }
 
-    async createSession(userId: string, ip: string) {
+    async createSession(userId: string) {
         const randomBytes = crypto.randomBytes(20);
         const sha256Hash = crypto.createHash("sha256").update(randomBytes).digest("hex");
 
         const { rows: createdSessions } = await this.server.postgresClient.query(`
-            INSERT INTO session(id, user_id, client_token, ip)
-            VALUES ($1, $2, $3, $4)
+            INSERT INTO session(id, user_id, client_token)
+            VALUES ($1, $2, $3)
             RETURNING *
-        `, [ crypto.randomUUID(), userId, sha256Hash, ip ]);
+        `, [ crypto.randomUUID(), userId, sha256Hash ]);
 
         return createdSessions[0] as Session|undefined;
     }

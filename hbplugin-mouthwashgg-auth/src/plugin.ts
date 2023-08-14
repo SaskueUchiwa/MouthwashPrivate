@@ -195,14 +195,14 @@ export class MouthwashAuthPlugin extends WorkerPlugin {
         return cachedUser;
     }
 
-    async getSession(clientId: string, ipAddress: string) {
-        const cachedSession = this.getCached(this.sessionCache, clientId + ":" + ipAddress);
+    async getSession(clientId: string) {
+        const cachedSession = this.getCached(this.sessionCache, clientId);
 
         if (cachedSession) {
             return cachedSession;
         }
 
-        const res = await this.make<UserSessionModel>("GET", "/api/v2/internal/users/" + clientId + "/sessions/" + ipAddress);
+        const res = await this.make<UserSessionModel>("GET", "/api/v2/internal/users/" + clientId + "/session");
         if (res.success) {
             this.setCached(this.sessionCache, clientId, res.data, 60);
             return res.data;

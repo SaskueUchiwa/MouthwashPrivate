@@ -35,15 +35,11 @@ create table session
             references users,
     client_token varchar not null
         constraint session_client_token_unique
-            unique,
-    ip           varchar not null
+            unique
 );
 
 alter table session
     owner to postgres;
-
-create index session_user_id_ip_index
-    on session (user_id, ip);
 
 create table lobby
 (
