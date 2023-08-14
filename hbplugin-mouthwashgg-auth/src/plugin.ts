@@ -162,7 +162,7 @@ export class MouthwashAuthPlugin extends WorkerPlugin {
             return cachedUser;
         }
 
-        const res = await this.make<UserAccountModel>("GET", "/api/v1/internal/users/" + clientId);
+        const res = await this.make<UserAccountModel>("GET", "/api/v2/internal/users/" + clientId);
         if (res.success) {
             this.setCached(this.userCache, clientId, res.data, 3600);
             return res.data;
@@ -198,7 +198,7 @@ export class MouthwashAuthPlugin extends WorkerPlugin {
             return cachedSession;
         }
 
-        const res = await this.make<UserSessionModel>("GET", "/api/v1/internal/users/" + clientId + "/sessions/" + ipAddress);
+        const res = await this.make<UserSessionModel>("GET", "/api/v2/internal/users/" + clientId + "/sessions/" + ipAddress);
         if (res.success) {
             this.setCached(this.sessionCache, clientId, res.data, 60);
             return res.data;
@@ -208,7 +208,7 @@ export class MouthwashAuthPlugin extends WorkerPlugin {
     }
 
     async updateUserSettings(clientId: string, gameSettings: any) {
-        await this.make("PUT", "/api/v1/internal/users/" + clientId + "/game_settings", {
+        await this.make("PUT", "/api/v2/internal/users/" + clientId + "/game_settings", {
             game_settings: gameSettings
         });
 
@@ -219,7 +219,7 @@ export class MouthwashAuthPlugin extends WorkerPlugin {
     }
 
     async updateUserCosmetics(clientId: string, hatId: number, petId: number, skinId: number) {
-        await this.make("PUT", "/api/v1/internal/users/" + clientId + "/cosmetics", {
+        await this.make("PUT", "/api/v2/internal/users/" + clientId + "/cosmetics", {
             cosmetic_hat: hatId,
             cosmetic_pet: petId,
             cosmetic_skin: skinId
@@ -239,7 +239,7 @@ export class MouthwashAuthPlugin extends WorkerPlugin {
             return cachedCosmetics;
         }
 
-        const res = await this.make<BundleItemModel[]>("GET", "/api/v1/internal/users/" + clientId + "/owned_cosmetics");
+        const res = await this.make<BundleItemModel[]>("GET", "/api/v2/internal/users/" + clientId + "/owned_cosmetics");
         if (res.success) {
             this.setCached(this.userOwnedItemsCache, clientId, res.data, 3600);
             return res.data;
@@ -253,7 +253,7 @@ export class MouthwashAuthPlugin extends WorkerPlugin {
             return cachedPerks;
         }
 
-        const res = await this.make<PerkModel[]>("GET", "/api/v1/internal/users/" + clientId + "/perks");
+        const res = await this.make<PerkModel[]>("GET", "/api/v2/internal/users/" + clientId + "/perks");
         if (res.success) {
             this.setCached(this.userPerksCache, clientId, res.data, 3600);
             return res.data;

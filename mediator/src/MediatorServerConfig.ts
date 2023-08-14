@@ -16,4 +16,9 @@ export interface MediatorServerConfig {
      * A set of allowed headers that the client can pass to the server.
      */
     allowedHeaders: string[];
+    /**
+     * A path to prefix each path with. Useful if not in a NGINX environment to
+     * prefix every path with a version indicator ("/v1", "/v2", etc);
+     */
+    pathPrefix: string;
 }

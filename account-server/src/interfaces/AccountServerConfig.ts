@@ -10,6 +10,7 @@ export interface AccountServerConfig {
     mailgun: {
         domain: string;
         api_key: string;
-    };
+    }|false;
     base_account_server_url: string;
+    path_prefix: string;
 }

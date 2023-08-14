@@ -46,6 +46,9 @@ export class MediatorServer<RouteType extends { new(...args: any[]): any }> {
             res.header("Access-Control-Allow-Origin", config.crossDomains.join(", "));
             res.header("Access-Control-Allow-Headers", config.allowedHeaders.join(", "));
             res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+
+            if (req.method === "OPTIONS") return res.status(200).end();
+
             next();
         });
 
@@ -60,7 +63,8 @@ export class MediatorServer<RouteType extends { new(...args: any[]): any }> {
      * @param declaredEndpoint Information about the endpoint to register on the server.
      */
     registerEndpoint(route: InstanceType<RouteType>, declaredEndpoint: DeclaredEndpointInformation) {
-        this.expressServer[declaredEndpoint.method](declaredEndpoint.path, ...declaredEndpoint.middlewares, async (req, res) => {
+        const path = this.config.pathPrefix + declaredEndpoint.path;
+        this.expressServer[declaredEndpoint.method](path, ...declaredEndpoint.middlewares, async (req, res) => {
             const transaction = new Transaction(req, res);
             const start = Date.now();
             try {
@@ -73,18 +77,18 @@ export class MediatorServer<RouteType extends { new(...args: any[]): any }> {
                 }
             }
             const end = Date.now();
-            this.logger.info("%s %s %sms", declaredEndpoint.method.toUpperCase(), declaredEndpoint.path, end - start);
+            this.logger.info("%s %s %sms", declaredEndpoint.method.toUpperCase(), path, end - start);
             const error = transaction.getErrorResponse();
             if (error) {
                 if (error instanceof InternalServerError) {
-                    this.logger.error("Exception @ %s %s: %s", kleur.yellow(declaredEndpoint.method.toUpperCase()), kleur.grey(declaredEndpoint.path), error.error);
+                    this.logger.error("Exception @ %s %s: %s", kleur.yellow(declaredEndpoint.method.toUpperCase()), kleur.grey(path), error.error);
                     return;
                 }
-                this.logger.error("Error @ %s %s: %s", kleur.yellow(declaredEndpoint.method.toUpperCase()), kleur.grey(declaredEndpoint.path), error);
+                this.logger.error("Error @ %s %s: %s", kleur.yellow(declaredEndpoint.method.toUpperCase()), kleur.grey(path), error);
             }
         });
         this.logger.info("Registered endpoint @ %s %s (%s middleware%s)",
-            kleur.bgMagenta(declaredEndpoint.method.toUpperCase()), kleur.grey(declaredEndpoint.path),
+            kleur.bgMagenta(declaredEndpoint.method.toUpperCase()), kleur.grey(path),
             declaredEndpoint.middlewares.length, declaredEndpoint.middlewares.length === 1 ? "" : "s");
     }
 

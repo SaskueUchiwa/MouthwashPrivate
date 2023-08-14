@@ -1,4 +1,4 @@
-import { AccountServer } from "$/AccountServer2";
+import { AccountServer } from "../AccountServer";
 
 export class BaseRoute {
     constructor(public readonly server: AccountServer) {}

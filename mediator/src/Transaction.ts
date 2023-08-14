@@ -78,17 +78,50 @@ export class Transaction<ParamType = any> {
     }
 
     /**
+     * Respond to the client with a JSON body, including a "success" key that indicates
+     * whether the request was successful, and a "data" key that contains the actual
+     * response payload.
+     * 
+     * @see {@link Transaction.respondJsonRaw} to send JSON as it is without any
+     * boilerplate.
+     * 
+     * @param json The body of the response in non-serialised JSON.
+     * @param statusCode The status code to send back in the response.
+     */
+    respondJson<T>(json: T, statusCode = HttpStatusCode.OK) {
+        this.assertNoResponse();
+
+        this._didRespond = true;
+        this.res.status(statusCode);
+        this.res.json({ success: statusCode === HttpStatusCode.OK, data: json });
+    }
+
+    /**
      * Respond to the client with a JSON body.
      * 
      * @param json The body of the response in non-serialised JSON.
      * @param statusCode The status code to send back in the response.
      */
-    respondJson(json: any, statusCode = HttpStatusCode.OK) {
+    respondJsonRaw(json: any, statusCode = HttpStatusCode.OK) {
         this.assertNoResponse();
 
         this._didRespond = true;
         this.res.status(statusCode);
         this.res.json(json);
+    }
+
+    /**
+     * Respond to the client with a plain-text body.
+     * 
+     * @param text The body of the response in text.
+     * @param statusCode The status code to send back in the response.
+     */
+    respondRaw(text: string, statusCode = HttpStatusCode.OK) {
+        this.assertNoResponse();
+
+        this._didRespond = true;
+        this.res.status(statusCode);
+        this.res.end(text);
     }
 
     /**

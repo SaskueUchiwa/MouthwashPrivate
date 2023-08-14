@@ -24,6 +24,7 @@
 
     let downloadConfig: DownloadConfig;
     let steamAuth: SteamAuth;
+    let accountManager: AccountManager;
     let installationConfig: InstallationConfig;
 
     let isDownloading = false;
@@ -271,7 +272,10 @@
         if (isDev) {
             baseAccountsApiUrl = localStorage.getItem("dev:base-api-url") || "https://accounts.mouthwash.midlight.studio";
         }
-        await checkInstallation();
+        setTimeout(async () => {
+            await accountManager.loadExistingLogin();
+            await checkInstallation();
+        }, 1);
     });
 
     async function startGame() {
@@ -378,7 +382,7 @@
         A revival of Polus.GG, a private server and client for Among Us with new gamemodes and cosmetics, unleashing thousands of new ways to play.
     </p>
     <div class="flex h-full w-full">
-        <AccountManager bind:loginApiInfo isGameOpen={amongUsProcess !== undefined} baseApiUrl={baseAccountsApiUrl}/>
+        <AccountManager bind:loginApiInfo bind:this={accountManager} isGameOpen={amongUsProcess !== undefined} baseApiUrl={baseAccountsApiUrl}/>
         <div class="w-0.25 bg-white my-8"></div>
         <div class="flex-1 p-4 flex flex-col items-center">
             <span class="text-4xl mt-8">Play</span>

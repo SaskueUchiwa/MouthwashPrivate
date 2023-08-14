@@ -45,11 +45,11 @@ INTERNAL_ACCESS_KEY=""
             domain: process.env.MAILGUN_DOMAIN!,
             api_key: process.env.MAILGUN_API_KEY!
         },
-        base_account_server_url: process.env.BASE_ACCOUNT_SERVER_URL!
+        base_account_server_url: process.env.BASE_ACCOUNT_SERVER_URL!,
+        path_prefix: process.env.PATH_PREFIX || ""
     });
     
     (async () => {
-        await accountServer.start();
-        console.log("Listening on port *:" + accountServer.config.port);
+        await accountServer.listen();
     })();
 })();

@@ -61,7 +61,7 @@
         signUpError = "";
 
         loadingSignUp = true;
-        const res = await fetch(baseApiUrl + "/api/v1/accounts", {
+        const res = await fetch(baseApiUrl + "/api/v2/accounts", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -113,7 +113,7 @@
         }
 
         loadingLogIn = true;
-        const res = await fetch(baseApiUrl + "/api/v1/auth/token", {
+        const res = await fetch(baseApiUrl + "/api/v2/auth/token", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -159,7 +159,7 @@
 
         const json = await res.json();
         loginApiInfo = {
-            ClientIdString: json.data.user_id,
+            ClientIdString: json.data.id,
             ClientToken: json.data.client_token,
             DisplayName: json.data.display_name,
             LoggedInDateTime: new Date().toISOString(),
@@ -170,7 +170,7 @@
 
     async function attemptResendVerification() {
         loadingResendVerification = true;
-        const res = await fetch(baseApiUrl + "/api/v1/accounts/resend_verification", {
+        const res = await fetch(baseApiUrl + "/api/v2/accounts/resend_verification", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -196,8 +196,8 @@
         unverifiedLogInEmail = false;
     }
 
-    async function checkLoginToken() {
-        const res = await fetch(baseApiUrl + "/api/v1/auth/check", {
+    export async function checkLoginToken() {
+        const res = await fetch(baseApiUrl + "/api/v2/auth/check", {
             method: "POST",
             headers: {
                 "Client-ID": loginApiInfo.ClientIdString,
@@ -212,7 +212,7 @@
 
         const json = await res.json();
         loginApiInfo = {
-            ClientIdString: json.data.user_id,
+            ClientIdString: json.data.id,
             ClientToken: json.data.client_token,
             DisplayName: json.data.display_name,
             LoggedInDateTime: new Date().toISOString(),
@@ -223,7 +223,7 @@
 
     async function attemptLogout() {
         loadingLogout = true;
-        const res = await fetch(baseApiUrl + "/api/v1/auth/logout", {
+        const res = await fetch(baseApiUrl + "/api/v2/auth/logout", {
             method: "POST",
             headers: {
                 "Client-ID": loginApiInfo.ClientIdString,
@@ -245,7 +245,7 @@
         localStorage.removeItem("cached-login");
     }
 
-    onMount(async () => {
+    export async function loadExistingLogin() {
         const serialisedApiTokenInfo = localStorage.getItem("cached-login");
         if (serialisedApiTokenInfo === null) {
             loginApiInfo = null;
@@ -260,7 +260,7 @@
             localStorage.removeItem("cached-login");
             console.log(e);
         }
-    });
+    }
 </script>
 
 <div class="flex-1 p-4 flex flex-col items-center">

@@ -1239,14 +1239,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"assets@workspace:assets":
-  version: 0.0.0-use.local
-  resolution: "assets@workspace:assets"
-  dependencies:
-    express: ^4.18.2
-  languageName: unknown
-  linkType: soft
-
 "astral-regex@npm:^2.0.0":
   version: 2.0.0
   resolution: "astral-regex@npm:2.0.0"
@@ -3665,6 +3657,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"kleur@npm:^4.1.5":
+  version: 4.1.5
+  resolution: "kleur@npm:4.1.5"
+  checksum: 1dc476e32741acf0b1b5b0627ffd0d722e342c1b0da14de3e8ae97821327ca08f9fb944542fb3c126d90ac5f27f9d804edbe7c585bf7d12ef495d115e0f22c12
+  languageName: node
+  linkType: hard
+
 "koa-body@npm:^6.0.1":
   version: 6.0.1
   resolution: "koa-body@npm:6.0.1"
@@ -4214,6 +4213,11 @@ __metadata:
 "mouthwash-mediator@workspace:*, mouthwash-mediator@workspace:mediator":
   version: 0.0.0-use.local
   resolution: "mouthwash-mediator@workspace:mediator"
+  dependencies:
+    "@types/node": latest
+    express: ^4.18.2
+    kleur: ^4.1.5
+    typescript: latest
   languageName: unknown
   linkType: soft
 
