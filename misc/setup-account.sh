@@ -3,7 +3,7 @@ __dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 bash ${__dir}./init.sh
 
 rm /etc/nginx/sites-enabled/default
-echo "server {
+echo 'server {
     listen 80;
     listen [::]:80;
 
@@ -13,7 +13,7 @@ echo "server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_pass http://localhost:8000;
     }
-}" > /etc/nginx/sites-enabled/accounts
+}' > /etc/nginx/sites-enabled/accounts
 service nginx restart
 
 apt-get install -y certbot

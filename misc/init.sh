@@ -21,3 +21,7 @@ sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plug
 sudo apt-get install -y nginx
 
 docker network create -d bridge mwgg_app
+
+sudo curl \
+  -L https://raw.githubusercontent.com/nickjj/wait-until/v0.2.0/wait-until \
+  -o /usr/local/bin/wait-until && sudo chmod +x /usr/local/bin/wait-until
