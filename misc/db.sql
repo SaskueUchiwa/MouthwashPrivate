@@ -19,6 +19,12 @@ create table users
 alter table users
     owner to postgres;
 
+create index users_display_name_index
+    on users (display_name);
+
+create index users_email_index
+    on users (email);
+
 create table session
 (
     id           uuid    not null
@@ -150,6 +156,9 @@ create table asset_bundle
 alter table asset_bundle
     owner to postgres;
 
+create unique index asset_bundle_bundle_asset_path_uindex
+    on asset_bundle (bundle_asset_path);
+
 create table bundle
 (
     id               uuid         not null
@@ -205,7 +214,4 @@ create table user_owned_item
 
 alter table user_owned_item
     owner to postgres;
-
-create unique index asset_bundle_bundle_asset_path_uindex
-    on asset_bundle (bundle_asset_path);
 

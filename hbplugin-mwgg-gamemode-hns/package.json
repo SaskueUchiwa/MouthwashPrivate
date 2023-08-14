@@ -3,6 +3,7 @@
     "license": "SSPL-1.0",
     "packageManager": "yarn@3.0.0-rc.13",
     "main": "./dist/index.js",
+    "private": true,
     "scripts": {
         "build": "tsc -p ./"
     },

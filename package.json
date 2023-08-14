@@ -14,7 +14,7 @@
   },
   "workspaces": [
     "account-server",
-    "assets",
+    "mediator",
     "hbplugin-mouthwashgg",
     "hbplugin-mouthwashgg-api",
     "hbplugin-mouthwashgg-auth",

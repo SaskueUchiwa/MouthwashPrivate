@@ -4,6 +4,7 @@
     "main": "./dist/src/index",
     "bin": "./dist/bin/pkg.js",
     "license": "GPL-3.0-only",
+    "private": true,
     "scripts": {
         "build": "tsc -p ./",
         "setup": "ts-node ./bin/setup",

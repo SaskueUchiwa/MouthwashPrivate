@@ -3,7 +3,7 @@ import crypto from "crypto";
 import express from "express";
 import bcrypt from "bcrypt";
 
-import { AccountServer } from "$/index";
+import { AccountServer } from "$/AccountServer";
 
 export default async function (server: AccountServer, req: express.Request, res: express.Response) {
     const ip = req.header("X-Forwarded-For") || req.socket.remoteAddress;
