@@ -51,7 +51,9 @@ export class SessionsController {
 
     async validateAuthorization(transaction: Transaction<any>) {
         const authorization = transaction.req.header("Authorization");
-
-        
+        if (authorization === undefined) throw new Unauthorized();
+        const session = await this.getClientSession(authorization);
+        if (session === undefined) throw new Unauthorized();
+        return session;
     }
 }
