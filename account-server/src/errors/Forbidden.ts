@@ -4,7 +4,7 @@ export class ForbiddenError extends mediator.TransactionError {
     constructor(public readonly reason: string) { super("FORBIDDEN") }
 
     getHttpStatus(): mediator.HttpStatusCode {
-        return mediator.HttpStatusCode.BadRequest;
+        return mediator.HttpStatusCode.Forbidden;
     }
 
     getMessage(): string {

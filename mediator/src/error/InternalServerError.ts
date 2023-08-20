@@ -26,7 +26,7 @@ export class InternalServerError extends TransactionError {
     }
 
     getPrivateDetails(): Record<string, string | number | boolean | null> {
-        return {};
+        return { message: this.error.message, stack: this.stack || null };
     }
     
 }

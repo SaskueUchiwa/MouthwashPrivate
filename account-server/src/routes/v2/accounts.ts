@@ -2,29 +2,23 @@ import * as mediator from "mouthwash-mediator";
 import * as bcrypt from "bcrypt";
 import * as ark from "arktype";
 import { BaseRoute } from "../BaseRoute";
-import { DisplayNameAlreadyInUse, EmailAlreadyInUseError, InvalidBodyError, UserNotFoundError } from "../../errors";
-
-const trimDisplayName = ark.morph("string", (s: string) => s.trim());
+import { DisplayNameAlreadyInUse, EmailAlreadyInUseError, InvalidBodyError, TooManyVerificationEmailsError, UserNotFoundError } from "../../errors";
 
 export const createUserRequestValidator = ark.type({
     email: "email",
     password: "8<=string<=128",
-    display_name: ["string", "|>", trimDisplayName ]
+    display_name: /^[a-zA-Z0-9_\-]{3,32}$/
 });
 
 export const resendVerificationEmailRequestValidator = ark.type({
     email: "email"
 });
 
-export const displayNameValidator = ark.type(/^[a-zA-Z0-9_\-]{3,32}$/);
-
 export class AccountsRoute extends BaseRoute {
     @mediator.Endpoint(mediator.HttpMethod.POST, "/v2/accounts")
     async onCreateAccount(transaction: mediator.Transaction<{}>) {
         const { data, problems } = createUserRequestValidator(transaction.getBody());
         if (data === undefined) throw new InvalidBodyError(problems);
-        const { data: dnData, problems: dnProblems } = displayNameValidator(data.display_name);
-        if (dnData === undefined) throw new InvalidBodyError(dnProblems);
 
         const existingUserEmail = await this.server.accountsController.getUserByEmail(data.email);
         if (existingUserEmail) throw new EmailAlreadyInUseError(data.email, existingUserEmail.id);
@@ -60,10 +54,14 @@ export class AccountsRoute extends BaseRoute {
             if (emailVerification === undefined) throw new mediator.InternalServerError(new Error(`Failed to create email intent? (email=${data.email})`));
             await this.server.accountsController.sendEmailVerificationIntent(foundUser.email, emailVerification.id);
         } else {
+            console.log(foundExistingVerification.last_sent, new Date);
+            if (foundExistingVerification.last_sent.getTime() > Date.now() - 2 * 60 * 1000)
+                throw new TooManyVerificationEmailsError(foundUser.email, foundUser.id);
+
             await this.server.accountsController.sendEmailVerificationIntent(foundUser.email, foundExistingVerification.id);
         }
 
-        transaction.respondNoContent();
+        transaction.respondJson({});
     }
 
     @mediator.Endpoint(mediator.HttpMethod.GET, "/v2/accounts/owned_bundles")

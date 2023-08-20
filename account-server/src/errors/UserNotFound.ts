@@ -10,7 +10,7 @@ export class UserNotFoundError extends mediator.TransactionError {
     constructor(public readonly identifier: TriedUserIdentifiers) { super("USER_NOT_FOUND") }
 
     getHttpStatus(): mediator.HttpStatusCode {
-        return mediator.HttpStatusCode.BadRequest;
+        return mediator.HttpStatusCode.NotFound;
     }
 
     getMessage(): string {

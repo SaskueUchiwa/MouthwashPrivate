@@ -35,7 +35,7 @@
     "plugins": {
         "loadDirectory": true,
         "hbplugin-mouthwashgg-auth": {
-            "baseUrl": "https://accounts.mouthwash.midlight.studio"
+            "baseUrl": "http://localhost:8000"
         },
         "hbplugin-mouthwashgg-master": false,
         "hbplugin-mouthwashgg": true,

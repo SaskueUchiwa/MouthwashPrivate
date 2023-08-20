@@ -56,4 +56,14 @@ export class SessionsController {
         if (session === undefined) throw new Unauthorized();
         return session;
     }
+
+    async deleteSession(id: string) {
+        const { rows: deletedSessions } = await this.server.postgresClient.query(`
+            DELETE
+            FROM session
+            WHERE id = $1
+        `, [ id ]);
+
+        return deletedSessions.length > 0;
+    }
 }

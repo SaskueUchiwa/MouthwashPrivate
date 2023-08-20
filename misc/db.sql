@@ -5,9 +5,9 @@ create table users
             primary key,
     email          varchar not null,
     password_hash  varchar not null,
-    created_at     timestamp(0),
-    banned_until   timestamp(0),
-    muted_until    timestamp(0),
+    created_at     timestamp with time zone,
+    banned_until   timestamp with time zone,
+    muted_until    timestamp with time zone,
     game_settings  json    not null,
     email_verified boolean not null,
     display_name   varchar not null,
@@ -48,7 +48,7 @@ create table lobby
     creator_id     uuid         not null
         constraint lobby_creator_id_foreign
             references users,
-    created_at     timestamp(0) not null,
+    created_at     timestamp with time zone not null,
     host_server_id integer      not null,
     destroyed_at   timestamp,
     game_code      varchar      not null
@@ -86,7 +86,7 @@ create table player_infraction
     game_id     uuid
         constraint player_infraction_game_id_foreign
             references game,
-    created_at  timestamp(0) not null,
+    created_at  timestamp with time zone not null,
     player_ping integer
 );
 
@@ -110,14 +110,14 @@ alter table player
 
 create table email_verification
 (
-    id          varchar      not null
+    id          varchar                  not null
         primary key,
-    user_id     uuid         not null
+    user_id     uuid                     not null
         constraint email_verification_user_id_foreign
             references users,
-    last_sent   timestamp(0) not null,
-    num_retries integer      not null,
-    verified_at timestamp(0)
+    last_sent   timestamp with time zone not null,
+    num_retries integer                  not null,
+    verified_at timestamp with time zone
 );
 
 alter table email_verification
@@ -166,7 +166,7 @@ create table bundle
             references users,
     base_resource_id integer      not null,
     price_usd        integer      not null,
-    added_at         timestamp(0) not null,
+    added_at         timestamp with time zone not null,
     asset_bundle_id  uuid
         constraint bundle_asset_bundle_id_fk
             references asset_bundle
@@ -202,7 +202,7 @@ create table user_owned_item
     user_id   uuid         not null
         constraint user_owned_item_user_id_foreign
             references users,
-    owned_at  timestamp(0) not null,
+    owned_at  timestamp with time zone not null,
     bundle_id uuid
         constraint user_owned_item_bundle_id_foreign
             references bundle

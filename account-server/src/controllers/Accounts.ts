@@ -78,6 +78,11 @@ export class AccountsController {
 
     async sendEmailVerificationIntent(email: string, verificationId: string) {
         if (!this.canSendEmailVerification()) throw new Error("Email verification not set up on this server.");
+        await this.server.postgresClient.query(`
+            UPDATE email_verification
+            SET last_sent = NOW()
+            WHERE id = $1
+        `, [ verificationId ]);
         try {
             const verifyUrl = this.server.config.base_account_server_url + "/api/v2/verify?t=" + verificationId;
             

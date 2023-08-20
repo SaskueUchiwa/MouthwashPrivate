@@ -40,6 +40,8 @@ export class AuthRoute extends BaseRoute {
         const session = await this.server.sessionsController.getClientSession(clientToken);
         if (session === undefined) throw new Unauthorized();
 
+        await this.server.sessionsController.deleteSession(session.id);
+
         transaction.respondJson({});
     }
 

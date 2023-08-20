@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Reflection;
 using HarmonyLib;
+using Polus.Extensions;
 using Polus.Mods.Patching;
 using Polus.Mods.Patching.Common.Utilities;
 
@@ -20,7 +21,11 @@ namespace Polus {
 
         public virtual void LoadPatches(string harmonyName, Type[] types) {
             if (_harmony == null) _harmony = new Harmony($"gg.polus.temporary.{harmonyName}");
-            foreach (Type type in types) ToggledPatches.AddRange(PatchManagerUtils.ResolvePatchDetails(type, false));
+            foreach (Type type in types)
+            {
+                type.Log();
+                ToggledPatches.AddRange(PatchManagerUtils.ResolvePatchDetails(type, false));
+            }
         }
 
         public void Patch() {

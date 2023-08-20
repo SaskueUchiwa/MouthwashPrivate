@@ -4,7 +4,7 @@ export class MissingHeaderError extends mediator.TransactionError {
     constructor(public readonly headerName: string) { super("MISSING_HEADER"); }
 
     getHttpStatus(): mediator.HttpStatusCode {
-        return mediator.HttpStatusCode.Conflict;
+        return mediator.HttpStatusCode.BadRequest;
     }
 
     getMessage(): string {

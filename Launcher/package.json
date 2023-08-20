@@ -1,7 +1,7 @@
 {
-  "name": "mouthwashgg-launcher",
+  "name": "mouthwash-launcher",
   "private": true,
-  "version": "0.0.8",
+  "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@tauri-apps/api": "^1.4.0",
-    "@zip.js/zip.js": "^2.7.20"
+    "emittery": "^1.0.1"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^2.4.2",
@@ -24,6 +24,6 @@
     "tslib": "^2.6.0",
     "typescript": "^5.0.2",
     "vite": "^4.4.4",
-    "vite-plugin-windicss": "^1.9.0"
+    "vite-plugin-windicss": "^1.9.1"
   }
 }

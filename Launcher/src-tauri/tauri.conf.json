@@ -7,43 +7,64 @@
     "withGlobalTauri": false
   },
   "package": {
-    "productName": "Mouthwash Launcher",
-    "version": "0.0.8"
+    "productName": "pgg-rewritten",
+    "version": "0.0.0"
   },
   "tauri": {
     "allowlist": {
-      "all": true,
+      "all": false,
+      "path": {
+        "all": true
+      },
       "fs": {
-        "scope": ["**"]
+        "all": false,
+        "copyFile": false,
+        "createDir": true,
+        "exists": true,
+        "readDir": true,
+        "readFile": false,
+        "removeDir": true,
+        "removeFile": false,
+        "renameFile": true,
+        "scope": [ "**" ],
+        "writeFile": false
+      },
+      "dialog": {
+        "all": false,
+        "ask": false,
+        "confirm": false,
+        "message": false,
+        "open": true,
+        "save": false
       },
       "shell": {
+        "all": false,
+        "execute": true,
+        "open": true,
         "scope": [{
-          "cmd": "$APPDATA/depot/DepotDownloader.exe",
+          "cmd": "$APPDATA/depot-downloader/DepotDownloader.exe",
           "name": "depot-downloader-download-au",
+          "args": true
+        },{
+          "cmd": "$APPDATA/legendary/legendary.exe",
+          "name": "legendary-download-au",
+          "args": true
+        }, {
+          "cmd": "powershell",
+          "name": "powershell",
           "args": true
         }, {
           "cmd": "cmd",
           "name": "cmd",
           "args": true
-        }]
-      }
-    },
-    "updater": {
-      "active": true,
-      "dialog": true,
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEU3RTFBNTg0MTk4MkE1RDYKUldUV3BZSVpoS1hoNXo2NktYM3pITkpuTnNML2dWR1RXVXA4QVJ1YWhhTlVxdXBOZGlsSjU5MnYK",
-      "endpoints": [
-        "https://files.mouthwash.midlight.studio/launcher_version.json"
-      ],
-      "windows": {
-        "installMode": "passive",
-        "installerArgs": []
+        }],
+        "sidecar": false
       }
     },
     "bundle": {
       "active": true,
       "targets": "all",
-      "identifier": "gg.mouthwash.launcher",
+      "identifier": "gg.polus.rewritten",
       "icon": [
         "icons/32x32.png",
         "icons/128x128.png",
@@ -53,16 +74,23 @@
       ]
     },
     "security": {
-      "csp": ""
+      "csp": null
     },
     "windows": [
       {
         "fullscreen": false,
         "resizable": true,
-        "title": "Mouthwash.GG",
-        "width": 1400,
-        "height": 860
+        "title": "Polus.GG: Rewritten",
+        "width": 800,
+        "height": 600,
+        "minHeight": 600,
+        "minWidth": 800
       }
     ]
+  },
+  "plugins": {
+    "shell": {
+      "open": ".+"
+    }
   }
 }

@@ -39,7 +39,7 @@ export class UsersRoute extends BaseRoute {
         const success = await this.server.cosmeticsController.setPlayerCosmetics(user_id, data.cosmetic_hat, data.cosmetic_pet, data.cosmetic_skin);
         if (!success) throw new UserNotFoundError({ id: user_id });
 
-        transaction.respondNoContent();
+        transaction.respondJson({});
     }
 
     @mediator.Endpoint(mediator.HttpMethod.PUT, "/v2/internal/users/:user_id/game_settings")
@@ -49,6 +49,6 @@ export class UsersRoute extends BaseRoute {
         const success = await this.server.accountsController.setPlayerGameSettings(user_id, transaction.getBody());
         if (!success) throw new UserNotFoundError({ id: user_id });
 
-        transaction.respondNoContent();
+        transaction.respondJson({});
     }
 }
