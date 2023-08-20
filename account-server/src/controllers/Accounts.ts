@@ -16,10 +16,11 @@ export interface User {
     display_name: string;
     cosmetic_hat: string;
     cosmetic_pet: string;
-    comsetic_skin: string;
+    cosmetic_skin: string;
 }
 
-export type SafeUser = DeclareSafeKeys<User, "id"|"email"|"created_at"|"banned_until"|"muted_until"|"email_verified"|"display_name">;
+export type SafeUser = DeclareSafeKeys<User, "id"|"email"|"created_at"|"banned_until"|"muted_until"|"email_verified"|"display_name"|"cosmetic_hat"|"cosmetic_pet"|"cosmetic_skin">;
+export type PublicUser = DeclareSafeKeys<SafeUser, "id"|"created_at"|"display_name"|"cosmetic_hat"|"cosmetic_pet"|"cosmetic_skin">;
 
 export interface EmailVerification {
     id: string;

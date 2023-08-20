@@ -25,10 +25,7 @@ export class AuthRoute extends BaseRoute {
         transaction.respondJson<SafeUser & { client_token: string }>({
             ...user,
             client_token: session.client_token,
-            password_hash: undefined,
-            cosmetic_hat: undefined,
-            comsetic_skin: undefined,
-            cosmetic_pet: undefined
+            password_hash: undefined
         });
     }
 
@@ -66,10 +63,7 @@ export class AuthRoute extends BaseRoute {
         transaction.respondJson<SafeUser & { client_token: string }>({
             ...user,
             client_token: session.client_token,
-            password_hash: undefined,
-            cosmetic_hat: undefined,
-            comsetic_skin: undefined,
-            cosmetic_pet: undefined
+            password_hash: undefined
         });
     }
 }

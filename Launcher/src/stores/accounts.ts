@@ -14,6 +14,18 @@ export interface UserLogin {
     display_name: string;
     client_token: string;
     logged_in_at: string;
+    cosmetic_hat: number;
+    cosmetic_pet: number;
+    cosmetic_skin: number;
+}
+
+export interface Game {
+    id: string;
+    lobby_id: string;
+    started_by: string;
+    game_settings: any;
+    started_at: string;
+    ended_at: string;
 }
 
 export type Deferred<T> = T|typeof loading|typeof unavailable;

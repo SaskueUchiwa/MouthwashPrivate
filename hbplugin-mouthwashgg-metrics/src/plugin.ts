@@ -2,11 +2,10 @@ import {
     EventListener,
     HindenburgPlugin,
     Int2Code,
+    PlayerData,
     Room,
     RoomCreateEvent,
     RoomDestroyEvent,
-    RoomGameEndEvent,
-    RoomGameStartEvent,
     Worker,
     WorkerPlugin
 } from "@skeldjs/hindenburg";
@@ -19,7 +18,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import { MouthwashAuthPlugin } from "hbplugin-mouthwashgg-auth";
-import { MouthwashApiPlugin } from "hbplugin-mouthwashgg-api";
+import { GamemodeGameEndEvent, GamemodeRolesAssignedEvent, MouthwashApiPlugin } from "hbplugin-mouthwashgg-api";
 
 export interface MouthwashggMetricsPluginConfig {
     pushNodeInterval: number;
@@ -34,6 +33,7 @@ export class MouthwashggMetricsPlugin extends WorkerPlugin {
     protected _uploadLobbiesInterval: NodeJS.Timeout|undefined;
 
     lobbyIds: WeakMap<Room, string>;
+    playerIds: WeakMap<PlayerData<Room>, string>;
     lobbyCurrentGameIds: WeakMap<Room, string>;
     
     constructor(public readonly worker: Worker, public readonly config: MouthwashggMetricsPluginConfig) {
@@ -56,6 +56,7 @@ export class MouthwashggMetricsPlugin extends WorkerPlugin {
         });
 
         this.lobbyIds = new WeakMap;
+        this.playerIds = new WeakMap;
         this.lobbyCurrentGameIds = new WeakMap;
     }
     
@@ -190,7 +191,7 @@ export class MouthwashggMetricsPlugin extends WorkerPlugin {
     }
 
     @EventListener()
-    async onGameStarted(ev: RoomGameStartEvent<Room>) {
+    async onGameStarted(ev: GamemodeRolesAssignedEvent) {
         const lobbyId = this.lobbyIds.get(ev.room as Room);
         if (!lobbyId) {
             this.logger.warn("Game started in room %s, but no lobby id was recorded for it", ev.room);
@@ -228,12 +229,22 @@ export class MouthwashggMetricsPlugin extends WorkerPlugin {
                 this.logger.warn("No connection user for client %s in room %s", connection, ev.room);
                 continue;
             }
+            const playerId = crypto.randomUUID();
+            const player = ev.room.players.get(connection.clientId);
+            if (!player) {
+                this.logger.warn("No player for client %s in room %s", connection, ev.room);
+                continue;
+            }
+            const role = api.roleService.getPlayerRole(player);
+            if (player) {
+                this.playerIds.set(player, playerId);
+            }
             userIds.push(connectionUser.id);
-            params.push(crypto.randomUUID(), gameId, connectionUser.id);
+            params.push(playerId, gameId, connectionUser.id, null, role?.metadata.roleName || null);
         }
         await this.postgresClient.query(`
-            INSERT INTO player(id, game_id, user_id)
-            VALUES ${userIds.map((_, i) => `($${(i * 3 + 1)}, $${(i * 3) + 2}, $${(i * 3) + 3})`).join(",")}
+            INSERT INTO player(id, game_id, user_id, did_win, role_name)
+            VALUES ${userIds.map((_, i) => `($${(i * 5 + 1)}, $${(i * 5) + 2}, $${(i * 5) + 3}, $${(i * 5) + 4}, $${(i * 5) + 5})`).join(",")}
             RETURNING *
         `, params);
 
@@ -247,7 +258,7 @@ export class MouthwashggMetricsPlugin extends WorkerPlugin {
     }
 
     @EventListener()
-    async onGameEnded(ev: RoomGameEndEvent<Room>) {
+    async onGameEnded(ev: GamemodeGameEndEvent) {
         const lobbyId = this.lobbyIds.get(ev.room as Room);
         if (!lobbyId) {
             this.logger.warn("Game ended in room %s, but no lobby id was recorded for it", ev.room);
@@ -265,6 +276,22 @@ export class MouthwashggMetricsPlugin extends WorkerPlugin {
             SET ended_at = NOW()
             WHERE id = $1
         `, [ gameId ]);
+
+        const promises = [];
+        for (const [ player, endGameScreen ] of ev.endGameScreens) {
+            const playerId = this.playerIds.get(player);
+            if (playerId === undefined) {
+                this.logger.warn("Failed to update win record for %s, as they did not have an id (won? %s)", playerId, endGameScreen.hasWon);
+                continue;
+            }
+
+            promises.push(this.postgresClient.query(`
+                UPDATE player
+                SET did_win = $2
+                WHERE id = $1
+            `, [ playerId, endGameScreen.hasWon ]));
+        }
+        await Promise.all(promises);
 
         if (createdGames.length > 0) {
             this.logger.info("Updated record for game ended (id %s) for room %s", gameId, ev.room);

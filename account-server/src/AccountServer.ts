@@ -5,14 +5,15 @@ import Mailgun from "mailgun.js";
 
 import { IMailgunClient } from "mailgun.js/Interfaces";
 import { AccountServerConfig } from "./interfaces";
-import { AccountsController, CosmeticsController, InternalController, SessionsController } from "./controllers";
+import { AccountsController, CosmeticsController, InternalController, LobbiesController, SessionsController } from "./controllers";
 import { BaseRoute } from "./routes/BaseRoute";
 import { AuthRoute } from "./routes/v2/auth";
 import { AccountsRoute } from "./routes/v2/accounts";
-import { UsersRoute } from "./routes/v2/internal/users";
+import { UsersRoute as InternalUsersRoute } from "./routes/v2/internal/users";
 import { SessionsRoute } from "./routes/v2/internal/sessions";
 import { VerifyRoute } from "./routes/v2/verify";
 import { BundlesRoute } from "./routes/v2/bundles";
+import { UsersRoute } from "./routes/v2/users";
 
 export class AccountServer {
     mediatorServer: mediator.MediatorServer<typeof BaseRoute>;
@@ -22,6 +23,7 @@ export class AccountServer {
     accountsController: AccountsController;
     cosmeticsController: CosmeticsController;
     internalController: InternalController;
+    lobbiesController: LobbiesController;
     sessionsController: SessionsController;
 
     constructor(public readonly config: AccountServerConfig) {
@@ -48,6 +50,7 @@ export class AccountServer {
         this.accountsController = new AccountsController(this);
         this.cosmeticsController = new CosmeticsController(this);
         this.internalController = new InternalController;
+        this.lobbiesController = new LobbiesController(this);
         this.sessionsController = new SessionsController(this);
     }
 
@@ -56,10 +59,11 @@ export class AccountServer {
 
         this.mediatorServer.registerRoute(AuthRoute);
         this.mediatorServer.registerRoute(AccountsRoute);
-        this.mediatorServer.registerRoute(UsersRoute);
+        this.mediatorServer.registerRoute(InternalUsersRoute);
         this.mediatorServer.registerRoute(SessionsRoute);
         this.mediatorServer.registerRoute(VerifyRoute);
         this.mediatorServer.registerRoute(BundlesRoute);
+        this.mediatorServer.registerRoute(UsersRoute);
 
         this.mediatorServer.listen(this.config.port);
     }

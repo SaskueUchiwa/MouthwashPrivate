@@ -30,7 +30,8 @@ import {
     PlayerCompleteTaskEvent,
     FinalTaskState,
     PlayerMurderEvent,
-    PlayerStartMeetingEvent
+    PlayerStartMeetingEvent,
+    PlayerData
 } from "@skeldjs/hindenburg";
 
 import { MouthwashAuthPlugin } from "hbplugin-mouthwashgg-auth";
@@ -76,6 +77,7 @@ import {
     ButtonFixedUpdateEvent,
     ClientFetchResourceResponseEvent,
     GamemodeBeforeRolesAssignedEvent,
+    GamemodeGameEndEvent,
     MouthwashUpdateGameOptionEvent
 } from "./events";
 
@@ -762,6 +764,7 @@ export class MouthwashApiPlugin extends RoomPlugin {
             }
         }
 
+        const endGameScreens: Map<PlayerData<Room>, EndGameScreen> = new Map;
         const promises = [];
         for (const [ , player ] of this.room.players) {
             if (player.playerId === undefined) {
@@ -777,6 +780,8 @@ export class MouthwashApiPlugin extends RoomPlugin {
             const connection = this.room.connections.get(player.clientId);
             if (!connection)
                 return;
+
+            endGameScreens.set(player, endGame);
 
             const yourTeam = typeof endGame.yourTeam === "undefined"
                 ? playerRole ? rolePlayers[playerRole.metadata.alignment] : []
@@ -821,6 +826,8 @@ export class MouthwashApiPlugin extends RoomPlugin {
             );
         }
         await Promise.all(promises);
+
+        await this.room.emit(new GamemodeGameEndEvent(this.room, endGameScreens));
 
         await Promise.all([
             this.hudService.resetAllHuds(),

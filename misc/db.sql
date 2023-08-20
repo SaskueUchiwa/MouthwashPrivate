@@ -43,15 +43,15 @@ alter table session
 
 create table lobby
 (
-    id             uuid         not null
+    id             uuid                     not null
         primary key,
-    creator_id     uuid         not null
+    creator_id     uuid                     not null
         constraint lobby_creator_id_foreign
             references users,
     created_at     timestamp with time zone not null,
-    host_server_id integer      not null,
+    host_server_id integer                  not null,
     destroyed_at   timestamp,
-    game_code      varchar      not null
+    game_code      varchar                  not null
 );
 
 alter table lobby
@@ -67,20 +67,24 @@ create table game
     started_by    uuid,
     game_settings json      not null,
     started_at    timestamp not null,
-    ended_at      timestamp
+    ended_at      timestamp,
+    num_players   integer
 );
 
 alter table game
     owner to postgres;
 
+create index game_started_at_index
+    on game (started_at desc);
+
 create table player_infraction
 (
-    id          uuid         not null
+    id          uuid                     not null
         primary key,
-    user_id     uuid         not null
+    user_id     uuid                     not null
         constraint player_infraction_user_id_foreign
             references users,
-    lobby_id    uuid         not null
+    lobby_id    uuid                     not null
         constraint player_infraction_lobby_id_foreign
             references lobby,
     game_id     uuid
@@ -95,14 +99,16 @@ alter table player_infraction
 
 create table player
 (
-    id      uuid not null
+    id        uuid not null
         primary key,
-    game_id uuid not null
+    game_id   uuid not null
         constraint player_game_id_foreign
             references game,
-    user_id uuid not null
+    user_id   uuid not null
         constraint player_user_id_foreign
-            references users
+            references users,
+    did_win   boolean,
+    role_name varchar
 );
 
 alter table player
@@ -157,15 +163,15 @@ create unique index asset_bundle_bundle_asset_path_uindex
 
 create table bundle
 (
-    id               uuid         not null
+    id               uuid                     not null
         primary key,
-    name             varchar      not null,
-    thumbnail_url    varchar      not null,
-    author_id        uuid         not null
+    name             varchar                  not null,
+    thumbnail_url    varchar                  not null,
+    author_id        uuid                     not null
         constraint bundle_author_id_foreign
             references users,
-    base_resource_id integer      not null,
-    price_usd        integer      not null,
+    base_resource_id integer                  not null,
+    price_usd        integer                  not null,
     added_at         timestamp with time zone not null,
     asset_bundle_id  uuid
         constraint bundle_asset_bundle_id_fk
@@ -194,12 +200,12 @@ alter table bundle_item
 
 create table user_owned_item
 (
-    id        uuid         not null
+    id        uuid                     not null
         primary key,
     item_id   uuid
         constraint user_owned_item_item_id_foreign
             references bundle_item,
-    user_id   uuid         not null
+    user_id   uuid                     not null
         constraint user_owned_item_user_id_foreign
             references users,
     owned_at  timestamp with time zone not null,
@@ -210,4 +216,3 @@ create table user_owned_item
 
 alter table user_owned_item
     owner to postgres;
-

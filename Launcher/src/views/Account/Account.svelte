@@ -6,6 +6,9 @@
     import SignUpSection from "./SignUpSection.svelte";
     import { accountUrl, loading, unavailable, user, type UserLogin } from "../../stores/accounts";
     import { get } from "svelte/store";
+    import UserGames from "./UserGames.svelte";
+    
+    let currentPage: ""|"games" = "";
 
     async function checkLogin(userLogin: UserLogin) {
         const checkLoginResponse = await fetch(get(accountUrl) + "/api/v2/auth/check", {
@@ -69,6 +72,14 @@
         user.set(unavailable);
         localStorage.removeItem("user-login");
     }
+
+    function setPage(page: ""|"games") {
+        currentPage = page;
+    }
+
+    function onSetPage(ev: CustomEvent<""|"games">) {
+        setPage(ev.detail);
+    }
 </script>
 
 <div class="flex gap-4 self-stretch h-full">
@@ -84,22 +95,37 @@
                     <span class="text-[#806593] italic">Not logged in.</span>
                 </div>
             {:else if $user}
-                <Profile user={$user} on:logout={onLogOut}/>
+                <Profile user={$user} page={currentPage} on:logout={onLogOut} on:set-page={onSetPage}/>
             {/if}
         {/if}
     </div>
-    <div class="flex-[3_0_0] flex flex-col bg-[#06000a] rounded-xl p-4 px-6 gap-2">
-        {#if $user === loading}
-            <div class="flex-1 flex items-center justify-center text-[#806593]">
-                <Loader size={32}/>
+    <div class="flex-[3_0_0] flex flex-col gap-4">
+        {#if $user !== loading && $user !== unavailable}
+            <div class="flex items-center bg-[#06000a] rounded-xl p-4 px-6 gap-2">
+                {#if currentPage === ""}
+                    <span class="text-xl font-semibold">Cosmetics</span>
+                {:else if currentPage === "games"}
+                    <span class="text-xl font-semibold">Recent Lobbies</span>
+                {/if}
             </div>
-        {:else}
-            {#if $user === unavailable}
-                <LoginSection/>
-                <SignUpSection/>
-            {:else}
-                <span class="text-xl font-semibold">Cosmetics</span>
-            {/if}
         {/if}
+        <div class="flex-1 flex flex-col bg-[#06000a] rounded-xl p-4 px-6 gap-2">
+            {#if $user === loading}
+                <div class="flex-1 flex items-center justify-center text-[#806593]">
+                    <Loader size={32}/>
+                </div>
+            {:else}
+                {#if $user === unavailable}
+                    <LoginSection/>
+                    <SignUpSection/>
+                {:else}
+                    {#if currentPage === ""}
+                        <span class="italic">You have 0 cosmetics</span>
+                    {:else if currentPage === "games"}
+                        <UserGames user={$user}/>
+                    {/if}
+                {/if}
+            {/if}
+        </div>
     </div>
 </div>
