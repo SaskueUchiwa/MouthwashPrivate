@@ -66,8 +66,8 @@ create table game
             references lobby,
     started_by    uuid,
     game_settings json      not null,
-    started_at    timestamp not null,
-    ended_at      timestamp,
+    started_at    timestamp with time zone not null,
+    ended_at      timestamp with time zone,
     num_players   integer
 );
 
@@ -99,16 +99,17 @@ alter table player_infraction
 
 create table player
 (
-    id        uuid not null
+    id             uuid not null
         primary key,
-    game_id   uuid not null
+    game_id        uuid not null
         constraint player_game_id_foreign
             references game,
-    user_id   uuid not null
+    user_id        uuid not null
         constraint player_user_id_foreign
             references users,
-    did_win   boolean,
-    role_name varchar
+    did_win        boolean,
+    role_name      varchar,
+    cosmetic_color integer
 );
 
 alter table player
@@ -216,3 +217,4 @@ create table user_owned_item
 
 alter table user_owned_item
     owner to postgres;
+

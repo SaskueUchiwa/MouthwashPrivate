@@ -18,7 +18,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import { MouthwashAuthPlugin } from "hbplugin-mouthwashgg-auth";
-import { GamemodeGameEndEvent, GamemodeRolesAssignedEvent, MouthwashApiPlugin } from "hbplugin-mouthwashgg-api";
+import { GamemodeGameEndEvent, GamemodeRolesAssignedEvent, MouthwashApiPlugin, RoleAlignment } from "hbplugin-mouthwashgg-api";
 
 export interface MouthwashggMetricsPluginConfig {
     pushNodeInterval: number;
@@ -240,11 +240,13 @@ export class MouthwashggMetricsPlugin extends WorkerPlugin {
                 this.playerIds.set(player, playerId);
             }
             userIds.push(connectionUser.id);
-            params.push(playerId, gameId, connectionUser.id, null, role?.metadata.roleName || null);
+            const playerName = api.nameService.getPlayerName(player);
+            params.push(playerId, gameId, connectionUser.id, null, role?.metadata.roleName || null,
+                player.info?.color || null, playerName || null, role ? RoleAlignment[role.metadata.alignment] : null);
         }
         await this.postgresClient.query(`
-            INSERT INTO player(id, game_id, user_id, did_win, role_name)
-            VALUES ${userIds.map((_, i) => `($${(i * 5 + 1)}, $${(i * 5) + 2}, $${(i * 5) + 3}, $${(i * 5) + 4}, $${(i * 5) + 5})`).join(",")}
+            INSERT INTO player(id, game_id, user_id, did_win, role_name, cosmetic_color, cosmetic_name, role_alignment)
+            VALUES ${userIds.map((_, i) => `($${(i * 8) + 1}, $${(i * 8) + 2}, $${(i * 8) + 3}, $${(i * 8) + 4}, $${(i * 8) + 5}, $${(i * 8) + 6}, $${(i * 8) + 7}, $${(i * 8) + 8})`).join(",")}
             RETURNING *
         `, params);
 

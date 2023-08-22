@@ -82,7 +82,7 @@
     }
 </script>
 
-<div class="flex gap-4 self-stretch h-full">
+<div class="min-h-0 flex gap-4 self-stretch h-full">
     <div class="flex-1 flex flex-col bg-[#06000a] rounded-xl p-4 px-6 gap-4">
         {#if $user === loading}
             <div class="flex-1 flex items-center justify-center text-[#806593]">
@@ -99,17 +99,17 @@
             {/if}
         {/if}
     </div>
-    <div class="flex-[3_0_0] flex flex-col gap-4">
+    <div class="min-h-0 flex-[3_0_0] flex flex-col gap-4">
         {#if $user !== loading && $user !== unavailable}
             <div class="flex items-center bg-[#06000a] rounded-xl p-4 px-6 gap-2">
                 {#if currentPage === ""}
                     <span class="text-xl font-semibold">Cosmetics</span>
                 {:else if currentPage === "games"}
-                    <span class="text-xl font-semibold">Recent Lobbies</span>
+                    <span class="text-xl font-semibold">Recent Games</span>
                 {/if}
             </div>
         {/if}
-        <div class="flex-1 flex flex-col bg-[#06000a] rounded-xl p-4 px-6 gap-2">
+        <div class="min-h-0 flex-1 flex flex-col bg-[#06000a] rounded-xl p-4 px-6 gap-2">
             {#if $user === loading}
                 <div class="flex-1 flex items-center justify-center text-[#806593]">
                     <Loader size={32}/>

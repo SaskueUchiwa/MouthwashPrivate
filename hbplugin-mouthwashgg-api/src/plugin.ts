@@ -70,7 +70,8 @@ import {
     AnyKillDistance,
     DeadBodyService,
     AssetReference,
-    TargettableService
+    TargettableService,
+    AssetBundleIds
 } from "./services";
 
 import {
@@ -207,6 +208,7 @@ export class MouthwashApiPlugin extends RoomPlugin {
 
     async setGamemode(gamemodePluginCtr: typeof BaseGamemodePlugin, doTransition: boolean) {
         if (this.gamemode) {
+            console.log(this.room.loadedPlugins);
             this.worker.pluginLoader.unloadPlugin(this.gamemode, this.room);
         }
 
@@ -220,7 +222,7 @@ export class MouthwashApiPlugin extends RoomPlugin {
         const registeredBundles = getRegisteredBundles(gamemodePluginCtr);
         const promises = [];
         for (const registeredBundle of registeredBundles) {
-            promises.push(AssetBundle.loadFromUrl(registeredBundle, false));
+            promises.push(AssetBundle.loadFromUrl(AssetBundleIds[registeredBundle], false));
         }
         gamemodePlugin.registeredBundles = await Promise.all(promises);
 

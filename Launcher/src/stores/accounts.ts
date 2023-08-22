@@ -26,6 +26,18 @@ export interface Game {
     game_settings: any;
     started_at: string;
     ended_at: string;
+    total_players: number|undefined;
+}
+
+export interface Player {
+    id: string;
+    lobby_id: string;
+    user_id: string;
+    did_win: boolean|null|undefined;
+    role_name: string|null|undefined;
+    cosmetic_color: number|null;
+    cosmetic_name: string|null;
+    role_alignment: string|null;
 }
 
 export type Deferred<T> = T|typeof loading|typeof unavailable;

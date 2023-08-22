@@ -103,8 +103,8 @@
     });
 </script>
 
-<div class="w-full flex flex-col items-center p-y-32">
-    <div class="h-full flex flex-col gap-16 items-center self-center">
+<div class="min-h-0 w-full flex flex-col items-center p-y-32">
+    <div class="min-h-0 h-full flex flex-col gap-16 items-center self-center">
         <div class="flex flex-col gap-4 items-center">
             <div><span class="font-bold text-6xl">Polus.gg</span>&nbsp;&nbsp;<span class="italic text-6xl">Rewritten</span></div>
             <span class="w-128 xl:w-248 text-xl">
@@ -112,7 +112,7 @@
                 brand new gamemodes, cosmetics and roles, unleashing thousands of new ways to play.
             </span>
         </div>
-        <div class="flex-1 self-stretch">
+        <div class="min-h-0 flex-1 self-stretch">
             <div class="w-full h-full" class:hidden={selectedTab !== "Account"}><AccountView/></div>
             <div class="w-full h-full" class:hidden={selectedTab !== "Download"}><DownloadView on:switch-view={switchView}/></div>
             <div class="w-full h-full" class:hidden={selectedTab !== "Play"}><PlayView on:switch-view={switchView}/></div>

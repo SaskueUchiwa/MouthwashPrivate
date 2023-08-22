@@ -1,6 +1,7 @@
 export * from "./DisplayNameAlreadyInUse";
 export * from "./EmailAlreadyInUse";
 export * from "./Forbidden";
+export * from "./GameNotFound";
 export * from "./InvalidBody";
 export * from "./MissingHeader";
 export * from "./TooManyVerificationEmails";

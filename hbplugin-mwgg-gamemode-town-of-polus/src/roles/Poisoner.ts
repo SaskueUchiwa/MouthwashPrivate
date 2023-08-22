@@ -12,7 +12,6 @@ import {
 import {
     AnyKillDistance,
     AssetReference,
-    BaseRole,
     Button,
     ButtonFixedUpdateEvent,
     EmojiService,

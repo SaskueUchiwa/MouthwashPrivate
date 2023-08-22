@@ -15,10 +15,12 @@ export class Crewmate extends BaseRole {
             : `There are ${impostorCount} ${Palette.impostorRed.text("Impostors")} among us`;
 
         return {
-            titleText: "Crewmate",
-            subtitleText: subtitleText,
-            backgroundColor: Palette.crewmateBlue,
-            teamPlayers: RoleAlignment.All
+            titleText: this.metadata.roleName,
+            subtitleText: subtitleText + "\n" + this.metadata.roleObjective,
+            backgroundColor: this.metadata.themeColor,
+            teamPlayers: this.metadata.alignment === RoleAlignment.Impostor
+                ? RoleAlignment.Impostor
+                : RoleAlignment.All
         };
     }
 

@@ -33,7 +33,7 @@
         }
     }
 
-    const joinDateFormat = new Intl.DateTimeFormat();
+    const joinDateFormat = new Intl.DateTimeFormat("en-US");
 </script>
 
 <div class="flex-1 flex flex-col items-center gap-4">

@@ -14,6 +14,7 @@ import { SessionsRoute } from "./routes/v2/internal/sessions";
 import { VerifyRoute } from "./routes/v2/verify";
 import { BundlesRoute } from "./routes/v2/bundles";
 import { UsersRoute } from "./routes/v2/users";
+import { GamesRoute } from "./routes/v2/games";
 
 export class AccountServer {
     mediatorServer: mediator.MediatorServer<typeof BaseRoute>;
@@ -64,6 +65,7 @@ export class AccountServer {
         this.mediatorServer.registerRoute(VerifyRoute);
         this.mediatorServer.registerRoute(BundlesRoute);
         this.mediatorServer.registerRoute(UsersRoute);
+        this.mediatorServer.registerRoute(GamesRoute);
 
         this.mediatorServer.listen(this.config.port);
     }
