@@ -29,6 +29,7 @@ export interface GameLobbyInfo {
     total_players: number|undefined;
     game_code: string;
     lobby_destroyed_at: string|null;
+    did_win: boolean|null;
 }
 
 export interface Player {

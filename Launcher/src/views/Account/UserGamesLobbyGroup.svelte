@@ -29,7 +29,7 @@
             <div class="border-[#806593] border-l-1 h-full w-3 h-full">
             </div>
         </div>
-        <div class="flex-1 flex flex-col min-h-0 gap-2 my-1">
+        <div class="flex-1 flex flex-col min-h-0 gap-2 mt-1">
             {#each games as game}
                 <GameListing {user} {game} bind:selectedGameId/>
             {/each}

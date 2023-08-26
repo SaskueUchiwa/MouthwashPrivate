@@ -85,7 +85,20 @@
                 </div>
             {/if}
         </div>
-        <div class="ml-auto order-2">
+        <div class="ml-auto order-2 flex items-center gap-4">
+            {#if game.did_win !== null}
+                {#if game.did_win}
+                    <div class="flex items-center gap-1">
+                        <div class="bg-green-400 rounded-full w-2 h-2"></div>
+                        <span class="text-xs font-semibold text-green-400">WON</span>
+                    </div>
+                {:else}
+                    <div class="flex items-center gap-1">
+                        <div class="border-red-400 border-2 rounded-full w-2 h-2"></div>
+                        <span class="text-xs font-semibold text-red-400">LOST</span>
+                    </div>
+                {/if}
+            {/if}
             <div class="bg-[#27063e] rounded-full">
                 {#if selectedGameId === game.id}
                     <ChevronUp size={16}/>

@@ -14,6 +14,7 @@ export interface GameLobbyInfo extends Game {
     total_players: number;
     game_code: string;
     lobby_destroyed_at: Date;
+    did_win: boolean|null;
 }
 
 export interface Player {
@@ -44,7 +45,7 @@ export class LobbiesController {
 
     async getUserGames(userId: string, before: Date, limit: number) {
         const { rows: foundGames } = await this.server.postgresClient.query(`
-            SELECT game.*, lobby.game_code, lobby.destroyed_at AS lobby_destroyed_at, COUNT(player.id) as total_players
+            SELECT game.*, lobby.game_code, lobby.destroyed_at AS lobby_destroyed_at, bool_or(player.did_win) as did_win, COUNT(player.id) as total_players
             FROM lobby
             LEFT JOIN game ON game.lobby_id = lobby.id
             JOIN player ON game.id = player.game_id
