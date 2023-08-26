@@ -120,7 +120,7 @@
                     <SignUpSection/>
                 {:else}
                     {#if currentPage === ""}
-                        <span class="italic">You have 0 cosmetics</span>
+                        <span class="italic">You don't have any cosmetics.</span>
                     {:else if currentPage === "games"}
                         <UserGames user={$user}/>
                     {/if}

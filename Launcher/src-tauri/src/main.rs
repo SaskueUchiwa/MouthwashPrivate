@@ -4,7 +4,6 @@ use winreg::enums::*;
 use winreg::RegKey;
 
 use futures_util::stream::StreamExt;
-use tauri::Manager;
 use zip::ZipArchive;
 use std::fs::{self, File};
 use std::path;
@@ -136,8 +135,6 @@ async fn download_file_and_extract(window: tauri::Window, url: String, folder: S
 async fn download_file(window: tauri::Window, url: String, file: String, download_id: String) -> Option<bool> {
     let depot_downloader_zip_bytes =
         download_and_stream_file(&window, url, download_id).await?;
-        
-    let app = window.clone();
 
     let file_path = path::Path::new(&file);
     let _ = fs::create_dir_all(file_path.parent().unwrap().to_string_lossy().to_string());

@@ -26,10 +26,8 @@ import {
     GamemodePlugin,
     GamemodeRolesAssignedEvent,
     MouthwashEndGames,
-    MouthwashUpdateGameOptionEvent,
     RegisterRole,
-    RoleAlignment,
-    RoleService
+    RoleAlignment
 } from "hbplugin-mouthwashgg-api";
 
 import {

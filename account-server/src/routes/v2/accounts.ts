@@ -54,7 +54,6 @@ export class AccountsRoute extends BaseRoute {
             if (emailVerification === undefined) throw new mediator.InternalServerError(new Error(`Failed to create email intent? (email=${data.email})`));
             await this.server.accountsController.sendEmailVerificationIntent(foundUser.email, emailVerification.id);
         } else {
-            console.log(foundExistingVerification.last_sent, new Date);
             if (foundExistingVerification.last_sent.getTime() > Date.now() - 2 * 60 * 1000)
                 throw new TooManyVerificationEmailsError(foundUser.email, foundUser.id);
 

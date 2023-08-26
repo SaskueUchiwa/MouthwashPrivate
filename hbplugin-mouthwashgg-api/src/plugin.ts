@@ -208,7 +208,6 @@ export class MouthwashApiPlugin extends RoomPlugin {
 
     async setGamemode(gamemodePluginCtr: typeof BaseGamemodePlugin, doTransition: boolean) {
         if (this.gamemode) {
-            console.log(this.room.loadedPlugins);
             this.worker.pluginLoader.unloadPlugin(this.gamemode, this.room);
         }
 

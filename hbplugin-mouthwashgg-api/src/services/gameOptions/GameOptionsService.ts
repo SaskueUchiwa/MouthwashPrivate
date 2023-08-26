@@ -184,7 +184,7 @@ export class GameOptionsService {
             );
             connection.room?.broadcastMessages([], [ message ], undefined, [ connection ]);
         } catch (e) {
-            console.log(e);
+            this.plugin.logger.error("Error handling set option", e);
         }
     }
 

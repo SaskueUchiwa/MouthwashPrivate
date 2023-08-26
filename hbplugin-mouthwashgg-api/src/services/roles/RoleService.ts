@@ -41,6 +41,10 @@ export class RoleService {
     getPlayerRole(player: PlayerData) {
         return this.playerRoles.get(player);
     }
+
+    isPlayerImpostor(player: PlayerData) {
+        return this.getPlayerRole(player)?.metadata.alignment === RoleAlignment.Impostor;
+    }
     
     static getMaxImpostorCount(numPlayers: number): number {
         if (numPlayers <= 6) {

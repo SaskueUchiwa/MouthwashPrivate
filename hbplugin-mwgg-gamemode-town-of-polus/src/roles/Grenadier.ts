@@ -7,7 +7,6 @@ import {
 } from "@skeldjs/hindenburg";
 
 import {
-    AssetBundle,
     AssetReference,
     AudioAsset,
     Button,
