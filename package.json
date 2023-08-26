@@ -6,20 +6,31 @@
   "author": "Edward Smale <essmale2005@gmail.com>",
   "packageManager": "yarn@3.6.1",
   "scripts": {
-    "build-all": "yarn workspaces foreach -ptv --exclude test run build"
+    "build-all": "yarn workspaces foreach -ptv --exclude test run build",
+    "dev:master": "yarn cross-env HINDENBURG_CONFIG=config.master.json ts-node ./Hindenburg/bin/worker",
+    "dev:node": "yarn cross-env HINDENBURG_CONFIG=config.node.json ts-node ./Hindenburg/bin/worker",
+    "start:master": "yarn cross-env HINDENBURG_CONFIG=config.master.json node ./Hindenburg/dist/bin/worker",
+    "start:node": "yarn cross-env HINDENBURG_CONFIG=config.node.json node ./Hindenburg/dist/bin/worker"
   },
   "workspaces": [
     "account-server",
-    "assets",
+    "mediator",
     "hbplugin-mouthwashgg",
     "hbplugin-mouthwashgg-anti-cheat",
     "hbplugin-mouthwashgg-api",
     "hbplugin-mouthwashgg-auth",
+    "hbplugin-mouthwashgg-metrics",
+    "hbplugin-mouthwashgg-master",
     "hbplugin-mwgg-gamemode-hns",
     "hbplugin-mwgg-gamemode-town-of-polus",
     "hbplugin-mwgg-gamemode-vanilla",
     "hbplugin-mwgg-gamemode-zombies",
     "mouthwash-types",
     "Hindenburg"
-  ]
+  ],
+  "devDependencies": {
+    "cross-env": "^7.0.3",
+    "ts-node": "latest",
+    "typescript": "latest"
+  }
 }

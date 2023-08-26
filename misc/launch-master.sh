@@ -1,0 +1,1 @@
+docker compose -f master.compose.yml -p mwgg up -d

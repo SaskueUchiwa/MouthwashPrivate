@@ -12,7 +12,6 @@ import {
 import {
     AnyKillDistance,
     AssetReference,
-    BaseRole,
     Button,
     ButtonFixedUpdateEvent,
     EmojiService,
@@ -162,7 +161,7 @@ export class Poisoner extends Impostor {
             return undefined;
         }
 
-        return this._poisonButton.getNearestPlayer(players, this._poisonerRange, player => !this.poisonedPlayers.has(player));
+        return this._poisonButton.getNearestPlayer(players, this._poisonerRange, player => !this.poisonedPlayers.has(player) && !this.api.roleService.isPlayerImpostor(player));
     }
 
     private async _removePlayer(player: PlayerData) {

@@ -4,21 +4,24 @@
     "packageManager": "yarn@3.0.0-rc.13",
     "main": "./dist/index.js",
     "types": "./src/index.ts",
+    "private": true,
     "scripts": {
         "build": "tsc -p ./"
     },
     "devDependencies": {
-        "@skeldjs/hindenburg": "link:../Hindenburg",
+        "@skeldjs/hindenburg": "workspace:*",
         "@types/got": "^9.6.12",
         "@types/node": "latest",
+        "@types/promise.allsettled": "^1.0.3",
         "@types/uuid": "^8.3.1",
         "typescript": "latest"
     },
     "dependencies": {
         "@skeldjs/events": "^2.13.10",
         "got": "^11.8.2",
-        "hbplugin-mouthwashgg-auth": "link:../hbplugin-mouthwashgg-auth",
-        "mouthwash-types": "link:../mouthwash-types",
+        "hbplugin-mouthwashgg-auth": "workspace:*",
+        "mouthwash-types": "workspace:*",
+        "promise.allsettled": "^1.0.6",
         "reflect-metadata": "^0.1.13",
         "uuid": "^8.3.2"
     }

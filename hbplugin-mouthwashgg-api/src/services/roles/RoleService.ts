@@ -41,17 +41,29 @@ export class RoleService {
     getPlayerRole(player: PlayerData) {
         return this.playerRoles.get(player);
     }
+
+    isPlayerImpostor(player: PlayerData) {
+        return this.getPlayerRole(player)?.metadata.alignment === RoleAlignment.Impostor;
+    }
     
-    static adjustImpostorCount(playerCount: number): number {
-        if (playerCount <= 6) {
+    static getMaxImpostorCount(numPlayers: number): number {
+        if (numPlayers <= 6) {
             return 1;
         }
 
-        if (playerCount <= 8) {
+        if (numPlayers <= 8) {
             return 2;
         }
 
         return 3;
+    }
+
+    static adjustImpostorCount(wantedImpostors: number, numPlayers: number) {
+        return Math.min(wantedImpostors, this.getMaxImpostorCount(numPlayers));
+    }
+
+    adjustImpostorCount(wantedImpostors: number) {
+        return RoleService.adjustImpostorCount(wantedImpostors, this.plugin.room.players.size);
     }
 
     getRoleAssignments(roleCounts: RoleCount[]): RoleAssignment[] {
@@ -80,11 +92,7 @@ export class RoleService {
         
         shuffleArray(players);
         
-        const impostorCount = Math.min(
-            this.plugin.gameOptions.gameOptions.get(DefaultRoomOptionName.ImpostorCount)?.getValue<NumberValue>().value || 2,
-            RoleService.adjustImpostorCount(this.plugin.room.players.size)
-        );
-
+        const impostorCount = this.plugin.gamemode?.getAdjustedImpostorCount() ?? this.adjustImpostorCount(2);
         this.plugin.room.setSettings({
             numImpostors: impostorCount
         });
@@ -150,7 +158,7 @@ export class RoleService {
 
         await Promise.all(readyPromises);
 
-        await this.plugin.room.emit(new GamemodeRolesAssignedEvent);
+        await this.plugin.room.emit(new GamemodeRolesAssignedEvent(this.plugin.room));
     }
     
     async sendStartGameScreen(player: PlayerData, startGameScreen: StartGameScreen, allPlayers: PlayerData[]) {

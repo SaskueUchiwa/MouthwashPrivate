@@ -1,0 +1,67 @@
+<script lang="ts">
+    import * as shell from "@tauri-apps/api/shell";
+    import * as path from "@tauri-apps/api/path";
+
+    import Cog from "../../icons/Cog.svelte";
+    import { loading, unavailable, user } from "../../stores/accounts";
+    import UpdateOrPlay from "./UpdateOrPlay.svelte";
+    import { amongUsProcess, gameInstalledPathState } from "../../stores/gameState";
+    import PlaySettings from "./PlaySettings.svelte";
+
+    let settingsOpen = false;
+    $: notLoggedIn = $user === unavailable || $user === loading;
+
+    let playSettings: PlaySettings;
+
+    async function launchGame() {
+        if ($gameInstalledPathState === unavailable || $gameInstalledPathState === loading)
+            return;
+
+        if ($user === unavailable || $user === loading)
+            return;
+
+        const apiInfo = {
+            ClientIdString: $user.id,
+            ClientToken: $user.client_token,
+            DisplayName: $user.display_name,
+            LoggedInDateTime: $user.logged_in_at,
+            Perks: []
+        };
+
+        const amongUsExe = await path.join($gameInstalledPathState, "Among Us.exe");
+        const command = new shell.Command("cmd", [ "/C", amongUsExe ], {
+            env: {
+                MWGG_LOGIN_TOKEN: btoa(JSON.stringify(apiInfo || null)),
+                MWGG_ACCOUNTS_URL: "http://localhost:8000",
+                MWGG_ASSETS_URL: "https://assets.mouthwash.midlight.studio"
+            }
+        });
+        amongUsProcess.set(await command.spawn());
+
+        command.on("close", () => {
+            amongUsProcess.set(unavailable);
+        });
+    }
+</script>
+
+<div class="flex gap-4 self-stretch h-full">
+    <div class="w-full flex flex-col bg-[#06000a] rounded-xl gap-4">
+        <div class="flex-[3_0_0] w-full bg-[#27063e] rounded-t-xl" style="background-image: url('https://placekitten.com/1080/439')"></div>
+        <div class="flex-1 flex flex-col items-center justify-center">
+            <div class="flex border-2 border-transparent rounded-lg">
+                <UpdateOrPlay on:launch-game={launchGame}/>
+                <button class="flex items-center justify-center rounded-r-lg bg-[#27063e] p-4 hover:bg-[#1C072B] hover:text-[#bba1ce] filter border-none font-inherit text-inherit cursor-pointer"
+                    class:grayscale={settingsOpen}
+                    class:pointer-events-none={settingsOpen}
+                    on:click={() => playSettings.open()}
+                >
+                    <Cog size={20}/>
+                </button>
+            </div>
+            {#if notLoggedIn}
+                <p class="text-yellow-500 my-0.5 text-xs">You need to be logged in before you can play.</p>
+            {/if}
+        </div>
+    </div>
+</div>
+<PlaySettings bind:isVisible={settingsOpen} bind:this={playSettings} on:switch-view/>

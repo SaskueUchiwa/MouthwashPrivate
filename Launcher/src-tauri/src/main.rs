@@ -1,13 +1,33 @@
-// Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use winreg::enums::*;
+use winreg::RegKey;
+
 use futures_util::stream::StreamExt;
-use tauri::Manager;
 use zip::ZipArchive;
 use std::fs::{self, File};
+use std::path;
 use std::path::Path;
 use std::time::SystemTime;
 use std::io;
+
+#[tauri::command]
+fn get_steam_registry_install_location() -> String {
+    let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
+    let cur_ver = hklm.open_subkey("SOFTWARE\\WOW6432Node\\Valve\\Steam");
+
+    if cur_ver.is_err() {
+        return "".to_string();
+    }
+
+    let pf = cur_ver.unwrap().get_value("InstallPath");
+
+    if pf.is_err() {
+        return "".to_string();
+    }
+
+    return pf.unwrap();
+}
 
 #[derive(serde::Serialize)]
 #[derive(Clone)]
@@ -105,27 +125,27 @@ async fn extract_downloaded_file(buf: Vec<u8>, destination: &str) -> Option<bool
 async fn download_file_and_extract(window: tauri::Window, url: String, folder: String, download_id: String) -> Option<bool> {
     let depot_downloader_zip_bytes =
         download_and_stream_file(&window, url, download_id).await?;
-        
-    let app = window.clone();
-    let app_data = tauri::api::path::app_data_dir(&app.config())?;
 
-    extract_downloaded_file(depot_downloader_zip_bytes, app_data.join(folder).to_str()?).await;
+    extract_downloaded_file(depot_downloader_zip_bytes, &folder).await;
 
     return Some(true);
 }
 
 #[tauri::command]
-async fn is_dev() -> bool {
-    if cfg!(debug_assertions) {
-        return true;
-    } else {
-        return false;
-    }
+async fn download_file(window: tauri::Window, url: String, file: String, download_id: String) -> Option<bool> {
+    let depot_downloader_zip_bytes =
+        download_and_stream_file(&window, url, download_id).await?;
+
+    let file_path = path::Path::new(&file);
+    let _ = fs::create_dir_all(file_path.parent().unwrap().to_string_lossy().to_string());
+    let _ = fs::write(file, depot_downloader_zip_bytes);
+
+    return Some(true);
 }
 
 fn main() {
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![download_file_and_extract, is_dev])
+        .invoke_handler(tauri::generate_handler![get_steam_registry_install_location, download_file_and_extract, download_file])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

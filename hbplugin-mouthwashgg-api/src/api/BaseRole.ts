@@ -79,11 +79,12 @@ export class BaseRole {
             ...buttonInfo
         };
 
-        return await this.api.hudService.spawnButton(
+        const button = await this.api.hudService.spawnButton(
             this.player,
             buttonId,
             spawnInfo
         );
+        return button;
     }
 
     async giveFakeTasks() {

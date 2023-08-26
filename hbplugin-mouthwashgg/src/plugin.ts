@@ -155,7 +155,7 @@ export class MouthwashPlugin extends WorkerPlugin {
 
             const connection = this.worker.connections.get(rinfo.address + ":" + rinfo.port);
             const cachedSession = connection && this.authApi.connectionSessionCache.get(connection);
-            const sessionInfo = (connection && cachedSession) || await this.authApi.getSession(uuid, rinfo.address);
+            const sessionInfo = (connection && cachedSession) || await this.authApi.getSession(uuid);
 
             if (sessionInfo) {
                 if (connection && !cachedSession) {

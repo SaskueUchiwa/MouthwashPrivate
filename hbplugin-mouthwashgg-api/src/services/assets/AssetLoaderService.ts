@@ -1,9 +1,15 @@
 import { ClientDisconnectEvent, Connection, PlayerData, ReliablePacket } from "@skeldjs/hindenburg";
 import { FetchResourceMessage, FetchResponseType, ResourceType } from "mouthwash-types";
+import allSettled from "promise.allsettled";
 
-import { ClientFetchResourceResponseEvent } from "../..";
+import { ClientFetchResourceResponseEvent } from "../../events";
 import { MouthwashApiPlugin } from "../../plugin";
 import { AssetBundle, AssetReference } from "./AssetBundle";
+
+export const AssetBundleIds = { // TODO: Move to database
+    "PggResources/Global": "https://jhwupengaqaqjewreahz.supabase.co/storage/v1/object/public/MouthwashAssets/016c9f28-ed8f-49cd-b819-fa993e4e3267",
+    "PggResources/TownOfPolus": "https://jhwupengaqaqjewreahz.supabase.co/storage/v1/object/public/MouthwashAssets/943eb535-3ba9-48b0-9470-80af80235842"
+} as Record<string, string>;
 
 export class AssetLoaderService {
     globalAssets?: AssetBundle;
@@ -19,7 +25,7 @@ export class AssetLoaderService {
     }
 
     async loadGlobalAsset() {
-        this.globalAssets = await AssetBundle.loadFromUrl("PggResources/Global", false);
+        this.globalAssets = await AssetBundle.loadFromUrl(AssetBundleIds["PggResources/Global"], false);
     }
 
     getLoadedBundles(connection: Connection) {
@@ -57,7 +63,6 @@ export class AssetLoaderService {
             return;
 
         const waitingFor = this.getWaitingFor(connection);
-
         if (waitingFor.has(assetBundle.bundleId))
             return;
 
@@ -74,7 +79,6 @@ export class AssetLoaderService {
                 ]
             )
         );
-
         waitingFor.set(assetBundle.bundleId, assetBundle);
     }
 
@@ -129,21 +133,28 @@ export class AssetLoaderService {
     }
 
     async resolveAssetReference(assetRef: AssetReference) {
-        const assetBundle = await AssetBundle.loadFromUrl(assetRef.bundleLocation, false);
+        const assetBundle = await AssetBundle.loadFromUrl(AssetBundleIds[assetRef.bundleLocation], false);
         const asset = assetBundle.getAssetSafe(assetRef.assetPath);
 
         const promises = [];
+        const connections = [];
         for (const [ , connection ] of this.plugin.room.connections) {
-            await this.assertLoaded(connection, assetBundle);
-            promises.push(this.waitForLoaded(connection, assetBundle));
+            promises.push(this.assertLoaded(connection, assetBundle).then(() => this.waitForLoaded(connection, assetBundle)));
+            connections.push(connection);
         }
-        await Promise.all(promises);
+        const results = await allSettled(promises);
+        for (let i = 0; i < results.length; i++) {
+            const result = results[i];
+            if (result.status === "rejected") {
+                this.plugin.logger.warn("Failed to load asset %s for %s: %s", assetRef.assetPath, connections[i], result.reason);
+            }
+        }
         
         return asset;
     }
 
     async resolveAssetReferenceFor(assetRef: AssetReference, setFor: PlayerData[]) {
-        const assetBundle = await AssetBundle.loadFromUrl(assetRef.bundleLocation, false);
+        const assetBundle = await AssetBundle.loadFromUrl(AssetBundleIds[assetRef.bundleLocation], false);
         const asset = assetBundle.getAssetSafe(assetRef.assetPath);
 
         const connections = this.plugin.room.getConnections(setFor, true);
@@ -153,10 +164,15 @@ export class AssetLoaderService {
 
         const promises = [];
         for (const connection of connections) {
-            await this.assertLoaded(connection, assetBundle);
-            promises.push(this.waitForLoaded(connection, assetBundle));
+            promises.push(this.assertLoaded(connection, assetBundle).then(() => this.waitForLoaded(connection, assetBundle)));
         }
-        await Promise.all(promises);
+        const results = await allSettled(promises);
+        for (let i = 0; i < results.length; i++) {
+            const result = results[i];
+            if (result.status === "rejected") {
+                this.plugin.logger.warn("Failed to load asset %s for %s: %s", assetRef.assetPath, connections[i], result.reason);
+            }
+        }
         
         return asset;
     }

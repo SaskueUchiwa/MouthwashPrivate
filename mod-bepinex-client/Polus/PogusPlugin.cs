@@ -103,19 +103,25 @@ namespace Polus {
                     LauncherBuild = 0;
                 }
 
-                CatchHelper.TryCatch(() => {
-                    if (File.Exists(PggConstants.CacheLocation)) {
-                        using FileStream stream = PggCache.GetFileStream(PggConstants.CacheLocation, FileMode.Open, FileAccess.Read, FileShare.None);
-                        ((PggCache) Cache).Deserialize(new BinaryReader(stream));
-                    }
+                if (File.Exists(PggConstants.CacheLocation)) {
+                    using FileStream stream = PggCache.GetFileStream(PggConstants.CacheLocation, FileMode.Open, FileAccess.Read, FileShare.None);
+                    ((PggCache) Cache).Deserialize(new BinaryReader(stream));
+                }
 
-                    PermanentMod.LoadPatches("gg.polus.permanent",
-                        Assembly.GetExecutingAssembly().GetTypes()
-                            .Where(x => x.GetCustomAttribute(typeof(HarmonyPatch)) != null).ToArray());
-                    PermanentMod.Patch();
-                    ModManager = new PggModManager(Log);
-                    ModManager.LoadMods();
-                });
+                "Getting assembly types..".Log();
+                
+                Type[] types = Assembly.GetExecutingAssembly().GetTypes();
+                "Getting patches..".Log();
+                Type[] patches = types.Where(x =>
+                {
+                    x.Log();
+                    return x.GetCustomAttribute(typeof(HarmonyPatch)) != null;
+                }).ToArray();
+                "Loading patches..".Log();
+                PermanentMod.LoadPatches("gg.polus.permanent", patches);
+                PermanentMod.Patch();
+                ModManager = new PggModManager(Log);
+                ModManager.LoadMods();
 
                 // font = Bundle.LoadAsset("Assets/Fonts/AmongUsButton2-Regular SDF.asset").Cast<TMP_FontAsset>();
                 font = Bundle.LoadAsset("Assets/Fonts/ComicSansMs3 SDF.asset").Cast<TMP_FontAsset>();

@@ -87,7 +87,7 @@ export class Impostor extends BaseRole {
             return undefined;
         }
 
-        return this._killButton.getNearestPlayer(players, this._killRange);
+        return this._killButton.getNearestPlayer(players, this._killRange, player => !this.api.roleService.isPlayerImpostor(player));
     }
 
     setKillButtonEnabled(enabled: boolean) {

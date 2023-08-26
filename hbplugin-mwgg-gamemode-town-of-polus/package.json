@@ -3,15 +3,16 @@
     "license": "SSPL-1.0",
     "packageManager": "yarn@3.0.0-rc.13",
     "main": "./dist/index.js",
+    "private": true,
     "scripts": {
         "build": "tsc -p ./"
     },
     "devDependencies": {
-        "@skeldjs/hindenburg": "link:../Hindenburg",
-        "hbplugin-mouthwashgg-api": "link:../hbplugin-mouthwashgg-api",
+        "@skeldjs/hindenburg": "workspace:*",
+        "hbplugin-mouthwashgg-api": "workspace:*",
         "typescript": "^4.4.4"
     },
     "dependencies": {
-        "mouthwash-types": "link:../mouthwash-types"
+        "mouthwash-types": "workspace:*"
     }
 }

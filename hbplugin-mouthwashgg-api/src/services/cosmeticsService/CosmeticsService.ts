@@ -10,7 +10,7 @@ interface LoadedCosmetic {
     among_us_id: number;
     resource_id: number;
     resource_path: string;
-    bundle_path: string;
+    asset_bundle_url: string;
     type: "HAT"|"PET";
     is_owned: boolean;
 }
@@ -41,13 +41,7 @@ export class CosmeticsService {
         const clientUser = await this.plugin.authApi.getConnectionUser(connection);
         if (!clientUser) return;
 
-        const ownedCosmetics = await this.plugin.authApi.getOwnedCosmetics(clientUser.client_id);
-        if (!ownedCosmetics) {
-            this.plugin.logger.warn("Failed to get owned cosmetics for user with client id %s", clientUser.client_id);
-            return;
-        }
-
-        const ownedCosmeticIdsSet = new Set(ownedCosmetics.map(cosmetic => cosmetic.id));
+        const ownedCosmeticIdsSet = new Set(clientUser.owned_cosmetics.map(cosmetic => cosmetic.id));
 
         const messages: (LoadHatMessage|LoadPetMessage)[] = [];
         const promises = [];
@@ -56,20 +50,21 @@ export class CosmeticsService {
             if (recipLoadedCosmetics.has(cosmeticId))
                 continue;
 
-            const assetBundle = await AssetBundle.loadFromUrl(loadedCosmetic.bundle_path, false);
+            const assetBundle = await AssetBundle.loadFromUrl(loadedCosmetic.asset_bundle_url, false);
             await this.plugin.assetLoader.assertLoaded(connection, assetBundle);
 
-            promises.push(this.plugin.assetLoader.waitForLoaded(connection, assetBundle));
-            messages.push(loadedCosmetic.type === "HAT"
+            promises.push(this.plugin.assetLoader.waitForLoaded(connection, assetBundle).then(() => {
+                messages.push(loadedCosmetic.type === "HAT"
                     ? new LoadHatMessage(loadedCosmetic.among_us_id, loadedCosmetic.resource_id, ownedCosmeticIdsSet.has(loadedCosmetic.id))
                     : new LoadPetMessage(loadedCosmetic.among_us_id, loadedCosmetic.resource_id, ownedCosmeticIdsSet.has(loadedCosmetic.id)));
+            }).catch(() => {}));
 
             recipLoadedCosmetics.set(loadedCosmetic.id, {
                 id: loadedCosmetic.id,
                 among_us_id: loadedCosmetic.among_us_id,
                 resource_id: loadedCosmetic.resource_id,
                 resource_path: loadedCosmetic.resource_path,
-                bundle_path: loadedCosmetic.bundle_path,
+                asset_bundle_url: loadedCosmetic.asset_bundle_url,
                 type: loadedCosmetic.type,
                 is_owned: false
             });
@@ -90,15 +85,9 @@ export class CosmeticsService {
         const clientUser = await this.plugin.authApi.getConnectionUser(client);
         if (!clientUser) return;
 
-        const ownedCosmetics = await this.plugin.authApi.getOwnedCosmetics(clientUser.client_id);
-        if (!ownedCosmetics) {
-            this.plugin.logger.warn("Failed to get owned cosmetics for user with client id %s", clientUser.client_id);
-            return;
-        }
-
         const connectionMessages: Map<Connection, (LoadHatMessage|LoadPetMessage)[]> = new Map;
         const promises = [];
-        for (const ownedCosmetic of ownedCosmetics) {
+        for (const ownedCosmetic of clientUser.owned_cosmetics) {
             if (this.roomLoadedCosmetics.get(ownedCosmetic.id))
                 continue;
 
@@ -117,20 +106,21 @@ export class CosmeticsService {
                     }
                 }
 
-                const assetBundle = await AssetBundle.loadFromUrl(ownedCosmetic.bundle_path, false);
+                const assetBundle = await AssetBundle.loadFromUrl(ownedCosmetic.asset_bundle_url, false);
                 await this.plugin.assetLoader.assertLoaded(connection, assetBundle);
 
-                promises.push(this.plugin.assetLoader.waitForLoaded(connection, assetBundle));
-                messages.push(ownedCosmetic.type === "HAT"
+                promises.push(this.plugin.assetLoader.waitForLoaded(connection, assetBundle).then(() => {
+                    messages.push(ownedCosmetic.type === "HAT"
                         ? new LoadHatMessage(ownedCosmetic.among_us_id, ownedCosmetic.resource_id, client === connection)
                         : new LoadPetMessage(ownedCosmetic.among_us_id, ownedCosmetic.resource_id, client === connection));
+                }).catch(() => {}));
                         
                 this.roomLoadedCosmetics.set(ownedCosmetic.id, {
                     id: ownedCosmetic.id,
                     among_us_id: ownedCosmetic.among_us_id,
                     resource_id: ownedCosmetic.resource_id,
                     resource_path: ownedCosmetic.resource_path,
-                    bundle_path: ownedCosmetic.bundle_path,
+                    asset_bundle_url: ownedCosmetic.asset_bundle_url,
                     type: ownedCosmetic.type,
                     is_owned: false
                 });

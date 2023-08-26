@@ -132,7 +132,7 @@ export class Button extends EventEmitter<ButtonEvents> {
                 if (!this.hudService.plugin.targettableService.isTargettable(player))
                     return;
 
-                return !filter || filter(player);
+                return filter === undefined || filter(player);
             });
     }
 }

@@ -30,7 +30,8 @@ import {
     PlayerCompleteTaskEvent,
     FinalTaskState,
     PlayerMurderEvent,
-    PlayerStartMeetingEvent
+    PlayerStartMeetingEvent,
+    PlayerData
 } from "@skeldjs/hindenburg";
 
 import { MouthwashAuthPlugin } from "hbplugin-mouthwashgg-auth";
@@ -69,13 +70,15 @@ import {
     AnyKillDistance,
     DeadBodyService,
     AssetReference,
-    TargettableService
+    TargettableService,
+    AssetBundleIds
 } from "./services";
 
 import {
     ButtonFixedUpdateEvent,
     ClientFetchResourceResponseEvent,
     GamemodeBeforeRolesAssignedEvent,
+    GamemodeGameEndEvent,
     MouthwashUpdateGameOptionEvent
 } from "./events";
 
@@ -218,7 +221,7 @@ export class MouthwashApiPlugin extends RoomPlugin {
         const registeredBundles = getRegisteredBundles(gamemodePluginCtr);
         const promises = [];
         for (const registeredBundle of registeredBundles) {
-            promises.push(AssetBundle.loadFromUrl(registeredBundle, false));
+            promises.push(AssetBundle.loadFromUrl(AssetBundleIds[registeredBundle], false));
         }
         gamemodePlugin.registeredBundles = await Promise.all(promises);
 
@@ -322,7 +325,7 @@ export class MouthwashApiPlugin extends RoomPlugin {
         if (!connectionUser) return;
 
         if (connectionUser.cosmetic_hat !== playerInfo.hat || connectionUser.cosmetic_pet !== playerInfo.pet || connectionUser.cosmetic_skin !== playerInfo.skin) {
-            await this.authApi.updateUserCosmetics(connectionUser.client_id, playerInfo.hat, playerInfo.pet, playerInfo.skin);
+            await this.authApi.updateUserCosmetics(connectionUser.id, playerInfo.hat, playerInfo.pet, playerInfo.skin);
         }
     }
 
@@ -332,7 +335,7 @@ export class MouthwashApiPlugin extends RoomPlugin {
         if (ev.client === this.roomCreator && this.authApi) {
             const connectionUser = await this.authApi.getConnectionUser(ev.client);
             if (connectionUser) {
-                await this.updateUserSettings(connectionUser.client_id);
+                await this.updateUserSettings(connectionUser.id);
             }
         }
     }
@@ -368,12 +371,9 @@ export class MouthwashApiPlugin extends RoomPlugin {
 
         await this.nameService.updateAllNames();
 
-        const perks = await this.authApi.getPerks(connectionUser.client_id);
-        if (perks) {
-            const coloredNamePerk = perks.find(perk => perk.id === "NAME_COLOR");
-            if (coloredNamePerk) {
-                await this.nameService.addColor(ev.player, new RGBA(coloredNamePerk.config.rgba));
-            }
+        const coloredNamePerk = connectionUser.perks.find(perk => perk.id === "NAME_COLOR");
+        if (coloredNamePerk) {
+            await this.nameService.addColor(ev.player, new RGBA(coloredNamePerk.settings.rgba));
         }
 
         if (ev.player.isHost) {
@@ -543,7 +543,7 @@ export class MouthwashApiPlugin extends RoomPlugin {
             if (this.roomCreator && !this.roomCreator.sentDisconnect) {
                 const connectionUser = await this.authApi.getConnectionUser(this.roomCreator);
                 if (connectionUser) {
-                    await this.updateUserSettings(connectionUser.client_id);
+                    await this.updateUserSettings(connectionUser.id);
                 }
             }
         }
@@ -553,7 +553,7 @@ export class MouthwashApiPlugin extends RoomPlugin {
             for (const [ , connection ] of this.room.connections) {
                 for (const assetBundle of this.gamemode.registeredBundles) {
                     await this.assetLoader.assertLoaded(connection, assetBundle);
-                    promises.push(this.assetLoader.waitForLoaded(connection, assetBundle));
+                    promises.push(this.assetLoader.waitForLoaded(connection, assetBundle).catch(() => {}));
                 }
             }
             await Promise.all(promises);
@@ -765,6 +765,7 @@ export class MouthwashApiPlugin extends RoomPlugin {
             }
         }
 
+        const endGameScreens: Map<PlayerData<Room>, EndGameScreen> = new Map;
         const promises = [];
         for (const [ , player ] of this.room.players) {
             if (player.playerId === undefined) {
@@ -780,6 +781,8 @@ export class MouthwashApiPlugin extends RoomPlugin {
             const connection = this.room.connections.get(player.clientId);
             if (!connection)
                 return;
+
+            endGameScreens.set(player, endGame);
 
             const yourTeam = typeof endGame.yourTeam === "undefined"
                 ? playerRole ? rolePlayers[playerRole.metadata.alignment] : []
@@ -824,6 +827,8 @@ export class MouthwashApiPlugin extends RoomPlugin {
             );
         }
         await Promise.all(promises);
+
+        await this.room.emit(new GamemodeGameEndEvent(this.room, endGameScreens));
 
         await Promise.all([
             this.hudService.resetAllHuds(),

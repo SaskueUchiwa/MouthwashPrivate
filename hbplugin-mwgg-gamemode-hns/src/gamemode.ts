@@ -27,8 +27,7 @@ import {
     GamemodeRolesAssignedEvent,
     MouthwashEndGames,
     RegisterRole,
-    RoleAlignment,
-    RoleService
+    RoleAlignment
 } from "hbplugin-mouthwashgg-api";
 
 import {
@@ -61,7 +60,7 @@ export const HnSOptionName = {
     id: "hide-and-seek",
     name: "Hide N' Seek",
     version: "1.0.0",
-    description: "Hiders are given a headstart to find the best place to hide from the seekers, who hunt down the hiders for the remaining section of the game.",
+    description: "Hiders are given a headstart to find the best place to hide from the seekers, who hunt down the hiders for the rest of the game.",
     author: "weakeyes"
 })
 @RegisterRole(Seeker)
@@ -101,12 +100,14 @@ export class HideAndSeekGamemodePlugin extends BaseGamemodePlugin {
         return defaultOptions;
     }
 
-    getRoleCounts() {
-        const impostorCount = Math.min(
-            this.api.gameOptions.gameOptions.get(HnSOptionName.NumSeekers)?.getValue<NumberValue>().value || 2,
-            RoleService.adjustImpostorCount(this.room.players.size)
+    getAdjustedImpostorCount(): number {
+        return this.api.roleService.adjustImpostorCount(
+            this.api.gameOptions.gameOptions.get(HnSOptionName.NumSeekers)?.getValue<NumberValue>().value ?? 2
         );
+    }
 
+    getRoleCounts() {
+        const impostorCount = this.getAdjustedImpostorCount();
         return [
             {
                 role: Seeker,

@@ -76,7 +76,6 @@ namespace PolusggSlim.Api
                 RequestUri = new Uri(_client.BaseAddress, "auth/check"),
                 Method = HttpMethod.Post
             };
-            request.Headers.Add("Client-ID", clientId);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", clientToken);
 
             var response = await _client.SendAsync(request);

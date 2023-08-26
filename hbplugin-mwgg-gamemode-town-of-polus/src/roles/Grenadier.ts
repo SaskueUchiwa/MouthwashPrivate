@@ -7,7 +7,6 @@ import {
 } from "@skeldjs/hindenburg";
 
 import {
-    AssetBundle,
     AssetReference,
     AudioAsset,
     Button,
@@ -92,13 +91,14 @@ export class Grenadier extends Impostor {
             }
         );
 
-        this._throwButton?.on("mwgg.button.click", ev => {
+        this._throwButton?.on("mwgg.button.click", async ev => {
             if (!this._throwButton || this._throwButton.currentTime > 0 || this.player.info?.isDead || !this.player.transform)
                 return;
             
             const playersInRange = this.getPossibleTargets();
-            const topAssetBundle = AssetBundle.loadfromCacheSafe("PggResources/TownOfPolus");
-            const flashbangAsset = topAssetBundle.getAssetSafe("Assets/Mods/TownOfPolus/FlashbangSfx.mp3") as AudioAsset;
+            const flashbangAsset = await this.api.assetLoader.resolveAssetReference(
+                new AssetReference("PggResources/TownOfPolus", "Assets/Mods/TownOfPolus/FlashbangSfx.mp3")
+            ) as AudioAsset;
 
             this._throwButton.setCurrentTime(this._throwButton.maxTimer);
             this._throwButton.setCountingDown(false);

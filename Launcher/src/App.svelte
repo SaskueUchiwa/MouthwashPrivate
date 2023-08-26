@@ -1,333 +1,32 @@
 <script lang="ts">
-    import { appDataDir, join } from "@tauri-apps/api/path";
-    import { createDir, exists, readDir, readTextFile, removeDir, renameFile, writeTextFile } from "@tauri-apps/api/fs";
-    import { open as openFileDialog } from "@tauri-apps/api/dialog";
-    import { Child, Command } from "@tauri-apps/api/shell";
-    import { invoke } from "@tauri-apps/api";
-
     import "virtual:windi.css";
-    import Download from "./icons/Download.svelte";
-    import DownloadController from "./lib/DownloadController.svelte";
-    import DownloadPercentage from "./lib/DownloadPercentage.svelte";
-    import DownloadConfig from "./lib/DownloadConfig.svelte";
-    import SteamAuth from "./lib/SteamAuth.svelte";
+
+    import * as fs from "@tauri-apps/api/fs";
+    import * as path from "@tauri-apps/api/path";
     import { onMount } from "svelte";
-    import AccountManager from "./layout/AccountManager.svelte";
-    import Adjustments from "./icons/Adjustments.svelte";
-    import Rocket from "./icons/Rocket.svelte";
-    import InstallationConfig from "./lib/InstallationConfig.svelte";
-    import type { ApiKeyInfo } from "./vite-env";
-    import ArrowPath from "./icons/ArrowPath.svelte";
-    import ArrowUp from "./icons/ArrowUp.svelte";
+    import Tab from "./components/Tab.svelte";
+    import TabList from "./components/TabList.svelte";
 
-    let isDev = false;
+    import Account from "./icons/Account.svelte";
+    import Download from "./icons/Download.svelte";
+    import Shop from "./icons/Shop.svelte";
 
-    let downloadConfig: DownloadConfig;
-    let steamAuth: SteamAuth;
-    let installationConfig: InstallationConfig;
+    import AccountView from "./views/Account/Account.svelte";
+    import DownloadView from "./views/Download/Download.svelte";
+    import PlayView from "./views/Play/Play.svelte";
+    import ShopView from "./views/Shop.svelte";
+    import { gameInstalledPathState, gameRemoteVersionState, type ChangeLogEntry, gameInstalledVersionState } from "./stores/gameState";
+    import { loading, unavailable } from "./stores/accounts";
+    import Launch from "./icons/Launch.svelte";
+    import Loader from "./icons/Loader.svelte";
 
-    let isDownloading = false;
-
-    let isDownloadingDepot: boolean;
-    let hasDownloadedDepot: boolean;
-    let depotDownloadProgress: number;
-
-    let depotDownloaderProcess: Child|undefined = undefined;
-
-    let amongUsExePath: string|undefined = undefined;
-    let amongUsInstallationPath: string|undefined = undefined;
-    let amongUsProcess: Child|undefined = undefined;
-
-    let baseAccountsApiUrl: string = "https://accounts.mouthwash.midlight.studio";
-    let loginApiInfo: ApiKeyInfo|undefined = undefined;
-
-    let localInstalledModVersion: string|undefined = undefined;
-    let updateAvailable: { mod_version: string; release_date: string; changelog: string[]; }|undefined = undefined;
-    let isCheckingForUpdates = false;
-
-    let isUpdating = false;
-
-    $: isDev && localStorage.setItem("dev:base-api-url", baseAccountsApiUrl);
-
-    async function moveFilesInFolder(originPath: string, destPath: string) {
-        const filesInOrigin = await readDir(originPath);
-
-        for (const file of filesInOrigin) {
-            const subOriginPath = await join(originPath, file.name);
-            const subDestPath = await join(destPath, file.name);
-            if (Array.isArray(file.children)) {
-                await createDir(subDestPath, { recursive: true });
-                await moveFilesInFolder(subOriginPath, subDestPath);
-            } else {
-                await renameFile(subOriginPath, subDestPath);
-            }
-        }
-    }
-
-    async function onDepotDownload(config: { username: string; password: string; installLocation: string; }, version: string|undefined) {
-        const depotDownloaderDirectory = await join(await appDataDir(), "depot");
-        await removeDir(depotDownloaderDirectory, { recursive: true });
-
-        const bepinexDirectory = await join(await appDataDir(), "bepinex");
-        const dependenciesDirectory = await join(await appDataDir(), "dependencies");
-        const pluginDirectory = await join(await appDataDir(), "plugin");
-
-        await moveFilesInFolder(bepinexDirectory, config.installLocation);
-        await removeDir(bepinexDirectory, { recursive: true });
-
-        const pluginsDir = await join(config.installLocation, "BepInEx", "plugins");
-        await createDir(pluginsDir, { recursive: true });
-        
-        await moveFilesInFolder(pluginDirectory, pluginsDir);
-        await removeDir(pluginDirectory, { recursive: true });
-
-        await moveFilesInFolder(dependenciesDirectory, pluginsDir);
-        
-        await removeDir(dependenciesDirectory, { recursive: true });
-        await removeDir(await join(config.installLocation, ".DepotDownloader"), { recursive: true });
-
-        await writeTextFile(await join(config.installLocation, "mod_version.txt"), version || "0.0.0");
-        await checkInstallation();
-        isDownloading = false;
-    }
-
-    async function downloadDepotAndAmongUs(installLocation: string, username: string, password: string) {
-        await invoke("download_file_and_extract", { url: "https://files.mouthwash.midlight.studio/DepotDownloader.zip", downloadId: "depot-downloader", folder: "depot" });
-        
-        await new Promise<void>(async (res, rej) => {
-            isDownloadingDepot = true;
-            hasDownloadedDepot = false;
-
-            console.log("creating directory..");
-            await createDir(installLocation, { recursive: true });
-            const cmd = new Command("depot-downloader-download-au", [
-                "-app", "945360",
-                "-depot", "945361",
-                "-manifest", "3510344350358296660",
-                "-username", username,
-                "-password", password,
-                "-dir", installLocation
-            ]);
-
-            console.log("starting depot downloader..");
-            depotDownloaderProcess = await cmd.spawn();
-
-            cmd.stdout.on("data", async buf => {
-                const bufString: string = buf.toString();
-
-                console.log(bufString);
-
-                const percRegExp = /\d+(\.\d+)?%/;
-                if (percRegExp.test(bufString)) { // Download percentage
-                    const percentage = bufString.match(percRegExp);
-                    const numberPart = percentage[0].replace(/[^0-9.]/g, "");
-                    const percentageNumber = parseFloat(numberPart);
-
-                    depotDownloadProgress = percentageNumber / 100;
-                }
-
-                if (bufString.includes("into Steam")) { // Logging into Steam.
-                    steamAuth.open(false);
-                }
-
-                if (bufString.includes("licenses")) { // Logged into steam (contains number of game licenses)
-                    steamAuth.close();
-                }
-
-                if (bufString.includes("not available from this account")) { // user doesn't have Among Us bought
-                    // error
-                }
-
-                if (bufString.includes("Downloaded")) { // Game downloaded
-                    isDownloadingDepot = false;
-                    hasDownloadedDepot = true;
-                    await depotDownloaderProcess.kill();
-                    setTimeout(() => {
-                        res();
-                    }, 1000);
-                }
-            });
-            cmd.stderr.on("data", buf => {
-                const bufString: string = buf.toString();
-
-                console.log(bufString);
-
-                if (bufString.includes("STEAM GUARD") || "confirm") {
-                    // steamAuth.open();
-
-                    if (bufString.includes("is incorrect")) { // invalid steam auth
-                        steamAuth.open(true);
-                    }
-                }
-            });
-
-            (window as any).provideInput = (inp: string) => depotDownloaderProcess.write(inp + "\r\n");
-        });
-    }
-
-    async function downloadSequence() {
-        isDownloading = true;
-        const { username, password, installLocation } = await downloadConfig.getConfig();
-        const remoteVersionInfo = await getLatestRemoteVersion();
-
-        console.log("beginning download..");
-        await Promise.all([
-            downloadDepotAndAmongUs(installLocation, username, password).then(() => console.log("downloaded depot")),
-            invoke("download_file_and_extract", { url: "https://files.mouthwash.midlight.studio/BepInEx.zip", downloadId: "bepinex", folder: "bepinex" })
-                .then(() => console.log("downloaded bepinex")),
-            invoke("download_file_and_extract", { url: "https://files.mouthwash.midlight.studio/MouthwashGG.zip", downloadId: "plugin", folder: "plugin" })
-                .then(() => console.log("downloaded mouthwash")),
-            invoke("download_file_and_extract", { url: "https://files.mouthwash.midlight.studio/Dependencies.zip", downloadId: "dependencies", folder: "dependencies" })
-                .then(() => console.log("downloaded dependencies"))
-        ]);
-        
-        onDepotDownload({ username, password, installLocation }, remoteVersionInfo?.mod_version);
-    }
-
-    function onSteamAuthSubmit(ev: CustomEvent<string>) {
-        depotDownloaderProcess?.write(ev.detail + "\r\n");
-        steamAuth.close();
-    }
-
-    async function checkInstallation() {
-        const config = await downloadConfig.getConfig();
-        const checkAUPath = await join(config.installLocation, "Among Us.exe");
-
-        if (await exists(checkAUPath)) {
-            amongUsExePath = checkAUPath;
-            amongUsInstallationPath = config.installLocation;
-
-            await checkForUpdates();
-        } else {
-            amongUsExePath = undefined;
-            amongUsInstallationPath = undefined;
-        }
-    }
-
-    async function getLatestRemoteVersion() {
-        const res = await fetch("https://files.mouthwash.midlight.studio/mod_version.json");
-        if (!res.ok) {
-            return undefined;
-        }
-
-        const remoteVersionInfo = await res.json();
-        return remoteVersionInfo;
-    }
-
-    async function checkForUpdates() {
-        isCheckingForUpdates = true;
-        updateAvailable = undefined;
-        const modVersionPath = await join(amongUsInstallationPath, "mod_version.txt");
-        if (!await exists(modVersionPath)) {
-            localInstalledModVersion = "Not found";
-            isCheckingForUpdates = false;
-            return;
-        }
-
-        const localModVersionInfo = await readTextFile(modVersionPath);
-        const localModVersionParts = localModVersionInfo.split(".");
-        if (localModVersionParts.length !== 3) {
-            localInstalledModVersion = "Not found";
-            isCheckingForUpdates = false;
-            return;
-        }
-
-        localInstalledModVersion = localModVersionInfo;
-
-        const [ localMajor, localMinor, localPatch ] = localModVersionParts.map(p => parseInt(p));
-        const remoteVersionInfo = await getLatestRemoteVersion();
-
-        if (remoteVersionInfo === undefined) {
-            isCheckingForUpdates = false;
-            return;
-        }
-
-        const remoteModVersionParts = remoteVersionInfo.mod_version.split(".");
-        const [ remoteMajor, remoteMinor, remotePatch ] = remoteModVersionParts.map(p => parseInt(p));
-
-        if (localMajor > remoteMajor) {
-            isCheckingForUpdates = false;
-            return;
-        }
-        if (localMinor > remoteMinor) {
-            isCheckingForUpdates = false;
-            return;
-        }
-        if (localPatch > remotePatch) {
-            isCheckingForUpdates = false;
-            return;
-        }
-        if (localMajor === remoteMajor && localMinor === remoteMinor && localPatch === remotePatch) {
-            isCheckingForUpdates = false;
-            return;
-        }
-
-        updateAvailable = remoteVersionInfo;
-        isCheckingForUpdates = false;
-    }
-
-    onMount(async () => {
-        isDev = await invoke("is_dev");
-        if (isDev) {
-            baseAccountsApiUrl = localStorage.getItem("dev:base-api-url") || "https://accounts.mouthwash.midlight.studio";
-        }
-        await checkInstallation();
-    });
-
-    async function startGame() {
-        const command = new Command("cmd", [ "/C", amongUsExePath ], {
-            env: {
-                MWGG_LOGIN_TOKEN: btoa(JSON.stringify(loginApiInfo || null)),
-                MWGG_ACCOUNTS_URL: baseAccountsApiUrl,
-                MWGG_ASSETS_URL: "https://assets.mouthwash.midlight.studio"
-            }
-        });
-        amongUsProcess = await command.spawn();
-
-        command.on("close", () => {
-            amongUsProcess = undefined;
-        });
-    }
-    
-    async function attemptUpdate() {
-        if (!updateAvailable)
-            return;
-
-        const config = await downloadConfig.getConfig();
-        const pluginDirectory = await join(await appDataDir(), "plugin-" + updateAvailable.mod_version);
-
-        isUpdating = true;
-
-        await invoke("download_file_and_extract", {
-            url: "https://files.mouthwash.midlight.studio/MouthwashGG.zip",
-            downloadId: "plugin-" + updateAvailable.mod_version,
-            folder: "plugin-" + updateAvailable.mod_version
-        });
-
-        isUpdating = false;
-
-        const pluginsDir = await join(config.installLocation, "BepInEx", "plugins");
-        await createDir(pluginsDir, { recursive: true });
-        
-        await moveFilesInFolder(pluginDirectory, pluginsDir);
-        await removeDir(pluginDirectory, { recursive: true });
-
-        await writeTextFile(await join(config.installLocation, "mod_version.txt"), updateAvailable.mod_version);
-        
-        await checkForUpdates();
-    }
-
-    async function uninstall() {
-        await removeDir(amongUsInstallationPath, { recursive: true });
-        await checkInstallation();
-    }
+    let selectedTab = "Account";
 
     const requiredFiles = [ "Among Us_Data", "Among Us_Data/il2cpp_data", "BepInEx", "BepInEx/core", "BepInEx/plugins/Polus.dll", "BepInEx/plugins/PolusggSlim.dll",
-        "mono", "mono/Managed", "mono/MonoBleedingEdge", "Among Us.exe", "baselib.dll", "doorstop_config.ini", "GameAssembly.dll", "UnityPlayer.dll", "winhttp.dll",
-        "mod_version.txt" ];
-    async function verifyInstallation(installationPath: string) {
+        "mono", "mono/Managed", "mono/MonoBleedingEdge", "Among Us.exe", "baselib.dll", "doorstop_config.ini", "GameAssembly.dll", "UnityPlayer.dll", "winhttp.dll" ];
+    async function checkInstallationPath(installationPath: string) {
         for (const requiredFile of requiredFiles) {
-            if (!await exists(await join(installationPath, requiredFile))) {
+            if (!await fs.exists(await path.join(installationPath, requiredFile))) {
                 console.log("Missing file %s in installation", requiredFile);
                 return false;
             }
@@ -336,240 +35,129 @@
         return true;
     }
 
-    let invalidInstallation = false;
-    async function locateInstallation() {
-        const config = await downloadConfig.getConfig();
-        const folder = await openFileDialog({
-            defaultPath: config.installLocation,
-            directory: true
-        });
+    async function getRemoteLatestVersion() {
+        try {
+            const changelogRes = await fetch("https://jhwupengaqaqjewreahz.supabase.co/storage/v1/object/public/Downloads/changelog.json");
 
-        if (folder === null || folder === "" || Array.isArray(folder)) {
+            if (!changelogRes.ok) {
+                gameRemoteVersionState.set(new Error("Could not get latest version, contact support. Status: " + changelogRes.status));
+                return;
+            }
+
+            const json = await changelogRes.json() as ChangeLogEntry[];
+            let latestRelease: ChangeLogEntry|undefined = undefined;
+            for (const entry of json) {
+                if (!latestRelease) {
+                    latestRelease = entry;
+                    continue;
+                }
+
+                if (new Date(entry.date_released).getTime() > new Date(latestRelease.date_released).getTime()) {
+                    latestRelease = entry;
+                }
+            }
+            if (latestRelease === undefined) {
+                gameRemoteVersionState.set(unavailable);
+                return;
+            }
+            gameRemoteVersionState.set(latestRelease);
+        } catch (e: any) {
+            gameRemoteVersionState.set(new Error("Could not get latest version, check your internet connection"));
+            return;
+        }
+    }
+
+    async function getInstallationPath() {
+        gameInstalledPathState.set(loading);
+        const installedPath = localStorage.getItem("installation-path");
+        if (installedPath === null) {
+            gameInstalledPathState.set(unavailable);
             return;
         }
 
-        if (!await verifyInstallation(folder)) {
-            invalidInstallation = true;
-            return false;
+        if (await checkInstallationPath(installedPath)) {
+            gameInstalledPathState.set(installedPath);
+            return;
+        }
+        
+        gameInstalledPathState.set(unavailable);
+    }
+
+    async function getLocalVersion() {
+        gameInstalledVersionState.set(loading);
+        const installedVersion = localStorage.getItem("installation-version");
+        if (installedVersion === null) {
+            gameInstalledVersionState.set(unavailable);
+            return;
         }
 
-        invalidInstallation = false;
-        await downloadConfig.setCachedInstallationLocation(folder);
-        await checkInstallation();
+        gameInstalledVersionState.set(installedVersion);
     }
+
+    function switchView(ev: CustomEvent<string>) {
+        selectedTab = ev.detail;
+    }
+
+    onMount(async () => {
+        await Promise.all([ getInstallationPath(), getRemoteLatestVersion(), getLocalVersion() ]);
+    });
 </script>
 
-<main class="text-white h-full flex flex-col items-center pt-8 gap-2 relative">
-    {#if isDev}
-        <div class="absolute left-1 top-1 text-xs opacity-50">
-            <div class="left-1 top-1 text-white">DEVELOPMENT MODE</div>
-            <span>Base API</span>
-            <div class="bg-[#2e1440] rounded-lg flex border-2">
-                <input
-                    class="bg-transparent px-4 py-1 w-72 flex-1"
-                    placeholder="Install Location"
-                    bind:value={baseAccountsApiUrl}
-                >
-            </div>
+<div class="min-h-0 w-full flex flex-col items-center p-y-32">
+    <div class="min-h-0 h-full flex flex-col gap-16 items-center self-center">
+        <div class="flex flex-col gap-4 items-center">
+            <div><span class="font-bold text-6xl">Polus.gg</span>&nbsp;&nbsp;<span class="italic text-6xl">Rewritten</span></div>
+            <span class="w-128 xl:w-248 text-xl">
+                A revival of the original Polus.GG mod for Among Us - a private server and client mod with
+                brand new gamemodes, cosmetics and roles, unleashing thousands of new ways to play.
+            </span>
         </div>
-    {/if}
-    <span class="text-5xl font-medium">Mouthwash.gg</span>
-    <p class="text-[#d0bfdb] max-w-196">
-        A revival of Polus.GG, a private server and client for Among Us with new gamemodes and cosmetics, unleashing thousands of new ways to play.
-    </p>
-    <div class="flex h-full w-full">
-        <AccountManager bind:loginApiInfo isGameOpen={amongUsProcess !== undefined} baseApiUrl={baseAccountsApiUrl}/>
-        <div class="w-0.25 bg-white my-8"></div>
-        <div class="flex-1 p-4 flex flex-col items-center">
-            <span class="text-4xl mt-8">Play</span>
-            {#if amongUsExePath === undefined}
-                <div class="flex flex-col items-start gap-2">
-                    <p class="text-[#8f75a1] text-sm max-w-102">
-                        Mouthwash runs on an older version of Among Us, so you'll need to login with Steam to download it.
-                        <br><br>
-                        If there's anything you'd like to change about the installation, clicking the button will bring up some configuration settings.
-                    </p>
-                    <div class="w-full flex flex-col items-center mt-8 filter" class:grayscale={isDownloading}>
-                        <div
-                            class="bg-[#1b0729] text-[#8f75a1] w-24 h-24 rounded-full flex items-center justify-center cursor-pointer peer hover:text-[#d0bfdb] transition-colors filter"
-                            class:pointer-events-none={isDownloading}
-                            on:click={() => downloadConfig.open()}
-                            on:keypress={ev => ev.key === "Enter" && downloadConfig.open()}
-                            role="button"
-                            tabindex="-1"
-                        >
-                            <Download size={24}/>
-                        </div>
-                        <span class="text-lg mt-4 text-[#8f75a1] peer-hover:text-[#d0bfdb] transition-colors">Download</span>
-                    </div>
-                </div>
-                {#if isDownloading}
-                    <div class="grid grid-cols-4 justify-center w-4/5 mt-8">
-                        <div class="flex flex-col gap-4">
-                            <DownloadController downloadId="depot-downloader" label="DepotDownloader"/>
-                            <DownloadPercentage
-                                speedBytesPerSecond={undefined}
-                                downloadProgress={depotDownloadProgress}
-                                isDownloading={isDownloadingDepot}
-                                hasDownloaded={hasDownloadedDepot}
-                                label="AU&nbsp;v2021.6.30"
-                            />
-                        </div>
-                        <DownloadController downloadId="bepinex" label="BepInEx"/>
-                        <DownloadController downloadId="plugin" label="Mouthwash"/>
-                        <DownloadController downloadId="dependencies" label="Dependencies"/>
-                    </div>
-                {:else}
-                    <!-- svelte-ignore a11y-invalid-attribute -->
-                    <a
-                        class="hover:underline mt-4 text-xs text-[#d0bfdb] italic"
-                        href="#"
-                        on:click={locateInstallation}
-                    >Already have Mouthwash installed? Click here to locate it.</a>
-                    {#if invalidInstallation}
-                        <p class="text-sm text-yellow-400 max-w-102 italic">
-                            The folder you selected doesn't seem like a Mouthwash installation, try another folder or download the game again.
-                        </p>
-                    {/if}
-                {/if}
-            {:else}
-                <div class="flex flex-col gap-4 items-center">
-                    {#if isUpdating && updateAvailable}
-                        <!-- svelte-ignore a11y-positive-tabindex -->
-                        <div
-                            class="flex flex-col items-center mt-8 filter border-2 p-4 rounded-lg border-[#8f75a1] group cursor-pointer w-42 transition-colors hover:bg-[#8f75a125]"
-                            on:click={() => startGame()}
-                            on:keypress={ev => ev.key === "Enter" && startGame()}
-                            role="button"
-                            tabindex="3"
-                        >
-                            <DownloadController downloadId="plugin-{updateAvailable.mod_version}" label="" isBig={true}/>
-                            <span class="text-lg mt-4 text-[#8f75a1] group-hover:text-[#d0bfdb] transition-colors">Updating..</span>
-                        </div>
-                    {:else}
-                        <!-- svelte-ignore a11y-positive-tabindex -->
-                        <div
-                            class="flex flex-col items-center mt-8 filter border-2 p-4 rounded-lg border-[#8f75a1] group cursor-pointer w-42 transition-colors hover:bg-[#8f75a125]"
-                            class:grayscale={(amongUsProcess !== undefined && !isDev) || loginApiInfo === undefined || loginApiInfo === null}
-                            class:pointer-events-none={(amongUsProcess !== undefined && !isDev) || loginApiInfo === undefined || loginApiInfo === null}
-                            on:click={() => startGame()}
-                            on:keypress={ev => ev.key === "Enter" && startGame()}
-                            role="button"
-                            tabindex="3"
-                        >
-                            <div class="bg-[#2e1440] text-[#8f75a1] w-24 h-24 rounded-full flex items-center justify-center peer group-hover:text-[#d0bfdb] border-[#8f75a1] transition-colors">
-                                <Rocket size={24}/>
-                            </div>
-                            <span class="text-lg mt-4 text-[#8f75a1] group-hover:text-[#d0bfdb] transition-colors">Launch Game</span>
-                        </div>
-                    {/if}
-                    {#if loginApiInfo === null}
-                        <p class="text-sm text-yellow-400 italic">
-                            Login to an account before playing.
-                        </p>
-                    {/if}
-                    {#if updateAvailable}
-                        <button
-                            class="flex items-center filter border-2 p-2 rounded-lg border-yellow-400 group cursor-pointer w-42 hover:bg-yellow-400/15"
-                            on:click={attemptUpdate}
-                            class:grayscale={isUpdating}
-                            class:pointer-events-none={isUpdating}
-                        >
-                            <!-- svelte-ignore a11y-positive-tabindex -->
-                            <div
-                                class="text-yellow-300 p-2 rounded-full flex items-center justify-center peer group-hover:text-yellow-400 transition-colors"
-                            >
-                                <ArrowUp size={16}/>
-                            </div>
-                            <span class="text-xs text-yellow-300 group-hover:text-yellow-400 transition-colors text-center">Update to v{updateAvailable.mod_version}</span>
-                        </button>
-                    {:else}
-                        <button
-                            class="flex items-center filter border-2 p-2 rounded-lg border-[#8f75a1] group cursor-pointer w-42 hover:bg-[#8f75a125]"
-                            class:grayscale={isCheckingForUpdates || amongUsProcess !== undefined}
-                            class:pointer-events-none={isCheckingForUpdates || amongUsProcess !== undefined}
-                            on:click={checkForUpdates}
-                        >
-                            <!-- svelte-ignore a11y-positive-tabindex -->
-                            <div
-                                class="text-[#8f75a1] p-2 rounded-full flex items-center justify-center peer group-hover:text-[#d0bfdb] transition-colors"
-                                class:animate-spin={isCheckingForUpdates}
-                            >
-                                <ArrowPath size={16}/>
-                            </div>
-                            <span class="text-xs text-[#8f75a1] group-hover:text-[#d0bfdb] transition-colors text-center">Check For Updates</span>
-                        </button>
-                    {/if}
-                    <button
-                        class="flex items-center filter border-2 p-2 rounded-lg border-[#8f75a1] group cursor-pointer w-42 hover:bg-[#8f75a125]"
-                        on:click={() => installationConfig.open()}
-                    >
-                        <!-- svelte-ignore a11y-positive-tabindex -->
-                        <div class="text-[#8f75a1] p-2 rounded-full flex items-center justify-center peer group-hover:text-[#d0bfdb] transition-colors">
-                            <Adjustments size={16}/>
-                        </div>
-                        <span class="text-xs text-[#8f75a1] group-hover:text-[#d0bfdb] transition-colors text-center">Manage Installation</span>
-                    </button>
-                </div>
-                <!-- <div class="flex flex-col items-start text-xs mt-8">
-                    svelte-ignore a11y-positive-tabindex -->
-                    <!-- <div
-                        class="text-[#8f75a1] hover:text-[#d0bfdb] flex items-center cursor-pointer"
-                        on:click={() => isInstallationInfoOpen = !isInstallationInfoOpen}
-                        on:keypress={ev => ev.key === "Enter" && (isInstallationInfoOpen = !isInstallationInfoOpen)}
-                        tabindex="4"
-                        role="button"
-                    >
-                        <span>Installation Info</span>
-                        {#if isInstallationInfoOpen}
-                            <ChevronDown size={12}/>
-                        {:else}
-                            <ChevronRight size={12}/>
-                        {/if}
-                    </div>
-                    <div class="text-[#8f75a1] text-xs flex flex-col items-start" class:invisible={!isInstallationInfoOpen}>
-                        <span class="w-168">Executable Path: {amongUsExePath}</span>
-                    </div>
-                </div> -->
-            {/if}
+        <div class="min-h-0 flex-1 self-stretch">
+            <div class="w-full h-full" class:hidden={selectedTab !== "Account"}><AccountView/></div>
+            <div class="w-full h-full" class:hidden={selectedTab !== "Download"}><DownloadView on:switch-view={switchView}/></div>
+            <div class="w-full h-full" class:hidden={selectedTab !== "Play"}><PlayView on:switch-view={switchView}/></div>
+            <div class="w-full h-full" class:hidden={selectedTab !== "Shop"}><ShopView/></div>
         </div>
     </div>
-</main>
+</div>
+<div class="absolute left-0 top-1/2 -translate-y-1/2 transform">
+    <TabList>
+        <Tab name="Account" idx={1} bind:selectedTab><Account size={26} slot="icon"/></Tab>
+        {#if $gameInstalledPathState === loading}
+            <Tab name="Loading" idx={2} bind:selectedTab><Loader size={26} slot="icon"/></Tab>
+        {:else if $gameInstalledPathState === unavailable}
+            <Tab name="Download" idx={2} bind:selectedTab><Download size={26} slot="icon"/></Tab>
+        {:else}
+            <Tab name="Play" idx={2} bind:selectedTab><Launch size={26} slot="icon"/></Tab>
+        {/if}
+        <Tab name="Shop" idx={3} bind:selectedTab><Shop size={26} slot="icon"/></Tab>
+    </TabList>
+</div>
 
-<DownloadConfig bind:this={downloadConfig} on:finalise-config={downloadSequence}/>
-<SteamAuth bind:this={steamAuth} on:submit={onSteamAuthSubmit}/>
-{#if amongUsInstallationPath !== undefined}
-    <InstallationConfig
-        bind:this={installationConfig}
-        installLocation={amongUsInstallationPath}
-        isGameOpen={amongUsProcess !== undefined}
-        localInstalledModVersion={localInstalledModVersion}
-        on:uninstall={uninstall}
-    />
-{/if}
-
-<style>
+<style windi:preflights:global windi:safelist:global>
     :global(html, body, #app) {
+        background-color: #0c0213;
         margin: 0;
         padding: 0;
         width: 100vw;
         height: 100vh;
-        overflow-x: hidden;
-        background-color: #0c0213;
         font-family: "Josefin Sans", sans-serif;
+        color: #eed7ff;
+    }
+
+    :global(#app) {
+        display: flex;
+        align-items: stretch;
+    }
+
+    :global(*) {
+        --un-blur: blur(0);
+        --un-brightness: brightness(1);
+        --un-contrast: contrast(1);
+        --un-drop-shadow: drop-shadow(0px 0px);
+        --un-hue-rotate: hue-rotate(0);
+        --un-invert: invert(0);
+        --un-saturate: saturate(0);
+        --un-sepia: sepia(0);
     }
 </style>
-
-<!--
-Download
-========
-Depot Downloader
-|-> Among Us 2021.6.30
-
-BepInEx 7f1f139aea11beccae05928371fdec20cfc01bba
-
-Polus.dll
-PolusggSlim.dll
-
-Newtonsoft.Json.dll
--->

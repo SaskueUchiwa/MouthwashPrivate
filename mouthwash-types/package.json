@@ -4,13 +4,14 @@
   "packageManager": "yarn@3.0.0-rc.13",
   "main": "./dist/index.js",
   "types": "./src/index.ts",
+  "private": true,
   "scripts": {
     "build": "tsc -p ./"
   },
   "devDependencies": {
-    "@skeldjs/hindenburg": "link:../Hindenburg",
+    "@skeldjs/hindenburg": "workspace:*",
     "@types/node": "latest",
-    "hbplugin-mouthwashgg": "link:../hbplugin-mouthwashgg",
+    "hbplugin-mouthwashgg": "workspace:*",
     "typescript": "latest"
   },
   "dependencies": {
