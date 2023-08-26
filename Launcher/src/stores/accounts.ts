@@ -19,14 +19,16 @@ export interface UserLogin {
     cosmetic_skin: number;
 }
 
-export interface Game {
+export interface GameLobbyInfo {
     id: string;
     lobby_id: string;
     started_by: string;
     game_settings: any;
     started_at: string;
-    ended_at: string;
+    ended_at: string|null;
     total_players: number|undefined;
+    game_code: string;
+    lobby_destroyed_at: string|null;
 }
 
 export interface Player {

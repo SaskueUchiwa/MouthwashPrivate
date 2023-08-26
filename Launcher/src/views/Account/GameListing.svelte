@@ -2,16 +2,15 @@
     import { writable } from "svelte/store";
     import ChevronDown from "../../icons/ChevronDown.svelte";
     import ChevronUp from "../../icons/ChevronUp.svelte";
-    import { unavailable, type Game, type Player, loading, accountUrl, type UserLogin } from "../../stores/accounts";
+    import { unavailable, type GameLobbyInfo, type Player, loading, accountUrl, type UserLogin } from "../../stores/accounts";
     import Loader from "../../icons/Loader.svelte";
     import PlayCircle from "../../icons/PlayCircle.svelte";
     import PlayerListing from "./PlayerListing.svelte";
     import { onMount } from "svelte";
 
     export let user: UserLogin;
-    export let game: Game;
-    export let index: number;
-    export let selectedGameIdx: number|undefined = undefined;
+    export let game: GameLobbyInfo;
+    export let selectedGameId: string|undefined;
 
     const map = game.game_settings?.[".Map"]?.options[game.game_settings?.[".Map"]?.selectedIdx];
     const gamemode = game.game_settings?.[".Gamemode"]?.options[game.game_settings?.[".Gamemode"]?.selectedIdx];
@@ -21,12 +20,12 @@
     let players = writable<typeof unavailable|typeof loading|Player[]>(unavailable);
 
     async function selectOrDeselect() {
-        if (selectedGameIdx === index) {
-            selectedGameIdx = undefined;
+        if (selectedGameId === game.id) {
+            selectedGameId = undefined;
             return;
         }
 
-        selectedGameIdx = index;
+        selectedGameId = game.id;
         if ($players === unavailable) {
             await getPlayers();
         }
@@ -58,7 +57,7 @@
     }
 
     onMount(async () => {
-        if (selectedGameIdx === index) {
+        if (selectedGameId === game.id) {
             await getPlayers();
         }
     });
@@ -88,7 +87,7 @@
         </div>
         <div class="ml-auto order-2">
             <div class="bg-[#27063e] rounded-full">
-                {#if selectedGameIdx === index}
+                {#if selectedGameId === game.id}
                     <ChevronUp size={16}/>
                 {:else}
                     <ChevronDown size={16}/>
@@ -96,7 +95,7 @@
             </div>
         </div>
     </div>
-    <div class:hidden={selectedGameIdx !== index}>
+    <div class:hidden={selectedGameId !== game.id}>
         {#if $players === loading}
             <div class="flex items-center justify-center">
                 <Loader size={20}/>

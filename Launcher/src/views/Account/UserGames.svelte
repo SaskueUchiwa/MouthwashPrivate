@@ -1,17 +1,40 @@
 <script lang="ts">
     import { writable } from "svelte/store";
-    import { type Game, type UserLogin, loading, unavailable, accountUrl } from "../../stores/accounts";
+    import { type GameLobbyInfo, type UserLogin, loading, unavailable, accountUrl } from "../../stores/accounts";
     import Loader from "../../icons/Loader.svelte";
     import { onMount } from "svelte";
-    import GameListing from "./GameListing.svelte";
     import ArrowPath from "../../icons/ArrowPath.svelte";
+    import UserGamesLobbyGroup from "./UserGamesLobbyGroup.svelte";
 
     export let user: UserLogin;
-    let selectedGameIdx: number = 0;
+    let selectedGameId: string|undefined = undefined;
     let loadingMoreGames = false;
     let hasFoundAll = false;
 
-    const games = writable<typeof unavailable|typeof loading|Game[]>(loading);
+    interface GameLobbyGroup {
+        lobbyId: string;
+        gameCode: string;
+        destroyedAt: string|null;
+        games: GameLobbyInfo[];
+    }
+
+    const games = writable<typeof unavailable|typeof loading|GameLobbyInfo[]>(loading);
+    const groupedGames = writable<typeof unavailable|typeof loading|GameLobbyGroup[]>(loading);
+
+    function groupGamesByLobby(games: GameLobbyInfo[]) {
+        const groupedGames: GameLobbyGroup[] = [];
+        for (const game of games) {
+            const lastGroup = groupedGames[groupedGames.length - 1] as GameLobbyGroup|undefined;
+            if (lastGroup && game.lobby_id === lastGroup.lobbyId) {
+                lastGroup.games.push(game);
+                continue;
+            }
+            groupedGames.push({ lobbyId: game.lobby_id, gameCode: game.game_code, destroyedAt: game.lobby_destroyed_at, games: [ game ] });
+        }
+        return groupedGames;
+    }
+
+    $: groupedGames.set(Array.isArray($games) ? groupGamesByLobby($games) : $games);
 
     async function getGames(after: Date) {
         const gamesResponse = await fetch($accountUrl + `/api/v2/users/${user.id}/games?limit=${10}&before=${after.toISOString()}`);
@@ -30,14 +53,18 @@
             console.error(json);
             return undefined;
         }
-        return json.data as Game[];
+        return json.data as GameLobbyInfo[];
     }
 
     async function getInitialGames() {
         games.set(loading);
         games.set(await getGames(new Date()) || unavailable);
         hasFoundAll = false;
-        selectedGameIdx = 0;
+        if (Array.isArray($games) && $games.length > 0) {
+            selectedGameId = $games[0].id;
+        } else {
+            selectedGameId = undefined;
+        }
     }
 
     async function loadNextPage() {
@@ -46,14 +73,13 @@
 
         loadingMoreGames = true;
         const lastGame = $games[$games.length - 1];
-        console.log(lastGame);
         const newGames = await getGames(lastGame ? new Date(lastGame.started_at) : new Date());
         if (newGames && newGames.length === 0) {
             hasFoundAll = true;
             loadingMoreGames = false;
             return;
         }
-        games.update(g => [...(g as Game[]), ...newGames]);
+        games.update(g => [...(g as GameLobbyInfo[]), ...newGames]);
         loadingMoreGames = false;
     }
 
@@ -62,7 +88,7 @@
     });
 </script>
 
-<div class="flex items-center">
+<div class="flex items-center border-b-1 pb-2 mb-1 border-white/20">
     {#if $games !== unavailable && $games !== loading}
         <span class="text-xs">Showing {$games.length}{hasFoundAll ? "" : "+"} game{$games.length === 1 ? "" : "s"}</span>
     {/if}
@@ -72,25 +98,25 @@
         class:grayscale={$games === loading}
         on:click={getInitialGames}
     >
-        <div class:animate-spin={$games === loading}>
+        <div class:animate-spin={$groupedGames === loading}>
             <ArrowPath size={14}/>
         </div>
         <span class="italic">Refresh</span>
     </button>
 </div>
-{#if $games === unavailable}
+{#if $groupedGames === unavailable}
     <span>Could not get games.</span>
-{:else if $games === loading}
+{:else if $groupedGames === loading}
     <div class="w-full h-full flex items-center justify-center">
         <Loader size={32}/>
     </div>
 {:else}
-    {#if $games.length === 0}
+    {#if $groupedGames.length === 0}
         <span>You haven't played any games yet!</span>
     {:else}
-        <div class="flex flex-col min-h-0 gap-2 overflow-y-scroll">
-            {#each $games as game, index}
-                <GameListing bind:selectedGameIdx {index} {user} {game}/>
+        <div class="flex flex-col min-h-0 gap-4 overflow-y-scroll">
+            {#each $groupedGames as gameGroup}
+                <UserGamesLobbyGroup {user} {...gameGroup} bind:selectedGameId/>
             {/each}
             <button
                 class="text-[#eed7ff] px-4 py-1 flex text-xs items-center justify-center gap-1 transition-colors filter hover:text-[#bba1ce]"

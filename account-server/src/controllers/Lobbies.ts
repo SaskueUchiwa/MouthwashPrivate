@@ -10,8 +10,10 @@ export interface Game {
     ended_at: Date|null;
 }
 
-export interface GameWithPlayers extends Game {
+export interface GameLobbyInfo extends Game {
     total_players: number;
+    game_code: string;
+    lobby_destroyed_at: Date;
 }
 
 export interface Player {
@@ -42,15 +44,17 @@ export class LobbiesController {
 
     async getUserGames(userId: string, before: Date, limit: number) {
         const { rows: foundGames } = await this.server.postgresClient.query(`
-            SELECT game.*, COUNT(player.id) AS total_players
-            FROM game
+            SELECT game.*, lobby.game_code, lobby.destroyed_at AS lobby_destroyed_at, COUNT(player.id) as total_players
+            FROM lobby
+            LEFT JOIN game ON game.lobby_id = lobby.id
             JOIN player ON game.id = player.game_id
-            WHERE player.user_id = $1 AND started_at < $2
-            GROUP BY game.id
-            LIMIT $3
+            WHERE player.user_id = $1 AND game.started_at < $2
+            GROUP BY game.id, game.started_at, lobby.id, lobby.game_code
+            ORDER BY game.started_at DESC, lobby.id
+            LIMIT $3;
         `, [ userId, before, limit ]);
 
-        return foundGames as GameWithPlayers[];
+        return foundGames as GameLobbyInfo[];
     }
 
     async getPlayersInGame(gameId: string) {
