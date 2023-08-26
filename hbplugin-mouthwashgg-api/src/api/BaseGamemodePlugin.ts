@@ -1,8 +1,8 @@
 import { Room, RoomPlugin } from "@skeldjs/hindenburg";
-import { GameOption } from "mouthwash-types";
+import { GameOption, NumberValue } from "mouthwash-types";
 import { BaseRole } from "./BaseRole";
 import { MouthwashApiPlugin } from "../plugin";
-import { AssetBundle, RoleCount } from "../services";
+import { AssetBundle, DefaultRoomOptionName, RoleCount } from "../services";
 
 export interface GamemodeMetadata {
     id: string;
@@ -40,6 +40,12 @@ export class BaseGamemodePlugin extends RoomPlugin {
 
     getGameOptions(): Map<string, GameOption> {
         return this.api.createDefaultOptions();
+    }
+
+    getAdjustedImpostorCount(): number {
+        return this.api.roleService.adjustImpostorCount(
+            this.api.gameOptions.gameOptions.get(DefaultRoomOptionName.ImpostorCount)?.getValue<NumberValue>().value ?? 2
+        );
     }
 
     getRoleCounts(): RoleCount[] {
