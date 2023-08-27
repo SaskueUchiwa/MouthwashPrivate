@@ -1,1 +1,1 @@
-export * from "./AnticheatReason";
+export * from "./InfractionName";

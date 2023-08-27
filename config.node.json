@@ -39,6 +39,7 @@
         },
         "hbplugin-mouthwashgg-master": false,
         "hbplugin-mouthwashgg": true,
+        "hbplugin-mouthwashgg-anti-cheat": true,
         "hbplugin-mouthwashgg-api": true,
         "hbplugin-mouthwashgg-metrics": true,
         "hbplugin-mwgg-gamemode-hns": true,

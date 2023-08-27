@@ -28,9 +28,10 @@ export interface MouthwashggMetricsPluginConfig {
 @HindenburgPlugin("hbplugin-mouthwashgg-metrics")
 export class MouthwashggMetricsPlugin extends WorkerPlugin {
     protected _authApi?: MouthwashAuthPlugin;
-    protected postgresClient: pg.Client;
-    protected redisClient: ioredis.Redis;
     protected _uploadLobbiesInterval: NodeJS.Timeout|undefined;
+    
+    postgresClient: pg.Client;
+    redisClient: ioredis.Redis;
 
     lobbyIds: WeakMap<Room, string>;
     playerIds: WeakMap<PlayerData<Room>, string>;

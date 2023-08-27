@@ -113,9 +113,9 @@ const killDistanceNameToNumber = {
     "Long": 3
 };
 
-@HindenburgPlugin("hbplugin-mouthwashgg-api", "1.0.0", "last")
+@HindenburgPlugin("hbplugin-mouthwashgg-api", "1.0.0", "none")
 export class MouthwashApiPlugin extends RoomPlugin {
-    private _authApi?: MouthwashAuthPlugin;
+    authApi?: MouthwashAuthPlugin;
 
     animationService: AnimationService;
     assetLoader: AssetLoaderService;
@@ -160,11 +160,6 @@ export class MouthwashApiPlugin extends RoomPlugin {
 
         this.allGamemodes = new Map;
     }
-    
-    get authApi() {
-        this._authApi ??= this.worker.loadedPlugins.get("hbplugin-mouthwashgg-auth")?.pluginInstance as MouthwashAuthPlugin|undefined;
-        return this._authApi;
-    }
 
     async onPluginLoad() {
         if (!this.room.config.serverAsHost)
@@ -179,6 +174,7 @@ export class MouthwashApiPlugin extends RoomPlugin {
             }
         }
 
+        this.authApi = this.assertDependency("hbplugin-mouthwashgg-auth", "worker") as MouthwashAuthPlugin|undefined;
         await this.assetLoader.loadGlobalAsset();
     }
 

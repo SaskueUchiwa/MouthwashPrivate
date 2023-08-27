@@ -321,55 +321,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@skeldjs/hindenburg@link:workspace:*::locator=hbplugin-mouthwashgg-master%40workspace%3Ahbplugin-mouthwashgg-master":
-  version: 0.0.0-use.local
-  resolution: "@skeldjs/hindenburg@link:workspace:*::locator=hbplugin-mouthwashgg-master%40workspace%3Ahbplugin-mouthwashgg-master"
-  languageName: node
-  linkType: soft
-
 "@skeldjs/hindenburg@link:../Hindenburg::locator=hbplugin-mouthwashgg-anti-cheat%40workspace%3Ahbplugin-mouthwashgg-anti-cheat":
   version: 0.0.0-use.local
   resolution: "@skeldjs/hindenburg@link:../Hindenburg::locator=hbplugin-mouthwashgg-anti-cheat%40workspace%3Ahbplugin-mouthwashgg-anti-cheat"
   languageName: node
   linkType: soft
 
-"@skeldjs/hindenburg@link:../Hindenburg::locator=hbplugin-mouthwashgg-api%40workspace%3Ahbplugin-mouthwashgg-api":
+"@skeldjs/hindenburg@link:workspace:*::locator=hbplugin-mouthwashgg-master%40workspace%3Ahbplugin-mouthwashgg-master":
   version: 0.0.0-use.local
-  resolution: "@skeldjs/hindenburg@link:../Hindenburg::locator=hbplugin-mouthwashgg-api%40workspace%3Ahbplugin-mouthwashgg-api"
+  resolution: "@skeldjs/hindenburg@link:workspace:*::locator=hbplugin-mouthwashgg-master%40workspace%3Ahbplugin-mouthwashgg-master"
   languageName: node
   linkType: soft
 
-"@skeldjs/hindenburg@link:../Hindenburg::locator=hbplugin-mouthwashgg-auth%40workspace%3Ahbplugin-mouthwashgg-auth":
-  version: 0.0.0-use.local
-  resolution: "@skeldjs/hindenburg@link:../Hindenburg::locator=hbplugin-mouthwashgg-auth%40workspace%3Ahbplugin-mouthwashgg-auth"
-  languageName: node
-  linkType: soft
-
-"@skeldjs/hindenburg@link:../Hindenburg::locator=hbplugin-mwgg-gamemode-hns%40workspace%3Ahbplugin-mwgg-gamemode-hns":
-  version: 0.0.0-use.local
-  resolution: "@skeldjs/hindenburg@link:../Hindenburg::locator=hbplugin-mwgg-gamemode-hns%40workspace%3Ahbplugin-mwgg-gamemode-hns"
-  languageName: node
-  linkType: soft
-
-"@skeldjs/hindenburg@link:../Hindenburg::locator=hbplugin-mwgg-gamemode-town-of-polus%40workspace%3Ahbplugin-mwgg-gamemode-town-of-polus":
-  version: 0.0.0-use.local
-  resolution: "@skeldjs/hindenburg@link:../Hindenburg::locator=hbplugin-mwgg-gamemode-town-of-polus%40workspace%3Ahbplugin-mwgg-gamemode-town-of-polus"
-  languageName: node
-  linkType: soft
-
-"@skeldjs/hindenburg@link:../Hindenburg::locator=hbplugin-mwgg-gamemode-vanilla%40workspace%3Ahbplugin-mwgg-gamemode-vanilla":
-  version: 0.0.0-use.local
-  resolution: "@skeldjs/hindenburg@link:../Hindenburg::locator=hbplugin-mwgg-gamemode-vanilla%40workspace%3Ahbplugin-mwgg-gamemode-vanilla"
-  languageName: node
-  linkType: soft
-
-"@skeldjs/hindenburg@link:../Hindenburg::locator=mouthwash-types%40workspace%3Amouthwash-types":
-  version: 0.0.0-use.local
-  resolution: "@skeldjs/hindenburg@link:../Hindenburg::locator=mouthwash-types%40workspace%3Amouthwash-types"
-  languageName: node
-  linkType: soft
-
-"@skeldjs/hindenburg@workspace:Hindenburg":
+"@skeldjs/hindenburg@workspace:*, @skeldjs/hindenburg@workspace:Hindenburg":
   version: 0.0.0-use.local
   resolution: "@skeldjs/hindenburg@workspace:Hindenburg"
   dependencies:
@@ -2652,21 +2616,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fsevents@npm:~2.3.2":
-  version: 2.3.2
-  resolution: "fsevents@npm:2.3.2"
-  dependencies:
-    node-gyp: latest
-  checksum: 97ade64e75091afee5265e6956cb72ba34db7819b4c3e94c431d4be2b19b8bb7a2d4116da417950c3425f17c8fe693d25e20212cac583ac1521ad066b77ae31f
-  conditions: os=darwin
-  languageName: node
-  linkType: hard
-
 "fsevents@patch:fsevents@~2.3.2#~builtin<compat/fsevents>":
   version: 2.3.2
   resolution: "fsevents@patch:fsevents@npm%3A2.3.2#~builtin<compat/fsevents>::version=2.3.2&hash=df0bf1"
   dependencies:
     node-gyp: latest
+  conditions: os=darwin
+  languageName: node
+  linkType: hard
+
+fsevents@~2.3.2:
+  version: 2.3.2
+  resolution: "fsevents@npm:2.3.2"
+  dependencies:
+    node-gyp: latest
+  checksum: 97ade64e75091afee5265e6956cb72ba34db7819b4c3e94c431d4be2b19b8bb7a2d4116da417950c3425f17c8fe693d25e20212cac583ac1521ad066b77ae31f
   conditions: os=darwin
   languageName: node
   linkType: hard
@@ -2980,43 +2944,15 @@ __metadata:
   dependencies:
     "@skeldjs/hindenburg": "link:../Hindenburg"
     "@types/node": latest
-    hbplugin-mouthwashgg-api: "link:../hbplugin-mouthwashgg-api"
+    hbplugin-mouthwashgg-api: "workspace:*"
+    hbplugin-mouthwashgg-auth: "workspace:*"
+    hbplugin-mouthwashgg-metrics: "workspace:*"
     mouthwash-types: "link:../mouthwash-types"
     typescript: latest
   languageName: unknown
   linkType: soft
 
-"hbplugin-mouthwashgg-api@link:../hbplugin-mouthwashgg-api::locator=hbplugin-mouthwashgg%40workspace%3Ahbplugin-mouthwashgg":
-  version: 0.0.0-use.local
-  resolution: "hbplugin-mouthwashgg-api@link:../hbplugin-mouthwashgg-api::locator=hbplugin-mouthwashgg%40workspace%3Ahbplugin-mouthwashgg"
-  languageName: node
-  linkType: soft
-
-"hbplugin-mouthwashgg-api@link:../hbplugin-mouthwashgg-api::locator=hbplugin-mouthwashgg-anti-cheat%40workspace%3Ahbplugin-mouthwashgg-anti-cheat":
-  version: 0.0.0-use.local
-  resolution: "hbplugin-mouthwashgg-api@link:../hbplugin-mouthwashgg-api::locator=hbplugin-mouthwashgg-anti-cheat%40workspace%3Ahbplugin-mouthwashgg-anti-cheat"
-  languageName: node
-  linkType: soft
-
-"hbplugin-mouthwashgg-api@link:../hbplugin-mouthwashgg-api::locator=hbplugin-mwgg-gamemode-hns%40workspace%3Ahbplugin-mwgg-gamemode-hns":
-  version: 0.0.0-use.local
-  resolution: "hbplugin-mouthwashgg-api@link:../hbplugin-mouthwashgg-api::locator=hbplugin-mwgg-gamemode-hns%40workspace%3Ahbplugin-mwgg-gamemode-hns"
-  languageName: node
-  linkType: soft
-
-"hbplugin-mouthwashgg-api@link:../hbplugin-mouthwashgg-api::locator=hbplugin-mwgg-gamemode-town-of-polus%40workspace%3Ahbplugin-mwgg-gamemode-town-of-polus":
-  version: 0.0.0-use.local
-  resolution: "hbplugin-mouthwashgg-api@link:../hbplugin-mouthwashgg-api::locator=hbplugin-mwgg-gamemode-town-of-polus%40workspace%3Ahbplugin-mwgg-gamemode-town-of-polus"
-  languageName: node
-  linkType: soft
-
-"hbplugin-mouthwashgg-api@link:../hbplugin-mouthwashgg-api::locator=hbplugin-mwgg-gamemode-vanilla%40workspace%3Ahbplugin-mwgg-gamemode-vanilla":
-  version: 0.0.0-use.local
-  resolution: "hbplugin-mouthwashgg-api@link:../hbplugin-mouthwashgg-api::locator=hbplugin-mwgg-gamemode-vanilla%40workspace%3Ahbplugin-mwgg-gamemode-vanilla"
-  languageName: node
-  linkType: soft
-
-"hbplugin-mouthwashgg-api@workspace:hbplugin-mouthwashgg-api":
+"hbplugin-mouthwashgg-api@workspace:*, hbplugin-mouthwashgg-api@workspace:hbplugin-mouthwashgg-api":
   version: 0.0.0-use.local
   resolution: "hbplugin-mouthwashgg-api@workspace:hbplugin-mouthwashgg-api"
   dependencies:
@@ -3064,7 +3000,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"hbplugin-mouthwashgg-metrics@workspace:hbplugin-mouthwashgg-metrics":
+"hbplugin-mouthwashgg-metrics@workspace:*, hbplugin-mouthwashgg-metrics@workspace:hbplugin-mouthwashgg-metrics":
   version: 0.0.0-use.local
   resolution: "hbplugin-mouthwashgg-metrics@workspace:hbplugin-mouthwashgg-metrics"
   dependencies:
@@ -4311,37 +4247,7 @@ __metadata:
   languageName: node
   linkType: soft
 
-"mouthwash-types@link:../mouthwash-types::locator=hbplugin-mouthwashgg-api%40workspace%3Ahbplugin-mouthwashgg-api":
-  version: 0.0.0-use.local
-  resolution: "mouthwash-types@link:../mouthwash-types::locator=hbplugin-mouthwashgg-api%40workspace%3Ahbplugin-mouthwashgg-api"
-  languageName: node
-  linkType: soft
-
-"mouthwash-types@link:../mouthwash-types::locator=hbplugin-mouthwashgg-auth%40workspace%3Ahbplugin-mouthwashgg-auth":
-  version: 0.0.0-use.local
-  resolution: "mouthwash-types@link:../mouthwash-types::locator=hbplugin-mouthwashgg-auth%40workspace%3Ahbplugin-mouthwashgg-auth"
-  languageName: node
-  linkType: soft
-
-"mouthwash-types@link:../mouthwash-types::locator=hbplugin-mwgg-gamemode-hns%40workspace%3Ahbplugin-mwgg-gamemode-hns":
-  version: 0.0.0-use.local
-  resolution: "mouthwash-types@link:../mouthwash-types::locator=hbplugin-mwgg-gamemode-hns%40workspace%3Ahbplugin-mwgg-gamemode-hns"
-  languageName: node
-  linkType: soft
-
-"mouthwash-types@link:../mouthwash-types::locator=hbplugin-mwgg-gamemode-town-of-polus%40workspace%3Ahbplugin-mwgg-gamemode-town-of-polus":
-  version: 0.0.0-use.local
-  resolution: "mouthwash-types@link:../mouthwash-types::locator=hbplugin-mwgg-gamemode-town-of-polus%40workspace%3Ahbplugin-mwgg-gamemode-town-of-polus"
-  languageName: node
-  linkType: soft
-
-"mouthwash-types@link:../mouthwash-types::locator=hbplugin-mwgg-gamemode-vanilla%40workspace%3Ahbplugin-mwgg-gamemode-vanilla":
-  version: 0.0.0-use.local
-  resolution: "mouthwash-types@link:../mouthwash-types::locator=hbplugin-mwgg-gamemode-vanilla%40workspace%3Ahbplugin-mwgg-gamemode-vanilla"
-  languageName: node
-  linkType: soft
-
-"mouthwash-types@workspace:mouthwash-types":
+"mouthwash-types@workspace:*, mouthwash-types@workspace:mouthwash-types":
   version: 0.0.0-use.local
   resolution: "mouthwash-types@workspace:mouthwash-types"
   dependencies:
@@ -6051,7 +5957,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@npm:^4.3.2, typescript@npm:^4.4.4":
+"typescript@^4.3.2, typescript@^4.4.4":
   version: 4.9.5
   resolution: "typescript@npm:4.9.5"
   bin:
@@ -6061,7 +5967,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@npm:latest":
+typescript@latest:
   version: 5.1.6
   resolution: "typescript@npm:5.1.6"
   bin:

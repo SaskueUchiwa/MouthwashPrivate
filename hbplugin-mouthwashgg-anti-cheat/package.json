@@ -7,12 +7,18 @@
     "build": "tsc -p ./"
   },
   "dependencies": {
-    "hbplugin-mouthwashgg-api": "link:../hbplugin-mouthwashgg-api",
+    "hbplugin-mouthwashgg-api": "workspace:*",
+    "hbplugin-mouthwashgg-auth": "workspace:*",
+    "hbplugin-mouthwashgg-metrics": "workspace:*",
     "mouthwash-types": "link:../mouthwash-types"
   },
   "devDependencies": {
     "@skeldjs/hindenburg": "link:../Hindenburg",
     "@types/node": "latest",
     "typescript": "latest"
+  },
+  "plugin": {
+    "loadOrder": "first",
+    "defaultConfig": {}
   }
 }

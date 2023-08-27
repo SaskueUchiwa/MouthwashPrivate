@@ -59,16 +59,15 @@ alter table lobby
 
 create table game
 (
-    id            uuid      not null
+    id            uuid                     not null
         primary key,
-    lobby_id      uuid      not null
+    lobby_id      uuid                     not null
         constraint game_lobby_id_foreign
             references lobby,
     started_by    uuid,
-    game_settings json      not null,
+    game_settings json                     not null,
     started_at    timestamp with time zone not null,
-    ended_at      timestamp with time zone,
-    num_players   integer
+    ended_at      timestamp with time zone
 );
 
 alter table game
@@ -79,19 +78,22 @@ create index game_started_at_index
 
 create table player_infraction
 (
-    id          uuid                     not null
+    id                 uuid                     not null
         primary key,
-    user_id     uuid                     not null
+    user_id            uuid                     not null
         constraint player_infraction_user_id_foreign
             references users,
-    lobby_id    uuid                     not null
+    lobby_id           uuid
         constraint player_infraction_lobby_id_foreign
             references lobby,
-    game_id     uuid
+    game_id            uuid
         constraint player_infraction_game_id_foreign
             references game,
-    created_at  timestamp with time zone not null,
-    player_ping integer
+    created_at         timestamp with time zone not null,
+    player_ping        integer,
+    infraction_name    varchar                  not null,
+    additional_details json                     not null,
+    severity           varchar                  not null
 );
 
 alter table player_infraction
@@ -109,11 +111,16 @@ create table player
             references users,
     did_win        boolean,
     role_name      varchar,
-    cosmetic_color integer
+    cosmetic_color integer,
+    cosmetic_name  varchar,
+    role_alignment varchar
 );
 
 alter table player
     owner to postgres;
+
+create index "player_game_Id_user_id_index"
+    on player (game_id, user_id);
 
 create table email_verification
 (
@@ -217,4 +224,3 @@ create table user_owned_item
 
 alter table user_owned_item
     owner to postgres;
-
