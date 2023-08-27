@@ -349,10 +349,10 @@ export class PluginLoader {
     static isRoomPlugin(pluginCtr: SomePluginCtr): pluginCtr is typeof RoomPlugin {
         let currentCtr: SomePluginCtr = pluginCtr;
         while (currentCtr !== null) {
-            currentCtr = Object.getPrototypeOf(currentCtr);
-
             if (currentCtr === RoomPlugin)
                 return true;
+        
+            currentCtr = Object.getPrototypeOf(currentCtr);
         }
         return false;
     }
