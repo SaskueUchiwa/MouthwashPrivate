@@ -16,49 +16,37 @@ import {
     EventListener,
     RoomDestroyEvent,
     BaseRpcMessage,
-    AddVoteMessage,
     CastVoteMessage,
     CheckColorMessage,
     CheckNameMessage,
-    ClearVoteMessage,
     ClimbLadderMessage,
-    CloseMessage,
     CloseDoorsOfTypeMessage,
     CompleteTaskMessage,
     EnterVentMessage,
-    ExiledMessage,
     ExitVentMessage,
     MurderPlayerMessage,
-    PlayAnimationMessage,
     RepairSystemMessage,
     SendChatMessage,
     SendChatNoteMessage,
-    SetColorMessage,
     SetHatMessage,
     RpcMessageTag,
     SendQuickChatMessage,
-    SetInfectedMessage,
-    SetNameMessage,
     SetPetMessage,
     SetScanner,
     SetStartCounterMessage,
-    SetTasksMessage,
-    SnapToMessage,
-    StartMeetingMessage,
     UpdateSystemMessage,
     UsePlatformMessage,
-    VotingCompleteMessage,
     Color,
     AirshipStatus,
     Networkable,
     PlayerControl,
     PlayerPhysics,
     CustomNetworkTransform,
-    InnerShipStatus,
     SetSkinMessage,
     Pet,
     Hat,
-    Skin
+    Skin,
+    AirshipVents
 } from "@skeldjs/hindenburg";
 
 import { MouthwashApiPlugin, RoleCtr } from "hbplugin-mouthwashgg-api";
@@ -68,6 +56,8 @@ import { CollidersService } from "./Colliders";
 import { InfractionName } from "./enums";
 import { MouthwashAuthPlugin } from "hbplugin-mouthwashgg-auth";
 import { getAnticheatExceptions } from "./hooks";
+import { CameraController, ClickBehaviour, ClickMessage, DeadBody, MouthwashRpcMessageTag, MouthwashSpawnType, ReportDeadBodyMessage } from "mouthwash-types";
+import { VentModule } from "./modules";
 
 export enum InfractionSeverity {
     Low = "LOW",
@@ -95,6 +85,8 @@ export class MouthwashAntiCheatPlugin extends RoomPlugin {
     metrics?: MouthwashggMetricsPlugin;
     unflushedPlayerInfractions: PlayerInfraction[];
 
+    ventModule: VentModule;
+
     constructor(
         public readonly room: Room,
         public readonly config: any
@@ -105,12 +97,20 @@ export class MouthwashAntiCheatPlugin extends RoomPlugin {
         this.metrics = this.getDependencyUnsafe("hbplugin-mouthwashgg-metrics", "worker") as MouthwashggMetricsPlugin|undefined;
         this.authApi = this.assertDependency("hbplugin-mouthwashgg-auth", "worker") as MouthwashAuthPlugin;
         this.api = this.assertDependency("hbplugin-mouthwashgg-api", "room") as MouthwashApiPlugin;
+
         this.unflushedPlayerInfractions = [];
+        
+        this.ventModule = new VentModule(this);
     }
 
     async onPluginLoad() {
         await this.collidersService.loadAllColliders();
+        this.room.registerEventTarget(this.ventModule);
         this.logger.info("Loaded colliders for maps");
+    }
+
+    async onPluginUnload() {
+        this.room.removeEventTarget(this.ventModule);    
     }
 
     // async banPlayer(player: PlayerData<Room>|Connection, role: BaseRole|undefined, reason: AnticheatReason) {
@@ -211,6 +211,9 @@ export class MouthwashAntiCheatPlugin extends RoomPlugin {
     }
 
     async onRpcMessageData(component: Networkable, rpcMessage: BaseRpcMessage, sender: Connection) {
+        if (!(rpcMessage.messageTag in RpcMessageTag) && !(rpcMessage.messageTag in MouthwashRpcMessageTag))
+            return this.createInfraction(sender, InfractionName.InvalidRpcCode, { netId: component.netId, rpcId: rpcMessage.messageTag }, InfractionSeverity.High);
+
         switch (rpcMessage.messageTag) {
         case RpcMessageTag.AddVote:
             // TODO: used for votebansystem - do we even have this?
@@ -275,6 +278,14 @@ export class MouthwashAntiCheatPlugin extends RoomPlugin {
         case RpcMessageTag.SyncSettings:
         case RpcMessageTag.VotingComplete:
         case RpcMessageTag.BootFromVent:
+        case MouthwashRpcMessageTag.SetOpacity:
+        case MouthwashRpcMessageTag.SetOutline:
+        case MouthwashRpcMessageTag.SetPlayerSpeedModifier:
+        case MouthwashRpcMessageTag.SetPlayerVisionModifier:
+        case MouthwashRpcMessageTag.BeginPlayerAnimation:
+        case MouthwashRpcMessageTag.SetChatVisibility:
+        case MouthwashRpcMessageTag.CloseHud:
+        case MouthwashRpcMessageTag.BeginCameraAnimation:
             return this.createInfraction(sender, InfractionName.ForbiddenRpcCode, { netId: component.netId, rpcId: rpcMessage.messageTag, spawnType: component.spawnType }, InfractionSeverity.Critical);
         case RpcMessageTag.ClimbLadder:
             const climbLadderMessage = rpcMessage as ClimbLadderMessage;
@@ -287,7 +298,6 @@ export class MouthwashAntiCheatPlugin extends RoomPlugin {
             break;
         case RpcMessageTag.EnterVent:
             const enterVentMessage = rpcMessage as EnterVentMessage;
-            return this.createInfraction(sender, InfractionName.ForbiddenRpcVent, { ventId: enterVentMessage.ventid }, InfractionSeverity.High);
         case RpcMessageTag.ExitVent:
             const exitVentMessage = rpcMessage as ExitVentMessage;
             return this.createInfraction(sender, InfractionName.ForbiddenRpcVent, { ventId: exitVentMessage.ventid }, InfractionSeverity.High);
@@ -335,13 +345,15 @@ export class MouthwashAntiCheatPlugin extends RoomPlugin {
             break;
         case RpcMessageTag.SetStartCounter:
             const setStartCounterMessage = rpcMessage as SetStartCounterMessage;
-            if (this.room.actingHostsEnabled && !this.room.actingHostIds.has(sender.clientId)) {
+            if (!this.room.actingHostIds.has(sender.clientId) && setStartCounterMessage.counter !== -1) {
                 return this.createInfraction(sender, InfractionName.ForbiddenRpcCode, { netId: component.netId, rpcId: rpcMessage.messageTag, spawnType: component.spawnType }, InfractionSeverity.Critical);
             }
             break;
         case RpcMessageTag.SnapTo:
-            if (!(this.room.shipStatus instanceof AirshipStatus)) {
-                return this.createInfraction(sender, InfractionName.ForbiddenRpcCode, { netId: component.netId, rpcId: RpcMessageTag.SnapTo, spawnType: component.spawnType }, InfractionSeverity.Critical);
+            const player = sender.getPlayer();
+            const playerPhysics = player?.physics;
+            if (!playerPhysics || !(this.room.shipStatus instanceof AirshipStatus) || playerPhysics.ventid === -1) {
+                return this.createInfraction(sender, InfractionName.ForbiddenRpcTeleport, { netId: component.netId, rpcId: RpcMessageTag.SnapTo, spawnType: component.spawnType }, InfractionSeverity.Medium);
             }
             break;
         case RpcMessageTag.UpdateSystem:
@@ -350,11 +362,20 @@ export class MouthwashAntiCheatPlugin extends RoomPlugin {
         case RpcMessageTag.UsePlatform:
             const usePlatformMessage = rpcMessage as UsePlatformMessage;
             break;
+        case MouthwashRpcMessageTag.Click:
+            const clickMessage = rpcMessage as ClickMessage;
+            break;
+        case MouthwashRpcMessageTag.SetCountingDown:
+            const setCountingDownMessage = rpcMessage;
+            break;
+        case MouthwashRpcMessageTag.ReportDeadBody:
+            const reportDeadBodyMessage = rpcMessage as ReportDeadBodyMessage;
+            break;
         default:
             return this.createInfraction(sender, InfractionName.InvalidRpcCode, { netId: component.netId, rpcId: rpcMessage.messageTag }, InfractionSeverity.High);
         }
 
-        switch (rpcMessage.messageTag as RpcMessageTag) {
+        switch (rpcMessage.messageTag as number) {
             case RpcMessageTag.AddVote:
                 if (this.room.voteBanSystem === component) return;
                 break;
@@ -386,6 +407,11 @@ export class MouthwashAntiCheatPlugin extends RoomPlugin {
             case RpcMessageTag.StartMeeting:
             case RpcMessageTag.SyncSettings:
             case RpcMessageTag.UsePlatform:
+            case MouthwashRpcMessageTag.SetOpacity:
+            case MouthwashRpcMessageTag.SetOutline:
+            case MouthwashRpcMessageTag.SetPlayerSpeedModifier:
+            case MouthwashRpcMessageTag.SetPlayerVisionModifier:
+            case MouthwashRpcMessageTag.BeginPlayerAnimation:
                 if (component instanceof PlayerControl) return;
                 break;
             case RpcMessageTag.ClimbLadder:
@@ -400,8 +426,38 @@ export class MouthwashAntiCheatPlugin extends RoomPlugin {
             case RpcMessageTag.CloseDoorsOfType:
                 if (this.room.shipStatus === component) return;
                 break;
+            case MouthwashRpcMessageTag.SetChatVisibility:
+            case MouthwashRpcMessageTag.CloseHud:
+            if (this.room.gameData === component) return;
+                break;
+            case MouthwashRpcMessageTag.BeginCameraAnimation:
+                if (component instanceof CameraController) return;
+                break;
+            case MouthwashRpcMessageTag.SetCountingDown:
+            case MouthwashRpcMessageTag.Click:
+                if (component instanceof ClickBehaviour) return;
+                break;
+            case MouthwashRpcMessageTag.ReportDeadBody:
+                if (component instanceof DeadBody) return;
+                break;
         }
         return this.createInfraction(sender, InfractionName.ForbiddenRpcCode, { netId: component.netId, rpcId: rpcMessage.messageTag, spawnType: component.spawnType }, InfractionSeverity.Critical);
+    }
+
+    async verifyComponentOwnership(component: Networkable<Room>, sender: Connection) {
+        if (component.ownerId === -1 || component.ownerId !== sender.clientId) {
+            // dead bodies and buttons are done via their network id, rather than the playercontrol.
+            if (component.spawnType === MouthwashSpawnType.Button as number) {
+                const button = this.api.hudService.buttonsByNetId.get(component.netId);
+                if (button && button.player.clientId === sender.clientId) {
+                    return true;
+                }
+            } else if (component.spawnType === MouthwashSpawnType.DeadBody as number) {
+                return true;
+            }
+            return false;
+        }
+        return true;
     }
 
     @MessageHandler(RpcMessage, { override: true })
@@ -416,11 +472,10 @@ export class MouthwashAntiCheatPlugin extends RoomPlugin {
         const component = this.room.netobjects.get(message.netid);
         if (component) {
             if (context.sender) {
-                if (component.ownerId === -1 || component.ownerId !== context.sender.clientId) {
+                if (message.data.messageTag !== RpcMessageTag.UpdateSystem && !await this.verifyComponentOwnership(component, context.sender)) {
                     this.createInfraction(context.sender, InfractionName.ForbiddenRpcInnernetObject, { netId: message.netid, rpcId: message.data.messageTag }, InfractionSeverity.Critical);
                     return;
                 }
-
                 const infraction = await this.onRpcMessageData(component, message.data, context.sender);
                 if (infraction && infraction.severity === InfractionSeverity.Critical) return;
             }

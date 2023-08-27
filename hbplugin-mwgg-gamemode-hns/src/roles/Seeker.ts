@@ -17,6 +17,8 @@ import {
     StartGameScreen
 } from "hbplugin-mouthwashgg-api";
 
+import { AnticheatExceptions, InfractionName } from "hbplugin-mouthwashgg-anti-cheat";
+
 import {
     EnumValue,
     HudItem,
@@ -35,6 +37,7 @@ export const SeekerOptionName = {
 
 @MouthwashRole("Seeker", RoleAlignment.Impostor, seekerColor, EmojiService.getEmoji("impostor"))
 @RoleObjective("Hunt the hiders down!")
+@AnticheatExceptions([ InfractionName.ForbiddenRpcVent ])
 export class Seeker extends Impostor {
     /**
      * Whether the seeker has not yet started looking for hiders.

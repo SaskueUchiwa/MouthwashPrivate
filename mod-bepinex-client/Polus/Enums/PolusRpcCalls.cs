@@ -17,7 +17,7 @@
         EnterVent = 0x8e,
         ExitVent = 0x8f,
         SetCountingDown = 0x90,
-        ReportDeadBody = 0x90,
+        ReportDeadBody = 0x91,
         SetAliveState = 0x92,
         DisplayKillAnimation = 0x93,
         SetSpeedModifier = 0x94,

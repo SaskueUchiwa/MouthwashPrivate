@@ -1,6 +1,7 @@
 import {
     ComponentSpawnData,
     HazelWriter,
+    Networkable,
     PlayerData,
     ReliablePacket,
     Room,
@@ -23,7 +24,8 @@ import {
     AllowTaskInteractionMessage,
     EdgeAlignment,
     CustomNetworkTransformGeneric,
-    MouthwashSpawnType
+    MouthwashSpawnType,
+    ClickBehaviour
 } from "mouthwash-types";
 
 import { Button, ButtonSpawnInfo } from "./Button";
@@ -45,7 +47,7 @@ export class PlayerHudManager {
         this.hudItemVisibility = new Map;
         this.hudStrings = new Map;
         this.chatVisible = true;
-        this.modstampText = "Playing on Mouthwash.gg";
+        this.modstampText = "Playing on Polus.gg: Rewritten";
         this.modstampColor = Palette.white;
         this.allowTaskInteraction = true;
 
@@ -79,11 +81,13 @@ export class PlayerHudManager {
 
 export class HudService {
     playerHuds: WeakMap<PlayerData, PlayerHudManager>;
+    buttonsByNetId: Map<number, Button>;
 
     constructor(
         public readonly plugin: MouthwashApiPlugin
     ) {
         this.playerHuds = new WeakMap;
+        this.buttonsByNetId = new Map;
     }
 
     getPlayerHud(player: PlayerData) {
@@ -474,7 +478,6 @@ export class HudService {
         }
         
         const connection = this.plugin.room.connections.get(player.clientId);
-
         if (connection) {
             const cntgWriter = HazelWriter.alloc(10);
             cntgWriter.write(spawnedObject);
@@ -509,10 +512,17 @@ export class HudService {
         }
 
         const button = new Button(this, buttonId, player, spawnedObject);
+        const clickBehaviour = spawnedObject.getComponent(ClickBehaviour as typeof Networkable);
+        if (clickBehaviour) {
+            this.buttonsByNetId.set(clickBehaviour.netId, button);
+        }
         playerButtons.set(buttonId, button);
 
         spawnedObject.on("component.despawn", () => {
             playerButtons.delete(buttonId);
+            if (clickBehaviour) {
+                this.buttonsByNetId.delete(clickBehaviour.netId);
+            }
         });
 
         return button;

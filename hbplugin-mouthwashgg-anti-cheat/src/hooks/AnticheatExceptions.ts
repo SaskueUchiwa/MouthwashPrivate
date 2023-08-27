@@ -11,5 +11,5 @@ export function AnticheatExceptions(exceptions: InfractionName[]) {
 }
 
 export function getAnticheatExceptions(pluginCtr: RoleCtr): Set<InfractionName> {
-    return Reflect.getMetadata(anticheatExceptionsKey, pluginCtr);
+    return Reflect.getMetadata(anticheatExceptionsKey, pluginCtr) || new Set;
 }

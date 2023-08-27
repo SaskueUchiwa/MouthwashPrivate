@@ -6,7 +6,8 @@ export enum MouthwashRpcMessageTag {
     SetOpacity,
     BeginPlayerAnimation = 0x8c,
     BeginCameraAnimation,
-    ReportDeadBody = 0x90,
+    SetCountingDown = 0x90,
+    ReportDeadBody,
     SetPlayerSpeedModifier = 0x94,
     SetPlayerVisionModifier
 }

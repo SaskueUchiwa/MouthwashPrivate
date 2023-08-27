@@ -146,7 +146,6 @@ export class DeadBodyService {
         ], undefined, connections);
 
         this.deadBodies.set(spawnedObject.netId, controller);
-
         spawnedObject.on("component.despawn", () => {
             this.deadBodies.delete(spawnedObject.netId);
         });

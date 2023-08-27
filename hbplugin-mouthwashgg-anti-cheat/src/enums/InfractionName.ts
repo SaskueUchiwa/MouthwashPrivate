@@ -68,5 +68,9 @@ export enum InfractionName {
      * Player vented despite not having permission to do so (i.e. being the Impostor) - a
      * high infraction.
      */
-    ForbiddenRpcVent = "FORBIDDEN_RPC_VENT"
+    ForbiddenRpcVent = "FORBIDDEN_RPC_VENT",
+    /**
+     * Player teleported to a location illegally, e.g. while not in a vent - a medium infraction.
+     */
+    ForbiddenRpcTeleport = "FORBIDDEN_RPC_TELEPORT"
 }
