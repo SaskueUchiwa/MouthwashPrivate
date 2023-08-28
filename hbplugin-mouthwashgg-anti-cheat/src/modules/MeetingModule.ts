@@ -26,6 +26,9 @@ export class MeetingModule extends EventTarget {
         if (!this.plugin.room.meetingHud)
             return this.plugin.createInfraction(sender, InfractionName.InvalidRpcMeetingVote, { }, InfractionSeverity.High);
 
+        if (this._isVotingComplete)
+            return this.plugin.createInfraction(sender, InfractionName.InvalidRpcMeetingVote, { }, InfractionSeverity.High);
+
         const castVoteVoter = this.plugin.room.getPlayerByPlayerId(castVoteMessage.votingid);
         const castVoteSuspect = this.plugin.room.getPlayerByPlayerId(castVoteMessage.suspectid);
         if (!castVoteVoter)
