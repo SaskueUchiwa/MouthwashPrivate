@@ -1,4 +1,20 @@
-import { AirshipVents, Connection, EnterVentMessage, EventListener, EventTarget, ExitVentMessage, GameMap, MeetingHudVotingCompleteEvent, MiraHQVents, PolusVents, RoomGameStartEvent, SnapToMessage, TheSkeldVents, Vector2 } from "@skeldjs/hindenburg";
+import {
+    AirshipVents,
+    Connection,
+    EnterVentMessage,
+    EventListener,
+    EventTarget,
+    ExitVentMessage,
+    GameMap,
+    MeetingHudVotingCompleteEvent,
+    MiraHQVents,
+    PolusVents,
+    RoomGameStartEvent,
+    SnapToMessage,
+    TheSkeldVents,
+    Vector2
+} from "@skeldjs/hindenburg";
+
 import { InfractionSeverity, MouthwashAntiCheatPlugin } from "../plugin";
 import { InfractionName } from "../enums";
 
@@ -88,7 +104,7 @@ export class VentModule extends EventTarget {
 
         const existingVent = this.getPlayerVent(sender);
         if (existingVent) {
-            return await this.plugin.createInfraction(sender, InfractionName.IllegalRpcVent, { ventId: enterVentMessage.ventid }, InfractionSeverity.Medium);
+            return await this.plugin.createInfraction(sender, InfractionName.IllegalRpcVent, { ventId: enterVentMessage.ventid, alreadyInVent: existingVent.id }, InfractionSeverity.Medium);
         }
 
         const player = sender.getPlayer();
@@ -119,8 +135,7 @@ export class VentModule extends EventTarget {
 
     async onSnapTo(sender: Connection, snapToMessage: SnapToMessage) {
         if (!this.plugin.room.shipStatus) {
-            await this.plugin.createInfraction(sender, InfractionName.ForbiddenRpcTeleport, { ventId: -2, position: snapToMessage.position }, InfractionSeverity.High);
-            return;
+            return await this.plugin.createInfraction(sender, InfractionName.ForbiddenRpcTeleport, { ventId: -2, position: snapToMessage.position }, InfractionSeverity.High);
         }
 
         if (this.plugin.room.settings.map === GameMap.Airship) {
@@ -130,8 +145,7 @@ export class VentModule extends EventTarget {
                     if (allowedTeleport.dist(snapToMessage.position) < 1)
                         return;
                 }
-                await this.plugin.createInfraction(sender, InfractionName.ForbiddenRpcTeleport, { ventId: -2, position: snapToMessage.position }, InfractionSeverity.High);
-                return;
+                return await this.plugin.createInfraction(sender, InfractionName.ForbiddenRpcTeleport, { ventId: -2, position: snapToMessage.position }, InfractionSeverity.High);
             }
         }
 
@@ -146,7 +160,7 @@ export class VentModule extends EventTarget {
                 return;
             }
         }
-        await this.plugin.createInfraction(sender, InfractionName.ForbiddenRpcTeleport, { ventId: vent.id, position: snapToMessage.position }, InfractionSeverity.High);
+        return await this.plugin.createInfraction(sender, InfractionName.ForbiddenRpcTeleport, { ventId: vent.id, position: snapToMessage.position }, InfractionSeverity.High);
     }
 
     @EventListener()

@@ -45,23 +45,52 @@ import {
     Pet,
     Hat,
     Skin,
-    SnapToMessage
+    SnapToMessage,
+    ReportDeadBodyMessage as AmongUsReportDeadBodyMessage
 } from "@skeldjs/hindenburg";
 
 import { MouthwashApiPlugin, RoleCtr } from "hbplugin-mouthwashgg-api";
 import { MouthwashggMetricsPlugin } from "hbplugin-mouthwashgg-metrics";
 
+import {
+    CameraController,
+    ClickBehaviour,
+    ClickMessage,
+    DeadBody,
+    MouthwashRpcMessageTag,
+    MouthwashSpawnType,
+    ReportDeadBodyMessage
+} from "mouthwash-types";
+
 import { CollidersService } from "./Colliders";
 import { InfractionName } from "./enums";
 import { MouthwashAuthPlugin } from "hbplugin-mouthwashgg-auth";
 import { getAnticheatExceptions } from "./hooks";
-import { CameraController, ClickBehaviour, ClickMessage, DeadBody, MouthwashRpcMessageTag, MouthwashSpawnType, ReportDeadBodyMessage } from "mouthwash-types";
+
 import { MeetingModule, VentModule } from "./modules";
 
 export enum InfractionSeverity {
+    /**
+     * Shouldn't happen in perfect gameplay but could very well happen under medium-high
+     * ping.
+     */
     Low = "LOW",
+    /**
+     * Could easily happen with higher ping, or could be the result of client-server
+     * desync and has little to no significant impact on gameplay. Alternatively, important
+     * side information that could be used alongside other infraction logs to determine
+     * if a player is cheating.
+     */
     Medium = "MEDIUM",
+    /**
+     * Could theoretically happen with high ping but never with low ping, or is a
+     * cheat that should be impossible but doesn't have any significant impact on gameplay.
+     */
     High = "HIGH",
+    /**
+     * Should _never_ happen even with extremely high ping and has a major
+     * impact on gameplay.
+     */
     Critical = "CRITICAL"
 }
 
@@ -107,11 +136,13 @@ export class MouthwashAntiCheatPlugin extends RoomPlugin {
     async onPluginLoad() {
         await this.collidersService.loadAllColliders();
         this.room.registerEventTarget(this.ventModule);
+        this.room.registerEventTarget(this.meetingModule);
         this.logger.info("Loaded colliders for maps");
     }
 
     async onPluginUnload() {
-        this.room.removeEventTarget(this.ventModule);    
+        this.room.removeEventTarget(this.ventModule);
+        this.room.removeEventTarget(this.meetingModule);
     }
 
     // async banPlayer(player: PlayerData<Room>|Connection, role: BaseRole|undefined, reason: AnticheatReason) {
@@ -221,34 +252,9 @@ export class MouthwashAntiCheatPlugin extends RoomPlugin {
             // const addVoteMessage = rpcMessage as AddVoteMessage;
             // return this.createInfraction(sender, InfractionName.InvalidRpcColor, { rpcId: RpcMessageTag.AddVote }, InfractionSeverity.Critical);
         case RpcMessageTag.CastVote:
-            const castVoteMessage = rpcMessage as CastVoteMessage;
-            const castVoteVoter = this.room.getPlayerByPlayerId(castVoteMessage.votingid);
-            const castVoteSuspect = this.room.getPlayerByPlayerId(castVoteMessage.suspectid);
-            if (!castVoteVoter)
-                return this.createInfraction(sender, InfractionName.ForbiddenRpcMeetingVote,
-                    { voterPlayerId: castVoteMessage.votingid, suspectPlayerId: castVoteMessage.suspectid }, InfractionSeverity.High);
-
-            if (castVoteVoter.clientId !== sender.clientId)
-                return this.createInfraction(sender, InfractionName.ForbiddenRpcMeetingVote,
-                    { voterPlayerId: castVoteMessage.votingid, suspectPlayerId: castVoteMessage.suspectid }, InfractionSeverity.Critical);
-
-            const voterState = this.room.meetingHud?.voteStates.get(castVoteMessage.votingid);
-            if (!voterState) return;
-
-            if (voterState.hasVoted) {
-                return this.createInfraction(sender, InfractionName.DuplicateRpcMeetingVote,
-                    { voterPlayerId: castVoteMessage.votingid, suspectPlayerId: castVoteMessage.suspectid, alreadyVotedForPlayerId: voterState.votedForId }, InfractionSeverity.High);
-            }
-
-            if (castVoteSuspect) {
-                if (castVoteSuspect.info?.isDead) {
-                    return this.createInfraction(sender, InfractionName.InvalidRpcMeetingVote,
-                        { voterPlayerId: castVoteMessage.votingid, suspectPlayerId: castVoteMessage.suspectid, isDead: true }, InfractionSeverity.High);
-                }
-            } else if (castVoteMessage.suspectid !== 255) {
-                return this.createInfraction(sender, InfractionName.InvalidRpcMeetingVote,
-                    { voterPlayerId: castVoteMessage.votingid, suspectPlayerId: castVoteMessage.suspectid, isDead: false },  InfractionSeverity.High);
-            }
+            const castVoteInfraction = await this.meetingModule.onCastVoteMessage(sender, rpcMessage as CastVoteMessage);
+            if (castVoteInfraction)
+                return castVoteInfraction;
             break;
         case RpcMessageTag.CheckColor:
             const checkColorMessage = rpcMessage as CheckColorMessage;
@@ -270,7 +276,6 @@ export class MouthwashAntiCheatPlugin extends RoomPlugin {
         case RpcMessageTag.Exiled:
         case RpcMessageTag.MurderPlayer:
         case RpcMessageTag.PlayAnimation:
-        case RpcMessageTag.ReportDeadBody:
         case RpcMessageTag.SetInfected:
         case RpcMessageTag.SetTasks:
         case RpcMessageTag.SetName:
@@ -288,6 +293,11 @@ export class MouthwashAntiCheatPlugin extends RoomPlugin {
         case MouthwashRpcMessageTag.CloseHud:
         case MouthwashRpcMessageTag.BeginCameraAnimation:
             return this.createInfraction(sender, InfractionName.ForbiddenRpcCode, { netId: component.netId, rpcId: rpcMessage.messageTag, spawnType: component.spawnType }, InfractionSeverity.Critical);
+        case RpcMessageTag.ReportDeadBody:
+            const reportDeadBodyInfraction = await this.meetingModule.onReportDeadBody(sender, rpcMessage as AmongUsReportDeadBodyMessage);
+            if (reportDeadBodyInfraction)
+                return reportDeadBodyInfraction;
+            break;
         case RpcMessageTag.ClimbLadder:
             const climbLadderMessage = rpcMessage as ClimbLadderMessage;
             break;

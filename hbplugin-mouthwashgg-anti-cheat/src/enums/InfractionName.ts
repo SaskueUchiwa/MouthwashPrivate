@@ -1,17 +1,3 @@
-/**
- * INFRACTION GUIDE
- * ================
- * CRITICAL - Should _never_ happen even with extremely high ping and has a major
- * impact on gameplay.
- * HIGH - Could theoretically happen with high ping but never with low ping, or is a
- * cheat that should be impossible but doesn't have any significant impact on gameplay.
- * MEDIUM - Could easily happen with higher ping, or could be the result of client-server
- * desync and has little to no significant impact on gameplay. Alternatively, important
- * side information that could be used alongside other infraction logs to determine
- * if a player is cheating.
- * LOW - Shouldn't happen in perfect gameplay but could very well happen under medium-high
- * ping.
- */
 export enum InfractionName {
     /**
      * Player attempted to call an RPC for an object that doesn't exist. Possibly communicating
@@ -78,5 +64,15 @@ export enum InfractionName {
      * Player teleported to a location illegally, e.g. while not in a vent, or moving to
      * a vent not in the same vent network as the one they were in previously - a medium infraction.
      */
-    ForbiddenRpcTeleport = "FORBIDDEN_RPC_TELEPORT"
+    ForbiddenRpcTeleport = "FORBIDDEN_RPC_TELEPORT",
+    /**
+     * Player attempted to report a dead body, that wasn't starting an emergency meeting -
+     * a high infraction.
+     */
+    InvalidRpcReportDeadBody = "INVALID_RPC_REPORT_DEAD_BODY",
+    /**
+     * Player attempted to start a meeting in an invalid state, e.g. there is already a meeting
+     * going on - a high infraction.
+     */
+    InvalidRpcMeetingStart = "INVALID_RPC_MEETING_START"
 }
