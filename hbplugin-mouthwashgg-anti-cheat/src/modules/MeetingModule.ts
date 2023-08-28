@@ -15,11 +15,13 @@ import { MouthwashMeetingHud } from "mouthwash-types";
 
 export class MeetingModule extends EventTarget {
     protected _isVotingComplete: boolean;
+    protected _inDiscussionTime: boolean;
 
     constructor(public readonly plugin: MouthwashAntiCheatPlugin) {
         super();
 
         this._isVotingComplete = false;
+        this._inDiscussionTime = false;
     }
 
     async onCastVoteMessage(sender: Connection, castVoteMessage: CastVoteMessage) {
@@ -27,7 +29,10 @@ export class MeetingModule extends EventTarget {
             return this.plugin.createInfraction(sender, InfractionName.InvalidRpcMeetingVote, { }, InfractionSeverity.High);
 
         if (this._isVotingComplete)
-            return this.plugin.createInfraction(sender, InfractionName.InvalidRpcMeetingVote, { }, InfractionSeverity.High);
+            return this.plugin.createInfraction(sender, InfractionName.InvalidRpcMeetingVote, { }, InfractionSeverity.Medium);
+
+        if (this._inDiscussionTime)
+            return this.plugin.createInfraction(sender, InfractionName.InvalidRpcMeetingVote, { }, InfractionSeverity.Medium);
 
         const castVoteVoter = this.plugin.room.getPlayerByPlayerId(castVoteMessage.votingid);
         const castVoteSuspect = this.plugin.room.getPlayerByPlayerId(castVoteMessage.suspectid);
@@ -73,6 +78,11 @@ export class MeetingModule extends EventTarget {
     @EventListener()
     async onMeetingBegin(ev: PlayerStartMeetingEvent<Room>) {
         this._isVotingComplete = false;
+        this._inDiscussionTime = true;
+
+        setTimeout(() => {
+            this._inDiscussionTime = false;
+        }, 8000 + this.plugin.room.settings.discussionTime * 1000);
     }
 
     @EventListener()

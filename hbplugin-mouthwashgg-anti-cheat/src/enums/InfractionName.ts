@@ -27,7 +27,7 @@ export enum InfractionName {
     DuplicateRpcMeetingVote = "DUPLICATE_RPC_MEETING_VOTE",
     /**
      * Player voted to eject a player that doesn't exist in the meeting - a high
-     * infraction.
+     * or medium infraction.
      */
     InvalidRpcMeetingVote = "INVALID_RPC_MEETING_VOTE",
     /**
