@@ -67,7 +67,7 @@ import { InfractionName } from "./enums";
 import { MouthwashAuthPlugin } from "hbplugin-mouthwashgg-auth";
 import { getAnticheatExceptions } from "./hooks";
 
-import { MeetingModule, VentModule } from "./modules";
+import { ChatModule, MeetingModule, VentModule } from "./modules";
 
 export enum InfractionSeverity {
     /**
@@ -115,6 +115,7 @@ export class MouthwashAntiCheatPlugin extends RoomPlugin {
 
     ventModule: VentModule;
     meetingModule: MeetingModule;
+    chatModule: ChatModule;
 
     constructor(
         public readonly room: Room,
@@ -131,6 +132,7 @@ export class MouthwashAntiCheatPlugin extends RoomPlugin {
         
         this.ventModule = new VentModule(this);
         this.meetingModule = new MeetingModule(this);
+        this.chatModule = new ChatModule(this);
     }
 
     async onPluginLoad() {
@@ -284,6 +286,7 @@ export class MouthwashAntiCheatPlugin extends RoomPlugin {
         case RpcMessageTag.SyncSettings:
         case RpcMessageTag.VotingComplete:
         case RpcMessageTag.BootFromVent:
+        case RpcMessageTag.SendChatNote:
         case MouthwashRpcMessageTag.SetOpacity:
         case MouthwashRpcMessageTag.SetOutline:
         case MouthwashRpcMessageTag.SetPlayerSpeedModifier:
@@ -323,10 +326,9 @@ export class MouthwashAntiCheatPlugin extends RoomPlugin {
             const repairSystemMessage = rpcMessage as RepairSystemMessage;
             break;
         case RpcMessageTag.SendChat:
-            const sendChatMessage = rpcMessage as SendChatMessage;
-            break;
-        case RpcMessageTag.SendChatNote:
-            const sendChatNoteMessage = rpcMessage as SendChatNoteMessage;
+            const sendChatInfraction = await this.chatModule.onChatMessage(sender, rpcMessage as SendChatMessage);
+            if (sendChatInfraction)
+                return sendChatInfraction;
             break;
         case RpcMessageTag.SendQuickChat:
             const sendQuickChatMessage = rpcMessage as SendQuickChatMessage;

@@ -74,5 +74,9 @@ export enum InfractionName {
      * Player attempted to start a meeting in an invalid state, e.g. there is already a meeting
      * going on - a high infraction.
      */
-    InvalidRpcMeetingStart = "INVALID_RPC_MEETING_START"
+    InvalidRpcMeetingStart = "INVALID_RPC_MEETING_START",
+    /**
+     * Player sent a message in chat too quickly before the last message - a low or medium infraction.
+     */
+    RateLimitedRpcSendChat = "RATE_LIMITED_RPC_SEND_CHAT"
 }
