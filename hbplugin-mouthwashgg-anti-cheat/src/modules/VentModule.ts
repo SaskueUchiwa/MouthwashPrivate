@@ -86,6 +86,11 @@ export class VentModule extends EventTarget {
         const enterInfraction = await this.plugin.createInfraction(sender, InfractionName.ForbiddenRpcVent, { ventId: enterVentMessage.ventid }, InfractionSeverity.High);
         if (enterInfraction !== undefined) return enterInfraction;
 
+        const existingVent = this.getPlayerVent(sender);
+        if (existingVent) {
+            return await this.plugin.createInfraction(sender, InfractionName.IllegalRpcVent, { ventId: enterVentMessage.ventid }, InfractionSeverity.Medium);
+        }
+
         const player = sender.getPlayer();
         const playerTransform = player?.transform;
         if (playerTransform) {
