@@ -301,10 +301,12 @@ export class MouthwashAntiCheatPlugin extends RoomPlugin {
             const enterVentInfraction = await this.ventModule.onEnterVent(sender, rpcMessage as EnterVentMessage);
             if (enterVentInfraction)
                 return enterVentInfraction;
+            break;
         case RpcMessageTag.ExitVent:
             const exitVentInfraction = await this.ventModule.onExitVent(sender, rpcMessage as ExitVentMessage);
             if (exitVentInfraction)
                 return exitVentInfraction;
+            break;
         case RpcMessageTag.MurderPlayer: // Murders are replaced by button presses
             const murderPlayerMessage = rpcMessage as MurderPlayerMessage;
         case RpcMessageTag.RepairSystem:

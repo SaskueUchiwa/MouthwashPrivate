@@ -17,7 +17,8 @@ const allowedAirshipLocations = [
     new Vector2(-0.7, -1),
     new Vector2(33.5, -1.5),
     new Vector2(20, 10.5),
-    new Vector2(-0.7, 8.5)
+    new Vector2(-0.7, 8.5),
+    new Vector2(-25, 40) // intial non-map location for pending spawn on Airship
 ];
 
 export class VentModule extends EventTarget {
@@ -93,7 +94,7 @@ export class VentModule extends EventTarget {
                 return;
             }
         }
-        return await this.plugin.createInfraction(sender, InfractionName.IllegalRpcVent, { ventId: enterVentMessage.ventid }, InfractionSeverity.Medium);
+        return await this.plugin.createInfraction(sender, InfractionName.IllegalRpcVent, { ventId: enterVentMessage.ventid, position: playerTransform?.position }, InfractionSeverity.Medium);
     }
     
     async onExitVent(sender: Connection, exitVentMessage: ExitVentMessage) {
