@@ -37,7 +37,6 @@ import {
     UpdateSystemMessage,
     UsePlatformMessage,
     Color,
-    AirshipStatus,
     Networkable,
     PlayerControl,
     PlayerPhysics,
@@ -46,7 +45,7 @@ import {
     Pet,
     Hat,
     Skin,
-    AirshipVents
+    SnapToMessage
 } from "@skeldjs/hindenburg";
 
 import { MouthwashApiPlugin, RoleCtr } from "hbplugin-mouthwashgg-api";
@@ -57,7 +56,7 @@ import { InfractionName } from "./enums";
 import { MouthwashAuthPlugin } from "hbplugin-mouthwashgg-auth";
 import { getAnticheatExceptions } from "./hooks";
 import { CameraController, ClickBehaviour, ClickMessage, DeadBody, MouthwashRpcMessageTag, MouthwashSpawnType, ReportDeadBodyMessage } from "mouthwash-types";
-import { VentModule } from "./modules";
+import { MeetingModule, VentModule } from "./modules";
 
 export enum InfractionSeverity {
     Low = "LOW",
@@ -86,6 +85,7 @@ export class MouthwashAntiCheatPlugin extends RoomPlugin {
     unflushedPlayerInfractions: PlayerInfraction[];
 
     ventModule: VentModule;
+    meetingModule: MeetingModule;
 
     constructor(
         public readonly room: Room,
@@ -101,6 +101,7 @@ export class MouthwashAntiCheatPlugin extends RoomPlugin {
         this.unflushedPlayerInfractions = [];
         
         this.ventModule = new VentModule(this);
+        this.meetingModule = new MeetingModule(this);
     }
 
     async onPluginLoad() {
@@ -297,10 +298,13 @@ export class MouthwashAntiCheatPlugin extends RoomPlugin {
             const completeTaskMessage = rpcMessage as CompleteTaskMessage;
             break;
         case RpcMessageTag.EnterVent:
-            const enterVentMessage = rpcMessage as EnterVentMessage;
+            const enterVentInfraction = await this.ventModule.onEnterVent(sender, rpcMessage as EnterVentMessage);
+            if (enterVentInfraction)
+                return enterVentInfraction;
         case RpcMessageTag.ExitVent:
-            const exitVentMessage = rpcMessage as ExitVentMessage;
-            return this.createInfraction(sender, InfractionName.ForbiddenRpcVent, { ventId: exitVentMessage.ventid }, InfractionSeverity.High);
+            const exitVentInfraction = await this.ventModule.onExitVent(sender, rpcMessage as ExitVentMessage);
+            if (exitVentInfraction)
+                return exitVentInfraction;
         case RpcMessageTag.MurderPlayer: // Murders are replaced by button presses
             const murderPlayerMessage = rpcMessage as MurderPlayerMessage;
         case RpcMessageTag.RepairSystem:
@@ -350,11 +354,9 @@ export class MouthwashAntiCheatPlugin extends RoomPlugin {
             }
             break;
         case RpcMessageTag.SnapTo:
-            const player = sender.getPlayer();
-            const playerPhysics = player?.physics;
-            if (!playerPhysics || !(this.room.shipStatus instanceof AirshipStatus) || playerPhysics.ventid === -1) {
-                return this.createInfraction(sender, InfractionName.ForbiddenRpcTeleport, { netId: component.netId, rpcId: RpcMessageTag.SnapTo, spawnType: component.spawnType }, InfractionSeverity.Medium);
-            }
+            const snapToInfraction = await this.ventModule.onSnapTo(sender, rpcMessage as SnapToMessage);
+            if (snapToInfraction)
+                return snapToInfraction;
             break;
         case RpcMessageTag.UpdateSystem:
             const updateSystemMessage = rpcMessage as UpdateSystemMessage;

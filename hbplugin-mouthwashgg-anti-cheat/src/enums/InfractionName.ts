@@ -65,12 +65,18 @@ export enum InfractionName {
      */
     InvalidRpcPet = "INVALID_RPC_PET",
     /**
-     * Player vented despite not having permission to do so (i.e. being the Impostor) - a
+     * Player vented despite not having permission to do so (i.e. being an impostor) - a
      * high infraction.
      */
     ForbiddenRpcVent = "FORBIDDEN_RPC_VENT",
     /**
-     * Player teleported to a location illegally, e.g. while not in a vent - a medium infraction.
+     * Player vented and had permission to do so, but the vent action was invalid, e.g. due to the player not being
+     * in the right place - a medium infraction.
+     */
+    IllegalRpcVent = "ILLEGAL_RPC_VENT",
+    /**
+     * Player teleported to a location illegally, e.g. while not in a vent, or moving to
+     * a vent not in the same vent network as the one they were in previously - a medium infraction.
      */
     ForbiddenRpcTeleport = "FORBIDDEN_RPC_TELEPORT"
 }
