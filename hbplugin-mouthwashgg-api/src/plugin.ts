@@ -98,7 +98,7 @@ import { CosmeticsService } from "./services/cosmeticsService";
 
 const mapNameToNumber = {
     "The Skeld": GameMap.TheSkeld,
-    "MiraHQ": GameMap.MiraHQ,
+    "Mira HQ": GameMap.MiraHQ,
     "Polus": GameMap.Polus,
     "Airship": GameMap.Airship,
 };
