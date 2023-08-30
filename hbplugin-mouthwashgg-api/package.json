@@ -17,7 +17,7 @@
         "typescript": "latest"
     },
     "dependencies": {
-        "@skeldjs/events": "^2.13.10",
+        "@skeldjs/events": "workspace:*",
         "got": "^11.8.2",
         "hbplugin-mouthwashgg-auth": "workspace:*",
         "mouthwash-types": "workspace:*",

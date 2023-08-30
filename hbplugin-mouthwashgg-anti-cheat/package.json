@@ -10,10 +10,10 @@
     "hbplugin-mouthwashgg-api": "workspace:*",
     "hbplugin-mouthwashgg-auth": "workspace:*",
     "hbplugin-mouthwashgg-metrics": "workspace:*",
-    "mouthwash-types": "link:../mouthwash-types"
+    "mouthwash-types": "workspace:*"
   },
   "devDependencies": {
-    "@skeldjs/hindenburg": "link:../Hindenburg",
+    "@skeldjs/hindenburg": "workspace:*",
     "@types/node": "latest",
     "typescript": "latest"
   },

@@ -9,8 +9,8 @@
     },
     "devDependencies": {
         "@skeldjs/hindenburg": "workspace:*",
-        "hbplugin-mouthwashgg-api": "workspace:*",
         "hbplugin-mouthwashgg-anti-cheat": "workspace:*",
+        "hbplugin-mouthwashgg-api": "workspace:*",
         "typescript": "^4.4.4"
     },
     "dependencies": {

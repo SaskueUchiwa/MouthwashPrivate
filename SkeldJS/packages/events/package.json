@@ -1,0 +1,24 @@
+{
+  "name": "@skeldjs/events",
+  "version": "2.14.35",
+  "main": "./dist/index.js",
+  "types": "./index.ts",
+  "publishConfig": {
+    "types": "./dist/index.d.ts"
+  },
+  "scripts": {
+    "build": "tsc -p ./",
+    "watch": "tsc -w -p ./",
+    "prepack": "yarn build"
+  },
+  "devDependencies": {
+    "@types/mocha": "^8.2.0",
+    "@types/node": "^14.14.16",
+    "typescript": "latest"
+  },
+  "license": "GPL-3.0-only",
+  "gitHead": "bd1e345157716ff1af70479b45bd23bd977bea32",
+  "files": [
+    "dist"
+  ]
+}

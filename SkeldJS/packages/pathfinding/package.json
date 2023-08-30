@@ -1,0 +1,41 @@
+{
+  "name": "@skeldjs/pathfinding",
+  "version": "2.14.35",
+  "main": "./dist/lib/index.js",
+  "types": "./index.ts",
+  "publishConfig": {
+    "types": "./dist/index.d.ts"
+  },
+  "license": "GPL-3.0-only",
+  "scripts": {
+    "build": "tsc -p ./",
+    "watch": "tsc -w -p ./",
+    "prepack": "yarn build && yarn build:colliders",
+    "build:colliders": "node dist/build.js"
+  },
+  "dependencies": {
+    "@skeldjs/constant": "workspace:*",
+    "@skeldjs/core": "workspace:*",
+    "@skeldjs/data": "workspace:*",
+    "@skeldjs/events": "workspace:*",
+    "@skeldjs/protocol": "workspace:*",
+    "@skeldjs/util": "workspace:*",
+    "heap": "^0.2.6"
+  },
+  "devDependencies": {
+    "@skeldjs/client": "workspace:*",
+    "@types/heap": "^0.2.28",
+    "@types/mocha": "^8.2.0",
+    "@types/node": "^14.14.16",
+    "ts-node": "latest",
+    "typescript": "latest"
+  },
+  "peerDependencies": {
+    "@skeldjs/client": "*"
+  },
+  "gitHead": "bd1e345157716ff1af70479b45bd23bd977bea32",
+  "files": [
+    "dist",
+    "data/build/*"
+  ]
+}

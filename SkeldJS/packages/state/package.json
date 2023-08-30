@@ -1,0 +1,28 @@
+{
+  "name": "@skeldjs/state",
+  "version": "2.14.35",
+  "main": "./dist/index.js",
+  "types": "./index.ts",
+  "publishConfig": {
+    "types": "./dist/index.d.ts"
+  },
+  "scripts": {
+    "build": "tsc -p ./",
+    "watch": "tsc -w -p ./",
+    "prepack": "yarn build"
+  },
+  "license": "GPL-3.0-only",
+  "dependencies": {
+    "@skeldjs/core": "workspace:*",
+    "@skeldjs/protocol": "workspace:*",
+    "@skeldjs/util": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/mocha": "^8.2.0",
+    "@types/node": "^14.14.16",
+    "typescript": "latest"
+  },
+  "files": [
+    "dist"
+  ]
+}

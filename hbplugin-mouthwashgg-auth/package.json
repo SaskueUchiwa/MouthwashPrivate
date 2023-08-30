@@ -16,7 +16,7 @@
         "typescript": "latest"
     },
     "dependencies": {
-        "@skeldjs/events": "^2.13.10",
+        "@skeldjs/events": "workspace:*",
         "dotenv": "^16.3.1",
         "mouthwash-types": "workspace:*",
         "reflect-metadata": "^0.1.13",
