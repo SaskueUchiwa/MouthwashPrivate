@@ -31,10 +31,7 @@ import {
     FinalTaskState,
     PlayerMurderEvent,
     PlayerStartMeetingEvent,
-    PlayerData,
-    AirshipStatus,
-    Vector2,
-    PlayerSetImpostorsEvent
+    PlayerData
 } from "@skeldjs/hindenburg";
 
 import { MouthwashAuthPlugin } from "hbplugin-mouthwashgg-auth";
@@ -521,12 +518,6 @@ export class MouthwashApiPlugin extends RoomPlugin {
                 )
             ]);
         }
-        ///// BEGIN PATCH (SKELDJS)
-        if (this.room.shipStatus instanceof AirshipStatus) {
-            this.room.shipStatus.initialSpawnCenter = new Vector2(0, 0);
-            this.room.shipStatus.meetingSpawnCenter = new Vector2(0, 0);
-        }
-        ///// END PATCH (SKELDJS)
     }
 
     @EventListener("room.gamestart")
