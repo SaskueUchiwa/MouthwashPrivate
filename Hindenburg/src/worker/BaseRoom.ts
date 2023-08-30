@@ -667,6 +667,9 @@ export class BaseRoom extends Hostable<RoomEvents> {
      * @param reason Reason for the destroying the room.
      */
     async destroy(reason = DisconnectReason.Destroy) {
+        if (this.state === GameState.Destroyed)
+            return;
+
         const ev = await this.emit(new RoomBeforeDestroyEvent(this, reason));
 
         if (ev.canceled)
@@ -741,7 +744,7 @@ export class BaseRoom extends Hostable<RoomEvents> {
 
                 const firstIntent = endGameIntents[0];
                 if (firstIntent) {
-                    this.endGame(firstIntent.reason, firstIntent);
+                    await this.endGame(firstIntent.reason, firstIntent);
                 }
             }
         }
@@ -1781,6 +1784,9 @@ export class BaseRoom extends Hostable<RoomEvents> {
     }
 
     async handleEnd(reason: GameOverReason, intent?: EndGameIntent) {
+        if (this.state === GameState.Started)
+            return;
+
         const waiting = this.waitingForHost;
         this.waitingForHost = new Set;
         this.state = GameState.Ended;
