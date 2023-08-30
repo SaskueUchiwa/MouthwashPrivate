@@ -13,12 +13,17 @@ export enum InfractionName {
      */
     ForbiddenRpcCode = "FORBIDDEN_RPC_CODE",
     /**
-     * Player attempted to call an RPC that doesn't exist on the server - a hard infraction.
+     * Player attempted to call an RPC that doesn't exist on the server - a high infraction.
      */
     InvalidRpcCode = "INVALID_RPC_CODE",
     /**
      * Player sent a vote in a meeting that was either not theirs - a critical infraction -
-     * or belonged to an invalid player - a high infraction.
+     * or belonged to an invalid player - a critical infraction.
+     */
+    FalseRpcMeetingVote = "FALSE_RPC_MEETING_VOTE",
+    /**
+     * Player sent a vote in a meeting when they aren't allowe to, e.g. they're
+     * dead - a critical infraction.
      */
     ForbiddenRpcMeetingVote = "FORBIDDEN_RPC_MEETING_VOTE",
     /**
@@ -52,7 +57,7 @@ export enum InfractionName {
     InvalidRpcPet = "INVALID_RPC_PET",
     /**
      * Player vented despite not having permission to do so (i.e. being an impostor) - a
-     * high infraction.
+     * critical infraction.
      */
     ForbiddenRpcVent = "FORBIDDEN_RPC_VENT",
     /**
@@ -64,7 +69,7 @@ export enum InfractionName {
      * Player teleported to a location illegally, e.g. while not in a vent, or moving to
      * a vent not in the same vent network as the one they were in previously - a medium infraction.
      */
-    ForbiddenRpcTeleport = "FORBIDDEN_RPC_TELEPORT",
+    InvalidRpcTeleport = "INVALID_RPC_TELEPORT",
     /**
      * Player attempted to report a dead body, that wasn't starting an emergency meeting -
      * a high infraction.
@@ -78,5 +83,46 @@ export enum InfractionName {
     /**
      * Player sent a message in chat too quickly before the last message - a low or medium infraction.
      */
-    RateLimitedRpcSendChat = "RATE_LIMITED_RPC_SEND_CHAT"
+    RateLimitedRpcSendChat = "RATE_LIMITED_RPC_SEND_CHAT",
+    /**
+     * Player attempted to repair a system but they lied about who they were - a critical infraction.
+     */
+    FalseRpcRepair = "FALSE_RPC_REPAIR",
+    /**
+     * Player attempted to repair a system but they weren't allowed to - a critical infraction.
+     */
+    ForbiddenRpcRepair = "FORBIDDEN_RPC_REPAIR",
+    /**
+     * Player attempted to repair a system that doesn't exist, or was otherwise unavailable to
+     * repair - a high infraction.
+     */
+    InvalidRpcRepair = "INVALID_RPC_REPAIR",
+    /**
+     * Player attempted to sabotage a system but they lied about who they were - a critical infraction.
+     */
+    FalseRpcSabotage = "FALSE_RPC_SABOTAGE",
+    /**
+     * Player attempted to sabotage a system but they weren't allowed to - a critical infraction.
+     */
+    ForbiddenRpcSabotage = "FORBIDDEN_RPC_SABOTAGE",
+    /**
+     * Player attempted to sabotage a system that doesn't exist, or was otherwise unavailable to
+     * sabotage, i.e. it was already sabotaged - a medium to high infraction.
+     */
+    InvalidRpcSabotage = "INVALID_RPC_SABOTAGE",
+    /**
+     * Player attempted to sabotage a system too quickly after sabotaging another one -
+     * a low to medium infraction.
+     */
+    RateLimitedRpcSabotage = "RATE_LIMITED_RPC_SABOTAGE",
+    /**
+     * Player attempted to open the decontamination room when it wasn't ready to open -
+     * a low infraction.
+     */
+    InvalidRpcOpenDecon = "INVALID_RPC_OPEN_DECON",
+    /**
+     * Player attempted to open a door on the map that was already open or doesn't exist
+     * - a low to medium infraction.
+     */
+    InvalidRpcOpenDoor = "INVALID_RPC_OPEN_DOOR"
 }

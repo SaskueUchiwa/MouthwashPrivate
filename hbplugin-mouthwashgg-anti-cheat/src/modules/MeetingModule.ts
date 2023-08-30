@@ -37,16 +37,21 @@ export class MeetingModule extends EventTarget {
         const castVoteVoter = this.plugin.room.getPlayerByPlayerId(castVoteMessage.votingid);
         const castVoteSuspect = this.plugin.room.getPlayerByPlayerId(castVoteMessage.suspectid);
         if (!castVoteVoter)
-            return this.plugin.createInfraction(sender, InfractionName.ForbiddenRpcMeetingVote,
-                { voterPlayerId: castVoteMessage.votingid, suspectPlayerId: castVoteMessage.suspectid }, InfractionSeverity.High);
+            return this.plugin.createInfraction(sender, InfractionName.FalseRpcMeetingVote,
+                { voterPlayerId: castVoteMessage.votingid, suspectPlayerId: castVoteMessage.suspectid }, InfractionSeverity.Critical);
 
         if (castVoteVoter.clientId !== sender.clientId)
-            return this.plugin.createInfraction(sender, InfractionName.ForbiddenRpcMeetingVote,
+            return this.plugin.createInfraction(sender, InfractionName.FalseRpcMeetingVote,
                 { voterPlayerId: castVoteMessage.votingid, suspectPlayerId: castVoteMessage.suspectid }, InfractionSeverity.Critical);
 
         const meetingHud = this.plugin.room.meetingHud as MouthwashMeetingHud<Room>|undefined;
         const voterState = meetingHud?.voteStates.get(castVoteMessage.votingid);
         if (!voterState) return;
+
+        if (castVoteVoter.info?.isDead) {
+            return this.plugin.createInfraction(sender, InfractionName.ForbiddenRpcMeetingVote,
+                { voterPlayerId: castVoteMessage.votingid, suspectPlayerId: castVoteMessage.suspectid, alreadyVotedForPlayerId: voterState.votedForId }, InfractionSeverity.Medium);
+        }
 
         if (voterState.hasVoted) {
             return this.plugin.createInfraction(sender, InfractionName.DuplicateRpcMeetingVote,

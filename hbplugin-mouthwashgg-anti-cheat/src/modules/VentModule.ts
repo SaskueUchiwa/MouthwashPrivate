@@ -135,7 +135,7 @@ export class VentModule extends EventTarget {
 
     async onSnapTo(sender: Connection, snapToMessage: SnapToMessage) {
         if (!this.plugin.room.shipStatus) {
-            return await this.plugin.createInfraction(sender, InfractionName.ForbiddenRpcTeleport, { ventId: -2, position: snapToMessage.position }, InfractionSeverity.High);
+            return await this.plugin.createInfraction(sender, InfractionName.InvalidRpcTeleport, { ventId: -2, position: snapToMessage.position }, InfractionSeverity.High);
         }
 
         if (this.plugin.room.settings.map === GameMap.Airship) {
@@ -145,14 +145,14 @@ export class VentModule extends EventTarget {
                     if (allowedTeleport.dist(snapToMessage.position) < 1)
                         return;
                 }
-                return await this.plugin.createInfraction(sender, InfractionName.ForbiddenRpcTeleport, { ventId: -2, position: snapToMessage.position }, InfractionSeverity.High);
+                return await this.plugin.createInfraction(sender, InfractionName.InvalidRpcTeleport, { ventId: -2, position: snapToMessage.position }, InfractionSeverity.High);
             }
         }
 
         const mapVents = this.getVentsInMap();
         const vent = this.getPlayerVent(sender);
         if (vent === undefined || mapVents === undefined)
-            return await this.plugin.createInfraction(sender, InfractionName.ForbiddenRpcTeleport, { ventId: -1, position: snapToMessage.position }, InfractionSeverity.High);
+            return await this.plugin.createInfraction(sender, InfractionName.InvalidRpcTeleport, { ventId: -1, position: snapToMessage.position }, InfractionSeverity.High);
 
         const network = this.getFullVentNetwork(vent, mapVents);
         for (const vent of network) {
@@ -160,7 +160,7 @@ export class VentModule extends EventTarget {
                 return;
             }
         }
-        return await this.plugin.createInfraction(sender, InfractionName.ForbiddenRpcTeleport, { ventId: vent.id, position: snapToMessage.position }, InfractionSeverity.High);
+        return await this.plugin.createInfraction(sender, InfractionName.InvalidRpcTeleport, { ventId: vent.id, position: snapToMessage.position }, InfractionSeverity.High);
     }
 
     @EventListener()

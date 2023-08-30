@@ -46,10 +46,11 @@ import {
     Hat,
     Skin,
     SnapToMessage,
-    ReportDeadBodyMessage as AmongUsReportDeadBodyMessage
+    ReportDeadBodyMessage as AmongUsReportDeadBodyMessage,
+    InnerShipStatus
 } from "@skeldjs/hindenburg";
 
-import { MouthwashApiPlugin, RoleCtr } from "hbplugin-mouthwashgg-api";
+import { BaseRole, Crewmate, Impostor, MouthwashApiPlugin, RoleCtr } from "hbplugin-mouthwashgg-api";
 import { MouthwashggMetricsPlugin } from "hbplugin-mouthwashgg-metrics";
 
 import {
@@ -67,7 +68,7 @@ import { InfractionName } from "./enums";
 import { MouthwashAuthPlugin } from "hbplugin-mouthwashgg-auth";
 import { getAnticheatExceptions } from "./hooks";
 
-import { ChatModule, MeetingModule, VentModule } from "./modules";
+import { ChatModule, MeetingModule, RepairModule, VentModule } from "./modules";
 
 export enum InfractionSeverity {
     /**
@@ -104,6 +105,9 @@ export interface PlayerInfraction {
     severity: InfractionSeverity;
 }
 
+const impostorExceptions = new Set([ InfractionName.ForbiddenRpcSabotage, InfractionName.ForbiddenRpcVent ]);
+const crewmateExceptions = new Set([ InfractionName.ForbiddenRpcRepair ]);
+
 @HindenburgPlugin("hbplugin-mouthwashgg-anti-cheat", "1.0.0", "last")
 export class MouthwashAntiCheatPlugin extends RoomPlugin {
     collidersService: CollidersService;
@@ -116,6 +120,7 @@ export class MouthwashAntiCheatPlugin extends RoomPlugin {
     ventModule: VentModule;
     meetingModule: MeetingModule;
     chatModule: ChatModule;
+    repairModule: RepairModule;
 
     constructor(
         public readonly room: Room,
@@ -133,18 +138,21 @@ export class MouthwashAntiCheatPlugin extends RoomPlugin {
         this.ventModule = new VentModule(this);
         this.meetingModule = new MeetingModule(this);
         this.chatModule = new ChatModule(this);
+        this.repairModule = new RepairModule(this);
     }
 
     async onPluginLoad() {
         await this.collidersService.loadAllColliders();
         this.room.registerEventTarget(this.ventModule);
         this.room.registerEventTarget(this.meetingModule);
+        this.room.registerEventTarget(this.repairModule);
         this.logger.info("Loaded colliders for maps");
     }
 
     async onPluginUnload() {
         this.room.removeEventTarget(this.ventModule);
         this.room.removeEventTarget(this.meetingModule);
+        this.room.removeEventTarget(this.repairModule);
     }
 
     // async banPlayer(player: PlayerData<Room>|Connection, role: BaseRole|undefined, reason: AnticheatReason) {
@@ -190,6 +198,16 @@ export class MouthwashAntiCheatPlugin extends RoomPlugin {
         this.unflushedPlayerInfractions = [];
     }
 
+    getInfractions<T extends BaseRole>(role: T) {
+        if (role.constructor === Impostor) {
+            return impostorExceptions;
+        } else if (role.constructor === Crewmate) {
+            return crewmateExceptions;
+        }
+        
+        return getAnticheatExceptions(role["constructor"] as RoleCtr);
+    }
+
     async createInfraction(playerOrConnection: PlayerData<Room>|Connection, infractionName: InfractionName, additionalDetails: any, severity: InfractionSeverity) {
         const gameId = this.metrics?.lobbyCurrentGameIds.get(this.room);
         const connection = playerOrConnection instanceof Connection ? playerOrConnection : this.room.getConnection(playerOrConnection);
@@ -206,10 +224,9 @@ export class MouthwashAntiCheatPlugin extends RoomPlugin {
         }
         const playerRole = this.api.roleService.getPlayerRole(player);
         if (playerRole !== undefined) {
-            const exceptions = getAnticheatExceptions(playerRole["constructor"] as RoleCtr);
-            if (exceptions.has(infractionName)) {
+            const exceptions = this.getInfractions(playerRole);
+            if (exceptions.has(infractionName))
                 return;
-            }
         }
 
         const connectionUser = await this.authApi.getConnectionUser(connection);
@@ -323,7 +340,9 @@ export class MouthwashAntiCheatPlugin extends RoomPlugin {
         case RpcMessageTag.MurderPlayer: // Murders are replaced by button presses
             const murderPlayerMessage = rpcMessage as MurderPlayerMessage;
         case RpcMessageTag.RepairSystem:
-            const repairSystemMessage = rpcMessage as RepairSystemMessage;
+            const repairSystemInfraction = await this.repairModule.onRepairSystem(sender, rpcMessage as RepairSystemMessage);
+            if (repairSystemInfraction)
+                return repairSystemInfraction;
             break;
         case RpcMessageTag.SendChat:
             const sendChatInfraction = await this.chatModule.onChatMessage(sender, rpcMessage as SendChatMessage);
@@ -489,8 +508,10 @@ export class MouthwashAntiCheatPlugin extends RoomPlugin {
         if (component) {
             if (context.sender) {
                 if (message.data.messageTag !== RpcMessageTag.UpdateSystem && !await this.verifyComponentOwnership(component, context.sender)) {
-                    this.createInfraction(context.sender, InfractionName.ForbiddenRpcInnernetObject, { netId: message.netid, rpcId: message.data.messageTag }, InfractionSeverity.Critical);
-                    return;
+                    if (!(component instanceof InnerShipStatus) || message.data.messageTag !== RpcMessageTag.RepairSystem) {
+                        this.createInfraction(context.sender, InfractionName.ForbiddenRpcInnernetObject, { netId: message.netid, rpcId: message.data.messageTag }, InfractionSeverity.Critical);
+                        return;
+                    }
                 }
                 const infraction = await this.onRpcMessageData(component, message.data, context.sender);
                 if (infraction && infraction.severity === InfractionSeverity.Critical) return;
