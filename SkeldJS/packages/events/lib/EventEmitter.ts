@@ -62,7 +62,7 @@ export class EventEmitter<Events extends EventData> {
         listener: Listener<Events[EventName]>
     ): () => void;
     on<K extends BasicEvent>(event: string, listener: Listener<K>): () => void;
-    on(event: string, listener: Listener<BasicEvent>): () => void {
+    on(event: string, listener: Listener<any>): () => void {
         const listeners = this.getListeners(event);
         listeners.add(listener);
 
@@ -74,7 +74,7 @@ export class EventEmitter<Events extends EventData> {
         listener: Listener<Events[EventName]>
     ): () => void;
     once<K extends BasicEvent>(event: string, listener: Listener<K>): () => void;
-    once(event: string, listener: Listener<BasicEvent>): () => void {
+    once(event: string, listener: Listener<any>): () => void {
         const removeListener = this.on(event, async (ev) => {
             removeListener();
             await listener(ev);
@@ -97,7 +97,7 @@ export class EventEmitter<Events extends EventData> {
         filter: (ev: Events[EventName]) => boolean|Promise<boolean>
     ): Promise<Events[EventName]>;
     waitf<K extends BasicEvent>(event: string, filter: (ev: K) => boolean|Promise<boolean>): Promise<BasicEvent>;
-    waitf(event: string, filter: (ev: BasicEvent) => boolean|Promise<boolean>): Promise<BasicEvent> {
+    waitf(event: string, filter: (ev: any) => boolean|Promise<boolean>): Promise<BasicEvent> {
         return new Promise(resolve => {
             const off = this.on(event, async ev => {
                 if (await filter(ev)) {
@@ -113,7 +113,7 @@ export class EventEmitter<Events extends EventData> {
         listener: Listener<Events[EventName]>
     ): void;
     off<K extends BasicEvent>(event: string, listener: Listener<K>): void;
-    off(event: string, listener: Listener<BasicEvent>) {
+    off(event: string, listener: Listener<any>) {
         const listeners = this.getListeners(event);
         listeners.delete(listener);
     }

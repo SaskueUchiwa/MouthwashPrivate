@@ -381,7 +381,7 @@ export class PacketDecoder<ContextType = any> {
             listeners.add(listener);
         }
 
-        return this.off.bind(this, messageClass, listener);
+        return () => this.off(messageClass, listener);
     }
 
     /**

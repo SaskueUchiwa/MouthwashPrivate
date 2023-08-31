@@ -24,7 +24,7 @@
   "scripts": {
     "lint": "eslint \"packages/**/*.ts\"",
     "fix": "eslint --fix \"packages/**/*.ts\"",
-    "build-all": "rimraf packages/**/dist && yarn workspaces foreach -ptv --exclude test run build",
+    "build-all": "yarn workspaces foreach -ptv --exclude test run build",
     "update:patch": "yarn workspaces foreach -v --exclude test version patch",
     "update:minor": "yarn workspaces foreach -v --exclude test version minor",
     "update:major": "yarn workspaces foreach -v --exclude test version major",
@@ -42,6 +42,9 @@
     "ts-node": "^9.1.1",
     "typescript": "latest"
   },
+  "workspaces": [
+    "packages/*"
+  ],
   "version": "2.14.35",
   "packageManager": "yarn@3.6.3"
 }
