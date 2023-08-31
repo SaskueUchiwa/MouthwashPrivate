@@ -185,6 +185,7 @@ export class InnerShipStatus<RoomType extends Hostable = Hostable> extends Netwo
         const doorsInRoom = this.getDoorsInRoom(rpc.systemId);
 
         for (const doorId of doorsInRoom) {
+            doors.cooldowns.set(doorId, 30);
             doors.closeDoor(doorId);
         }
     }
