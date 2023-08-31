@@ -27,7 +27,7 @@
     "hbplugin-mwgg-gamemode-zombies",
     "mouthwash-types",
     "Hindenburg",
-    "SkeldJS/packages/*"
+    "SkeldJS"
   ],
   "devDependencies": {
     "cross-env": "^7.0.3",

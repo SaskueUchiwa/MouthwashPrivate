@@ -31,7 +31,31 @@ export class RepairModule extends EventTarget {
     }
 
     async onCloseDoorsOfType(sender: Connection, closeDoorsOfTypeMessage: CloseDoorsOfTypeMessage) {
+        const defaultInfraction = await this.plugin.createInfraction(sender, InfractionName.ForbiddenRpcCloseDoors,
+            { systemId: closeDoorsOfTypeMessage.systemId }, InfractionSeverity.Critical);
+        if (defaultInfraction) return defaultInfraction;
 
+        const shipStatus = this.plugin.room.shipStatus;
+        const doorsSystem = shipStatus?.systems.get(SystemType.Doors) as DoorsSystem|undefined;
+        if (!shipStatus || !doorsSystem) {
+            return await this.plugin.createInfraction(sender, InfractionName.InvalidRpcCloseDoors,
+                { systemId: closeDoorsOfTypeMessage.systemId }, InfractionSeverity.High);
+        }
+        const doorIds = shipStatus.getDoorsInRoom(closeDoorsOfTypeMessage.systemId);
+        if (doorIds.length === 0) {
+            return await this.plugin.createInfraction(sender, InfractionName.InvalidRpcCloseDoors,
+                { systemId: closeDoorsOfTypeMessage.systemId }, InfractionSeverity.High);
+        }
+        const cooldown = doorsSystem.cooldowns.get(closeDoorsOfTypeMessage.systemId);
+        if (cooldown !== undefined) {
+            return await this.plugin.createInfraction(sender, InfractionName.RateLimitedRpcCloseDoors,
+                { systemId: closeDoorsOfTypeMessage.systemId }, cooldown <= 10 ? InfractionSeverity.Medium : InfractionSeverity.Low);
+        }
+        const allClosed = doorIds.every(doorId => doorsSystem.doors[doorId] && !doorsSystem.doors[doorId].isOpen);
+        if (allClosed) {
+            return await this.plugin.createInfraction(sender, InfractionName.InvalidRpcCloseDoors,
+                { systemId: closeDoorsOfTypeMessage.systemId, alreadyClosed: true }, InfractionSeverity.High);
+        }
     }
 
     async onRepairSystem(sender: Connection, repairSystemMessage: RepairSystemMessage) {
@@ -133,30 +157,32 @@ export class RepairModule extends EventTarget {
             return this.plugin.createInfraction(sender, InfractionName.InvalidRpcRepair,
                 { systemId: repairSystemMessage.systemId, repairAmount: repairSystemMessage.amount }, InfractionSeverity.High);
         } else if (system instanceof HeliSabotageSystem) {
-            if (!system.sabotaged) {
-                return this.plugin.createInfraction(sender, InfractionName.InvalidRpcRepair,
-                    { systemId: repairSystemMessage.systemId, repairAmount: repairSystemMessage.amount, isRepaired: true }, InfractionSeverity.Medium);
-            }
-
             const consoleId = repairSystemMessage.amount & 0xf;
             const repairOp = repairSystemMessage.amount & 0xf0;
 
             switch (repairOp) {
+                case HeliSabotageSystemRepairTag.ActiveBit:
+                case HeliSabotageSystemRepairTag.DamageBit:
+                case HeliSabotageSystemRepairTag.FixBit:
+                    if (!system.sabotaged) {
+                        return this.plugin.createInfraction(sender, InfractionName.InvalidRpcRepair,
+                            { systemId: repairSystemMessage.systemId, repairAmount: repairSystemMessage.amount, isRepaired: true }, InfractionSeverity.Medium);
+                    }
+                    break;
+            }
+
+            switch (repairOp) {
                 case HeliSabotageSystemRepairTag.DeactiveBit:
-                    console.log("[HELI] %s deactivated %s (active consoles %s, completed consoles %s, countdown %s, resetTimer %s)",
-                        repairingPlayer, consoleId, system.activeConsoles, system.completedConsoles, system.countdown, system.resetTimer);
+
                     break;
                 case HeliSabotageSystemRepairTag.ActiveBit:
-                    console.log("[HELI] %s activated %s (active consoles %s, completed consoles %s, countdown %s, resetTimer %s)",
-                        repairingPlayer, consoleId, system.activeConsoles, system.completedConsoles, system.countdown, system.resetTimer);
+
                     break;
                 case HeliSabotageSystemRepairTag.DamageBit:
-                    console.log("[HELI] %s damaged %s (active consoles %s, completed consoles %s, countdown %s, resetTimer %s)",
-                        repairingPlayer, consoleId, system.activeConsoles, system.completedConsoles, system.countdown, system.resetTimer);
+
                     break;
                 case HeliSabotageSystemRepairTag.FixBit:
-                    console.log("[HELI] %s fixed %s (active consoles %s, completed consoles %s, countdown %s, resetTimer %s)",
-                        repairingPlayer, consoleId, system.activeConsoles, system.completedConsoles, system.countdown, system.resetTimer);
+
                     break;
             }
         } else if (system instanceof HqHudSystem) {
@@ -165,16 +191,23 @@ export class RepairModule extends EventTarget {
 
             switch (repairOperation) {
                 case HqHudSystemRepairTag.CompleteConsole:
-                    console.log("[HQ HUD] %s completed %s (active consoles %s, completed consoles %s, timer %s)",
-                        repairingPlayer, consoleId, system.activeConsoles, system.completedConsoles, system.timer);
+                case HqHudSystemRepairTag.OpenConsole:
+                    if (!system.sabotaged) {
+                        return this.plugin.createInfraction(sender, InfractionName.InvalidRpcRepair,
+                            { systemId: repairSystemMessage.systemId, repairAmount: repairSystemMessage.amount, isRepaired: true }, InfractionSeverity.Medium);
+                    }
+                    break;
+            }
+
+            switch (repairOperation) {
+                case HqHudSystemRepairTag.CompleteConsole:
+
                     break;
                 case HqHudSystemRepairTag.CloseConsole:
-                    console.log("[HQ HUD] %s closed %s (active consoles %s, completed consoles %s, timer %s)",
-                        repairingPlayer, consoleId, system.activeConsoles, system.completedConsoles, system.timer);
+
                     break;
                 case HqHudSystemRepairTag.OpenConsole:
-                    console.log("[HQ HUD] %s open %s (active consoles %s, completed consoles %s, timer %s)",
-                        repairingPlayer, consoleId, system.activeConsoles, system.completedConsoles, system.timer);
+
                     break;
             }
         } else if (system instanceof HudOverrideSystem) {
@@ -182,8 +215,6 @@ export class RepairModule extends EventTarget {
                 return this.plugin.createInfraction(sender, InfractionName.InvalidRpcRepair,
                     { systemId: repairSystemMessage.systemId, repairAmount: repairSystemMessage.amount, isRepaired: true }, InfractionSeverity.Medium);
             }
-
-            console.log("[HUD] repaired by %s", repairingPlayer);
         } else if (system instanceof LifeSuppSystem) {
             if (!system.sabotaged) {
                 return this.plugin.createInfraction(sender, InfractionName.InvalidRpcRepair,
@@ -193,57 +224,49 @@ export class RepairModule extends EventTarget {
             const consoleId = repairSystemMessage.amount & 0x3;
 
             if (repairSystemMessage.amount & 0x40) { // repair console
-                console.log("[O2] %s repaired %s (completed consoles %s, timer %s)", repairingPlayer, consoleId, system.completed, system.timer);
+                
             } else if (repairSystemMessage.amount & 0x10) { // repair system
-                console.log("[O2] %s repaired whole system (completed consoles %s, timer %s)", repairingPlayer, consoleId, system.completed, system.timer);
+
             }
         } else if (system instanceof MedScanSystem) {
             const playerId = repairSystemMessage.amount & 0x1f;
 
             if (repairSystemMessage.amount & 0x80) { // join queue
-                console.log("[MED SCAN] %s (%s) added player id %s to queue (queue %s)",
-                    repairingPlayer, repairingPlayer.playerId, playerId, system.queue);
+
             } else if (repairSystemMessage.amount & 0x40) { // leave queue
-                console.log("[MED SCAN] %s (%s) removed player id %s from queue (queue %s)",
-                    repairingPlayer, repairingPlayer.playerId, playerId, system.queue);
+
             }
         } else if (system instanceof MovingPlatformSystem) {
             return this.plugin.createInfraction(sender, InfractionName.InvalidRpcRepair,
                 { systemId: repairSystemMessage.systemId, repairAmount: repairSystemMessage.amount }, InfractionSeverity.High);
         } else if (system instanceof ReactorSystem) {
-            if (!system.sabotaged) {
-                return this.plugin.createInfraction(sender, InfractionName.InvalidRpcRepair,
-                    { systemId: repairSystemMessage.systemId, repairAmount: repairSystemMessage.amount, isRepaired: true }, InfractionSeverity.Medium);
+            if ((repairSystemMessage.amount & 0x40) || (repairSystemMessage.amount & 0x10)) {
+                if (!system.sabotaged) {
+                    return this.plugin.createInfraction(sender, InfractionName.InvalidRpcRepair,
+                        { systemId: repairSystemMessage.systemId, repairAmount: repairSystemMessage.amount, isRepaired: true }, InfractionSeverity.Medium);
+                }
             }
 
             const consoleId = repairSystemMessage.amount & 0x3;
 
             if (repairSystemMessage.amount & 0x40) { // place hand on console
-                console.log("[REACTOR] %s placed hand on console %s (active consoles %s, timer %s)",
-                    repairingPlayer, consoleId, system.completed, system.timer);
+
             } else if (repairSystemMessage.amount & 0x20) { // remove hand from console
-                console.log("[REACTOR] %s removed hand from console %s (active consoles %s, timer %s)",
-                    repairingPlayer, consoleId, system.completed, system.timer);
+
             } else if (repairSystemMessage.amount & 0x10) { // repair system
-                console.log("[REACTOR] %s repaired whole system (active consoles %s, timer %s)",
-                    repairingPlayer, system.completed, system.timer);
+
             }
         } else if (system instanceof SecurityCameraSystem) {
             if (repairSystemMessage.amount === 1) { // begin watching cameras
-                console.log("[SECURITY] %s started watching cameras (players watching cameras %s)",
-                    repairingPlayer, system.players);
+
             } else { // stop watching cameras
-                console.log("[SECURITY] %s stopped watching cameras (players watching cameras %s)",
-                    repairingPlayer, system.players);
+
             }
         } else if (system instanceof SwitchSystem) {
             if (!system.sabotaged) {
                 return this.plugin.createInfraction(sender, InfractionName.InvalidRpcRepair,
                     { systemId: repairSystemMessage.systemId, repairAmount: repairSystemMessage.amount, isRepaired: true }, InfractionSeverity.Medium);
             }
-
-            console.log("[SWITCHES] %s toggled switch %s (switches %s, expected %s, brightness %s)",
-                repairingPlayer, repairSystemMessage.amount, system.actual, system.expected, system.brightness);
         } else {
             this.plugin.logger.warn("Got unhandled system type %s for repair from player %s (repair amount %s)",
                 system.systemType, repairingPlayer, repairSystemMessage.amount);

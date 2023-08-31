@@ -105,8 +105,10 @@ export interface PlayerInfraction {
     severity: InfractionSeverity;
 }
 
-const impostorExceptions = new Set([ InfractionName.ForbiddenRpcSabotage, InfractionName.ForbiddenRpcVent ]);
+const impostorExceptions = new Set([ InfractionName.ForbiddenRpcSabotage, InfractionName.ForbiddenRpcVent, InfractionName.ForbiddenRpcCloseDoors ]);
 const crewmateExceptions = new Set([ InfractionName.ForbiddenRpcRepair ]);
+
+const allowedShipStatusRpcMessages = new Set([ RpcMessageTag.CloseDoorsOfType, RpcMessageTag.UpdateSystem, RpcMessageTag.RepairSystem ]);
 
 @HindenburgPlugin("hbplugin-mouthwashgg-anti-cheat", "1.0.0", "last")
 export class MouthwashAntiCheatPlugin extends RoomPlugin {
@@ -322,7 +324,9 @@ export class MouthwashAntiCheatPlugin extends RoomPlugin {
             const climbLadderMessage = rpcMessage as ClimbLadderMessage;
             break;
         case RpcMessageTag.CloseDoorsOfType:
-            const closeDoorsOfTypeMessage = rpcMessage as CloseDoorsOfTypeMessage;
+            const closeDoorsOfTypeMessage = await this.repairModule.onCloseDoorsOfType(sender, rpcMessage as CloseDoorsOfTypeMessage);
+            if (closeDoorsOfTypeMessage)
+                return closeDoorsOfTypeMessage;
             break;
         case RpcMessageTag.CompleteTask:
             const completeTaskMessage = rpcMessage as CompleteTaskMessage;
@@ -459,6 +463,7 @@ export class MouthwashAntiCheatPlugin extends RoomPlugin {
                 break;
             case RpcMessageTag.RepairSystem:
             case RpcMessageTag.CloseDoorsOfType:
+            case RpcMessageTag.UpdateSystem:
                 if (this.room.shipStatus === component) return;
                 break;
             case MouthwashRpcMessageTag.SetChatVisibility:
@@ -507,9 +512,9 @@ export class MouthwashAntiCheatPlugin extends RoomPlugin {
         const component = this.room.netobjects.get(message.netid);
         if (component) {
             if (context.sender) {
-                if (message.data.messageTag !== RpcMessageTag.UpdateSystem && !await this.verifyComponentOwnership(component, context.sender)) {
-                    if (!(component instanceof InnerShipStatus) || message.data.messageTag !== RpcMessageTag.RepairSystem) {
-                        this.createInfraction(context.sender, InfractionName.ForbiddenRpcInnernetObject, { netId: message.netid, rpcId: message.data.messageTag }, InfractionSeverity.Critical);
+                if (!await this.verifyComponentOwnership(component, context.sender)) {
+                    if (!(component instanceof InnerShipStatus) || !allowedShipStatusRpcMessages.has(message.data.messageTag)) {
+                        this.createInfraction(context.sender, InfractionName.ForbiddenRpcInnernetObject, { netId: message.netid, rpcId: message.data.messageTag, spawnType: component.spawnType }, InfractionSeverity.Critical);
                         return;
                     }
                 }

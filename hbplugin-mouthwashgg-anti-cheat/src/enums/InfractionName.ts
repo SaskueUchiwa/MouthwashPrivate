@@ -124,5 +124,20 @@ export enum InfractionName {
      * Player attempted to open a door on the map that was already open or doesn't exist
      * - a low to medium infraction.
      */
-    InvalidRpcOpenDoor = "INVALID_RPC_OPEN_DOOR"
+    InvalidRpcOpenDoor = "INVALID_RPC_OPEN_DOOR",
+    /**
+     * Player attempted to close a set of doors in a room when they weren't allowed to
+     * - a critical infraction.
+     */
+    ForbiddenRpcCloseDoors = "FORBIDDEN_RPC_CLOSE_DOORS",
+    /**
+     * Player attempted to close a set of doors in a room when they were already closed
+     * or they were otherwise unavailable to close - a high infraction.
+     */
+    InvalidRpcCloseDoors = "INVALID_RPC_CLOSE_DOORS",
+    /**
+     * Player attempted to close doors too quickly before the cooldown was finished
+     * - a low-medium infraction.
+     */
+    RateLimitedRpcCloseDoors = "RATE_LIMITED_RPC_CLOSE_DOORS"
 }
