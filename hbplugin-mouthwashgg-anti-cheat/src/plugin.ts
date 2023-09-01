@@ -106,7 +106,7 @@ export interface PlayerInfraction {
 }
 
 const impostorExceptions = new Set([ InfractionName.ForbiddenRpcSabotage, InfractionName.ForbiddenRpcVent, InfractionName.ForbiddenRpcCloseDoors ]);
-const crewmateExceptions = new Set([ InfractionName.ForbiddenRpcRepair ]);
+const crewmateExceptions = new Set([ InfractionName.ForbiddenRpcRepair, InfractionName.ForbiddenRpcCompleteTask ]);
 
 const allowedShipStatusRpcMessages = new Set([ RpcMessageTag.CloseDoorsOfType, RpcMessageTag.UpdateSystem, RpcMessageTag.RepairSystem ]);
 
