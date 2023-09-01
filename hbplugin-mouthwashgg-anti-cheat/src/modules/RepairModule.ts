@@ -137,6 +137,9 @@ export class RepairModule extends EventTarget {
                     break;
                 case 4: // exit heading down
                     break;
+                default:
+                    return this.plugin.createInfraction(sender, InfractionName.InvalidRpcRepair,
+                        { systemId: repairSystemMessage.systemId, repairAmount: repairSystemMessage.amount }, InfractionSeverity.Medium);
             }
         } else if (system instanceof DoorsSystem) {
             const doorId = repairSystemMessage.amount & 0x1f;
@@ -182,6 +185,9 @@ export class RepairModule extends EventTarget {
                 case HeliSabotageSystemRepairTag.FixBit:
 
                     break;
+                default:
+                    return this.plugin.createInfraction(sender, InfractionName.InvalidRpcRepair,
+                        { systemId: repairSystemMessage.systemId, repairAmount: repairSystemMessage.amount }, InfractionSeverity.Medium);
             }
         } else if (system instanceof HqHudSystem) {
             const consoleId = repairSystemMessage.amount & 0xf;
@@ -207,6 +213,9 @@ export class RepairModule extends EventTarget {
                 case HqHudSystemRepairTag.OpenConsole:
 
                     break;
+                default:
+                    return this.plugin.createInfraction(sender, InfractionName.InvalidRpcRepair,
+                        { systemId: repairSystemMessage.systemId, repairAmount: repairSystemMessage.amount }, InfractionSeverity.Medium);
             }
         } else if (system instanceof HudOverrideSystem) {
             if (!system.sabotaged) {
@@ -225,6 +234,9 @@ export class RepairModule extends EventTarget {
                 
             } else if (repairSystemMessage.amount & 0x10) { // repair system
 
+            } else {
+                return this.plugin.createInfraction(sender, InfractionName.InvalidRpcRepair,
+                    { systemId: repairSystemMessage.systemId, repairAmount: repairSystemMessage.amount }, InfractionSeverity.Medium);
             }
         } else if (system instanceof MedScanSystem) {
             const playerId = repairSystemMessage.amount & 0x1f;
@@ -233,6 +245,9 @@ export class RepairModule extends EventTarget {
 
             } else if (repairSystemMessage.amount & 0x40) { // leave queue
 
+            } else {
+                return this.plugin.createInfraction(sender, InfractionName.InvalidRpcRepair,
+                    { systemId: repairSystemMessage.systemId, repairAmount: repairSystemMessage.amount }, InfractionSeverity.Medium);
             }
         } else if (system instanceof MovingPlatformSystem) {
             return this.plugin.createInfraction(sender, InfractionName.InvalidRpcRepair,
@@ -253,6 +268,9 @@ export class RepairModule extends EventTarget {
 
             } else if (repairSystemMessage.amount & 0x10) { // repair system
 
+            } else {
+                return this.plugin.createInfraction(sender, InfractionName.InvalidRpcRepair,
+                    { systemId: repairSystemMessage.systemId, repairAmount: repairSystemMessage.amount }, InfractionSeverity.Medium);
             }
         } else if (system instanceof SecurityCameraSystem) {
             if (repairSystemMessage.amount === 1) { // begin watching cameras

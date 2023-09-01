@@ -139,5 +139,20 @@ export enum InfractionName {
      * Player attempted to close doors too quickly before the cooldown was finished
      * - a low-medium infraction.
      */
-    RateLimitedRpcCloseDoors = "RATE_LIMITED_RPC_CLOSE_DOORS"
+    RateLimitedRpcCloseDoors = "RATE_LIMITED_RPC_CLOSE_DOORS",
+    /**
+     * Player attempted to complete a task even though they weren't allowed to,
+     * e.g. they weren't a Crewmate - a high infraction.
+     */
+    ForbiddenRpcCompleteTask = "FORBIDDEN_RPC_COMPLETE_TASK",
+    /**
+     * Player attempted to complete a task that wasn't valid, e.g. they didn't
+     * have the task in question - a high infraction.
+     */
+    InvalidRpcCompleteTask = "INVALID_RPC_COMPLETE_TASK",
+    /**
+     * Player attempted to complete a task but they weren't near a console,
+     * or were otherwise incapable of completing it - a high infraction.
+     */
+    UnableRpcCompleteTask = "UNABLE_RPC_COMPLETE_TASK"
 }

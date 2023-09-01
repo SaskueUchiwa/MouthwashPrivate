@@ -68,7 +68,7 @@ import { InfractionName } from "./enums";
 import { MouthwashAuthPlugin } from "hbplugin-mouthwashgg-auth";
 import { getAnticheatExceptions } from "./hooks";
 
-import { ChatModule, MeetingModule, RepairModule, VentModule } from "./modules";
+import { ChatModule, MeetingModule, RepairModule, TaskModule, VentModule } from "./modules";
 
 export enum InfractionSeverity {
     /**
@@ -123,6 +123,7 @@ export class MouthwashAntiCheatPlugin extends RoomPlugin {
     meetingModule: MeetingModule;
     chatModule: ChatModule;
     repairModule: RepairModule;
+    taskModule: TaskModule;
 
     constructor(
         public readonly room: Room,
@@ -141,6 +142,7 @@ export class MouthwashAntiCheatPlugin extends RoomPlugin {
         this.meetingModule = new MeetingModule(this);
         this.chatModule = new ChatModule(this);
         this.repairModule = new RepairModule(this);
+        this.taskModule = new TaskModule(this);
     }
 
     async onPluginLoad() {
@@ -148,6 +150,7 @@ export class MouthwashAntiCheatPlugin extends RoomPlugin {
         this.room.registerEventTarget(this.ventModule);
         this.room.registerEventTarget(this.meetingModule);
         this.room.registerEventTarget(this.repairModule);
+        this.room.registerEventTarget(this.taskModule);
         this.logger.info("Loaded colliders for maps");
     }
 
@@ -155,6 +158,7 @@ export class MouthwashAntiCheatPlugin extends RoomPlugin {
         this.room.removeEventTarget(this.ventModule);
         this.room.removeEventTarget(this.meetingModule);
         this.room.removeEventTarget(this.repairModule);
+        this.room.removeEventTarget(this.taskModule);
     }
 
     // async banPlayer(player: PlayerData<Room>|Connection, role: BaseRole|undefined, reason: AnticheatReason) {
@@ -329,7 +333,9 @@ export class MouthwashAntiCheatPlugin extends RoomPlugin {
                 return closeDoorsOfTypeMessage;
             break;
         case RpcMessageTag.CompleteTask:
-            const completeTaskMessage = rpcMessage as CompleteTaskMessage;
+            const completeTaskInfraction = await this.taskModule.onCompleteTask(sender, rpcMessage as CompleteTaskMessage);
+            if (completeTaskInfraction)
+                return completeTaskInfraction;
             break;
         case RpcMessageTag.EnterVent:
             const enterVentInfraction = await this.ventModule.onEnterVent(sender, rpcMessage as EnterVentMessage);
