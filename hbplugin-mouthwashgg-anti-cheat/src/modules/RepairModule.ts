@@ -59,8 +59,6 @@ export class RepairModule extends EventTarget {
     }
 
     async onRepairSystem(sender: Connection, repairSystemMessage: RepairSystemMessage) {
-        console.log("Got %s from %s", repairSystemMessage, sender);
-
         const repairingPlayer = this.plugin.room.getPlayerByNetId(repairSystemMessage.netId);
         if (repairingPlayer === undefined || repairingPlayer.clientId !== sender.clientId) {
             if (repairSystemMessage.systemId === SystemType.Sabotage) {
