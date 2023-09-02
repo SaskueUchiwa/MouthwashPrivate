@@ -41,10 +41,10 @@ INTERNAL_ACCESS_KEY=""
             database: process.env.POSTGRES_DATABASE!
         },
         port: parseInt(process.env.PORT || "8000"),
-        mailgun: {
+        mailgun: process.env.MAILGUN_DOMAIN ? {
             domain: process.env.MAILGUN_DOMAIN!,
             api_key: process.env.MAILGUN_API_KEY!
-        },
+        } : false,
         base_account_server_url: process.env.BASE_ACCOUNT_SERVER_URL!,
         path_prefix: process.env.PATH_PREFIX || ""
     });

@@ -542,6 +542,8 @@ export class BaseRoom extends Hostable<RoomEvents> {
                             }
                         }
                     }
+                } else if (message.scene === "EndGame") {
+                    player.inScene = false;
                 }
             }
         });
@@ -728,23 +730,21 @@ export class BaseRoom extends Hostable<RoomEvents> {
             if (this.hostIsMe) {
                 for (let i = 0; i < endGameIntents.length; i++) {
                     const intent = endGameIntents[i];
-                    const ev = await this.emit(
-                        new RoomEndGameIntentEvent(
-                            this,
-                            intent.name,
-                            intent.reason,
-                            intent.metadata
-                        )
-                    );
+                    const ev = await this.emit(new RoomEndGameIntentEvent(
+                        this,
+                        intent.name,
+                        intent.reason,
+                        intent.metadata
+                    ));
+            
                     if (ev.canceled) {
                         endGameIntents.splice(i, 1);
                         i--;
                     }
                 }
 
-                const firstIntent = endGameIntents[0];
-                if (firstIntent) {
-                    await this.endGame(firstIntent.reason, firstIntent);
+                if (endGameIntents[0]) {
+                    await this.endGame(endGameIntents[0].reason, endGameIntents[0]);
                 }
             }
         }
@@ -1784,7 +1784,7 @@ export class BaseRoom extends Hostable<RoomEvents> {
     }
 
     async handleEnd(reason: GameOverReason, intent?: EndGameIntent) {
-        if (this.state === GameState.Started)
+        if (this.state !== GameState.Started)
             return;
 
         const waiting = this.waitingForHost;
