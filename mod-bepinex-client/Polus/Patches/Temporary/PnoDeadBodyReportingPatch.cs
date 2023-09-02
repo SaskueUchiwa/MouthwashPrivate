@@ -12,7 +12,6 @@ namespace Polus.Patches.Temporary {
         public static bool OnClock(DeadBody __instance) {
             if (__instance.Reported)
                 return false;
-            if (__instance.ParentId != 255) return true;
             // MessageWriter messageWriter = AmongUsClient.Instance.StartRpc(PlayerControl.LocalPlayer.NetId, (byte)PolusRpcCalls.ReportDeadBody);
             // messageWriter.Write(__instance.GetComponent<PolusDeadBody>().pno.NetId);
             // messageWriter.EndMessage();

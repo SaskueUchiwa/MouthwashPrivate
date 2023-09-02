@@ -1,6 +1,10 @@
-﻿using System.Linq;
+﻿using System.Collections;
+using System.Linq;
 using HarmonyLib;
 using Il2CppSystem;
+using Il2CppSystem.Collections.Generic;
+using Polus.Extensions;
+using PowerTools;
 using UnhollowerBaseLib;
 using UnityEngine;
 
@@ -73,24 +77,42 @@ namespace Polus.Patches.Temporary {
 
 				KillAnimation anim = __instance.KillAnimations[UnityEngine.Random.Range(0, __instance.KillAnimations.Count)];
 				DestroyableSingleton<AchievementManager>.Instance.OnMurder(__instance.AmOwner, target.AmOwner);
-				__instance.MyPhysics.StartCoroutine(anim.CoPerformKill(__instance, target));
+				__instance.MyPhysics.StartCoroutine(DontSpawnDeadBody.CoPerformKillMoveNext(anim, __instance, target));
 				return false;
             }
         }
         
-        [HarmonyPatch(typeof(KillAnimation), nameof(KillAnimation.CoPerformKill))]
         public class DontSpawnDeadBody
         {
-	        [HarmonyPostfix]
-	        public static void CoPerformKill(KillAnimation __instance, PlayerControl source, PlayerControl target)
+	        public static IEnumerator CoPerformKillMoveNext(KillAnimation __instance, PlayerControl source, PlayerControl target)
 	        {
-		        DeadBody[] allDeadBodies = UnityEngine.Object.FindObjectsOfType<DeadBody>();
-		        DeadBody justDied = allDeadBodies.First(body => body.ParentId == target.PlayerId);
-		        
-		        if (justDied == null)
-			        return;
-		        
-		        UnityEngine.Object.Destroy(justDied.gameObject);
+		        FollowerCamera cam = Camera.main.GetComponent<FollowerCamera>();
+		        bool isParticipant = PlayerControl.LocalPlayer == source || PlayerControl.LocalPlayer == target;
+		        PlayerPhysics sourcePhys = source.MyPhysics;
+		        KillAnimation.SetMovement(source, false);
+		        KillAnimation.SetMovement(target, false);
+		        Vector3 vector = target.transform.position + __instance.BodyOffset;
+		        vector.z = vector.y / 1000f;
+		        if (isParticipant)
+		        {
+			        cam.Locked = true;
+			        ConsoleJoystick.SetMode_Task();
+			        if (PlayerControl.LocalPlayer.AmOwner)
+			        {
+				        PlayerControl.LocalPlayer.MyPhysics.inputHandler.enabled = true;
+			        }
+		        }
+		        target.Die(DeathReason.Kill);
+		        SpriteAnim sourceAnim = source.MyAnim;
+		        yield return new WaitForAnimationFinish(sourceAnim, __instance.BlurAnim);
+		        source.NetTransform.SnapTo(target.transform.position);
+		        sourceAnim.Play(sourcePhys.IdleAnim, 1f);
+		        KillAnimation.SetMovement(source, true);
+		        KillAnimation.SetMovement(target, true);
+		        if (isParticipant)
+		        {
+			        cam.Locked = false;
+		        }
 	        }
         }
         
