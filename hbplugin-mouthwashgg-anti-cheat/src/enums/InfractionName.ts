@@ -17,6 +17,21 @@ export enum InfractionName {
      */
     InvalidRpcCode = "INVALID_RPC_CODE",
     /**
+     * Player attempted to update an object that did not exist in the room - a
+     * high infraction.
+     */
+    UnknownDataInnernetObject = "UNKNOWN_DATA_INNERNET_OBJECT",
+    /**
+     * Player attempted to update an object that did not belong to them - a
+     * critical infraction.
+     */
+    ForbiddenDataInnernetObject = "FORBIDDEN_DATA_INNERNET_OBJECT",
+    /**
+     * Player attempted to update an object that normally wouldn't get updated - a
+     * critical infraction.
+     */
+    InvalidDataInnernetObject = "INVALID_DATA_INNERNET_OBJECT",
+    /**
      * Player sent a vote in a meeting that was either not theirs - a critical infraction -
      * or belonged to an invalid player - a critical infraction.
      */
@@ -154,5 +169,45 @@ export enum InfractionName {
      * Player attempted to complete a task but they weren't near a console,
      * or were otherwise incapable of completing it - a high infraction.
      */
-    UnableRpcCompleteTask = "UNABLE_RPC_COMPLETE_TASK"
+    UnableRpcCompleteTask = "UNABLE_RPC_COMPLETE_TASK",
+    /**
+     * Player attempted to spawn an object when they weren't allowed to - a
+     * critical infraction.
+     */
+    ForbiddenSpawn = "FORBIDDEN_SPAWN",
+    /**
+     * Player attempted to despawn an object when they weren't allowed to -
+     * a critical infraction.
+     */
+    ForbiddenDespawn = "FORBIDDEN_DESPAWN",
+    /**
+     * Player attempted to change scene for another player - a critical
+     * infraction.
+     */
+    FalseSceneChange = "FALSE_SCENE_CHANGE",
+    /**
+     * Player attempted to change scene despite not being allowed to - a
+     * critical infraction.
+     */
+    ForbiddenSceneChange = "FORBIDDEN_SCENE_CHANGE",
+    /**
+     * Player attempted to change scene in an invalid state, e.g. the scene
+     * was invalid - a critical infraction.
+     */
+    InvalidSceneChange = "INVALID_SCENE_CHANGE",
+    /**
+     * Player attempted to change scene despite already being in a scene -
+     * a high infraction.
+     */
+    DuplicateSceneChange = "DUPLICATE_SCENE_CHANGE",
+    /**
+     * Player attempted to ready up for another player - a critical
+     * infraction.
+     */
+    FalseReady = "FALSE_READY",
+    /**
+     * Player attempted to ready in an invalid state, e.g. a game has
+     * not started - a high infraction.
+     */
+    InvalidReady = "INVALID_READY"
 }

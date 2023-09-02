@@ -1079,7 +1079,7 @@ export class BaseRoom extends Hostable<RoomEvents> {
             const canceledBefore = message["_canceled"];
             message["_canceled"] = false;
 
-            await this.decoder.emit(message, MessageDirection.Clientbound, ctx);
+            await this.decoder.emit(message, MessageDirection.Serverbound, ctx);
 
             if (message["_canceled"]) {
                 message["_canceled"] = canceledBefore;

@@ -47,7 +47,14 @@ import {
     Skin,
     SnapToMessage,
     ReportDeadBodyMessage as AmongUsReportDeadBodyMessage,
-    InnerShipStatus
+    InnerShipStatus,
+    SpawnMessage,
+    DespawnMessage,
+    SceneChangeMessage,
+    ReadyMessage,
+    DataMessage,
+    HazelReader,
+    MeetingHud
 } from "@skeldjs/hindenburg";
 
 import { BaseRole, Crewmate, Impostor, MouthwashApiPlugin, RoleCtr } from "hbplugin-mouthwashgg-api";
@@ -109,6 +116,7 @@ const impostorExceptions = new Set([ InfractionName.ForbiddenRpcSabotage, Infrac
 const crewmateExceptions = new Set([ InfractionName.ForbiddenRpcRepair, InfractionName.ForbiddenRpcCompleteTask ]);
 
 const allowedShipStatusRpcMessages = new Set([ RpcMessageTag.CloseDoorsOfType, RpcMessageTag.UpdateSystem, RpcMessageTag.RepairSystem ]);
+const allowedMeetingHudRpcMessages = new Set([ RpcMessageTag.CastVote ]);
 
 @HindenburgPlugin("hbplugin-mouthwashgg-anti-cheat", "1.0.0", "last")
 export class MouthwashAntiCheatPlugin extends RoomPlugin {
@@ -283,15 +291,18 @@ export class MouthwashAntiCheatPlugin extends RoomPlugin {
             break;
         case RpcMessageTag.CheckColor:
             const checkColorMessage = rpcMessage as CheckColorMessage;
-            if (!(checkColorMessage.color in Color))
+            if (!(checkColorMessage.color in Color)) {
+                rpcMessage.cancel();
                 return this.createInfraction(sender, InfractionName.InvalidRpcColor,
                     { colorId: checkColorMessage.color },  InfractionSeverity.Critical);
+            }
             break;
         case RpcMessageTag.CheckName:
             const checkNameMessage = rpcMessage as CheckNameMessage;
             const checkNameConnectionUser = await this.authApi.getConnectionUser(sender);
             if (!checkNameConnectionUser) return;
             if (checkNameMessage.name !== checkNameConnectionUser.display_name) {
+                rpcMessage.cancel();
                 return this.createInfraction(sender, InfractionName.InvalidRpcName,
                     { name: checkNameMessage.name },  InfractionSeverity.Critical);
             }
@@ -318,6 +329,7 @@ export class MouthwashAntiCheatPlugin extends RoomPlugin {
         case MouthwashRpcMessageTag.SetChatVisibility:
         case MouthwashRpcMessageTag.CloseHud:
         case MouthwashRpcMessageTag.BeginCameraAnimation:
+            rpcMessage.cancel();
             return this.createInfraction(sender, InfractionName.ForbiddenRpcCode, { netId: component.netId, rpcId: rpcMessage.messageTag, spawnType: component.spawnType }, InfractionSeverity.Critical);
         case RpcMessageTag.ReportDeadBody:
             const reportDeadBodyInfraction = await this.meetingModule.onReportDeadBody(sender, rpcMessage as AmongUsReportDeadBodyMessage);
@@ -368,6 +380,7 @@ export class MouthwashAntiCheatPlugin extends RoomPlugin {
             const setHatConnectionUser = await this.authApi.getConnectionUser(sender);
             if (setHatConnectionUser) {
                 if (!(setHatMessage.hat in Hat) && setHatConnectionUser.owned_cosmetics.findIndex(cosmetic => cosmetic.among_us_id === setHatMessage.hat && cosmetic.type === "HAT") === -1) {
+                    setHatMessage.cancel();
                     return this.createInfraction(sender, InfractionName.InvalidRpcHat, { hatId: setHatMessage.hat }, InfractionSeverity.Critical);
                 }
             }
@@ -378,6 +391,7 @@ export class MouthwashAntiCheatPlugin extends RoomPlugin {
             if (!setPetConnectionUser) return;
             if (setPetConnectionUser) {
                 if (!(setPetMessage.pet in Pet) && setPetConnectionUser.owned_cosmetics.findIndex(cosmetic => cosmetic.among_us_id === setPetMessage.pet && cosmetic.type === "PET") === -1) {
+                    setPetMessage.cancel();
                     return this.createInfraction(sender, InfractionName.InvalidRpcPet, { petId: setPetMessage.pet }, InfractionSeverity.Critical);
                 }
             }
@@ -385,6 +399,7 @@ export class MouthwashAntiCheatPlugin extends RoomPlugin {
             const setSkinMessage = rpcMessage as SetSkinMessage;
             if (setSkinMessage.skin === 9999999 as Skin) return;
             if (!(setSkinMessage.skin in Skin)) {
+                setSkinMessage.cancel();
                 return this.createInfraction(sender, InfractionName.InvalidRpcSkin, { skinId: setSkinMessage.skin }, InfractionSeverity.Critical);
             }
         case RpcMessageTag.SetScanner:
@@ -487,6 +502,7 @@ export class MouthwashAntiCheatPlugin extends RoomPlugin {
                 if (component instanceof DeadBody) return;
                 break;
         }
+        rpcMessage.cancel();
         return this.createInfraction(sender, InfractionName.ForbiddenRpcCode, { netId: component.netId, rpcId: rpcMessage.messageTag, spawnType: component.spawnType }, InfractionSeverity.Critical);
     }
 
@@ -506,6 +522,44 @@ export class MouthwashAntiCheatPlugin extends RoomPlugin {
         return true;
     }
 
+    @MessageHandler(DataMessage, { override: true })
+    async onDataMessage(message: DataMessage, context: PacketContext, originalHandlers: MessageHandlerCallback<DataMessage>[]) {
+        if (message.netid === this.room.gameData?.netId && this.config.serverAsHost && context.sender?.clientId === this.room.host?.clientId)
+            return;
+
+        const component = this.room.netobjects.get(message.netid);
+        if (component) {
+            if (component === this.room.gameData && !this.room["finishedActingHostTransactionRoutine"]) {
+                // it's necessary for the client to do some things for the SaaH acting host transaction.
+                // to combat potential fraud at this stage, we can just ignore any changes to gamedata.
+                message.cancel();
+                return;
+            }
+
+            if (context.sender) {
+                if (!await this.verifyComponentOwnership(component, context.sender)) {
+                    message.cancel();
+                    return await this.createInfraction(context.sender, InfractionName.ForbiddenDataInnernetObject,
+                        { netId: message.netid, spawnType: component.spawnType }, InfractionSeverity.Critical);
+                }
+                if (!(component instanceof CustomNetworkTransform)) {
+                    message.cancel();
+                    return await this.createInfraction(context.sender, InfractionName.InvalidDataInnernetObject,
+                        { netId: message.netid, spawnType: component.spawnType }, InfractionSeverity.Critical);
+                }
+            }
+
+            const reader = HazelReader.from(message.data);
+            component.Deserialize(reader);
+        } else {
+            if (context.sender) {
+                message.cancel();
+                return await this.createInfraction(context.sender, InfractionName.UnknownDataInnernetObject,
+                    { netId: message.netid }, InfractionSeverity.Critical);
+            }
+        }
+    }
+
     @MessageHandler(RpcMessage, { override: true })
     async onRpcMessage(message: RpcMessage, context: PacketContext, originalHandlers: MessageHandlerCallback<RpcMessage>[]) {
         if (this.room.host && this.room.host.clientId === context.sender?.clientId && !this.room["finishedActingHostTransactionRoutine"] && message.data instanceof SyncSettingsMessage) {
@@ -519,13 +573,18 @@ export class MouthwashAntiCheatPlugin extends RoomPlugin {
         if (component) {
             if (context.sender) {
                 if (!await this.verifyComponentOwnership(component, context.sender)) {
-                    if (!(component instanceof InnerShipStatus) || !allowedShipStatusRpcMessages.has(message.data.messageTag)) {
-                        this.createInfraction(context.sender, InfractionName.ForbiddenRpcInnernetObject, { netId: message.netid, rpcId: message.data.messageTag, spawnType: component.spawnType }, InfractionSeverity.Critical);
-                        return;
+                    if ((!(component instanceof InnerShipStatus) || !allowedShipStatusRpcMessages.has(message.data.messageTag))
+                        && (!(component instanceof MeetingHud) || !allowedMeetingHudRpcMessages.has(message.data.messageTag))) {
+                        message.cancel();
+                        return await this.createInfraction(context.sender, InfractionName.ForbiddenRpcInnernetObject,
+                                { netId: message.netid, rpcId: message.data.messageTag, spawnType: component.spawnType }, InfractionSeverity.Critical);
                     }
                 }
                 const infraction = await this.onRpcMessageData(component, message.data, context.sender);
-                if (infraction && infraction.severity === InfractionSeverity.Critical) return;
+                if (infraction && infraction.severity === InfractionSeverity.Critical) {
+                    message.cancel();
+                    return;
+                }
             }
 
             try {
@@ -539,6 +598,94 @@ export class MouthwashAntiCheatPlugin extends RoomPlugin {
                 this.createInfraction(context.sender, InfractionName.UnknownRpcInnernetObject, { netId: message.netid, rpcId: message.data.messageTag }, InfractionSeverity.Medium);
             }
             this.logger.warn("Got remote procedure call for non-existent component: net id %s. There is a chance that a player is using this to communicate discreetly with another player", message.netid);
+        }
+    }
+
+    @MessageHandler(SpawnMessage, { override: true })
+    async onSpawnMessage(message: SpawnMessage, context: PacketContext, originalHandlers: MessageHandlerCallback<SpawnMessage>[]) {
+        if (context.sender) {
+            const defaultInfraction = await this.createInfraction(context.sender, InfractionName.ForbiddenSpawn,
+                { spawnType: message.spawnType, ownerId: message.ownerid }, InfractionSeverity.Critical);
+            if (defaultInfraction) {
+                message.cancel();
+                return;
+            }
+        }
+
+        for (const originalHandler of originalHandlers) {
+            await originalHandler(message, context);
+        }
+    }
+
+    @MessageHandler(DespawnMessage, { override: true })
+    async onDespawnMessage(message: DespawnMessage, context: PacketContext, originalHandlers: MessageHandlerCallback<DespawnMessage>[]) {
+        if (context.sender) {
+            const defaultInfraction = await this.createInfraction(context.sender, InfractionName.ForbiddenDespawn,
+                { netId: message.netid }, InfractionSeverity.Critical);
+            if (defaultInfraction) {
+                message.cancel();
+                return;
+            }
+        }
+
+        for (const originalHandler of originalHandlers) {
+            await originalHandler(message, context);
+        }
+    }
+
+    @MessageHandler(SceneChangeMessage, { override: true })
+    async onSceneChangeMessage(message: SceneChangeMessage, context: PacketContext, originalHandlers: MessageHandlerCallback<SceneChangeMessage>[]) {
+        if (context.sender) {
+            if (message.clientid !== context.sender.clientId)
+                return await this.createInfraction(context.sender, InfractionName.FalseSceneChange,
+                    { clientId: message.clientid, sceneName: message.scene }, InfractionSeverity.Critical);
+    
+            if (message.scene !== "OnlineGame") {
+                message.cancel();
+                return await this.createInfraction(context.sender, InfractionName.InvalidSceneChange,
+                    { sceneName: message.scene }, InfractionSeverity.Critical);
+            }
+
+            const player = this.room.players.get(message.clientid);
+            if (!player) {
+                message.cancel();
+                return await this.createInfraction(context.sender, InfractionName.ForbiddenSceneChange,
+                    { sceneName: message.scene }, InfractionSeverity.Critical);
+            }
+
+            if (player.inScene) {
+                return await this.createInfraction(context.sender, InfractionName.DuplicateSceneChange,
+                    { sceneName: message.scene }, InfractionSeverity.High);
+            }
+        }
+        
+        for (const originalHandler of originalHandlers) {
+            await originalHandler(message, context);
+        }
+    }
+
+    @MessageHandler(ReadyMessage, { override: true })
+    async onReadyMessage(message: ReadyMessage, context: PacketContext, originalHandlers: MessageHandlerCallback<ReadyMessage>[]) {
+        if (context.sender) {
+            if (message.clientid !== context.sender.clientId) {
+                message.cancel();
+                return await this.createInfraction(context.sender, InfractionName.FalseReady,
+                    { clientId: message.clientid }, InfractionSeverity.Critical);
+            }
+
+            const player = this.room.players.get(message.clientid);
+            if (!player) {
+                return await this.createInfraction(context.sender, InfractionName.InvalidReady,
+                    { clientId: message.clientid }, InfractionSeverity.High);
+            }
+            if (player.isReady) {
+                return await this.createInfraction(context.sender, InfractionName.InvalidReady,
+                    { clientId: message.clientid, isReady: true }, InfractionSeverity.High);
+            }
+        }
+
+        for (const originalHandler of originalHandlers) {
+            await originalHandler(message, context);
         }
     }
 
