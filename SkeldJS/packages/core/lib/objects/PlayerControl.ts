@@ -5,6 +5,7 @@ import {
     CheckColorMessage,
     CheckNameMessage,
     CompleteTaskMessage,
+    ComponentSpawnData,
     GameSettings,
     MurderPlayerMessage,
     QuickChatMessageData,
@@ -23,6 +24,7 @@ import {
     SetPetMessage,
     SetSkinMessage,
     SetStartCounterMessage,
+    SpawnMessage,
     StartMeetingMessage,
     SyncSettingsMessage,
     UsePlatformMessage
@@ -1119,7 +1121,10 @@ export class PlayerControl<RoomType extends Hostable = Hostable> extends Network
 
         const spawnMeetinghud = this.room.spawnPrefab(
             SpawnType.MeetingHud,
-            -2
+            -2,
+            undefined,
+            undefined,
+            false
         ) as MeetingHud<RoomType>;
 
         const callerState = spawnMeetinghud.voteStates.get(caller.playerId);
@@ -1131,6 +1136,23 @@ export class PlayerControl<RoomType extends Hostable = Hostable> extends Network
         if (movingPlatform instanceof MovingPlatformSystem) {
             movingPlatform.setSide(MovingPlatformSide.Left);
         }
+        
+        this.room.stream.push(
+            new SpawnMessage(
+                SpawnType.MeetingHud,
+                -2,
+                0,
+                spawnMeetinghud.components.map((component) => {
+                    const writer = HazelWriter.alloc(0);
+                    writer.write(component, true);
+
+                    return new ComponentSpawnData(
+                        component.netId,
+                        writer.buffer
+                    );
+                })
+            )
+        );
     }
 
     private _rpcStartMeeting(player: PlayerData|"emergency"): void {
