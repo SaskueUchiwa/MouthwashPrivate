@@ -15,6 +15,9 @@ namespace Polus.Patches.Temporary {
             // MessageWriter messageWriter = AmongUsClient.Instance.StartRpc(PlayerControl.LocalPlayer.NetId, (byte)PolusRpcCalls.ReportDeadBody);
             // messageWriter.Write(__instance.GetComponent<PolusDeadBody>().pno.NetId);
             // messageWriter.EndMessage();
+            if (PlayerControl.LocalPlayer.Data.IsDead)
+                return false;
+            
             __instance.GetComponent<PolusDeadBody>().OnReported(PlayerControl.LocalPlayer.NetId);
             return false;
         }
