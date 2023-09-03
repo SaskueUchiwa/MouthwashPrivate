@@ -13,6 +13,7 @@
         "typescript": "latest"
     },
     "dependencies": {
+        "hbplugin-mouthwashgg-anti-cheat": "workspace:*",
         "hbplugin-mouthwashgg-api": "workspace:*",
         "mouthwash-types": "workspace:*"
     }

@@ -32,6 +32,8 @@ import {
     PlayerAnimationKeyframe,
     RGBA
 } from "mouthwash-types";
+import { AnticheatExceptions, InfractionName } from "hbplugin-mouthwashgg-anti-cheat";
+
 import { TownOfPolusOptionName } from "../../gamemode";
 
 const grenadierColor = new RGBA(15, 61, 120, 255);
@@ -43,6 +45,7 @@ export const GrenadierOptionName = {
 
 @MouthwashRole("Grenadier", RoleAlignment.Impostor, grenadierColor, EmojiService.getEmoji("grenadier"))
 @RoleObjective("Use the flashbangs to blind the " + Crewmate.metadata.themeColor.text("Crewmates"))
+@AnticheatExceptions([ InfractionName.ForbiddenRpcSabotage, InfractionName.ForbiddenRpcVent, InfractionName.ForbiddenRpcCloseDoors ])
 export class Grenadier extends Impostor {
     static getGameOptions(gameOptions: Map<string, GameOption>) {
         const roleOptions = new Map<any, any>([]);

@@ -5,6 +5,7 @@ import {
     PlayerDieEvent,
     Room
 } from "@skeldjs/hindenburg";
+import { AnticheatExceptions, InfractionName } from "hbplugin-mouthwashgg-anti-cheat";
 
 import {
     AssetReference,
@@ -21,7 +22,6 @@ import {
 
 import {
     GameOption,
-    NumberValue,
     Palette,
     RGBA
 } from "mouthwash-types";
@@ -34,6 +34,7 @@ export const JesterOptionName = {
 
 @MouthwashRole("Jester", RoleAlignment.Neutral, jesterColor, EmojiService.getEmoji("jester"))
 @RoleObjective("Trick everyone into voting you out")
+@AnticheatExceptions([ InfractionName.ForbiddenRpcRepair ])
 export class Jester extends BaseRole {
     static getGameOptions(gameOptions: Map<string, GameOption>) {
         const roleOptions = new Map<any, any>([]);

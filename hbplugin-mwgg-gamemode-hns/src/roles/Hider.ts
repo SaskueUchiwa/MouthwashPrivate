@@ -15,19 +15,19 @@ import {
     MouthwashRole,
     RoleAlignment,
     RoleAssignment,
-    RoleGameOption,
     RoleObjective,
     StartGameScreen
 } from "hbplugin-mouthwashgg-api";
 
 import {
     EnumValue,
-    GameOption,
     NumberValue,
     Palette,
     PlayerAnimationKeyframe,
     RGBA
 } from "mouthwash-types";
+import { AnticheatExceptions, InfractionName } from "hbplugin-mouthwashgg-anti-cheat";
+
 import { seekerColor } from "./Seeker";
 import { HnSOptionName } from "../gamemode";
 
@@ -38,7 +38,8 @@ export const HiderOptionName = {
 } as const;
 
 @MouthwashRole("Hider", RoleAlignment.Crewmate, hiderColor, EmojiService.getEmoji("crewmate"))
-@RoleObjective("Finish your tasks and escape from the " + seekerColor.text("Seekers") + "!")
+@RoleObjective(`Finish your tasks and escape from the ${seekerColor.text("Seekers")}!`)
+@AnticheatExceptions([ InfractionName.ForbiddenRpcCompleteTask ])
 export class Hider extends Crewmate {
     protected _playerSpeed: number;
 

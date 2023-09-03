@@ -35,6 +35,7 @@ import {
     Priority,
     RGBA
 } from "mouthwash-types";
+import { AnticheatExceptions, InfractionName } from "hbplugin-mouthwashgg-anti-cheat";
 
 import { TownOfPolusOptionName } from "../../gamemode";
 
@@ -46,6 +47,7 @@ export const IdentityThiefOptionName = {
 
 @MouthwashRole("Identity Thief", RoleAlignment.Neutral, identityThiefColor, EmojiService.getEmoji("identitythief"))
 @RoleObjective("Steal someone's identity and complete their objective")
+@AnticheatExceptions([ InfractionName.ForbiddenRpcRepair ])
 export class IdentityThief extends BaseRole {
     static getGameOptions(gameOptions: Map<string, GameOption>) {
         const roleOptions = new Map<any, any>([]);

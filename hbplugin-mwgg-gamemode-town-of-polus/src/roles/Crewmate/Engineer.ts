@@ -24,6 +24,7 @@ import {
 import { EnumValue, GameOption, NumberValue, Palette, RGBA } from "mouthwash-types";
 
 import { TownOfPolusOptionName } from "../../gamemode";
+import { AnticheatExceptions, InfractionName } from "hbplugin-mouthwashgg-anti-cheat";
 
 const engineerColor = new RGBA(248, 191, 20, 255);
 const fixAsset = new AssetReference("PggResources/TownOfPolus", "Assets/Mods/TownOfPolus/Fix.png");
@@ -39,6 +40,7 @@ export enum EngineerUses {
 
 @MouthwashRole("Engineer", RoleAlignment.Crewmate, engineerColor, EmojiService.getEmoji("engineer"))
 @RoleObjective("Fix sabotages and finish your tasks")
+@AnticheatExceptions([ InfractionName.ForbiddenRpcRepair, InfractionName.ForbiddenRpcCompleteTask ])
 export class Engineer extends Crewmate {
     static getGameOptions(gameOptions: Map<string, GameOption>) {
         const roleOptions = new Map<any, any>([]);

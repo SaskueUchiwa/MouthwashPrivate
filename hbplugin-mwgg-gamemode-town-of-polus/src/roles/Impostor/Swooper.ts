@@ -8,7 +8,6 @@ import {
 
 import {
     AssetReference,
-    BaseRole,
     Button,
     EmojiService,
     EventListener,
@@ -28,6 +27,8 @@ import {
     PlayerAnimationKeyframe,
     RGBA
 } from "mouthwash-types";
+import { AnticheatExceptions, InfractionName } from "hbplugin-mouthwashgg-anti-cheat";
+
 import { TownOfPolusOptionName } from "../../gamemode";
 
 const swooperColor = new RGBA(150, 150, 150, 255);
@@ -40,6 +41,7 @@ export const SwooperOptionName = {
 @MouthwashRole("Swooper", RoleAlignment.Impostor, swooperColor, EmojiService.getEmoji("crewmate"))
 @RoleObjective(`Sabotage and kill the crewmates.
 Use the swoop ability to turn invisible.`)
+@AnticheatExceptions([ InfractionName.ForbiddenRpcSabotage, InfractionName.ForbiddenRpcVent, InfractionName.ForbiddenRpcCloseDoors ])
 export class Swooper extends Impostor {
     static getGameOptions(gameOptions: Map<string, GameOption>) {
         const roleOptions = new Map<any, any>([]);

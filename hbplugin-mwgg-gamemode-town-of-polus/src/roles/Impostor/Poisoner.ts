@@ -34,6 +34,7 @@ import {
     Priority,
     RGBA
 } from "mouthwash-types";
+import { AnticheatExceptions, InfractionName } from "hbplugin-mouthwashgg-anti-cheat";
 
 import { TownOfPolusOptionName } from "../../gamemode";
 
@@ -54,6 +55,7 @@ const killDistanceToRange = {
 
 @MouthwashRole("Poisoner", RoleAlignment.Impostor, poisonerColor, EmojiService.getEmoji("poisoner"))
 @RoleObjective("Sabotage and poison the crewmates")
+@AnticheatExceptions([ InfractionName.ForbiddenRpcSabotage, InfractionName.ForbiddenRpcVent, InfractionName.ForbiddenRpcCloseDoors ])
 export class Poisoner extends Impostor {
     static getGameOptions(gameOptions: Map<string, GameOption>) {
         const roleOptions = new Map<any, any>([]);

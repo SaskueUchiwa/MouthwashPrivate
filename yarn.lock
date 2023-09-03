@@ -3744,6 +3744,7 @@ __metadata:
   resolution: "hbplugin-mwgg-gamemode-town-of-polus@workspace:hbplugin-mwgg-gamemode-town-of-polus"
   dependencies:
     "@skeldjs/hindenburg": "workspace:*"
+    hbplugin-mouthwashgg-anti-cheat: "workspace:*"
     hbplugin-mouthwashgg-api: "workspace:*"
     mouthwash-types: "workspace:*"
     typescript: ^4.4.4
@@ -3756,6 +3757,7 @@ __metadata:
   dependencies:
     "@skeldjs/hindenburg": "workspace:*"
     "@types/node": latest
+    hbplugin-mouthwashgg-anti-cheat: "workspace:*"
     hbplugin-mouthwashgg-api: "workspace:*"
     mouthwash-types: "workspace:*"
     typescript: latest
