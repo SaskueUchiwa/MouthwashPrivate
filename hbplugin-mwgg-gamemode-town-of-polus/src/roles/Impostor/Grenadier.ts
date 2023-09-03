@@ -32,7 +32,7 @@ import {
     PlayerAnimationKeyframe,
     RGBA
 } from "mouthwash-types";
-import { TownOfPolusOptionName } from "../gamemode";
+import { TownOfPolusOptionName } from "../../gamemode";
 
 const grenadierColor = new RGBA(15, 61, 120, 255);
 

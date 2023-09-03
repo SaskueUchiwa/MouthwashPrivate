@@ -23,7 +23,7 @@ import {
 
 import { EnumValue, GameOption, NumberValue, Palette, RGBA } from "mouthwash-types";
 
-import { TownOfPolusOptionName } from "../gamemode";
+import { TownOfPolusOptionName } from "../../gamemode";
 
 const engineerColor = new RGBA(248, 191, 20, 255);
 const fixAsset = new AssetReference("PggResources/TownOfPolus", "Assets/Mods/TownOfPolus/Fix.png");

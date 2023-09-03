@@ -35,7 +35,7 @@ import {
     RGBA
 } from "mouthwash-types";
 
-import { TownOfPolusOptionName } from "../gamemode";
+import { TownOfPolusOptionName } from "../../gamemode";
 
 const poisonerColor = new RGBA(160, 0, 252, 255);
 

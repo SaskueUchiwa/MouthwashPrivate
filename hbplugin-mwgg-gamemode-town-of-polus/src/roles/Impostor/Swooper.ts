@@ -28,7 +28,7 @@ import {
     PlayerAnimationKeyframe,
     RGBA
 } from "mouthwash-types";
-import { TownOfPolusOptionName } from "../gamemode";
+import { TownOfPolusOptionName } from "../../gamemode";
 
 const swooperColor = new RGBA(150, 150, 150, 255);
 

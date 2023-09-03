@@ -35,7 +35,7 @@ import {
     WinSound
 } from "mouthwash-types";
 
-import { TownOfPolusOptionName } from "../gamemode";
+import { TownOfPolusOptionName } from "../../gamemode";
 
 const sheriffColor = new RGBA(196, 150, 69, 255);
 
