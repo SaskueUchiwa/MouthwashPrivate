@@ -68,7 +68,6 @@ export class Impostor extends BaseRole {
                 this.player.transform?.snapTo(this._killTarget.transform.position);
             }
             this.patchMurderPlayer(this._killTarget, this._killTarget);
-            this._killTarget.control?.murderPlayer(this._killTarget);
             this._killButton.setCurrentTime(this._killButton.maxTimer);
         });
     }

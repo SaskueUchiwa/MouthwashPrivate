@@ -40,7 +40,6 @@ namespace Polus.Patches.Temporary {
 					}
 					__instance.SetKillTimer(PlayerControl.GameOptions.KillCooldown);
 				}
-				target.gameObject.layer = LayerMask.NameToLayer("Ghost");
 				if (target.AmOwner)
 				{
 					StatsManager instance2 = StatsManager.Instance;
@@ -102,7 +101,6 @@ namespace Polus.Patches.Temporary {
 				        PlayerControl.LocalPlayer.MyPhysics.inputHandler.enabled = true;
 			        }
 		        }
-		        target.Die(DeathReason.Kill);
 		        SpriteAnim sourceAnim = source.MyAnim;
 		        yield return new WaitForAnimationFinish(sourceAnim, __instance.BlurAnim);
 		        source.NetTransform.SnapTo(target.transform.position);

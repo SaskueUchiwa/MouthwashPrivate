@@ -4,7 +4,7 @@ import { AssetReference, ButtonSpawnInfo, RoleAssignment } from "../services";
 import { MouthwashApiPlugin } from "../plugin";
 import { RoleMetadata, StartGameScreen } from "./interfaces";
 import { RoleRegisteredEventListenerInfo } from "./hooks";
-import { RoleAlignment } from ".";
+import { RoleAlignment } from "./enums";
 
 export class RoleGameOption {
     constructor(

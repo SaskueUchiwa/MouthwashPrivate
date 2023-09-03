@@ -117,7 +117,12 @@ export class DeadBodyService {
         const controller = new DeadBodyController(spawnedObject);
         const ev = new DeadBodySpawnEvent(controller);
         await this.plugin.room.emit(ev);
-        if (ev.canceled) return undefined;
+        if (ev.canceled) {
+            for (const component of spawnedObject.components) {
+                this.plugin.room["_despawnComponent"](component);
+            }
+            return undefined;
+        }
 
         const dbWriter = HazelWriter.alloc(4);
         dbWriter.write(spawnedObject);

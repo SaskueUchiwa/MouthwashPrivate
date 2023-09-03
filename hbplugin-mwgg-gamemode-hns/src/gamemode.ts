@@ -47,7 +47,7 @@ import {
 import { Hider, Seeker, hiderColor, seekerColor } from "./roles";
 
 export const HnSOptionName = {
-    NumSeekers: "Seeker Count",
+    NumSeekers: `${seekerColor.text("Seeker")} Count`,
     ChatAccess: "Chat",
     GameDuration: "Game Duration",
     TaskCompletion: "Task Completion",
