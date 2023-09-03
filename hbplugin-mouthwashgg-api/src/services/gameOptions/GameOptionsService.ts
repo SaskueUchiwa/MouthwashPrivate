@@ -173,7 +173,7 @@ export class GameOptionsService {
         try {
             gameOption.setValue(message.option.getValue(), true);
             this.updateCachedValue(gameOption, message.option.getValue());
-            await this.plugin.room.emit(
+            const ev = await this.plugin.room.emit(
                 new MouthwashUpdateGameOptionEvent(
                     this.plugin.room,
                     this,
@@ -182,7 +182,18 @@ export class GameOptionsService {
                     gameOption.getValue()
                 )
             );
-            connection.room?.broadcastMessages([], [ message ], undefined, [ connection ]);
+            if (ev.reverted) {
+                gameOption.setValue(oldValue);
+                this.updateCachedValue(gameOption, message.option.getValue());
+                connection.room?.broadcastMessages([ ], [
+                    new SetGameOptionMessage(
+                        0,
+                        gameOption
+                    )
+                ], [ connection ]);
+            } else {
+                connection.room?.broadcastMessages([], [ message ], undefined, [ connection ]);
+            }
         } catch (e) {
             this.plugin.logger.error("Error handling set option", e);
         }

@@ -464,6 +464,16 @@ export class MouthwashApiPlugin extends RoomPlugin {
             this.updateDefaultSettings();
         }
 
+        if (ev.optionKey === DefaultRoomOptionName.CommonTasks || ev.optionKey === DefaultRoomOptionName.LongTasks || ev.optionKey === DefaultRoomOptionName.ShortTasks) {
+            const commonTasks = this.gameOptions.gameOptions.get(DefaultRoomOptionName.CommonTasks)?.getValue<NumberValue>();
+            const longTasks = this.gameOptions.gameOptions.get(DefaultRoomOptionName.LongTasks)?.getValue<NumberValue>();
+            const shortTasks = this.gameOptions.gameOptions.get(DefaultRoomOptionName.ShortTasks)?.getValue<NumberValue>();
+
+            if (commonTasks && longTasks && shortTasks && commonTasks.isRoughlyEqual(0) && longTasks.isRoughlyEqual(0) && shortTasks.isRoughlyEqual(0)) {
+                ev.revert();
+            }
+        }
+
         if (this.gamemode) {
             await this.doGameOptionTransition();
         }

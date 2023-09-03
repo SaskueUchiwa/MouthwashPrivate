@@ -206,6 +206,11 @@ export class MeetingHud<RoomType extends Hostable = Hostable> extends Networkabl
 
     private _close() {
         this.room["_despawnComponent"](this);
+        if (this.room.shipStatus) {
+            for (const [ , player ] of this.room.players) {
+                this.room.shipStatus.spawnPlayer(player, true);
+            }
+        }
     }
 
     private _rpcClose() {

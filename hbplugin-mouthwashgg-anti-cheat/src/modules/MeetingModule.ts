@@ -87,7 +87,7 @@ export class MeetingModule extends EventTarget {
 
         setTimeout(() => {
             this._inDiscussionTime = false;
-        }, 8000 + this.plugin.room.settings.discussionTime * 1000);
+        }, 5000 + this.plugin.room.settings.discussionTime * 1000);
     }
 
     @EventListener()

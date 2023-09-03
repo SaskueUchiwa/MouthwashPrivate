@@ -1136,6 +1136,13 @@ export class PlayerControl<RoomType extends Hostable = Hostable> extends Network
         if (movingPlatform instanceof MovingPlatformSystem) {
             movingPlatform.setSide(MovingPlatformSide.Left);
         }
+
+        for (const [ , player ] of this.room.players) {
+            const playerPhysics = player.physics;
+            if (playerPhysics && playerPhysics.ventid !== -1) {
+                playerPhysics.exitVent(playerPhysics.ventid)
+            }
+        }
         
         this.room.stream.push(
             new SpawnMessage(

@@ -1,10 +1,10 @@
-import { BasicEvent } from "@skeldjs/events";
+import { RevertableEvent } from "@skeldjs/events";
 import { Room } from "@skeldjs/hindenburg";
 
 import { AnyGameOptionType } from "mouthwash-types";
 import { GameOptionsService } from "../services";
 
-export class MouthwashUpdateGameOptionEvent extends BasicEvent {
+export class MouthwashUpdateGameOptionEvent extends RevertableEvent {
     static eventName = "mwgg.gameoption.update" as const;
     eventName = "mwgg.gameoption.update" as const;
 
