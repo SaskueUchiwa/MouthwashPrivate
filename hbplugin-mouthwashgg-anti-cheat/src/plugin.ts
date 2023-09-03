@@ -275,9 +275,86 @@ export class MouthwashAntiCheatPlugin extends RoomPlugin {
         return infraction;
     }
 
+    async validateRpcUsage(component: Networkable, rpcMessage: BaseRpcMessage, sender: Connection) {
+        switch (rpcMessage.messageTag as number) {
+            case RpcMessageTag.AddVote:
+                if (this.room.voteBanSystem === component) return;
+                break;
+            case RpcMessageTag.CastVote:
+            case RpcMessageTag.ClearVote:
+            case RpcMessageTag.Close:
+            case RpcMessageTag.VotingComplete:
+                if (this.room.meetingHud === component) return;
+                break;
+            case RpcMessageTag.CheckColor:
+            case RpcMessageTag.CheckName:
+            case RpcMessageTag.CompleteTask:
+            case RpcMessageTag.Exiled:
+            case RpcMessageTag.MurderPlayer:
+            case RpcMessageTag.PlayAnimation:
+            case RpcMessageTag.ReportDeadBody:
+            case RpcMessageTag.SendChat:
+            case RpcMessageTag.SendChatNote:
+            case RpcMessageTag.SendQuickChat:
+            case RpcMessageTag.SetColor:
+            case RpcMessageTag.SetHat:
+            case RpcMessageTag.SetInfected:
+            case RpcMessageTag.SetName:
+            case RpcMessageTag.SetPet:
+            case RpcMessageTag.SetScanner:
+            case RpcMessageTag.SetSkin:
+            case RpcMessageTag.SetStartCounter:
+            case RpcMessageTag.SetTasks:
+            case RpcMessageTag.StartMeeting:
+            case RpcMessageTag.SyncSettings:
+            case RpcMessageTag.UsePlatform:
+            case MouthwashRpcMessageTag.SetOpacity:
+            case MouthwashRpcMessageTag.SetOutline:
+            case MouthwashRpcMessageTag.SetPlayerSpeedModifier:
+            case MouthwashRpcMessageTag.SetPlayerVisionModifier:
+            case MouthwashRpcMessageTag.BeginPlayerAnimation:
+                if (component instanceof PlayerControl) return;
+                break;
+            case RpcMessageTag.ClimbLadder:
+            case RpcMessageTag.EnterVent:
+            case RpcMessageTag.ExitVent:
+                if (component instanceof PlayerPhysics) return;
+                break;
+            case RpcMessageTag.SnapTo:
+                if (component instanceof CustomNetworkTransform) return;
+                break;
+            case RpcMessageTag.RepairSystem:
+            case RpcMessageTag.CloseDoorsOfType:
+            case RpcMessageTag.UpdateSystem:
+                if (this.room.shipStatus === component) return;
+                break;
+            case MouthwashRpcMessageTag.SetChatVisibility:
+            case MouthwashRpcMessageTag.CloseHud:
+            if (this.room.gameData === component) return;
+                break;
+            case MouthwashRpcMessageTag.BeginCameraAnimation:
+                if (component instanceof CameraController) return;
+                break;
+            case MouthwashRpcMessageTag.SetCountingDown:
+            case MouthwashRpcMessageTag.Click:
+                if (component instanceof ClickBehaviour) return;
+                break;
+            case MouthwashRpcMessageTag.ReportDeadBody:
+                if (component instanceof DeadBody) return;
+                break;
+        }
+        
+        rpcMessage.cancel();
+        return this.createInfraction(sender, InfractionName.ForbiddenRpcCode, { netId: component.netId, rpcId: rpcMessage.messageTag, spawnType: component.spawnType }, InfractionSeverity.Critical);
+    }
+
     async onRpcMessageData(component: Networkable, rpcMessage: BaseRpcMessage, sender: Connection) {
         if (!(rpcMessage.messageTag in RpcMessageTag) && !(rpcMessage.messageTag in MouthwashRpcMessageTag))
             return this.createInfraction(sender, InfractionName.InvalidRpcCode, { netId: component.netId, rpcId: rpcMessage.messageTag }, InfractionSeverity.High);
+
+        const usageInfraction = await this.validateRpcUsage(component, rpcMessage, sender);
+        if (usageInfraction)
+            return usageInfraction;
 
         switch (rpcMessage.messageTag) {
         case RpcMessageTag.AddVote:
@@ -332,9 +409,9 @@ export class MouthwashAntiCheatPlugin extends RoomPlugin {
             rpcMessage.cancel();
             return this.createInfraction(sender, InfractionName.ForbiddenRpcCode, { netId: component.netId, rpcId: rpcMessage.messageTag, spawnType: component.spawnType }, InfractionSeverity.Critical);
         case RpcMessageTag.ReportDeadBody:
-            const reportDeadBodyInfraction = await this.meetingModule.onReportDeadBody(sender, rpcMessage as AmongUsReportDeadBodyMessage);
-            if (reportDeadBodyInfraction)
-                return reportDeadBodyInfraction;
+            const amongUsReportDeadBodyInfraction = await this.meetingModule.onAmongUsReportDeadBody(sender, rpcMessage as AmongUsReportDeadBodyMessage);
+            if (amongUsReportDeadBodyInfraction)
+                return amongUsReportDeadBodyInfraction;
             break;
         case RpcMessageTag.ClimbLadder:
             const climbLadderMessage = rpcMessage as ClimbLadderMessage;
@@ -429,81 +506,13 @@ export class MouthwashAntiCheatPlugin extends RoomPlugin {
             const setCountingDownMessage = rpcMessage;
             break;
         case MouthwashRpcMessageTag.ReportDeadBody:
-            const reportDeadBodyMessage = rpcMessage as ReportDeadBodyMessage;
+            const reportDeadBodyInfraction = await this.meetingModule.onReportDeadBody(sender, component as DeadBody, rpcMessage as ReportDeadBodyMessage);
+            if (reportDeadBodyInfraction)
+                return reportDeadBodyInfraction;
             break;
         default:
             return this.createInfraction(sender, InfractionName.InvalidRpcCode, { netId: component.netId, rpcId: rpcMessage.messageTag }, InfractionSeverity.High);
         }
-
-        switch (rpcMessage.messageTag as number) {
-            case RpcMessageTag.AddVote:
-                if (this.room.voteBanSystem === component) return;
-                break;
-            case RpcMessageTag.CastVote:
-            case RpcMessageTag.ClearVote:
-            case RpcMessageTag.Close:
-            case RpcMessageTag.VotingComplete:
-                if (this.room.meetingHud === component) return;
-                break;
-            case RpcMessageTag.CheckColor:
-            case RpcMessageTag.CheckName:
-            case RpcMessageTag.CompleteTask:
-            case RpcMessageTag.Exiled:
-            case RpcMessageTag.MurderPlayer:
-            case RpcMessageTag.PlayAnimation:
-            case RpcMessageTag.ReportDeadBody:
-            case RpcMessageTag.SendChat:
-            case RpcMessageTag.SendChatNote:
-            case RpcMessageTag.SendQuickChat:
-            case RpcMessageTag.SetColor:
-            case RpcMessageTag.SetHat:
-            case RpcMessageTag.SetInfected:
-            case RpcMessageTag.SetName:
-            case RpcMessageTag.SetPet:
-            case RpcMessageTag.SetScanner:
-            case RpcMessageTag.SetSkin:
-            case RpcMessageTag.SetStartCounter:
-            case RpcMessageTag.SetTasks:
-            case RpcMessageTag.StartMeeting:
-            case RpcMessageTag.SyncSettings:
-            case RpcMessageTag.UsePlatform:
-            case MouthwashRpcMessageTag.SetOpacity:
-            case MouthwashRpcMessageTag.SetOutline:
-            case MouthwashRpcMessageTag.SetPlayerSpeedModifier:
-            case MouthwashRpcMessageTag.SetPlayerVisionModifier:
-            case MouthwashRpcMessageTag.BeginPlayerAnimation:
-                if (component instanceof PlayerControl) return;
-                break;
-            case RpcMessageTag.ClimbLadder:
-            case RpcMessageTag.EnterVent:
-            case RpcMessageTag.ExitVent:
-                if (component instanceof PlayerPhysics) return;
-                break;
-            case RpcMessageTag.SnapTo:
-                if (component instanceof CustomNetworkTransform) return;
-                break;
-            case RpcMessageTag.RepairSystem:
-            case RpcMessageTag.CloseDoorsOfType:
-            case RpcMessageTag.UpdateSystem:
-                if (this.room.shipStatus === component) return;
-                break;
-            case MouthwashRpcMessageTag.SetChatVisibility:
-            case MouthwashRpcMessageTag.CloseHud:
-            if (this.room.gameData === component) return;
-                break;
-            case MouthwashRpcMessageTag.BeginCameraAnimation:
-                if (component instanceof CameraController) return;
-                break;
-            case MouthwashRpcMessageTag.SetCountingDown:
-            case MouthwashRpcMessageTag.Click:
-                if (component instanceof ClickBehaviour) return;
-                break;
-            case MouthwashRpcMessageTag.ReportDeadBody:
-                if (component instanceof DeadBody) return;
-                break;
-        }
-        rpcMessage.cancel();
-        return this.createInfraction(sender, InfractionName.ForbiddenRpcCode, { netId: component.netId, rpcId: rpcMessage.messageTag, spawnType: component.spawnType }, InfractionSeverity.Critical);
     }
 
     async verifyComponentOwnership(component: Networkable<Room>, sender: Connection) {

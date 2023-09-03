@@ -5,13 +5,13 @@ import {
     EventTarget,
     MeetingHudVotingCompleteEvent,
     PlayerStartMeetingEvent,
-    ReportDeadBodyMessage,
+    ReportDeadBodyMessage as AmongUsReportDeadBodyMessage,
     Room
 } from "@skeldjs/hindenburg";
 
 import { InfractionSeverity, MouthwashAntiCheatPlugin } from "../plugin";
 import { InfractionName } from "../enums";
-import { MouthwashMeetingHud } from "mouthwash-types";
+import { DeadBody, MouthwashMeetingHud, ReportDeadBodyMessage } from "mouthwash-types";
 
 export class MeetingModule extends EventTarget {
     protected _isVotingComplete: boolean;
@@ -69,7 +69,7 @@ export class MeetingModule extends EventTarget {
         }
     }
 
-    async onReportDeadBody(sender: Connection, reportDeadBodyMessage: ReportDeadBodyMessage) {
+    async onAmongUsReportDeadBody(sender: Connection, reportDeadBodyMessage: AmongUsReportDeadBodyMessage) {
         if (reportDeadBodyMessage.bodyid !== 255)
             return this.plugin.createInfraction(sender, InfractionName.InvalidRpcReportDeadBody, { bodyId: reportDeadBodyMessage.bodyid }, InfractionSeverity.High);
 
@@ -78,6 +78,15 @@ export class MeetingModule extends EventTarget {
         
         if (this.plugin.room.meetingHud)
             return this.plugin.createInfraction(sender, InfractionName.InvalidRpcMeetingStart, { state: "MEETING" }, InfractionSeverity.High);
+    }
+
+    async onReportDeadBody(sender: Connection, component: DeadBody, reportDeadBodyMessage: ReportDeadBodyMessage) {
+        const senderPlayer = sender.getPlayer();
+        const playerInfo = senderPlayer?.info;
+        if (!playerInfo || playerInfo.isDead) {
+            return this.plugin.createInfraction(sender, InfractionName.InvalidRpcReportDeadBody,
+                { reporterNetId: reportDeadBodyMessage.reporterNetId }, InfractionSeverity.Critical);
+        }
     }
 
     @EventListener()
