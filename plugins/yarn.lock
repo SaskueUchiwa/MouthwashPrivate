@@ -4,6 +4,12 @@
 __metadata:
   version: 6
 
+"hbplugin-mouthwashgg-anti-cheat@link:../hbplugin-mouthwashgg-anti-cheat::locator=root-workspace-0b6124%40workspace%3A.":
+  version: 0.0.0-use.local
+  resolution: "hbplugin-mouthwashgg-anti-cheat@link:../hbplugin-mouthwashgg-anti-cheat::locator=root-workspace-0b6124%40workspace%3A."
+  languageName: node
+  linkType: soft
+
 "hbplugin-mouthwashgg-api@link:../hbplugin-mouthwashgg-api::locator=root-workspace-0b6124%40workspace%3A.":
   version: 0.0.0-use.local
   resolution: "hbplugin-mouthwashgg-api@link:../hbplugin-mouthwashgg-api::locator=root-workspace-0b6124%40workspace%3A."
@@ -40,6 +46,12 @@ __metadata:
   languageName: node
   linkType: soft
 
+"hbplugin-mwgg-gamemode-infection@link:../hbplugin-mwgg-gamemode-infection::locator=root-workspace-0b6124%40workspace%3A.":
+  version: 0.0.0-use.local
+  resolution: "hbplugin-mwgg-gamemode-infection@link:../hbplugin-mwgg-gamemode-infection::locator=root-workspace-0b6124%40workspace%3A."
+  languageName: node
+  linkType: soft
+
 "hbplugin-mwgg-gamemode-town-of-polus@link:../hbplugin-mwgg-gamemode-town-of-polus::locator=root-workspace-0b6124%40workspace%3A.":
   version: 0.0.0-use.local
   resolution: "hbplugin-mwgg-gamemode-town-of-polus@link:../hbplugin-mwgg-gamemode-town-of-polus::locator=root-workspace-0b6124%40workspace%3A."
@@ -57,11 +69,13 @@ __metadata:
   resolution: "root-workspace-0b6124@workspace:."
   dependencies:
     hbplugin-mouthwashgg: "link:../hbplugin-mouthwashgg"
+    hbplugin-mouthwashgg-anti-cheat: "link:../hbplugin-mouthwashgg-anti-cheat"
     hbplugin-mouthwashgg-api: "link:../hbplugin-mouthwashgg-api"
     hbplugin-mouthwashgg-auth: "link:../hbplugin-mouthwashgg-auth"
     hbplugin-mouthwashgg-master: "link:../hbplugin-mouthwashgg-master"
     hbplugin-mouthwashgg-metrics: "link:../hbplugin-mouthwashgg-metrics"
     hbplugin-mwgg-gamemode-hns: "link:../hbplugin-mwgg-gamemode-hns"
+    hbplugin-mwgg-gamemode-infection: "link:../hbplugin-mwgg-gamemode-infection"
     hbplugin-mwgg-gamemode-town-of-polus: "link:../hbplugin-mwgg-gamemode-town-of-polus"
     hbplugin-mwgg-gamemode-vanilla: "link:../hbplugin-mwgg-gamemode-vanilla"
   languageName: unknown

@@ -3739,6 +3739,18 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"hbplugin-mwgg-gamemode-infection@workspace:hbplugin-mwgg-gamemode-infection":
+  version: 0.0.0-use.local
+  resolution: "hbplugin-mwgg-gamemode-infection@workspace:hbplugin-mwgg-gamemode-infection"
+  dependencies:
+    "@skeldjs/hindenburg": "workspace:*"
+    hbplugin-mouthwashgg-anti-cheat: "workspace:*"
+    hbplugin-mouthwashgg-api: "workspace:*"
+    mouthwash-types: "workspace:*"
+    typescript: ^4.4.4
+  languageName: unknown
+  linkType: soft
+
 "hbplugin-mwgg-gamemode-town-of-polus@workspace:hbplugin-mwgg-gamemode-town-of-polus":
   version: 0.0.0-use.local
   resolution: "hbplugin-mwgg-gamemode-town-of-polus@workspace:hbplugin-mwgg-gamemode-town-of-polus"
