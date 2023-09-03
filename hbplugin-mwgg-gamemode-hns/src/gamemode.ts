@@ -336,7 +336,7 @@ export class HideAndSeekGamemodePlugin extends BaseGamemodePlugin {
                             player.playerId,
                             {
                                 titleText: player.isImpostor ? "Victory" : Palette.impostorRed.text("Defeat"),
-                                subtitleText: `The ${seekerColor.text("Seekers")} killed all of the ${hiderColor.text("Hiders")}`,
+                                subtitleText: `The ${seekerColor.text("Seekers")} caught all of the ${hiderColor.text("Hiders")}`,
                                 backgroundColor: Palette.impostorRed,
                                 yourTeam: RoleAlignment.Impostor,
                                 winSound: WinSound.ImpostorWin,

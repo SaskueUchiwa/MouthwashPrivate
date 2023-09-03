@@ -57,7 +57,7 @@ namespace Polus.Patches.Temporary {
 						}
 					}
 					DestroyableSingleton<HudManager>.Instance.KillOverlay.ShowKillAnimation(__instance.Data, data);
-					DestroyableSingleton<HudManager>.Instance.ShadowQuad.gameObject.SetActive(false);
+					// DestroyableSingleton<HudManager>.Instance.ShadowQuad.gameObject.SetActive(false);
 					target.nameText.GetComponent<MeshRenderer>().material.SetInt("_Mask", 0);
 					target.RpcSetScanner(false);
 					ImportantTextTask importantTextTask = new GameObject("_Player").AddComponent<ImportantTextTask>();
