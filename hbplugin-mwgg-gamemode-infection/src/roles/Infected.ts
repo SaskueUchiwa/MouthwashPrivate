@@ -1,38 +1,44 @@
 import {
+    EndGameIntent,
+    GameOverReason,
     PlayerData,
     PlayerMurderEvent,
     Room
 } from "@skeldjs/hindenburg";
 
 import {
+    AnyKillDistance,
     AssetReference,
     EmojiService,
+    EndGameScreen,
     Impostor,
     MouthwashRole,
     RoleAlignment,
     RoleAssignment,
     RoleObjective,
     RoleStringNames,
-    StartGameScreen
+    StartGameScreen,
+    killDistanceToRange
 } from "hbplugin-mouthwashgg-api";
 
 import { AnticheatExceptions, InfractionName } from "hbplugin-mouthwashgg-anti-cheat";
 
 import {
+    EnumValue,
     HudLocation,
     KeyCode,
+    NumberValue,
     Palette,
     Priority,
-    RGBA
+    RGBA,
+    WinSound
 } from "mouthwash-types";
+import { uninfectedColor } from "./Uninfected";
+import { InfectionOptionName } from "../gamemode";
 
-export const zombieColor = new RGBA(255, 25, 25, 255);
+export const infectedColor = new RGBA(255, 25, 25, 255);
 
-export const ZombieOptionName = {
-
-} as const;
-
-@MouthwashRole("Infected", RoleAlignment.Impostor, zombieColor, EmojiService.getEmoji("impostor"))
+@MouthwashRole("Infected", RoleAlignment.Impostor, infectedColor, EmojiService.getEmoji("impostor"))
 @RoleObjective("Infect the crewmates!")
 @AnticheatExceptions([ InfractionName.ForbiddenRpcVent ])
 export class Infected extends Impostor {
@@ -53,15 +59,22 @@ export class Infected extends Impostor {
         };
     }
 
+    constructor(public readonly player: PlayerData<Room>) {
+        super(player);
+        
+        this._killRange = killDistanceToRange[this.api.gameOptions.gameOptions.get(InfectionOptionName.InfectDistance)?.getValue<EnumValue<AnyKillDistance>>().selectedOption || "Short"];
+        this._killCooldown = this.api.gameOptions.gameOptions.get(InfectionOptionName.InfectCooldown)?.getValue<NumberValue>().value || 10;
+    }
+
     async onReady() {
-        await this.giveFakeTasks();
+        await this.markImpostor();
 
         this._killButton = await this.spawnButton(
             "kill-button",
             new AssetReference("PggResources/Global", "Assets/Mods/OfficialAssets/KillButton.png"),
             {
                 maxTimer: this._killCooldown,
-                currentTime: 10,
+                currentTime: 20,
                 isCountingDown: true,
                 keys: [ KeyCode.Q ]
             }
@@ -74,7 +87,10 @@ export class Infected extends Impostor {
             if (this._killTarget.transform) {
                 this.player.transform?.snapTo(this._killTarget.transform.position);
             }
-            await this.patchMurderPlayer(this.player, this._killTarget);
+            await this.quietMurder(this._killTarget);
+            if (await this.checkForAllInfectedEndGame(this._killTarget))
+                return;
+
             this._killTarget.info?.setDead(false);
             const originaRole = this.api.roleService.getPlayerRole(this._killTarget);
             const previousEmoji = originaRole?.metadata.emoji || EmojiService.getEmoji("crewmate");
@@ -83,7 +99,7 @@ export class Infected extends Impostor {
             this.api.hudService.setHudStringFor(
                 HudLocation.TaskText,
                 RoleStringNames.TaskObjective,
-                `${zombieColor.text("Role: Zombie\nYou've been infected! Go find other crewmates\nto spread the infection!")}`,
+                `${infectedColor.text("Role: Zombie\nYou've been infected! Go find other crewmates\nto spread the infection!")}`,
                 Priority.A,
                 [ role.player ]
             );
@@ -116,5 +132,41 @@ export class Infected extends Impostor {
         await murderer.emit(new PlayerMurderEvent(this.room, murderer, undefined, victim));
         murdererPlayerControl["_rpcMurderPlayer"](victim);
         murdererPlayerControl["_checkMurderEndGame"](victim);
+    }
+
+    async checkForAllInfectedEndGame(finalTarget: PlayerData<Room>) {
+        for (const [ , player ] of this.room.players) {
+            if (player === finalTarget)
+                continue;
+            
+            const playerRole = this.api.roleService.getPlayerRole(player);
+            if (playerRole && !(playerRole instanceof Infected)) {
+                return false;
+            }
+        }
+
+        const players = this.api.getEndgamePlayers();
+        this.room.registerEndGameIntent(
+            new EndGameIntent(
+                "crewmates infected",
+                GameOverReason.ImpostorByKill,
+                {
+                    endGameScreen: new Map(players.map<[number, EndGameScreen]>(player => {
+                        return [
+                            player.playerId,
+                            {
+                                titleText: player.isImpostor ? "Victory" : Palette.impostorRed.text("Defeat"),
+                                subtitleText: `${uninfectedColor.text("Crewmates")} were infected`,
+                                backgroundColor: Palette.impostorRed,
+                                yourTeam: RoleAlignment.Impostor,
+                                winSound: WinSound.ImpostorWin,
+                                hasWon: player.isImpostor
+                            }
+                        ];
+                    }))
+                }
+            )
+        );
+        return true;
     }
 }

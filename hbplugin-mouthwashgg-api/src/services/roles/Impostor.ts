@@ -16,7 +16,7 @@ import { EmojiService } from "../emojis";
 import { AnyKillDistance, DefaultRoomOptionName } from "../gameOptions";
 import { Button } from "../hud";
 
-const killDistanceToRange = {
+export const killDistanceToRange = {
     "Really Short": 0.5,
     "Short": 1,
     "Medium": 2,
@@ -54,7 +54,7 @@ export class Impostor extends BaseRole {
             new AssetReference("PggResources/Global", "Assets/Mods/OfficialAssets/KillButton.png"),
             {
                 maxTimer: this._killCooldown,
-                currentTime: 10,
+                currentTime: 15,
                 isCountingDown: true,
                 keys: [ KeyCode.Q ]
             }

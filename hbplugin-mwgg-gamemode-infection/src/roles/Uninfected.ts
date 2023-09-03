@@ -13,13 +13,9 @@ import {
 
 import { Palette } from "mouthwash-types";
 
-const crewmateColor = Palette.crewmateBlue;
+export const uninfectedColor = Palette.crewmateBlue;
 
-export const CrewmateOptionName = {
-
-} as const;
-
-@MouthwashRole("Crewmate", RoleAlignment.Crewmate, crewmateColor, EmojiService.getEmoji("crewmate"))
+@MouthwashRole("Crewmate", RoleAlignment.Crewmate, uninfectedColor, EmojiService.getEmoji("crewmate"))
 @RoleObjective("Run from the infected, and complete your tasks!")
 export class Uninfected extends BaseRole {
     constructor(
