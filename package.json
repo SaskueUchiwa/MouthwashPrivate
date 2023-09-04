@@ -6,7 +6,8 @@
   "author": "Edward Smale <essmale2005@gmail.com>",
   "packageManager": "yarn@3.6.3",
   "scripts": {
-    "build-all": "yarn workspaces foreach -ptv --exclude test run build",
+    "build-all": "yarn workspaces foreach -ptv --exclude mouthwash-gg run build",
+    "watch-all": "yarn workspaces foreach -p --jobs unlimited --exclude mouthwash-gg run tsc -w -p ./",
     "dev:master": "yarn cross-env HINDENBURG_CONFIG=config.master.json ts-node ./Hindenburg/bin/worker",
     "dev:node": "yarn cross-env HINDENBURG_CONFIG=config.node.json ts-node ./Hindenburg/bin/worker",
     "start:master": "yarn cross-env HINDENBURG_CONFIG=config.master.json node ./Hindenburg/dist/bin/worker",
