@@ -3,7 +3,8 @@ import {
     GameOverReason,
     PlayerData,
     PlayerMurderEvent,
-    Room
+    Room,
+    RpcMessage
 } from "@skeldjs/hindenburg";
 
 import {
@@ -24,13 +25,16 @@ import {
 import { AnticheatExceptions, InfractionName } from "hbplugin-mouthwashgg-anti-cheat";
 
 import {
+    BooleanValue,
     EnumValue,
+    HudItem,
     HudLocation,
     KeyCode,
     NumberValue,
     Palette,
     Priority,
     RGBA,
+    SetPlayerSpeedModifierMessage,
     WinSound
 } from "mouthwash-types";
 import { uninfectedColor } from "./Uninfected";
@@ -40,7 +44,7 @@ export const infectedColor = new RGBA(255, 25, 25, 255);
 
 @MouthwashRole("Infected", RoleAlignment.Impostor, infectedColor, EmojiService.getEmoji("impostor"))
 @RoleObjective("Infect the crewmates!")
-@AnticheatExceptions([ InfractionName.ForbiddenRpcVent ])
+@AnticheatExceptions([ InfractionName.ForbiddenRpcVent, InfractionName.ForbiddenRpcCloseDoors ])
 export class Infected extends Impostor {
     getStartGameScreen(playerRoles: RoleAssignment[], zombieCount: number): StartGameScreen {
         const crewmateCount = playerRoles.filter(roleAssignment => {
@@ -59,9 +63,12 @@ export class Infected extends Impostor {
         };
     }
 
+    protected _infectedSpeed: number;
+
     constructor(public readonly player: PlayerData<Room>) {
         super(player);
-        
+
+        this._infectedSpeed = this.api.gameOptions.gameOptions.get(InfectionOptionName.InfectedSpeed)?.getValue<NumberValue>().value || 1.25;
         this._killRange = killDistanceToRange[this.api.gameOptions.gameOptions.get(InfectionOptionName.InfectDistance)?.getValue<EnumValue<AnyKillDistance>>().selectedOption || "Short"];
         this._killCooldown = this.api.gameOptions.gameOptions.get(InfectionOptionName.InfectCooldown)?.getValue<NumberValue>().value || 10;
     }
@@ -104,6 +111,14 @@ export class Infected extends Impostor {
                 [ role.player ]
             );
             await this.api.nameService.removeEmoji(this._killTarget, previousEmoji);
+            await this.room.broadcastMessages(
+                [
+                    new RpcMessage(
+                        this._killTarget.control!.netId,
+                        new SetPlayerSpeedModifierMessage(this._infectedSpeed)
+                    )
+                ]
+            );
             // we probably dont need to add the emoji, as it's done in Infected.onReady
             // this.api.nameService.addEmojiFor(role.player, role.metadata.emoji, [ role.player ]);
             await role.onReady();

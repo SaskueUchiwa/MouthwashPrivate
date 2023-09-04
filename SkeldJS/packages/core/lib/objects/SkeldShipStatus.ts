@@ -83,7 +83,7 @@ export class SkeldShipStatus<RoomType extends Hostable = Hostable> extends Inner
         }));
         this.systems.set(SystemType.Doors, new AutoDoorsSystem(this, SystemType.Doors, {
             dirtyBit: 0,
-            doors: [],
+            doors: []
         }));
         this.systems.set(SystemType.Sabotage, new SabotageSystem(this, SystemType.Sabotage, {
             cooldown: 0,

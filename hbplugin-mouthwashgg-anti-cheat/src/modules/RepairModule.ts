@@ -36,7 +36,7 @@ export class RepairModule extends EventTarget {
         if (defaultInfraction) return defaultInfraction;
 
         const shipStatus = this.plugin.room.shipStatus;
-        const doorsSystem = shipStatus?.systems.get(SystemType.Doors) as DoorsSystem|undefined;
+        const doorsSystem = shipStatus?.systems.get(SystemType.Doors) as DoorsSystem|AutoDoorsSystem|ElectricalDoorsSystem|undefined;
         if (!shipStatus || !doorsSystem) {
             return await this.plugin.createInfraction(sender, InfractionName.InvalidRpcCloseDoors,
                 { systemId: closeDoorsOfTypeMessage.systemId }, InfractionSeverity.High);
@@ -46,10 +46,12 @@ export class RepairModule extends EventTarget {
             return await this.plugin.createInfraction(sender, InfractionName.InvalidRpcCloseDoors,
                 { systemId: closeDoorsOfTypeMessage.systemId }, InfractionSeverity.High);
         }
-        const cooldown = doorsSystem.cooldowns.get(closeDoorsOfTypeMessage.systemId);
-        if (cooldown !== undefined) {
-            return await this.plugin.createInfraction(sender, InfractionName.RateLimitedRpcCloseDoors,
-                { systemId: closeDoorsOfTypeMessage.systemId }, cooldown <= 10 ? InfractionSeverity.Medium : InfractionSeverity.Low);
+        if ("cooldowns" in doorsSystem) {
+            const cooldown = doorsSystem.cooldowns.get(closeDoorsOfTypeMessage.systemId);
+            if (cooldown !== undefined) {
+                return await this.plugin.createInfraction(sender, InfractionName.RateLimitedRpcCloseDoors,
+                    { systemId: closeDoorsOfTypeMessage.systemId }, cooldown <= 10 ? InfractionSeverity.Medium : InfractionSeverity.Low);
+            }
         }
         const allClosed = doorIds.every(doorId => doorsSystem.doors[doorId] && !doorsSystem.doors[doorId].isOpen);
         if (allClosed) {

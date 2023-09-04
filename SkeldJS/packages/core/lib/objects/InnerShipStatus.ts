@@ -35,6 +35,7 @@ import {
     SecurityCameraSystemEvents,
     SwitchSystemEvents,
     SystemStatus,
+    AutoDoorsSystem,
 } from "../systems";
 
 import { Networkable, NetworkableEvents } from "../Networkable";
@@ -181,10 +182,12 @@ export class InnerShipStatus<RoomType extends Hostable = Hostable> extends Netwo
     }
 
     protected async _handleCloseDoorsOfType(rpc: CloseDoorsOfTypeMessage) {
-        const doors = this.systems.get(SystemType.Doors)! as DoorsSystem;
+        const doors = this.systems.get(SystemType.Doors)! as DoorsSystem|AutoDoorsSystem;
         const doorsInRoom = this.getDoorsInRoom(rpc.systemId);
 
-        doors.cooldowns.set(rpc.systemId, 30);
+        if ("cooldowns" in doors) {
+            doors.cooldowns.set(rpc.systemId, 30);
+        }
         for (const doorId of doorsInRoom) {
             doors.closeDoor(doorId);
         }

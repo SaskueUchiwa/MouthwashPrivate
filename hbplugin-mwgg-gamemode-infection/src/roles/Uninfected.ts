@@ -2,6 +2,7 @@ import {
     PlayerData,
     Room
 } from "@skeldjs/hindenburg";
+import { AnticheatExceptions, InfractionName } from "hbplugin-mouthwashgg-anti-cheat";
 
 import {
     BaseRole,
@@ -17,6 +18,7 @@ export const uninfectedColor = Palette.crewmateBlue;
 
 @MouthwashRole("Crewmate", RoleAlignment.Crewmate, uninfectedColor, EmojiService.getEmoji("crewmate"))
 @RoleObjective("Run from the infected, and complete your tasks!")
+@AnticheatExceptions([ InfractionName.ForbiddenRpcCloseDoors ])
 export class Uninfected extends BaseRole {
     constructor(
         public readonly player: PlayerData<Room>
@@ -28,6 +30,8 @@ export class Uninfected extends BaseRole {
         // allow all players to see the emoji to identify non-infected
         await this.api.nameService.removeEmojiFor(this.player, this.metadata.emoji, [ this.player ]);
         await this.api.nameService.addEmoji(this.player, this.metadata.emoji);
+
+        this.player.info?.setImpostor(true); // to give sabotage button
     }
 
     async onRemove() {}
