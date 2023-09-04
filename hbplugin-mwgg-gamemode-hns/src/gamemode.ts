@@ -61,7 +61,7 @@ export const HnSOptionName = {
     name: "Hide N' Seek",
     version: "1.0.0",
     description: "Hiders are given a headstart to find the best place to hide from the seekers, who hunt down the hiders for the rest of the game.",
-    author: "weakeyes"
+    author: "weakeyes, przebot"
 })
 @RegisterRole(Seeker)
 @RegisterRole(Hider)
