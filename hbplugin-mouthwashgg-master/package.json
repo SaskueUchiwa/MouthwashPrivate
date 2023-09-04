@@ -33,8 +33,12 @@
     "node": ">=14",
     "hindenburg": "1.2.*"
   },
+  "dependencies": {
+    "@skeldjs/hindenburg": "workspace:*",
+    "ioredis": "^5.3.2"
+  },
   "devDependencies": {
-    "@skeldjs/hindenburg": "link:workspace:*",
+    "@types/node": "latest",
     "typescript": "latest"
   },
   "plugin": {
@@ -43,8 +47,5 @@
       "pullNodesInterval": 10000,
       "nodeExpireTimeout": 15000
     }
-  },
-  "dependencies": {
-    "ioredis": "^5.3.2"
   }
 }

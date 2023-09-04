@@ -34,7 +34,7 @@
     "hindenburg": "1.2.*"
   },
   "devDependencies": {
-    "@skeldjs/hindenburg": "workspace:*",
+    "@types/node": "latest",
     "@types/pg": "^8.10.2",
     "typescript": "latest"
   },
@@ -46,6 +46,7 @@
     }
   },
   "dependencies": {
+    "@skeldjs/hindenburg": "workspace:*",
     "dotenv": "^16.3.1",
     "hbplugin-mouthwashgg-api": "workspace:*",
     "ioredis": "^5.3.2",

@@ -9,7 +9,6 @@
         "build": "tsc -p ./"
     },
     "devDependencies": {
-        "@skeldjs/hindenburg": "workspace:*",
         "@types/got": "^9.6.12",
         "@types/node": "latest",
         "@types/promise.allsettled": "^1.0.3",
@@ -18,6 +17,7 @@
     },
     "dependencies": {
         "@skeldjs/events": "workspace:*",
+        "@skeldjs/hindenburg": "workspace:*",
         "got": "^11.8.2",
         "hbplugin-mouthwashgg-auth": "workspace:*",
         "mouthwash-types": "workspace:*",

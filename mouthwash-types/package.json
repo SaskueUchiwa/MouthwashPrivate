@@ -9,12 +9,11 @@
     "build": "tsc -p ./"
   },
   "devDependencies": {
-    "@skeldjs/hindenburg": "workspace:*",
     "@types/node": "latest",
-    "hbplugin-mouthwashgg": "workspace:*",
     "typescript": "latest"
   },
   "dependencies": {
-    "@skeldjs/events": "workspace:*"
+    "@skeldjs/events": "workspace:*",
+    "@skeldjs/hindenburg": "workspace:*"
   }
 }

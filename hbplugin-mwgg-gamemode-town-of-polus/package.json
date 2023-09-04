@@ -8,10 +8,11 @@
         "build": "tsc -p ./"
     },
     "devDependencies": {
-        "@skeldjs/hindenburg": "workspace:*",
-        "typescript": "^4.4.4"
+        "@types/node": "latest",
+        "typescript": "latest"
     },
     "dependencies": {
+        "@skeldjs/hindenburg": "workspace:*",
         "hbplugin-mouthwashgg-anti-cheat": "workspace:*",
         "hbplugin-mouthwashgg-api": "workspace:*",
         "mouthwash-types": "workspace:*"

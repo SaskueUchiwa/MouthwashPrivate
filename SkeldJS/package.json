@@ -27,8 +27,7 @@
     "build-all": "yarn workspaces foreach -ptv --exclude test run build",
     "update:patch": "yarn workspaces foreach -v --exclude test version patch",
     "update:minor": "yarn workspaces foreach -v --exclude test version minor",
-    "update:major": "yarn workspaces foreach -v --exclude test version major",
-    "publish-all": "yarn workspaces foreach -pv --exclude test --no-private npm publish --access public"
+    "update:major": "yarn workspaces foreach -v --exclude test version major"
   },
   "devDependencies": {
     "@types/node": "^15.0.1",
@@ -39,7 +38,7 @@
     "@yarnpkg/pnpify": "^3.0.0-rc.3",
     "eslint": "^7.16.0",
     "rimraf": "^3.0.2",
-    "ts-node": "^9.1.1",
+    "ts-node": "latest",
     "typescript": "latest"
   },
   "workspaces": [
