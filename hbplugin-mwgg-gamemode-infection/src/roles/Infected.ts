@@ -25,9 +25,7 @@ import {
 import { AnticheatExceptions, InfractionName } from "hbplugin-mouthwashgg-anti-cheat";
 
 import {
-    BooleanValue,
     EnumValue,
-    HudItem,
     HudLocation,
     KeyCode,
     NumberValue,
@@ -44,7 +42,7 @@ export const infectedColor = new RGBA(255, 25, 25, 255);
 
 @MouthwashRole("Infected", RoleAlignment.Impostor, infectedColor, EmojiService.getEmoji("impostor"))
 @RoleObjective("Infect the crewmates!")
-@AnticheatExceptions([ InfractionName.ForbiddenRpcVent, InfractionName.ForbiddenRpcCloseDoors ])
+@AnticheatExceptions([ /* InfractionName.ForbiddenRpcVent, */ InfractionName.ForbiddenRpcCloseDoors ])
 export class Infected extends Impostor {
     getStartGameScreen(playerRoles: RoleAssignment[], zombieCount: number): StartGameScreen {
         const crewmateCount = playerRoles.filter(roleAssignment => {

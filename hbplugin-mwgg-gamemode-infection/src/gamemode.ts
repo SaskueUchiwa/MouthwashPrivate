@@ -144,6 +144,7 @@ export class InfectionGamemodePlugin extends BaseGamemodePlugin {
         this.api.hudService.setHudItemVisibility(HudItem.CallMeetingButton, false);
         this.api.hudService.setHudItemVisibility(HudItem.ReportButton, false);
         this.api.hudService.setHudItemVisibility(HudItem.MapSabotageButtons, false);
+        this.api.hudService.setHudItemVisibility(HudItem.VentButton, false);
 
         const infectedSpeed = this.api.gameOptions.gameOptions.get(InfectionOptionName.InfectedSpeed)?.getValue<NumberValue>().value || 1.25;
         const uninfectedSpeed = this.api.gameOptions.gameOptions.get(InfectionOptionName.UninfectedSpeed)?.getValue<NumberValue>().value || 1.25;
