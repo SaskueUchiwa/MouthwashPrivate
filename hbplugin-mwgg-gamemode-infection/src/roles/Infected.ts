@@ -25,7 +25,9 @@ import {
 import { AnticheatExceptions, InfractionName } from "hbplugin-mouthwashgg-anti-cheat";
 
 import {
+    BooleanValue,
     EnumValue,
+    HudItem,
     HudLocation,
     KeyCode,
     NumberValue,
@@ -33,10 +35,11 @@ import {
     Priority,
     RGBA,
     SetPlayerSpeedModifierMessage,
+    SetPlayerVisionModifierMessage,
     WinSound
 } from "mouthwash-types";
 import { uninfectedColor } from "./Uninfected";
-import { InfectionOptionName } from "../gamemode";
+import { InfectionGamemodePlugin, InfectionOptionName } from "../gamemode";
 
 export const infectedColor = new RGBA(255, 25, 25, 255);
 
@@ -62,11 +65,15 @@ export class Infected extends Impostor {
     }
 
     protected _infectedSpeed: number;
+    protected _infectedVision: number;
+    protected _canInfectedCloseDoors: boolean;
 
     constructor(public readonly player: PlayerData<Room>) {
         super(player);
 
         this._infectedSpeed = this.api.gameOptions.gameOptions.get(InfectionOptionName.InfectedSpeed)?.getValue<NumberValue>().value || 1.25;
+        this._infectedVision = this.api.gameOptions.gameOptions.get(InfectionOptionName.InfectedVision)?.getValue<NumberValue>().value || .75;
+        this._canInfectedCloseDoors = this.api.gameOptions.gameOptions.get(InfectionOptionName.InfectedCloseDoors)?.getValue<BooleanValue>().enabled || false;
         this._killRange = killDistanceToRange[this.api.gameOptions.gameOptions.get(InfectionOptionName.InfectDistance)?.getValue<EnumValue<AnyKillDistance>>().selectedOption || "Short"];
         this._killCooldown = this.api.gameOptions.gameOptions.get(InfectionOptionName.InfectCooldown)?.getValue<NumberValue>().value || 10;
     }
@@ -93,12 +100,15 @@ export class Infected extends Impostor {
                 this.player.transform?.snapTo(this._killTarget.transform.position);
             }
             await this.quietMurder(this._killTarget);
+            this._killTarget.info?.setDead(false);
             if (await this.checkForAllInfectedEndGame(this._killTarget))
                 return;
 
-            this._killTarget.info?.setDead(false);
-            const originaRole = this.api.roleService.getPlayerRole(this._killTarget);
-            const previousEmoji = originaRole?.metadata.emoji || EmojiService.getEmoji("crewmate");
+            if (this.api.gamemode && this.api.gamemode instanceof InfectionGamemodePlugin && await this.api.gamemode.checkTaskEndGame(this._killTarget))
+                return;
+
+            const originalRole = this.api.roleService.getPlayerRole(this._killTarget);
+            const previousEmoji = originalRole?.metadata.emoji || EmojiService.getEmoji("crewmate");
             await this.api.roleService.removeRole(this._killTarget);
             const role = await this.api.roleService.assignRole(this._killTarget, Infected);
             this.api.hudService.setHudStringFor(
@@ -108,15 +118,22 @@ export class Infected extends Impostor {
                 Priority.A,
                 [ role.player ]
             );
-            await this.api.nameService.removeEmoji(this._killTarget, previousEmoji);
+            await this.api.nameService.removeEmoji(role.player, previousEmoji);
             await this.room.broadcastMessages(
                 [
                     new RpcMessage(
-                        this._killTarget.control!.netId,
+                        role.player.control!.netId,
                         new SetPlayerSpeedModifierMessage(this._infectedSpeed)
+                    ),
+                    new RpcMessage(
+                        role.player.control!.netId,
+                        new SetPlayerVisionModifierMessage(this._infectedVision)
                     )
                 ]
             );
+            this.api.hudService.setHudItemVisibilityFor(HudItem.MapDoorButtons, this._canInfectedCloseDoors, [ role.player ]);
+            this.api.hudService.setHudItemVisibilityFor(HudItem.SabotageButton, this._canInfectedCloseDoors, [ role.player ]);
+            this.api.hudService.setTaskInteraction(role.player, false, false);
             // we probably dont need to add the emoji, as it's done in Infected.onReady
             // this.api.nameService.addEmojiFor(role.player, role.metadata.emoji, [ role.player ]);
             await role.onReady();

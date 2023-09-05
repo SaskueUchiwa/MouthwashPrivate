@@ -4,6 +4,7 @@ import {
     GameMap,
     GameOverReason,
     HindenburgPlugin,
+    PlayerCompleteTaskEvent,
     PlayerData,
     PlayerLeaveEvent,
     PreventLoad,
@@ -54,7 +55,8 @@ export const InfectionOptionName = {
     InfectDistance: "Infect Distance",
     InfectedSpeed: `${infectedColor.text("Infected")} Speed`,
     InfectedVision: `${infectedColor.text("Infected")} Vision`,
-    InfectedCloseDoors: `${infectedColor.text("Infected")} Close Doors`
+    InfectedCloseDoors: `${infectedColor.text("Infected")} Close Doors`,
+    TaskBar: "Task Bar"
 } as const;
 
 const infectedMapSpawnPositions: Record<GameMap, Vector2[]> = {
@@ -91,12 +93,14 @@ export class InfectionGamemodePlugin extends BaseGamemodePlugin {
         defaultOptions.delete(DefaultRoomOptionName.VotingTime);
         defaultOptions.delete(DefaultRoomOptionName.ImpostorKillCooldown);
         defaultOptions.delete(DefaultRoomOptionName.ImpostorCount);
+        defaultOptions.delete(DefaultRoomOptionName.TaskBarUpdates);
+
 
         // defaultOptions.set(InfectionOptionName.SpawnLocation, new GameOption(DefaultRoomCategoryName.Config, InfectionOptionName.SpawnLocation, new EnumValue<InfectionSpawnLocations>([ "Default", "Reactor" ], 0), Priority.E));
+        defaultOptions.set(InfectionOptionName.TaskBar, new GameOption(DefaultRoomCategoryName.Config, InfectionOptionName.TaskBar, new BooleanValue(false), Priority.E + 1));
         defaultOptions.set(InfectionOptionName.UninfectedSpeed, new GameOption(DefaultRoomCategoryName.CrewmateRoles, InfectionOptionName.UninfectedSpeed, new NumberValue(1.25, 0.25, 0.25, 3, false, "{0}x"), Priority.F));
         defaultOptions.set(InfectionOptionName.UninfectedVision, new GameOption(DefaultRoomCategoryName.CrewmateRoles, InfectionOptionName.UninfectedVision, new NumberValue(0.5, 0.25, 0.25, 2, false, "{0}x"), Priority.F + 1));
         defaultOptions.set(InfectionOptionName.UninfectedCloseDoors, new GameOption(DefaultRoomCategoryName.CrewmateRoles, InfectionOptionName.UninfectedCloseDoors, new BooleanValue(false), Priority.F + 2));
-        defaultOptions.set(InfectionOptionName.InitialInfectedCount, new GameOption(DefaultRoomCategoryName.ImpostorRoles, InfectionOptionName.InitialInfectedCount, new NumberValue(1, 1, 1, 3, false, "{0} Infected"), Priority.G));
         defaultOptions.set(InfectionOptionName.InfectCooldown, new GameOption(DefaultRoomCategoryName.ImpostorRoles, InfectionOptionName.InfectCooldown, new NumberValue(10, 2.5, 0, 60, false, "{0}s"), Priority.G + 1));
         defaultOptions.set(InfectionOptionName.InfectDistance, new GameOption(DefaultRoomCategoryName.ImpostorRoles, InfectionOptionName.InfectDistance, new EnumValue<AnyKillDistance>(["Really Short", "Short", "Medium", "Long"], 1), Priority.G + 2));
         defaultOptions.set(InfectionOptionName.InfectedSpeed, new GameOption(DefaultRoomCategoryName.ImpostorRoles, InfectionOptionName.InfectedSpeed, new NumberValue(1.25, 0.25, 0.25, 3, false, "{0}x"), Priority.G + 3));
@@ -151,6 +155,9 @@ export class InfectionGamemodePlugin extends BaseGamemodePlugin {
         this.api.hudService.setHudItemVisibility(HudItem.MapSabotageButtons, false);
         this.api.hudService.setHudItemVisibility(HudItem.VentButton, false);
 
+        const taskBarVisible = this.api.gameOptions.gameOptions.get(InfectionOptionName.TaskBar)?.getValue<BooleanValue>().enabled || false;
+        this.api.hudService.setHudItemVisibility(HudItem.TaskProgressBar, taskBarVisible);
+
         const infectedSpeed = this.api.gameOptions.gameOptions.get(InfectionOptionName.InfectedSpeed)?.getValue<NumberValue>().value || 1.25;
         const uninfectedSpeed = this.api.gameOptions.gameOptions.get(InfectionOptionName.UninfectedSpeed)?.getValue<NumberValue>().value || 1.25;
         
@@ -199,13 +206,13 @@ export class InfectionGamemodePlugin extends BaseGamemodePlugin {
             ]
         );
 
-        const canUninfectedCloseDoors = this.api.gameOptions.gameOptions.get(InfectionOptionName.UninfectedCloseDoors)?.getValue<BooleanValue>().enabled || false;
         const canInfectedCloseDoors = this.api.gameOptions.gameOptions.get(InfectionOptionName.InfectedCloseDoors)?.getValue<BooleanValue>().enabled || false;
+        const canUninfectedCloseDoors = this.api.gameOptions.gameOptions.get(InfectionOptionName.UninfectedCloseDoors)?.getValue<BooleanValue>().enabled || false;
         
-        this.api.hudService.setHudItemVisibilityFor(HudItem.MapDoorButtons, canUninfectedCloseDoors, playersUninfected);
-        this.api.hudService.setHudItemVisibilityFor(HudItem.SabotageButton, canUninfectedCloseDoors, playersUninfected);
         this.api.hudService.setHudItemVisibilityFor(HudItem.MapDoorButtons, canInfectedCloseDoors, playersInfected);
         this.api.hudService.setHudItemVisibilityFor(HudItem.SabotageButton, canInfectedCloseDoors, playersInfected);
+        this.api.hudService.setHudItemVisibilityFor(HudItem.MapDoorButtons, canUninfectedCloseDoors, playersUninfected);
+        this.api.hudService.setHudItemVisibilityFor(HudItem.SabotageButton, canUninfectedCloseDoors, playersUninfected);
 
         const spawnLocation = this.api.gameOptions.gameOptions.get(InfectionOptionName.SpawnLocation)?.getValue<EnumValue<InfectionSpawnLocations>>();
         // if (spawnLocation?.selectedOption === "Reactor" ) {
@@ -276,31 +283,7 @@ export class InfectionGamemodePlugin extends BaseGamemodePlugin {
 
     @EventListener("room.endgameintent")
     async onEndGameIntent(ev: RoomEndGameIntentEvent<Room>) {
-        if (ev.intentName === MouthwashEndGames.CrewmatesCompletedTasks) {
-            ev.cancel();
-            
-            const players = this.api.getEndgamePlayers();
-            this.room.registerEndGameIntent(
-                new EndGameIntent(
-                    "crewmates complete tasks",
-                    GameOverReason.HumansByTask,
-                    {
-                        endGameScreen: new Map(players.map<[number, EndGameScreen]>(player => {
-                            return [
-                                player.playerId,
-                                {
-                                    titleText: !player.isImpostor ? "Victory" : Palette.impostorRed.text("Defeat"),
-                                    subtitleText: `The ${uninfectedColor.text("Crewmates")} completed all of their tasks`,
-                                    backgroundColor: Palette.crewmateBlue,
-                                    winSound: WinSound.CrewmateWin,
-                                    hasWon: !player.isImpostor
-                                }
-                            ];
-                        }))
-                    }
-                )
-            );
-        } else if (ev.intentName === MouthwashEndGames.ImpostorsDisconnected) {
+        if (ev.intentName === MouthwashEndGames.ImpostorsDisconnected) {
             ev.cancel();
 
             const players = this.api.getEndgamePlayers();
@@ -327,6 +310,65 @@ export class InfectionGamemodePlugin extends BaseGamemodePlugin {
             );
         } else if (ev.intentName === MouthwashEndGames.CrewmatesDisconnected) {
             ev.cancel(); // this end-game intent needs to be registered when there is exactly _0_ crewmates left. 
+        } else if (ev.intentName === MouthwashEndGames.CrewmatesCompletedTasks) {
+            ev.cancel(); // we handle our own task completion end game below
         }
+    }
+    
+    computeTaskCounts(justInfected?: PlayerData<Room>): { totalTasks: number; completeTasks: number; players: PlayerData<Room>[] } {
+        let totalTasks = 0;
+        let completeTasks = 0;
+        const players = [];
+        for (const [ , player ] of this.room.players) {
+            const playerInfo = player.info;
+            if (playerInfo && !playerInfo.isDisconnected && (this.api.hudService.getPlayerHud(player).allowTaskInteraction && justInfected !== player)) {
+                for (const task of playerInfo.taskStates) {
+                    totalTasks++;
+                    if (task.completed) {
+                        completeTasks++;
+                    }
+                }
+            }
+            players.push(player);
+        }
+
+        return { totalTasks, completeTasks, players };
+    }
+
+    async checkTaskEndGame(justInfected?: PlayerData<Room>) {
+        const { totalTasks, completeTasks, players } = this.computeTaskCounts(justInfected);
+        await Promise.all(players.map(player => this.api.hudService.setTaskCounts(player, totalTasks, completeTasks)));
+
+        if (totalTasks > 0 && completeTasks >= totalTasks) {
+            this.room.registerEndGameIntent(
+                new EndGameIntent(
+                    "uninfected crewmates completed tasks",
+                    GameOverReason.HumansByTask,
+                    {
+                        endGameScreen: new Map(players.map<[number, EndGameScreen]>(player => {
+                            const playerRole = this.api.roleService.getPlayerRole(player);
+                            return [
+                                player.playerId!,
+                                {
+                                    titleText: playerRole && !(playerRole instanceof Infected) && player !== justInfected
+                                        ? "Victory" : Palette.impostorRed.text("Defeat"),
+                                    subtitleText: `The ${Palette.crewmateBlue.text("Crewmates")} completed all of the tasks`,
+                                    backgroundColor: Palette.crewmateBlue,
+                                    winSound: WinSound.CrewmateWin,
+                                    hasWon: !(playerRole instanceof Infected) && player !== justInfected
+                                }
+                            ];
+                        }))
+                    }
+                )
+            );
+            return true;
+        }
+        return false;
+    }
+    
+    @EventListener("player.completetask")
+    async onPlayerCompleteTask(ev: PlayerCompleteTaskEvent<Room>) {
+        await this.checkTaskEndGame(undefined);
     }
 }
