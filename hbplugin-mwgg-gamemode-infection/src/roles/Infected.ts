@@ -100,6 +100,9 @@ export class Infected extends Impostor {
             if (!this._killButton || !this.isKillButtonEnabled() || this._killButton.currentTime > 0 || !this._killTarget || this.player.info?.isDead)
                 return;
 
+            if (this._killCooldown > 0) {
+                this._killButton.setCurrentTime(this._killButton.maxTimer);
+            }
             if (this._killTarget.transform) {
                 this.player.transform?.snapTo(this._killTarget.transform.position);
             }
