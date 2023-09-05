@@ -36,6 +36,7 @@ import {
     Palette,
     Priority,
     SetPlayerSpeedModifierMessage,
+    SetPlayerVisionModifierMessage,
     WinSound
 } from "mouthwash-types";
 
@@ -47,10 +48,12 @@ export const InfectionOptionName = {
     SpawnLocation: "Spawn Location",
     UninfectedCloseDoors: `${uninfectedColor.text("Crewmates")} Close Doors`,
     UninfectedSpeed: `${uninfectedColor.text("Crewmates")} Speed`,
+    UninfectedVision: `${uninfectedColor.text("Crewmates")} Vision`,
     InitialInfectedCount: `Initial ${infectedColor.text("Infected")} Count`,
     InfectCooldown: "Infect Cooldown",
     InfectDistance: "Infect Distance",
     InfectedSpeed: `${infectedColor.text("Infected")} Speed`,
+    InfectedVision: `${infectedColor.text("Infected")} Vision`,
     InfectedCloseDoors: `${infectedColor.text("Infected")} Close Doors`
 } as const;
 
@@ -91,12 +94,14 @@ export class InfectionGamemodePlugin extends BaseGamemodePlugin {
 
         // defaultOptions.set(InfectionOptionName.SpawnLocation, new GameOption(DefaultRoomCategoryName.Config, InfectionOptionName.SpawnLocation, new EnumValue<InfectionSpawnLocations>([ "Default", "Reactor" ], 0), Priority.E));
         defaultOptions.set(InfectionOptionName.UninfectedSpeed, new GameOption(DefaultRoomCategoryName.CrewmateRoles, InfectionOptionName.UninfectedSpeed, new NumberValue(1.25, 0.25, 0.25, 3, false, "{0}x"), Priority.F));
-        defaultOptions.set(InfectionOptionName.UninfectedCloseDoors, new GameOption(DefaultRoomCategoryName.CrewmateRoles, InfectionOptionName.UninfectedCloseDoors, new BooleanValue(false), Priority.F + 1));
+        defaultOptions.set(InfectionOptionName.UninfectedVision, new GameOption(DefaultRoomCategoryName.CrewmateRoles, InfectionOptionName.UninfectedVision, new NumberValue(0.5, 0.25, 0.25, 2, false, "{0}x"), Priority.F + 1));
+        defaultOptions.set(InfectionOptionName.UninfectedCloseDoors, new GameOption(DefaultRoomCategoryName.CrewmateRoles, InfectionOptionName.UninfectedCloseDoors, new BooleanValue(false), Priority.F + 2));
         defaultOptions.set(InfectionOptionName.InitialInfectedCount, new GameOption(DefaultRoomCategoryName.ImpostorRoles, InfectionOptionName.InitialInfectedCount, new NumberValue(1, 1, 1, 3, false, "{0} Infected"), Priority.G));
         defaultOptions.set(InfectionOptionName.InfectCooldown, new GameOption(DefaultRoomCategoryName.ImpostorRoles, InfectionOptionName.InfectCooldown, new NumberValue(10, 2.5, 0, 60, false, "{0}s"), Priority.G + 1));
         defaultOptions.set(InfectionOptionName.InfectDistance, new GameOption(DefaultRoomCategoryName.ImpostorRoles, InfectionOptionName.InfectDistance, new EnumValue<AnyKillDistance>(["Really Short", "Short", "Medium", "Long"], 1), Priority.G + 2));
         defaultOptions.set(InfectionOptionName.InfectedSpeed, new GameOption(DefaultRoomCategoryName.ImpostorRoles, InfectionOptionName.InfectedSpeed, new NumberValue(1.25, 0.25, 0.25, 3, false, "{0}x"), Priority.G + 3));
-        defaultOptions.set(InfectionOptionName.InfectedCloseDoors, new GameOption(DefaultRoomCategoryName.ImpostorRoles, InfectionOptionName.InfectedCloseDoors, new BooleanValue(false), Priority.G + 4));
+        defaultOptions.set(InfectionOptionName.InfectedVision, new GameOption(DefaultRoomCategoryName.ImpostorRoles, InfectionOptionName.InfectedVision, new NumberValue(0.75, 0.25, 0.25, 2, false, "{0}x"), Priority.G + 4));
+        defaultOptions.set(InfectionOptionName.InfectedCloseDoors, new GameOption(DefaultRoomCategoryName.ImpostorRoles, InfectionOptionName.InfectedCloseDoors, new BooleanValue(false), Priority.G + 5));
 
         return defaultOptions;
     }
@@ -149,6 +154,9 @@ export class InfectionGamemodePlugin extends BaseGamemodePlugin {
         const infectedSpeed = this.api.gameOptions.gameOptions.get(InfectionOptionName.InfectedSpeed)?.getValue<NumberValue>().value || 1.25;
         const uninfectedSpeed = this.api.gameOptions.gameOptions.get(InfectionOptionName.UninfectedSpeed)?.getValue<NumberValue>().value || 1.25;
         
+        const infectedVision = this.api.gameOptions.gameOptions.get(InfectionOptionName.InfectedVision)?.getValue<NumberValue>().value || .75;
+        const uninfectedVision = this.api.gameOptions.gameOptions.get(InfectionOptionName.UninfectedVision)?.getValue<NumberValue>().value || .5;
+        
         const playersUninfected: PlayerData<Room>[] = [];
         const playersInfected: PlayerData<Room>[] = [];
         for (const [ , player ] of this.room.players) {
@@ -161,6 +169,7 @@ export class InfectionGamemodePlugin extends BaseGamemodePlugin {
             }
         }
 
+        this.room.setSettings({ crewmateVision: 1, impostorVision: 1 })
         await this.room.broadcastMessages(
             [
                 ...playersInfected.map(infectedPlayer => {
@@ -169,10 +178,22 @@ export class InfectionGamemodePlugin extends BaseGamemodePlugin {
                         new SetPlayerSpeedModifierMessage(infectedSpeed)
                     );
                 }),
+                ...playersInfected.map(infectedPlayer => {
+                    return new RpcMessage(
+                        infectedPlayer.control!.netId,
+                        new SetPlayerVisionModifierMessage(infectedVision)
+                    );
+                }),
                 ...playersUninfected.map(uninfectedPlayer => {
                     return new RpcMessage(
                         uninfectedPlayer.control!.netId,
                         new SetPlayerSpeedModifierMessage(uninfectedSpeed)
+                    );
+                }),
+                ...playersUninfected.map(uninfectedPlayer => {
+                    return new RpcMessage(
+                        uninfectedPlayer.control!.netId,
+                        new SetPlayerVisionModifierMessage(uninfectedVision)
                     );
                 })
             ]
