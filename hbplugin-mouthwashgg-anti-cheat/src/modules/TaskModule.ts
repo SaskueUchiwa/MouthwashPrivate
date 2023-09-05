@@ -59,8 +59,9 @@ export class TaskModule extends EventTarget {
                 { taskIdx: completeTaskRpcMessage.taskidx, inMeeting: true }, InfractionSeverity.High);
         }
 
-        const taskInQuestion = player.info?.taskStates[completeTaskRpcMessage.taskidx];
-        const taskInQuestionId = player.info?.taskIds[completeTaskRpcMessage.taskidx];
+        const playerInfo = player.info;
+        const taskInQuestion = playerInfo?.taskStates[completeTaskRpcMessage.taskidx];
+        const taskInQuestionId = playerInfo?.taskIds[completeTaskRpcMessage.taskidx];
         if (!taskInQuestion || !taskInQuestionId) {
             return await this.plugin.createInfraction(sender, InfractionName.InvalidRpcCompleteTask,
                 { taskIdx: completeTaskRpcMessage.taskidx }, InfractionSeverity.High);

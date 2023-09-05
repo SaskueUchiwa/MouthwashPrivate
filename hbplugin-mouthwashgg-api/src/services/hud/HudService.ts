@@ -21,11 +21,12 @@ import {
     SetHudVisibility,
     SetHudStringMessage,
     Palette,
-    AllowTaskInteractionMessage,
+    SetTaskCountsMessage,
     EdgeAlignment,
     CustomNetworkTransformGeneric,
     MouthwashSpawnType,
-    ClickBehaviour
+    ClickBehaviour,
+    AllowTaskInteractionMessage
 } from "mouthwash-types";
 
 import { Button, ButtonSpawnInfo } from "./Button";
@@ -41,6 +42,9 @@ export class PlayerHudManager {
     modstampColor: RGBA;
     allowTaskInteraction: boolean;
 
+    totalTasks: number;
+    tasksCompleted: number;
+
     buttons: Map<string, Button>;
 
     constructor() {
@@ -50,6 +54,9 @@ export class PlayerHudManager {
         this.modstampText = "Playing on Polus.gg: Rewritten";
         this.modstampColor = Palette.white;
         this.allowTaskInteraction = true;
+
+        this.totalTasks = 0;
+        this.tasksCompleted = 0;
 
         this.buttons = new Map;
     }
@@ -388,7 +395,7 @@ export class HudService {
         return this.getPlayerHud(player).getFullHudString(location);
     }
 
-    async setTaskInteraction(player: PlayerData, enabled: boolean) {
+    async setTaskInteraction(player: PlayerData, enabled: boolean, force = false) {
         const hudManager = this.getPlayerHud(player);
         hudManager.allowTaskInteraction = enabled;
 
@@ -398,7 +405,25 @@ export class HudService {
                 new ReliablePacket(
                     connection.getNextNonce(),
                     [
-                        new AllowTaskInteractionMessage(enabled)
+                        new AllowTaskInteractionMessage(enabled, force)
+                    ]
+                )
+            );
+        }
+    }
+
+    async setTaskCounts(player: PlayerData, totalTasks: number, tasksCompleted: number) {
+        const hudManager = this.getPlayerHud(player);
+        hudManager.totalTasks = totalTasks;
+        hudManager.tasksCompleted = tasksCompleted;
+
+        const connection = this.plugin.room.connections.get(player.clientId);
+        if (connection) {
+            await connection.sendPacket(
+                new ReliablePacket(
+                    connection.getNextNonce(),
+                    [
+                        new SetTaskCountsMessage(totalTasks, tasksCompleted)
                     ]
                 )
             );

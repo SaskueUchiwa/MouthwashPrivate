@@ -79,7 +79,8 @@ import {
     RoomGameStartEvent,
     RoomSelectHostEvent,
     getPluginEventListeners,
-    EventTarget
+    EventTarget,
+    RoomGameReadyEvent
 } from "../api";
 
 import {
@@ -155,6 +156,7 @@ export type RoomEvents = HostableEvents<BaseRoom> & ExtractEventTypes<[
     RoomCreateEvent,
     RoomDestroyEvent,
     RoomGameEndEvent,
+    RoomGameReadyEvent,
     RoomGameStartEvent,
     RoomSelectHostEvent
 ]>;
@@ -1776,6 +1778,8 @@ export class BaseRoom extends Hostable<RoomEvents> {
                     this.shipStatus.spawnPlayer(player, true);
                 }
             }
+            
+            await this.emit(new RoomGameReadyEvent(this));
         }   
     }
 

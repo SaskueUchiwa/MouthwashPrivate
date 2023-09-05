@@ -18,7 +18,7 @@ export const uninfectedColor = Palette.crewmateBlue;
 
 @MouthwashRole("Crewmate", RoleAlignment.Crewmate, uninfectedColor, EmojiService.getEmoji("crewmate"))
 @RoleObjective("Run from the infected, and complete your tasks!")
-@AnticheatExceptions([ InfractionName.ForbiddenRpcCloseDoors ])
+@AnticheatExceptions([ InfractionName.ForbiddenRpcCloseDoors, InfractionName.ForbiddenRpcCompleteTask ])
 export class Uninfected extends BaseRole {
     constructor(
         public readonly player: PlayerData<Room>

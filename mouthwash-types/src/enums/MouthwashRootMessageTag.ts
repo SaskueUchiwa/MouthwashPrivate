@@ -9,6 +9,7 @@ export enum MouthwashRootMessageTag {
     DeleteGameOption,
     SetHudVisibility = 0x8c,
     AllowTaskInteraction,
+    SetTaskCounts,
     LoadHat = 0x96,
     LoadPet,
     SetBody,

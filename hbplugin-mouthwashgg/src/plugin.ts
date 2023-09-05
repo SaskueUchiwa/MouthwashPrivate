@@ -18,6 +18,7 @@ import {
 } from "@skeldjs/hindenburg";
 
 import {
+    AllowTaskInteractionMessage,
     BeginCameraAnimationMessage,
     BeginPlayerAnimationMessage,
     CameraController,
@@ -48,6 +49,7 @@ import {
     SetOpacityMessage,
     SetOutlineMessage,
     SetQrContentsMessage,
+    SetTaskCountsMessage,
     SoundSource
 } from "mouthwash-types";
 
@@ -79,6 +81,8 @@ import { MouthwashApiPlugin, ClientFetchResourceResponseEvent } from "hbplugin-m
 @RegisterMessage(ReportDeadBodyMessage)
 @RegisterMessage(LoadHatMessage)
 @RegisterMessage(LoadPetMessage)
+@RegisterMessage(AllowTaskInteractionMessage)
+@RegisterMessage(SetTaskCountsMessage)
 @RegisterPrefab(SpawnType.MeetingHud, [ MouthwashMeetingHud ])
 @RegisterPrefab(MouthwashSpawnType.Button, [ CustomNetworkTransformGeneric, Graphic, ClickBehaviour ] as typeof Networkable[])
 @RegisterPrefab(MouthwashSpawnType.DeadBody, [ DeadBody, CustomNetworkTransformGeneric ] as typeof Networkable[])

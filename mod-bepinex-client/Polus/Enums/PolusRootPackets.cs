@@ -10,6 +10,7 @@
         DeleteGameOption = 0x8A,
         SetHudVisibility = 0x8C,
         AllowTaskInteraction = 0x8D,
+        SetTaskCounts = 0x8E,
         LoadHat = 0x96,
         LoadPet = 0x97,
         SetBody = 0x98,

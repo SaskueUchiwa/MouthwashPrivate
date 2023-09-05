@@ -31,7 +31,8 @@ import {
     FinalTaskState,
     PlayerMurderEvent,
     PlayerStartMeetingEvent,
-    PlayerData
+    PlayerData,
+    RoomGameReadyEvent
 } from "@skeldjs/hindenburg";
 
 import { MouthwashAuthPlugin } from "hbplugin-mouthwashgg-auth";
@@ -842,29 +843,38 @@ export class MouthwashApiPlugin extends RoomPlugin {
             this.roleService.removeAllRoles()
         ]);
     }
-    
-    @EventListener("player.completetask")
-    async onPlayerCompleteTask(ev: PlayerCompleteTaskEvent<Room>) {
+
+    @EventListener("room.gameready")
+    async onRoomGameReady(ev: RoomGameReadyEvent) {
+        const { totalTasks, completeTasks, players } = this.computeTaskCounts();
+        await Promise.all(players.map(player => this.hudService.setTaskCounts(player, totalTasks, completeTasks)));
+    }
+
+    computeTaskCounts(): { totalTasks: number; completeTasks: number; players: PlayerData<Room>[] } {
         let totalTasks = 0;
         let completeTasks = 0;
-        const taskStates: Map<number, FinalTaskState[]> = new Map;
+        const players = [];
         for (const [ , player ] of this.room.players) {
             const playerInfo = player.info;
             if (playerInfo && !playerInfo.isDisconnected && this.hudService.getPlayerHud(player).allowTaskInteraction) {
-                const states: FinalTaskState[] = [];
-                taskStates.set(playerInfo.playerId, states);
                 for (const task of playerInfo.taskStates) {
                     totalTasks++;
                     if (task.completed) {
                         completeTasks++;
                     }
-                    states.push({
-                        taskId: playerInfo.taskIds[task.taskidx],
-                        completed: task.completed
-                    });
                 }
             }
+            players.push(player);
         }
+
+        return { totalTasks, completeTasks, players };
+    }
+
+    @EventListener("player.completetask")
+    async onPlayerCompleteTask(ev: PlayerCompleteTaskEvent<Room>) {
+        const { totalTasks, completeTasks, players } = this.computeTaskCounts();
+        await Promise.all(players.map(player => this.hudService.setTaskCounts(player, totalTasks, completeTasks)));
+
         if (totalTasks > 0 && completeTasks >= totalTasks) {
             const players = this.getEndgamePlayers();
             this.room.registerEndGameIntent(

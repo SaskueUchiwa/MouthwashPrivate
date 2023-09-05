@@ -392,6 +392,16 @@ namespace Polus {
                 }
                 case PolusRootPackets.AllowTaskInteraction: {
                     AllowTaskInteractionPatch.TaskInteractionAllowed = reader.ReadBoolean();
+                    AllowTaskInteractionPatch.ForceTaskInteraction = reader.ReadBoolean();
+                    $"Task Interaction Allowed: {AllowTaskInteractionPatch.TaskInteractionAllowed}, ForceTaskInteraction: {AllowTaskInteractionPatch.ForceTaskInteraction}".Log();
+                    break;
+                }
+                case PolusRootPackets.SetTaskCounts:
+                {
+                    GameData.Instance.TotalTasks = reader.ReadInt32();
+                    GameData.Instance.CompletedTasks = reader.ReadInt32();
+                    $"Set Task Counts: {GameData.Instance.TotalTasks}, Completed: {GameData.Instance.CompletedTasks}"
+                        .Log();
                     break;
                 }
                 case PolusRootPackets.MarkAssBrown: {

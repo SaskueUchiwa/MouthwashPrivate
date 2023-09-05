@@ -96,7 +96,7 @@ export class InfectionGamemodePlugin extends BaseGamemodePlugin {
         defaultOptions.set(InfectionOptionName.InfectCooldown, new GameOption(DefaultRoomCategoryName.ImpostorRoles, InfectionOptionName.InfectCooldown, new NumberValue(10, 2.5, 0, 60, false, "{0}s"), Priority.G + 1));
         defaultOptions.set(InfectionOptionName.InfectDistance, new GameOption(DefaultRoomCategoryName.ImpostorRoles, InfectionOptionName.InfectDistance, new EnumValue<AnyKillDistance>(["Really Short", "Short", "Medium", "Long"], 1), Priority.G + 2));
         defaultOptions.set(InfectionOptionName.InfectedSpeed, new GameOption(DefaultRoomCategoryName.ImpostorRoles, InfectionOptionName.InfectedSpeed, new NumberValue(1.25, 0.25, 0.25, 3, false, "{0}x"), Priority.G + 3));
-        defaultOptions.set(InfectionOptionName.InfectedCloseDoors, new GameOption(DefaultRoomCategoryName.CrewmateRoles, InfectionOptionName.InfectedCloseDoors, new BooleanValue(false), Priority.G + 4));
+        defaultOptions.set(InfectionOptionName.InfectedCloseDoors, new GameOption(DefaultRoomCategoryName.ImpostorRoles, InfectionOptionName.InfectedCloseDoors, new BooleanValue(false), Priority.G + 4));
 
         return defaultOptions;
     }
@@ -157,6 +157,7 @@ export class InfectionGamemodePlugin extends BaseGamemodePlugin {
                 playersInfected.push(player);
             } else if (playerRole instanceof Uninfected) {
                 playersUninfected.push(player);
+                this.api.hudService.setTaskInteraction(player, true, true);
             }
         }
 
@@ -180,8 +181,11 @@ export class InfectionGamemodePlugin extends BaseGamemodePlugin {
         const canUninfectedCloseDoors = this.api.gameOptions.gameOptions.get(InfectionOptionName.UninfectedCloseDoors)?.getValue<BooleanValue>().enabled || false;
         const canInfectedCloseDoors = this.api.gameOptions.gameOptions.get(InfectionOptionName.InfectedCloseDoors)?.getValue<BooleanValue>().enabled || false;
         
-        if (canUninfectedCloseDoors) this.api.hudService.setHudItemVisibilityFor(HudItem.MapDoorButtons, canUninfectedCloseDoors, playersUninfected);
-        if (canInfectedCloseDoors) this.api.hudService.setHudItemVisibilityFor(HudItem.MapDoorButtons, canInfectedCloseDoors, playersInfected);
+        this.api.hudService.setHudItemVisibilityFor(HudItem.MapDoorButtons, canUninfectedCloseDoors, playersUninfected);
+        this.api.hudService.setHudItemVisibilityFor(HudItem.SabotageButton, canUninfectedCloseDoors, playersUninfected);
+        this.api.hudService.setHudItemVisibilityFor(HudItem.MapDoorButtons, canInfectedCloseDoors, playersInfected);
+        this.api.hudService.setHudItemVisibilityFor(HudItem.SabotageButton, canInfectedCloseDoors, playersInfected);
+
         const spawnLocation = this.api.gameOptions.gameOptions.get(InfectionOptionName.SpawnLocation)?.getValue<EnumValue<InfectionSpawnLocations>>();
         // if (spawnLocation?.selectedOption === "Reactor" ) {
             setTimeout(() => {
