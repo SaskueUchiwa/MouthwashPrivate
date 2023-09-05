@@ -44,7 +44,7 @@ import { InfectionGamemodePlugin, InfectionOptionName } from "../gamemode";
 export const infectedColor = new RGBA(255, 25, 25, 255);
 
 @MouthwashRole("Infected", RoleAlignment.Impostor, infectedColor, EmojiService.getEmoji("impostor"))
-@RoleObjective("Infect the crewmates!")
+@RoleObjective("You're infected! Spread the infection and infect\nall Crewmates to win.")
 @AnticheatExceptions([ /* InfractionName.ForbiddenRpcVent, */ InfractionName.ForbiddenRpcCloseDoors ])
 export class Infected extends Impostor {
     getStartGameScreen(playerRoles: RoleAssignment[], zombieCount: number): StartGameScreen {
@@ -68,6 +68,8 @@ export class Infected extends Impostor {
     protected _infectedVision: number;
     protected _canInfectedCloseDoors: boolean;
 
+    protected _totalInfections: number;
+
     constructor(public readonly player: PlayerData<Room>) {
         super(player);
 
@@ -76,6 +78,8 @@ export class Infected extends Impostor {
         this._canInfectedCloseDoors = this.api.gameOptions.gameOptions.get(InfectionOptionName.InfectedCloseDoors)?.getValue<BooleanValue>().enabled || false;
         this._killRange = killDistanceToRange[this.api.gameOptions.gameOptions.get(InfectionOptionName.InfectDistance)?.getValue<EnumValue<AnyKillDistance>>().selectedOption || "Short"];
         this._killCooldown = this.api.gameOptions.gameOptions.get(InfectionOptionName.InfectCooldown)?.getValue<NumberValue>().value || 10;
+
+        this._totalInfections = 0;
     }
 
     async onReady() {
@@ -100,6 +104,7 @@ export class Infected extends Impostor {
                 this.player.transform?.snapTo(this._killTarget.transform.position);
             }
             await this.quietMurder(this._killTarget);
+            this._totalInfections++;
             this._killTarget.info?.setDead(false);
             if (await this.checkForAllInfectedEndGame(this._killTarget))
                 return;
@@ -114,7 +119,7 @@ export class Infected extends Impostor {
             this.api.hudService.setHudStringFor(
                 HudLocation.TaskText,
                 RoleStringNames.TaskObjective,
-                `${infectedColor.text("Role: Zombie\nYou've been infected! Go find other crewmates\nto spread the infection!")}`,
+                `${infectedColor.text("Role: Infected\nYou've been infected! Go find other crewmates\nto spread the infection!")}`,
                 Priority.A,
                 [ role.player ]
             );
@@ -165,7 +170,9 @@ export class Infected extends Impostor {
     }
 
     async checkForAllInfectedEndGame(finalTarget: PlayerData<Room>) {
+        const players = [];
         for (const [ , player ] of this.room.players) {
+            players.push(player);
             if (player === finalTarget)
                 continue;
             
@@ -175,28 +182,48 @@ export class Infected extends Impostor {
             }
         }
 
-        const players = this.api.getEndgamePlayers();
         this.room.registerEndGameIntent(
             new EndGameIntent(
                 "crewmates infected",
                 GameOverReason.ImpostorByKill,
                 {
                     endGameScreen: new Map(players.map<[number, EndGameScreen]>(player => {
-                        return [
-                            player.playerId,
-                            {
-                                titleText: player.isImpostor ? "Victory" : Palette.impostorRed.text("Defeat"),
-                                subtitleText: `${uninfectedColor.text("Crewmates")} were infected`,
-                                backgroundColor: Palette.impostorRed,
-                                yourTeam: RoleAlignment.Impostor,
-                                winSound: WinSound.ImpostorWin,
-                                hasWon: player.isImpostor
-                            }
-                        ];
+                        const playerRole = this.api.roleService.getPlayerRole(player);
+                        if (playerRole instanceof Infected) {
+                            return [
+                                player.playerId!,
+                                {
+                                    titleText: playerRole._totalInfections > 0 ? "Victory" : Palette.impostorRed.text("Defeat"),
+                                    subtitleText: playerRole._totalInfections > 0
+                                        ? `All ${uninfectedColor.text("Crewmates")} were infected`
+                                        : `All ${uninfectedColor.text("Crewmates")} were infected, but you didn't pass on the infection`,
+                                    backgroundColor: Palette.impostorRed,
+                                    yourTeam: RoleAlignment.Impostor,
+                                    winSound: WinSound.ImpostorWin,
+                                    hasWon: playerRole._totalInfections > 0
+                                }
+                            ];
+                        } else {
+                            return [
+                                player.playerId!,
+                                {
+                                    titleText: Palette.impostorRed.text("Defeat"),
+                                    subtitleText: `All ${uninfectedColor.text("Crewmates")} were infected`,
+                                    backgroundColor: Palette.impostorRed,
+                                    yourTeam: RoleAlignment.Impostor,
+                                    winSound: WinSound.ImpostorWin,
+                                    hasWon: false
+                                }
+                            ];
+                        }
                     }))
                 }
             )
         );
         return true;
+    }
+
+    didInfectPlayers() {
+        return this._totalInfections > 0;
     }
 }

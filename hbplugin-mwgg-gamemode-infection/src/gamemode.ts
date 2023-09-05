@@ -250,29 +250,33 @@ export class InfectionGamemodePlugin extends BaseGamemodePlugin {
 
     @EventListener("player.leave") 
     async onPlayerLeave(ev: PlayerLeaveEvent) {
+        const players = [];
         for (const [ , player ] of this.room.players) {
+            players.push(player);
             const playerRole = this.api.roleService.getPlayerRole(player);
             if (playerRole && !(playerRole instanceof Infected)) {
                 return;
             }
         }
         
-        const players = this.api.getEndgamePlayers();
         this.room.registerEndGameIntent(
             new EndGameIntent(
                 "crewmates disconnected",
                 GameOverReason.HumansDisconnect,
                 {
                     endGameScreen: new Map(players.map<[number, EndGameScreen]>(player => {
+                        const playerRole = this.api.roleService.getPlayerRole(player);
                         return [
-                            player.playerId,
+                            player.playerId!,
                             {
-                                titleText: player.isImpostor ? "Victory" : Palette.impostorRed.text("Defeat"),
-                                subtitleText: `${uninfectedColor.text("Crewmates")} disconnected`,
+                                titleText: playerRole instanceof Infected && playerRole.didInfectPlayers() ? "Victory" : Palette.impostorRed.text("Defeat"),
+                                subtitleText: playerRole instanceof Infected && !playerRole.didInfectPlayers()
+                                    ? `${uninfectedColor.text("Crewmates")} disconnected, but you didn't pass on the infection`
+                                    : `${uninfectedColor.text("Crewmates")} disconnected`,
                                 backgroundColor: Palette.impostorRed,
                                 yourTeam: RoleAlignment.Impostor,
                                 winSound: WinSound.ImpostorWin,
-                                hasWon: player.isImpostor
+                                hasWon: playerRole instanceof Infected
                             }
                         ];
                     }))
@@ -286,22 +290,22 @@ export class InfectionGamemodePlugin extends BaseGamemodePlugin {
         if (ev.intentName === MouthwashEndGames.ImpostorsDisconnected) {
             ev.cancel();
 
-            const players = this.api.getEndgamePlayers();
             this.room.registerEndGameIntent(
                 new EndGameIntent(
                     "infected disconnected",
                     GameOverReason.ImpostorDisconnect,
                     {
-                        endGameScreen: new Map(players.map<[number, EndGameScreen]>(player => {
+                        endGameScreen: new Map([...this.room.players.values()].map<[number, EndGameScreen]>(player => {
+                            const playerRole = this.api.roleService.getPlayerRole(player);
                             return [
-                                player.playerId,
+                                player.playerId!,
                                 {
-                                    titleText: !player.isImpostor ? "Victory" : Palette.impostorRed.text("Defeat"),
+                                    titleText: playerRole instanceof Uninfected ? "Victory" : Palette.impostorRed.text("Defeat"),
                                     subtitleText: `${infectedColor.text("Infected")} disconnected`,
                                     backgroundColor: Palette.crewmateBlue,
                                     yourTeam: RoleAlignment.Crewmate,
                                     winSound: WinSound.CrewmateWin,
-                                    hasWon: !player.isImpostor
+                                    hasWon: playerRole instanceof Uninfected
                                 }
                             ];
                         }))
