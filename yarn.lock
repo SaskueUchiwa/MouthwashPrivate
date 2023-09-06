@@ -1692,10 +1692,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"arktype@npm:^1.0.19-alpha":
-  version: 1.0.19-alpha
-  resolution: "arktype@npm:1.0.19-alpha"
-  checksum: b1c4ba4dec1e19543cc2f550226a71d39857d166665371d08d7288bc37a7aa5de1a2dab61399eb89cc89920f07c4cb0d66ea7a1663ba7f78ff06ca0dbccbdb89
+"arktype@npm:^1.0.21-alpha":
+  version: 1.0.21-alpha
+  resolution: "arktype@npm:1.0.21-alpha"
+  checksum: 0b6fc4785d167bae9fb764a8065b329ec23e48a818a1a54d3d9a0eee3b7268fdc807ec97b4c3ffad2921d27c447a0c378626a3637b84b9a3f028d04ac4fe0e23
   languageName: node
   linkType: hard
 
@@ -4985,7 +4985,7 @@ __metadata:
     "@types/express": ^4.17.13
     "@types/node": latest
     "@types/pg": ^8.6.1
-    arktype: ^1.0.19-alpha
+    arktype: ^1.0.21-alpha
     bcrypt: ^5.0.1
     chalk: ^4.1.2
     dotenv: ^10.0.0

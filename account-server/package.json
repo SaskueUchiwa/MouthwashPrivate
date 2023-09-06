@@ -18,7 +18,8 @@
         "typescript": "latest"
     },
     "dependencies": {
-        "arktype": "^1.0.19-alpha",
+        "reflect-metadata": "0.1.13",
+        "arktype": "^1.0.21-alpha",
         "bcrypt": "^5.0.1",
         "chalk": "^4.1.2",
         "dotenv": "^10.0.0",
