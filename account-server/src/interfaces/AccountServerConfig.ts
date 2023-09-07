@@ -13,4 +13,8 @@ export interface AccountServerConfig {
     }|false;
     base_account_server_url: string;
     path_prefix: string;
+    stripe: {
+        secret_key: string;
+        signing_secret: string;
+    }|false;
 }

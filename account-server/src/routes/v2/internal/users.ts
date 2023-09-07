@@ -1,5 +1,6 @@
 import * as mediator from "mouthwash-mediator";
 import * as ark from "arktype";
+import * as express from "express";
 import { BaseRoute } from "../../BaseRoute";
 import { InvalidBodyError, UserNotFoundError } from "../../../errors";
 import { InternalController } from "../../../controllers";
@@ -30,7 +31,7 @@ export class UsersRoute extends BaseRoute {
     }
 
     @mediator.Endpoint(mediator.HttpMethod.PUT, "/v2/internal/users/:user_id/cosmetics")
-    @mediator.Middleware(InternalController.validateInternalAccess)
+    @mediator.Middleware(express.json(), InternalController.validateInternalAccess)
     async updateCosmetics(transaction: mediator.Transaction<{ user_id: string; }>) {
         const { user_id } = transaction.getParams();
         const { data, problems } = updateCosmeticsRequestValidator(transaction.getBody());
@@ -43,7 +44,7 @@ export class UsersRoute extends BaseRoute {
     }
 
     @mediator.Endpoint(mediator.HttpMethod.PUT, "/v2/internal/users/:user_id/game_settings")
-    @mediator.Middleware(InternalController.validateInternalAccess)
+    @mediator.Middleware(express.json(), InternalController.validateInternalAccess)
     async updateGameSettings(transaction: mediator.Transaction<{ user_id: string }>) {
         const { user_id } = transaction.getParams();
         const success = await this.server.accountsController.setPlayerGameSettings(user_id, transaction.getBody());

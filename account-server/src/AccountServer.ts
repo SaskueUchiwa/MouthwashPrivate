@@ -2,10 +2,21 @@ import * as mediator from "mouthwash-mediator";
 import * as pg from "pg";
 import FormData from "form-data";
 import Mailgun from "mailgun.js";
+import stripeApp from "stripe";
 
-import { IMailgunClient } from "mailgun.js/Interfaces";
+import type { IMailgunClient } from "mailgun.js/Interfaces";
+
 import { AccountServerConfig } from "./interfaces";
-import { AccountsController, CosmeticsController, InternalController, LobbiesController, SessionsController } from "./controllers";
+
+import {
+    AccountsController,
+    CheckoutController,
+    CosmeticsController,
+    InternalController,
+    LobbiesController,
+    SessionsController
+} from "./controllers";
+
 import { BaseRoute } from "./routes/BaseRoute";
 import { AuthRoute } from "./routes/v2/auth";
 import { AccountsRoute } from "./routes/v2/accounts";
@@ -15,13 +26,16 @@ import { VerifyRoute } from "./routes/v2/verify";
 import { BundlesRoute } from "./routes/v2/bundles";
 import { UsersRoute } from "./routes/v2/users";
 import { GamesRoute } from "./routes/v2/games";
+import { StripeRoute } from "./routes/v2/stripe";
 
 export class AccountServer {
     mediatorServer: mediator.MediatorServer<typeof BaseRoute>;
     postgresClient: pg.Client;
     mgClient: IMailgunClient|undefined;
+    stripe?: stripeApp;
 
     accountsController: AccountsController;
+    checkoutController: CheckoutController;
     cosmeticsController: CosmeticsController;
     internalController: InternalController;
     lobbiesController: LobbiesController;
@@ -49,10 +63,15 @@ export class AccountServer {
         }
 
         this.accountsController = new AccountsController(this);
+        this.checkoutController = new CheckoutController(this);
         this.cosmeticsController = new CosmeticsController(this);
         this.internalController = new InternalController;
         this.lobbiesController = new LobbiesController(this);
         this.sessionsController = new SessionsController(this);
+
+        if (config.stripe) {
+            this.stripe = new stripeApp(config.stripe.secret_key, { apiVersion: "2023-08-16" });
+        }
     }
 
     async listen() {
@@ -66,6 +85,7 @@ export class AccountServer {
         this.mediatorServer.registerRoute(BundlesRoute);
         this.mediatorServer.registerRoute(UsersRoute);
         this.mediatorServer.registerRoute(GamesRoute);
+        this.mediatorServer.registerRoute(StripeRoute);
 
         this.mediatorServer.listen(this.config.port);
     }

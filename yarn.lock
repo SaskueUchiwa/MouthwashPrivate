@@ -898,7 +898,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*, @types/node@npm:latest":
+"@types/node@npm:*, @types/node@npm:>=8.1.0, @types/node@npm:latest":
   version: 20.5.9
   resolution: "@types/node@npm:20.5.9"
   checksum: 717490e94131722144878b4ca1a963ede1673bb8f2ef78c2f5b50b918df6dc9b35e7f8283e5c2a7a9f137730f7c08dc6228e53d4494a94c9ee16881e6ce6caed
@@ -3012,7 +3012,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"express@npm:^4.17.1, express@npm:^4.18.2":
+"express@npm:^4.18.2":
   version: 4.18.2
   resolution: "express@npm:4.18.2"
   dependencies:
@@ -4989,12 +4989,14 @@ __metadata:
     bcrypt: ^5.0.1
     chalk: ^4.1.2
     dotenv: ^10.0.0
-    express: ^4.17.1
+    express: ^4.18.2
     express-rate-limit: ^5.5.0
     form-data: ^4.0.0
     mailgun.js: ^9.2.0
     mouthwash-mediator: "workspace:*"
     pg: ^8.7.1
+    reflect-metadata: 0.1.13
+    stripe: ^13.4.0
     ts-node: latest
     typescript: latest
   languageName: unknown
@@ -5930,7 +5932,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"reflect-metadata@npm:^0.1.13":
+"reflect-metadata@npm:0.1.13, reflect-metadata@npm:^0.1.13":
   version: 0.1.13
   resolution: "reflect-metadata@npm:0.1.13"
   checksum: 798d379a7b6f6455501145419505c97dd11cbc23857a386add2b9ef15963ccf15a48d9d15507afe01d4cd74116df8a213247200bac00320bd7c11ddeaa5e8fb4
@@ -6578,6 +6580,16 @@ __metadata:
   version: 3.1.1
   resolution: "strip-json-comments@npm:3.1.1"
   checksum: 492f73e27268f9b1c122733f28ecb0e7e8d8a531a6662efbd08e22cccb3f9475e90a1b82cab06a392f6afae6d2de636f977e231296400d0ec5304ba70f166443
+  languageName: node
+  linkType: hard
+
+"stripe@npm:^13.4.0":
+  version: 13.4.0
+  resolution: "stripe@npm:13.4.0"
+  dependencies:
+    "@types/node": ">=8.1.0"
+    qs: ^6.11.0
+  checksum: 8036e4daa69521046b7c1e3243e6a2adc19bd69c403bef7275c75d77a0673abe7ca164816bc8a281fe0fc8ac7253afaa727a2e36f55bb9c862b8d88aa44d59d2
   languageName: node
   linkType: hard
 

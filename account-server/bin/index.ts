@@ -46,7 +46,11 @@ INTERNAL_ACCESS_KEY=""
             api_key: process.env.MAILGUN_API_KEY!
         } : false,
         base_account_server_url: process.env.BASE_ACCOUNT_SERVER_URL!,
-        path_prefix: process.env.PATH_PREFIX || ""
+        path_prefix: process.env.PATH_PREFIX || "",
+        stripe: process.env.STRIPE_SECRET_KEY ? {
+            secret_key: process.env.STRIPE_SECRET_KEY!,
+            signing_secret: process.env.STRIPE_SIGNING_SECRET!
+        } : false
     });
     
     (async () => {

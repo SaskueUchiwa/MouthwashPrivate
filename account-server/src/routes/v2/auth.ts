@@ -1,6 +1,7 @@
 import * as mediator from "mouthwash-mediator";
 import * as bcrypt from "bcrypt";
 import * as ark from "arktype";
+import * as express from "express";
 import { BaseRoute } from "../BaseRoute";
 import { ForbiddenError, InvalidBodyError, MissingHeaderError, Unauthorized } from "../../errors";
 import { SafeUser } from "../../controllers";
@@ -12,6 +13,7 @@ export const createTokenRequestValidator = ark.type({
 
 export class AuthRoute extends BaseRoute {
     @mediator.Endpoint(mediator.HttpMethod.POST, "/v2/auth/check")
+    @mediator.Middleware(express.json())
     async onCheckAuth(transaction: mediator.Transaction<{}>) {
         const clientToken = transaction.req.header("Authorization");
         if (clientToken === undefined) throw new MissingHeaderError("Authorization");
@@ -30,6 +32,7 @@ export class AuthRoute extends BaseRoute {
     }
 
     @mediator.Endpoint(mediator.HttpMethod.POST, "/v2/auth/logout")
+    @mediator.Middleware(express.json())
     async onLogout(transaction: mediator.Transaction<{}>) {
         const clientToken = transaction.req.header("Authorization");
         if (clientToken === undefined) throw new MissingHeaderError("Authorization");
@@ -43,6 +46,7 @@ export class AuthRoute extends BaseRoute {
     }
 
     @mediator.Endpoint(mediator.HttpMethod.POST, "/v2/auth/token")
+    @mediator.Middleware(express.json())
     async onCreateToken(transaction: mediator.Transaction<{}>) {
         const { data, problems } = createTokenRequestValidator(transaction.getBody());
         if (data === undefined) throw new InvalidBodyError(problems);

@@ -1,5 +1,5 @@
+import * as crypto from "crypto";
 import { AccountServer } from "../AccountServer";
-
 
 export interface Bundle {
     id: string;
@@ -20,6 +20,14 @@ export interface BundleItem {
     resource_path: number;
     type: "HAT"|"PET";
     resource_id: number;
+}
+
+export interface BundleOwnership {
+    id: string;
+    item_id: string|null;
+    user_id: string;
+    owned_at: Date;
+    bundle_id: string|null;
 }
 
 export interface UserPerk {
@@ -78,5 +86,14 @@ export class CosmeticsController {
         `);
 
         return availableBundles as Bundle[];
+    }
+
+    async addOwnedBundle(userId: string, bundleId: string) {
+        const { rows: bundlesOwned } = await this.server.postgresClient.query(`
+            INSERT INTO user_owned_item(id, item_id, user_id, owned_at, bundle_id)
+            VALUES($1, NULL, $2, NOW(), $3)
+            RETURNING *
+        `, [ crypto.randomUUID(), userId, bundleId ]);
+        return bundlesOwned[0] as BundleOwnership;
     }
 }

@@ -1,8 +1,9 @@
 import * as mediator from "mouthwash-mediator";
 import * as bcrypt from "bcrypt";
 import * as ark from "arktype";
+import * as express from "express";
 import { BaseRoute } from "../BaseRoute";
-import { DisplayNameAlreadyInUse, EmailAlreadyInUseError, InvalidBodyError, TooManyVerificationEmailsError, UserNotFoundError } from "../../errors";
+import { FailedToAwardBundles, EmailAlreadyInUseError, InvalidBodyError, TooManyVerificationEmailsError, UserNotFoundError } from "../../errors";
 
 export const createUserRequestValidator = ark.type({
     email: "email",
@@ -16,6 +17,7 @@ export const resendVerificationEmailRequestValidator = ark.type({
 
 export class AccountsRoute extends BaseRoute {
     @mediator.Endpoint(mediator.HttpMethod.POST, "/v2/accounts")
+    @mediator.Middleware(express.json())
     async onCreateAccount(transaction: mediator.Transaction<{}>) {
         const { data, problems } = createUserRequestValidator(transaction.getBody());
         if (data === undefined) throw new InvalidBodyError(problems);
@@ -24,7 +26,7 @@ export class AccountsRoute extends BaseRoute {
         if (existingUserEmail) throw new EmailAlreadyInUseError(data.email, existingUserEmail.id);
 
         const existingUserDisplayName = await this.server.accountsController.getUserByDisplayName(data.display_name);
-        if (existingUserDisplayName) throw new DisplayNameAlreadyInUse(data.display_name, existingUserDisplayName.id);
+        if (existingUserDisplayName) throw new FailedToAwardBundles(data.display_name, existingUserDisplayName.id);
 
         const passwordHash = await bcrypt.hash(data.password, 12);
         const doVerifyEmail = this.server.accountsController.canSendEmailVerification();
@@ -42,6 +44,7 @@ export class AccountsRoute extends BaseRoute {
     }
 
     @mediator.Endpoint(mediator.HttpMethod.POST, "/v2/accounts/resend_verification")
+    @mediator.Middleware(express.json())
     async onResendEmailVerification(transaction: mediator.Transaction<{}>){ 
         const { data, problems } = resendVerificationEmailRequestValidator(transaction.getBody());
         if (data === undefined) throw new InvalidBodyError(problems);
@@ -73,5 +76,35 @@ export class AccountsRoute extends BaseRoute {
         const ownedBundles = await this.server.cosmeticsController.getAllCosmeticItemsOwnedByUser(session.user_id);
 
         transaction.respondJson(ownedBundles.map(bundle => ({ ...bundle, asset_bundle_url: undefined })));
+    }
+    
+    @mediator.Endpoint(mediator.HttpMethod.POST, "/v2/accounts/checkout_bundle")
+    async createBundleCheckoutSession(transaction: mediator.Transaction<{}>) {
+        if (!this.server.stripe) {
+            throw new mediator.InternalServerError(new Error("Stripe not enabled on server."));
+        }
+
+        const session = await this.server.sessionsController.validateAuthorization(transaction);
+
+        const mouthwashCheckoutSession = await this.server.checkoutController.createCheckout(
+            session.user_id,
+            "price_1NnieOCihgHKsR3XmYy9T0Q9",
+            "5d8aea57-5ee9-4ed7-906a-0cc4181de6f0"
+        );
+
+        if (!mouthwashCheckoutSession)
+            throw new mediator.InternalServerError(new Error("Failed to create checkout session."));
+
+        const stripeCheckoutSession = await this.server.stripe.checkout.sessions.create({
+            success_url: "https://accounts.mouthwash.midlight.studio/checkout_success",
+            cancel_url: "https://accounts.mouthwash.midlight.studio/checkout_cancel",
+            line_items: [
+                { price: "price_1NnieOCihgHKsR3XmYy9T0Q9", quantity: 1 }
+            ],
+            mode: "payment",
+            client_reference_id: mouthwashCheckoutSession.id
+        });
+
+        transaction.respondJson({ proceed_checkout_url: stripeCheckoutSession.url });
     }
 }
