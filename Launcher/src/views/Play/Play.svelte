@@ -3,7 +3,7 @@
     import * as path from "@tauri-apps/api/path";
 
     import Cog from "../../icons/Cog.svelte";
-    import { loading, unavailable, user } from "../../stores/accounts";
+    import { accountUrl, loading, unavailable, user } from "../../stores/accounts";
     import UpdateOrPlay from "./UpdateOrPlay.svelte";
     import { amongUsProcess, gameInstalledPathState } from "../../stores/gameState";
     import PlaySettings from "./PlaySettings.svelte";
@@ -32,7 +32,7 @@
         const command = new shell.Command("cmd", [ "/C", amongUsExe ], {
             env: {
                 MWGG_LOGIN_TOKEN: btoa(JSON.stringify(apiInfo || null)),
-                MWGG_ACCOUNTS_URL: "http://localhost:8000",
+                MWGG_ACCOUNTS_URL: $accountUrl,
                 MWGG_ASSETS_URL: "https://assets.mouthwash.midlight.studio"
             }
         });

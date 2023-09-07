@@ -24,7 +24,7 @@ namespace Polus.ServerList
                     Subregion = "Earth",
                     Name = "Global",
                     Maintenance = false,
-                    Ip = "65.109.160.245"
+                    Ip = "135.181.30.41"
                 },
                 new()
                 {
