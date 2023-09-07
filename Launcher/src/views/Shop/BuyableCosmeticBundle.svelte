@@ -36,7 +36,7 @@
     }
 </script>
 
-<div class="flex items-center gap-2">
+<div class="flex items-center gap-2 filter" class:grayscale={doesAlreadyOwn}>
     <img src={bundleInfo.thumbnail_url} alt={bundleInfo.bundle_name} width={96} class="rounded-lg"/>
     <div class="flex flex-col gap-2">
         <div class="flex flex-col">
