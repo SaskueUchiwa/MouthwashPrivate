@@ -63,12 +63,12 @@ export class AccountsController {
         return foundUsers[0] as User|undefined;
     }
 
-    async createUser(displayName: string, email: string, passwordHash: string) {
+    async createUser(displayName: string, email: string, passwordHash: string, emailVerified: boolean) {
         const { rows: createdUsers } = await this.server.postgresClient.query(`
             INSERT INTO users(id, email, password_hash, created_at, banned_until, muted_until, game_settings, email_verified, cosmetic_hat, cosmetic_pet, cosmetic_skin, display_name)
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
             RETURNING *
-        `, [ crypto.randomUUID(), email, passwordHash, new Date(), null, null, {}, false, 0, 0, 0, displayName ]);
+        `, [ crypto.randomUUID(), email, passwordHash, new Date(), null, null, {}, emailVerified, 0, 0, 0, displayName ]);
 
         return createdUsers[0] as User|undefined;
     }

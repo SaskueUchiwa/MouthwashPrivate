@@ -27,10 +27,11 @@ export class AccountsRoute extends BaseRoute {
         if (existingUserDisplayName) throw new DisplayNameAlreadyInUse(data.display_name, existingUserDisplayName.id);
 
         const passwordHash = await bcrypt.hash(data.password, 12);
-        const user = await this.server.accountsController.createUser(data.display_name, data.email, passwordHash);
+        const doVerifyEmail = this.server.accountsController.canSendEmailVerification();
+        const user = await this.server.accountsController.createUser(data.display_name, data.email, passwordHash, !doVerifyEmail);
         if (user === undefined) throw new mediator.InternalServerError(new Error(`Failed to create user? (email=${data.email} display_name=${data.display_name})`));
 
-        if (this.server.accountsController.canSendEmailVerification()) {
+        if (doVerifyEmail) {
             const emailVerification = await this.server.accountsController.createEmailVerificationIntent(user.id);
             if (emailVerification === undefined) throw new mediator.InternalServerError(new Error(`Failed to create email intent? (email=${data.email})`));
             await this.server.accountsController.sendEmailVerificationIntent(user.email, emailVerification.id);
