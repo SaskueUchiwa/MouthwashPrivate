@@ -49,6 +49,9 @@ export class AccountsRoute extends BaseRoute {
         const foundUser = await this.server.accountsController.getUserByEmail(data.email);
         if (foundUser === undefined) throw new UserNotFoundError({ email: data.email });
 
+        if (!this.server.accountsController.canSendEmailVerification())
+            throw new mediator.InternalServerError(new Error("User sent email verification request, but Mailgun is not available on the server"));
+
         const foundExistingVerification = await this.server.accountsController.getEmailVerificationIntentForUser(foundUser.id);
         if (foundExistingVerification === undefined) {
             const emailVerification = await this.server.accountsController.createEmailVerificationIntent(foundUser.id);
