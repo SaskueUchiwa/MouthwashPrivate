@@ -63,7 +63,7 @@
                     const badDisplayName = json.details.find(detail => detail.path.length === 1 && detail.path[0] === "display_name");
                     if (badDisplayName) {
                         erroredInputs.add("display-name");
-                        errorMessages.push("Invalid display name. It must be at least 3 characters long and no more than 32, containing only alphabet letters, numbers, underscores ('_') and hyphens ('-').")
+                        errorMessages.push("Invalid display name. It must be at least 3 characters long and no more than 24, containing only alphabet letters, numbers, underscores ('_') and hyphens ('-').")
                     }
                     if (badEmail) {
                         erroredInputs.add("email");

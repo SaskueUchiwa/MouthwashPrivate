@@ -17,7 +17,7 @@ import { BaseRoute } from "../BaseRoute";
 export const createUserRequestValidator = ark.type({
     email: "email",
     password: "8<=string<=128",
-    display_name: /^[a-zA-Z0-9_\-]{3,32}$/
+    display_name: /^[a-zA-Z0-9_\-]{3,24}$/
 });
 
 export const resendVerificationEmailRequestValidator = ark.type({
