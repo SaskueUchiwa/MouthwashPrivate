@@ -12,6 +12,11 @@ export interface Checkout {
     completed_at: Date|null;
 }
 
+export interface StripeItem {
+    id: string;
+    stripe_price_id: string;
+}
+
 export class CheckoutController {
     constructor(public readonly server: AccountServer) {}
 
@@ -31,6 +36,7 @@ export class CheckoutController {
             FROM checkout_session
             WHERE id = $1
         `, [ id ]);
+
         return foundCheckouts[0] as Checkout|undefined;
     }
 
@@ -41,6 +47,29 @@ export class CheckoutController {
             WHERE id = $1
             RETURNING *
         `, [ id, paymentIntent ]);
+
         return updatedCheckouts[0] as Checkout|undefined;
+    }
+
+    async setCheckoutCancelled(id: string) {
+        const { rows: updatedCheckouts } = await this.server.postgresClient.query(`
+            UPDATE checkout_session
+            SET canceled_at = NOW()
+            WHERE id = $1
+            RETURNING *
+        `, [ id ]);
+
+        return updatedCheckouts[0] as Checkout|undefined;
+    }
+
+    async getBundleStripeItem(bundleId: string) {
+        const { rows: foundStripeItems } = await this.server.postgresClient.query(`
+            SELECT *
+            FROM stripe_item
+            RIGHT JOIN bundle ON bundle.stripe_item_id = stripe_item.id
+            WHERE bundle.id = $1
+        `, [ bundleId ]);
+        
+        return foundStripeItems[0] as StripeItem|undefined;
     }
 }

@@ -1,3 +1,4 @@
+export * from "./BundleNotFound";
 export * from "./DisplayNameAlreadyInUse";
 export * from "./EmailAlreadyInUse";
 export * from "./FailedToAwardBundles";

@@ -28,7 +28,13 @@ export class StripeRoute extends BaseRoute {
                     await this.server.checkoutController.setCheckoutPaymentIntent(mouthwashCheckoutSession.id, checkoutSessionCompleted.payment_intent);
                     await this.server.cosmeticsController.addOwnedBundle(mouthwashCheckoutSession.user_id, mouthwashCheckoutSession.bundle_id);
                 }
-                this.server.mediatorServer.logger.info("info", checkoutSessionCompleted.payment_status);
+                break;
+            case "checkout.session.expired":
+                const mouthwashCheckoutSession = await this.server.checkoutController.getCheckoutById(checkoutSessionCompleted.client_reference_id);
+                if (mouthwashCheckoutSession === undefined)
+                    return;
+
+                await this.server.checkoutController.setCheckoutCancelled(mouthwashCheckoutSession.id);
                 break;
             default:
                 this.server.mediatorServer.logger.warn(`Unhandled Stripe event type ${event.type}`);

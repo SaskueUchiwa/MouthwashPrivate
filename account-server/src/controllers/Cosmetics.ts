@@ -79,6 +79,16 @@ export class CosmeticsController {
         return rowsUpdated.rowCount > 0;
     }
 
+    async getAvailableBundleById(bundleId: string) {
+        const { rows: availableBundles } = await this.server.postgresClient.query(`
+            SELECT *
+            FROM bundle
+            WHERE id = $1
+        `, [ bundleId ]);
+        
+        return availableBundles[0] as Bundle|undefined;
+    }
+
     async getAllAvailableBundles() {
         const { rows: availableBundles } = await this.server.postgresClient.query(`
             SELECT *
@@ -94,6 +104,7 @@ export class CosmeticsController {
             VALUES($1, NULL, $2, NOW(), $3)
             RETURNING *
         `, [ crypto.randomUUID(), userId, bundleId ]);
-        return bundlesOwned[0] as BundleOwnership;
+
+        return bundlesOwned[0] as BundleOwnership|undefined;
     }
 }
