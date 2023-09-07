@@ -47,12 +47,16 @@ export interface BundleItem {
     id: string;
     bundle_id: string;
     name: string;
+    bundle_name: string;
     among_us_id: number;
     resource_path: number;
     type: "HAT"|"PET";
     resource_id: number;
     thumbnail_url: string;
     owned_at: string;
+    added_at: string;
+    bundle_price_usd: number;
+    valuation: string;
 }
 
 export type Deferred<T> = T|typeof loading|typeof unavailable;

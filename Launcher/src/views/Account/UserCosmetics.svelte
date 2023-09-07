@@ -53,7 +53,7 @@
     <div class="flex-1 flex items-center justify-center text-[#806593]">
         <Loader size={32}/>
     </div>
-{:else if $bundles === unavailable || error}
+{:else if $bundles === unavailable || $bundles.size === 0 || error}
     You have no cosmetics.
 {:else}
     <div class="flex flex-col gap-2">

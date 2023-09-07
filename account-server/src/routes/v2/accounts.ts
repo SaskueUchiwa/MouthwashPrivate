@@ -4,11 +4,12 @@ import * as ark from "arktype";
 import * as express from "express";
 
 import {
+    BundleAlreadyOwnedError,
+    BundleNotFoundError,
     EmailAlreadyInUseError,
     InvalidBodyError,
     TooManyVerificationEmailsError,
     UserNotFoundError,
-    BundleNotFoundError,
     DisplayNameAlreadyInUse
 } from "../../errors";
 
@@ -84,7 +85,7 @@ export class AccountsRoute extends BaseRoute {
         const session = await this.server.sessionsController.validateAuthorization(transaction);
         const ownedBundles = await this.server.cosmeticsController.getAllCosmeticItemsOwned(session.user_id);
 
-        transaction.respondJson(ownedBundles.map(bundle => ({ ...bundle })));
+        transaction.respondJson(ownedBundles);
     }
     
     @mediator.Endpoint(mediator.HttpMethod.POST, "/v2/accounts/checkout_bundle")
@@ -102,6 +103,10 @@ export class AccountsRoute extends BaseRoute {
             throw new BundleNotFoundError(bundle_id);
 
         const session = await this.server.sessionsController.validateAuthorization(transaction);
+        const ownedItem = await this.server.cosmeticsController.doesUserOwnBundle(session.user_id, bundle_id);
+        
+        if (ownedItem)
+            throw new BundleAlreadyOwnedError(bundle_id);
 
         const mouthwashCheckoutSession = await this.server.checkoutController.createCheckout(
             session.user_id,

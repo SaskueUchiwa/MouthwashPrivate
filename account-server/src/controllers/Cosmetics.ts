@@ -60,15 +60,24 @@ export class CosmeticsController {
     
     async getAllCosmeticItemsOwned(userId: string): Promise<(BundleItem & { thumbnail_url: string; bundle_name: string; owned_at: Date; })[]> {
         const { rows: foundBundleItems } = await this.server.postgresClient.query(`
-            SELECT bundle_item.*, bundle.thumbnail_url, bundle.name, user_owned_item.owned_at
+            SELECT bundle_item.*, bundle.thumbnail_url, bundle.name AS bundle_name, user_owned_item.owned_at
             FROM bundle_item
             LEFT JOIN bundle ON bundle.id = bundle_item.bundle_id
-            LEFT JOIN asset_bundle ON asset_bundle.id = bundle.asset_bundle_id
             LEFT JOIN user_owned_item ON user_owned_item.item_id = bundle_item.id OR user_owned_item.bundle_id = bundle.id
             WHERE user_owned_item.user_id = $1
         `, [ userId ]);
 
         return foundBundleItems;
+    }
+
+    async doesUserOwnBundle(userId: string, bundleId: string) {
+        const ownedBundleIds = await this.server.postgresClient.query(`
+            SELECT *
+            FROM user_owned_item
+            WHERE user_id = $1 AND bundle_Id = $2
+        `, [ userId, bundleId ]);
+
+        return ownedBundleIds.rowCount > 0;
     }
 
     async getUserPerks(userId: string) {
@@ -102,13 +111,14 @@ export class CosmeticsController {
         return availableBundles[0] as Bundle|undefined;
     }
 
-    async getAllAvailableBundles() {
+    async getAllAvailableBundles(): Promise<(Bundle|{ thumbnail_url: string; bundle_name: string; added_at: Date; bundle_price_usd: number; })[]> {
         const { rows: availableBundles } = await this.server.postgresClient.query(`
-            SELECT *
-            FROM bundle
+            SELECT bundle_item.*, bundle.thumbnail_url, bundle.name AS bundle_name, bundle.added_at, bundle.price_usd AS bundle_price_usd
+            FROM bundle_item
+            LEFT JOIN bundle ON bundle.id = bundle_item.bundle_id
         `);
 
-        return availableBundles as Bundle[];
+        return availableBundles;
     }
 
     async addOwnedBundle(userId: string, bundleId: string) {

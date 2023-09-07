@@ -1,3 +1,4 @@
+export * from "./BundleAlreadyOwned";
 export * from "./BundleNotFound";
 export * from "./DisplayNameAlreadyInUse";
 export * from "./EmailAlreadyInUse";

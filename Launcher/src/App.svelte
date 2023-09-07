@@ -14,7 +14,7 @@
     import AccountView from "./views/Account/Account.svelte";
     import DownloadView from "./views/Download/Download.svelte";
     import PlayView from "./views/Play/Play.svelte";
-    import ShopView from "./views/Shop.svelte";
+    import ShopView from "./views/Shop/Shop.svelte";
     import { gameInstalledPathState, gameRemoteVersionState, type ChangeLogEntry, gameInstalledVersionState } from "./stores/gameState";
     import { loading, unavailable } from "./stores/accounts";
     import Launch from "./icons/Launch.svelte";
