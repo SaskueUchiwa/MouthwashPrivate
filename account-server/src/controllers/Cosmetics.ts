@@ -14,7 +14,7 @@ export interface Bundle {
 
 export interface BundleItem {
     id: string;
-    bundle_id: number;
+    bundle_id: string;
     name: string;
     among_us_id: number;
     resource_path: number;
@@ -45,9 +45,22 @@ export interface UserPerkSettings {
 export class CosmeticsController {
     constructor(public readonly server: AccountServer) {}
     
-    async getAllCosmeticItemsOwnedByUser(userId: string): Promise<(BundleItem & { asset_bundle_url: string; })[]> {
+    async getAllCosmeticItemAssetsOwnedByUser(userId: string): Promise<(BundleItem & { asset_bundle_url: string; })[]> {
         const { rows: foundBundleItems } = await this.server.postgresClient.query(`
             SELECT bundle_item.*, asset_bundle.url as asset_bundle_url
+            FROM bundle_item
+            LEFT JOIN bundle ON bundle.id = bundle_item.bundle_id
+            LEFT JOIN asset_bundle ON asset_bundle.id = bundle.asset_bundle_id
+            LEFT JOIN user_owned_item ON user_owned_item.item_id = bundle_item.id OR user_owned_item.bundle_id = bundle.id
+            WHERE user_owned_item.user_id = $1
+        `, [ userId ]);
+
+        return foundBundleItems;
+    }
+    
+    async getAllCosmeticItemsOwned(userId: string): Promise<(BundleItem & { thumbnail_url: string; bundle_name: string; owned_at: Date; })[]> {
+        const { rows: foundBundleItems } = await this.server.postgresClient.query(`
+            SELECT bundle_item.*, bundle.thumbnail_url, bundle.name, user_owned_item.owned_at
             FROM bundle_item
             LEFT JOIN bundle ON bundle.id = bundle_item.bundle_id
             LEFT JOIN asset_bundle ON asset_bundle.id = bundle.asset_bundle_id

@@ -2,7 +2,7 @@ import { writable } from "svelte/store";
 
 export const loading = Symbol("loading");
 export const unavailable = Symbol("unavailable");
-export const accountUrl = writable("https://accounts.mouthwash.midlight.studio");
+export const accountUrl = writable("http://localhost:8000");
 
 export interface UserLogin {
     id: string;
@@ -41,6 +41,18 @@ export interface Player {
     cosmetic_color: number|null;
     cosmetic_name: string|null;
     role_alignment: string|null;
+}
+
+export interface BundleItem {
+    id: string;
+    bundle_id: string;
+    name: string;
+    among_us_id: number;
+    resource_path: number;
+    type: "HAT"|"PET";
+    resource_id: number;
+    thumbnail_url: string;
+    owned_at: string;
 }
 
 export type Deferred<T> = T|typeof loading|typeof unavailable;

@@ -7,6 +7,7 @@
     import { accountUrl, loading, unavailable, user, type UserLogin } from "../../stores/accounts";
     import { get } from "svelte/store";
     import UserGames from "./UserGames.svelte";
+    import UserCosmetics from "./UserCosmetics.svelte";
     
     let currentPage: ""|"games" = "";
 
@@ -120,7 +121,7 @@
                     <SignUpSection/>
                 {:else}
                     {#if currentPage === ""}
-                        <span class="italic">You don't have any cosmetics.</span>
+                        <UserCosmetics user={$user}/>
                     {:else if currentPage === "games"}
                         <UserGames user={$user}/>
                     {/if}
