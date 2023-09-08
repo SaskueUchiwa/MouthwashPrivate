@@ -15,7 +15,6 @@ namespace MouthwashClient.Patches.Menu
                 if (LoginService.IsLoggedIn())
                 {
                     UserInformationWithAuthToken userInformation = LoginService.GetLoginInformation();
-                    PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage($"Logged in as {userInformation.DisplayName}");
                     Reactor.Patches.ReactorVersionShower.Text.text += $"\nLogged in as {userInformation.DisplayName}";
                 }
                 else if (!string.IsNullOrEmpty(LoginService.ErrorWhileLoggingIn))

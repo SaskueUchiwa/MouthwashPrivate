@@ -74,17 +74,17 @@ namespace MouthwashClient.Services
                     "Couldn't check your login credentials.\nMake sure you start the game through\nthe launcher.");
                 yield break;
             }
-            
-            PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage($"Authenticating with account server.. {userCredentials}");
 
-            UnityWebRequest checkAuthRequest = UnityWebRequest.Post($"{Environment.GetEnvironmentVariable("MWGG_ACCOUNTS_URL")!}/api/v2/auth/check", "");
+            string url = $"{Environment.GetEnvironmentVariable("MWGG_ACCOUNTS_URL")!}/api/v2/auth/check";
+            PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage($"Authenticating with account server @ POST {url}");
+
+            UnityWebRequest checkAuthRequest = UnityWebRequest.Post(url, "");
             checkAuthRequest.SetRequestHeader("Authorization", $"Bearer {userCredentials.ClientToken}");
 
             yield return checkAuthRequest.SendWebRequest();
-
-            PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage($"Authentication status: {checkAuthRequest.responseCode}..");
+            PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage($"Authentication status: {checkAuthRequest.result}..");
             
-            if (checkAuthRequest.responseCode != 200)
+            if (checkAuthRequest.result != UnityWebRequest.Result.Success)
             {
                 ErrorCallback(
                     "Failed to get information about your login.\nMake sure you start the game through\nthe launcher.");

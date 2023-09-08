@@ -8,19 +8,20 @@ using Reactor;
 using Reactor.Utilities;
 using UnityEngine;
 
-namespace MouthwashClient;
-
-[BepInAutoPlugin]
-[BepInProcess("Among Us.exe")]
-[BepInDependency(ReactorPlugin.Id)]
-public partial class MouthwashClientPlugin : BasePlugin
+namespace MouthwashClient
 {
-    public Harmony Harmony { get; } = new(Id);
-
-    public ConfigEntry<string> ConfigName { get; private set; }
-
-    public override void Load()
+    [BepInAutoPlugin]
+    [BepInProcess("Among Us.exe")]
+    [BepInDependency(ReactorPlugin.Id)]
+    public partial class MouthwashClientPlugin : BasePlugin
     {
-        Harmony.PatchAll();
+        public Harmony Harmony { get; } = new(Id);
+
+        public ConfigEntry<string> ConfigName { get; private set; }
+
+        public override void Load()
+        {
+            Harmony.PatchAll();
+        }
     }
 }

@@ -15,23 +15,22 @@ namespace MouthwashClient.Patches
         
         public static void Postfix(MainMenuManager __instance)
         {
-            if (!_onceLogin)
+            if (_onceLogin) return;
+            
+            LoginService.ErrorCallback += s =>
             {
-                LoginService.ErrorCallback += s =>
-                {
-                    PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage($"Showing error: {s}");
-                    PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage(DestroyableSingleton<DisconnectPopup>.Instance.isActiveAndEnabled);
-                    DestroyableSingleton<DiscordManager>.Instance.discordPopup.Show($"<size=150%>{s}</size>");
-                    DestroyableSingleton<EOSManager>.Instance.HideCallbackWaitAnim();
-                };
-                LoginService.DoneCallback += () =>
-                {
-                    DestroyableSingleton<EOSManager>.Instance.HideCallbackWaitAnim();
-                    Reactor.Patches.ReactorVersionShower.UpdateText();
-                };
-                __instance.StartCoroutine(LoginService.Initialize());
-                _onceLogin = true;
-            }
+                PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage($"Showing error: {s}");
+                PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage(DestroyableSingleton<DisconnectPopup>.Instance.isActiveAndEnabled);
+                DestroyableSingleton<DiscordManager>.Instance.discordPopup.Show($"<size=150%>{s}</size>");
+                DestroyableSingleton<EOSManager>.Instance.HideCallbackWaitAnim();
+            };
+            LoginService.DoneCallback += () =>
+            {
+                DestroyableSingleton<EOSManager>.Instance.HideCallbackWaitAnim();
+                Reactor.Patches.ReactorVersionShower.UpdateText();
+            };
+            DestroyableSingleton<AmongUsClient>.Instance.StartCoroutine(LoginService.Initialize());
+            _onceLogin = true;
         }
     }
 

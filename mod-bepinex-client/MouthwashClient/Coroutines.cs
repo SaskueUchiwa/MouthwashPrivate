@@ -44,7 +44,7 @@ namespace MouthwashClient
         private void Update() {
             for (int i = coroutinesStore.Count - 1; i >= 0; i--) {
                 CoroutineTuple tuple = coroutinesStore[i];
-                if (!(tuple.WaitCondition is WaitForSeconds waitForSeconds)) continue;
+                if (tuple.WaitCondition is not WaitForSeconds waitForSeconds) continue;
                 if ((waitForSeconds.m_Seconds -= Time.deltaTime) > 0) continue;
                 coroutinesStore.RemoveAt(i);
                 ProcessNextOfCoroutine(tuple.Coroutine);
@@ -72,11 +72,12 @@ namespace MouthwashClient
         private void ProcessCoroutineList(List<IEnumerator> target) {
             if (target.Count == 0) return;
 
-            // use a temp list to make sure waits made during processing are not handled by same processing invocation
-            // additionally, a temp list reduces allocations compared to an array
             tempList.AddRange(target);
             target.Clear();
-            foreach (IEnumerator enumerator in tempList) ProcessNextOfCoroutine(enumerator);
+            foreach (IEnumerator enumerator in tempList)
+            {
+                ProcessNextOfCoroutine(enumerator);
+            }
             tempList.Clear();
         }
 
@@ -91,8 +92,7 @@ namespace MouthwashClient
         [HideFromIl2Cpp]
         private void ProcessNextOfCoroutine(IEnumerator enumerator) {
             try {
-                if (!enumerator.MoveNext()
-                ) // Run the next step of the coroutine. If it's done, restore the parent routine
+                if (!enumerator.MoveNext())
                 {
                     List<int> indices = coroutinesStore.Select((it, idx) => (idx, it))
                         .Where(it => it.it.WaitCondition == enumerator).Select(it => it.idx).ToList();
@@ -105,8 +105,9 @@ namespace MouthwashClient
                     return;
                 }
             } catch (Exception e) {
+                PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogError(e);
                 Stop(FindOriginalCoroutine(
-                    enumerator)); // We want the entire coroutine hierarchy to stop when an error happen
+                    enumerator)); // we want the entire coroutine hierarchy to stop when an error happens
             }
 
             object next = enumerator.Current;
@@ -126,20 +127,23 @@ namespace MouthwashClient
                 case WaitForSeconds: {
                     break; // do nothing, this one is supported in Process
                 }
-                case UnityWebRequestAsyncOperation:
-                    PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage("Got web request");
-                    nextFrameCoroutines.Add(enumerator);
-                    return;
+                case UnityWebRequestAsyncOperation webRequestNext:
+                    next = new WebRequestEnumeratorWrapper(webRequestNext);
+                    break;
                 case Il2CppObjectBase il2CppObjectBase: {
-                    Il2CppSystem.Collections.IEnumerator nextAsEnumerator =
+                    
+                    Il2CppSystem.Collections.IEnumerator? nextAsEnumerator =
                         il2CppObjectBase.TryCast<Il2CppSystem.Collections.IEnumerator>();
                     if (nextAsEnumerator != null) // il2cpp IEnumerator also handles CustomYieldInstruction
                         next = new Il2CppEnumeratorWrapper(nextAsEnumerator);
                     break;
                 }
+                default:
+                    nextFrameCoroutines.Add(enumerator);
+                    return;
             }
 
-            coroutinesStore.Add(new CoroutineTuple {WaitCondition = next, Coroutine = enumerator});
+            coroutinesStore.Add(new CoroutineTuple{ WaitCondition = next, Coroutine = enumerator });
 
             if (next is IEnumerator nextCoroutine)
                 ProcessNextOfCoroutine(nextCoroutine);
@@ -155,6 +159,26 @@ namespace MouthwashClient
             public object WaitCondition;
             public object Owner;
             public IEnumerator Coroutine;
+        }
+
+        private class WebRequestEnumeratorWrapper : IEnumerator {
+            private readonly UnityWebRequestAsyncOperation _webRequest;
+
+            public WebRequestEnumeratorWrapper(UnityWebRequestAsyncOperation webRequest) {
+                _webRequest = webRequest;
+            }
+
+            public bool MoveNext()
+            {
+                return !_webRequest.isDone;
+            }
+
+            public void Reset()
+            {
+                throw new NotImplementedException();
+            }
+
+            public object Current => _webRequest.progress;
         }
 
         private class Il2CppEnumeratorWrapper : IEnumerator {
