@@ -18,6 +18,10 @@ namespace MouthwashClient.Patches.Menu
                     PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage($"Logged in as {userInformation.DisplayName}");
                     Reactor.Patches.ReactorVersionShower.Text.text += $"\nLogged in as {userInformation.DisplayName}";
                 }
+                else if (!string.IsNullOrEmpty(LoginService.ErrorWhileLoggingIn))
+                {
+                    Reactor.Patches.ReactorVersionShower.Text.text += $"\n<color=#c92d22>{LoginService.ErrorWhileLoggingIn}</color>";
+                }
                 else
                 {
                     Reactor.Patches.ReactorVersionShower.Text.text += "\n<color=#c92d22>Not logged in</color>";

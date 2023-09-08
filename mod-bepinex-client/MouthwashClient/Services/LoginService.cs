@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Collections;
 using System.IO;
 using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Reactor.Utilities;
+using UnityEngine;
+using UnityEngine.Networking;
 
 namespace MouthwashClient.Services
 {
@@ -48,8 +51,17 @@ namespace MouthwashClient.Services
     public static class LoginService
     {
         static private UserInformationWithAuthToken? _cachedUserInformation;
+        static public string ErrorWhileLoggingIn = "";
+
+        public static Action<string> ErrorCallback;
+        public static Action DoneCallback;
+
+        public static void ErrorPopup(string text)
+        {
+            ErrorWhileLoggingIn = text;
+        }
         
-        public static async void Initialize()
+        public static IEnumerator Initialize()
         {
             _cachedUserInformation = null;
             
@@ -58,46 +70,41 @@ namespace MouthwashClient.Services
             LoginUserCredentials? userCredentials = CredentialsService.GetLoginUserCredentials();
             if (userCredentials == null)
             {
-                // DisconnectPopup.Instance.SetText("Couldn't check your login credentials. Make sure you start the game through the launcher.");
-                // DisconnectPopup.Instance.Show();
-                return;
+                ErrorCallback(
+                    "Couldn't check your login credentials.\nMake sure you start the game through\nthe launcher.");
+                yield break;
             }
             
             PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage($"Authenticating with account server.. {userCredentials}");
 
-            HttpClient checkAuthHttpClient = new();
-            HttpRequestMessage checkAuthRequest = new();
-            checkAuthRequest.RequestUri =
-                new Uri($"{Environment.GetEnvironmentVariable("MWGG_ACCOUNTS_URL")!}/api/v2/auth/check");
-            checkAuthRequest.Method = HttpMethod.Post;
-            checkAuthRequest.Headers.Add("Authorization", $"Bearer {userCredentials.ClientToken}");
+            UnityWebRequest checkAuthRequest = UnityWebRequest.Post($"{Environment.GetEnvironmentVariable("MWGG_ACCOUNTS_URL")!}/api/v2/auth/check", "");
+            checkAuthRequest.SetRequestHeader("Authorization", $"Bearer {userCredentials.ClientToken}");
 
-            HttpResponseMessage checkAuthResponse = checkAuthHttpClient.Send(checkAuthRequest);
+            yield return checkAuthRequest.SendWebRequest();
 
-            PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage($"Authentication status: {checkAuthResponse.StatusCode}..");
+            PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage($"Authentication status: {checkAuthRequest.responseCode}..");
             
-            if (!checkAuthResponse.IsSuccessStatusCode)
+            if (checkAuthRequest.responseCode != 200)
             {
-                // DisconnectPopup.Instance.SetText("Couldn't get information about your login. Make sure you start the game through the launcher.");
-                // DisconnectPopup.Instance.Show();
-                return;
+                ErrorCallback(
+                    "Failed to get information about your login.\nMake sure you start the game through\nthe launcher.");
+                yield break;
             }
 
-            string checkAuthResponseText = await checkAuthResponse.Content.ReadAsStringAsync();
-            PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage(checkAuthResponseText);
+            string checkAuthResponseText = checkAuthRequest.downloadHandler.text;
             StandardApiResponse<UserInformationWithAuthToken>? userInformation =
                 JsonSerializer.Deserialize<StandardApiResponse<UserInformationWithAuthToken>>(checkAuthResponseText);
             if (userInformation == null)
             {
-                // DisconnectPopup.Instance.SetText("Couldn't get information about your login. Make sure you start the game through the launcher.");
-                // DisconnectPopup.Instance.Show();
-                return;
+                ErrorCallback(
+                    "Couldn't get information about your login.\nMake sure you start the game through\nthe launcher.");
+                yield break;
             }
             
             PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage($"Successfully authenticated!");
 
             _cachedUserInformation = userInformation.Data;
-            Reactor.Patches.ReactorVersionShower.UpdateText();
+            DoneCallback();
         }
 
         public static bool IsLoggedIn()
