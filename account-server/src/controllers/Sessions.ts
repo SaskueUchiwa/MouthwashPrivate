@@ -21,7 +21,7 @@ export class SessionsController {
             SELECT *
             FROM session
             WHERE client_token = $1
-        `, [token ]);
+        `, [ token ]);
 
         return foundSessions[0] as Session|undefined;
     }

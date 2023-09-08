@@ -1,8 +1,0 @@
-bin/
-obj/
-/packages/
-riderModule.iml
-/_ReSharper.Caches/
-**/.idea/*
-**/Directory.Build.props
-PolusGGMod.sln.DotSettings.user
