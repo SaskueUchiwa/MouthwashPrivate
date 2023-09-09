@@ -240,7 +240,7 @@ export class AccountsController {
         const newPasswordHash = await bcrypt.hash(newPassword, 12);
         const { rows: updatedUsers } = await this.server.postgresClient.query(`
             UPDATE users
-            SET users.password_hash = $2
+            SET password_hash = $2
             WHERE id = $1
             RETURNING *
         `, [ userId, newPasswordHash ]);

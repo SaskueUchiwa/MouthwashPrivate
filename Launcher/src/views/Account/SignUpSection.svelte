@@ -173,6 +173,7 @@
             <li class="my-0.5">Keep track your bought cosmetic bundles and game statistics</li>
             <li class="my-0.5">You'll need an account to start playing</li>
             <li class="my-0.5">Your email address will have to be verified before you can log-in</li>
+            <li class="my-0.5">Make sure you to check your email inbox's spam folder if you can't find the verification emails</li>
         </ul>
         <ErrorNotes {successMessages} {errorMessages}/>
     </div>

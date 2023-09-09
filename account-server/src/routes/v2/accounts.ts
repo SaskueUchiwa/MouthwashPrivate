@@ -3,7 +3,7 @@ import * as crypto from "crypto";
 import * as ark from "arktype";
 import express from "express";
 import { BaseRoute } from "../BaseRoute";
-import { DisplayNameAlreadyInUse, EmailAlreadyInUseError, InvalidBodyError, PasswordResetIntentNotFoundError, TooManyVerificationEmailsError, UserNotFoundError } from "../../errors";
+import { DisplayNameAlreadyInUse, EmailAlreadyInUseError, EmailAlreadyVerifiedError, InvalidBodyError, PasswordResetIntentNotFoundError, TooManyVerificationEmailsError, UserNotFoundError } from "../../errors";
 import { InvalidPasswordResetCode } from "../../errors/InvalidPasswordResetCode";
 
 export const createUserRequestValidator = ark.type({
@@ -63,6 +63,8 @@ export class AccountsRoute extends BaseRoute {
         const foundUser = await this.server.accountsController.getUserByEmail(data.email);
         if (foundUser === undefined) throw new UserNotFoundError({ email: data.email });
 
+        if (foundUser.email_verified) throw new EmailAlreadyVerifiedError(data.email);
+
         if (!this.server.accountsController.canSendEmailVerification())
             throw new mediator.InternalServerError(new Error("User sent email verification request, but email provider is not available on the server"));
 
@@ -99,6 +101,8 @@ export class AccountsRoute extends BaseRoute {
         const resetPasswordIntent = await this.server.accountsController.createResetPasswordIntent(foundUser.id);
         if (!resetPasswordIntent)
             throw new mediator.InternalServerError(new Error("User sent password reset request, but password intent was not created"));
+
+        await this.server.accountsController.sendResetPasswordIntent(foundUser.email, foundUser.display_name, resetPasswordIntent.code);
 
         transaction.respondJson({ reset_id: resetPasswordIntent.id });
     }
