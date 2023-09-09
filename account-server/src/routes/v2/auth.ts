@@ -1,6 +1,7 @@
 import * as mediator from "mouthwash-mediator";
 import * as bcrypt from "bcrypt";
 import * as ark from "arktype";
+import express from "express";
 import { BaseRoute } from "../BaseRoute";
 import { ForbiddenError, InvalidBodyError, MissingHeaderError, Unauthorized } from "../../errors";
 import { SafeUser } from "../../controllers";
@@ -43,6 +44,7 @@ export class AuthRoute extends BaseRoute {
     }
 
     @mediator.Endpoint(mediator.HttpMethod.POST, "/v2/auth/token")
+    @mediator.Middleware(express.json())
     async onCreateToken(transaction: mediator.Transaction<{}>) {
         const { data, problems } = createTokenRequestValidator(transaction.getBody());
         if (data === undefined) throw new InvalidBodyError(problems);

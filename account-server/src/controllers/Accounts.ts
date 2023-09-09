@@ -3,6 +3,7 @@ import * as crypto from "crypto";
 import { AccountServer } from "../AccountServer";
 import { IMailgunClient } from "mailgun.js/Interfaces";
 import { DeclareSafeKeys } from "../types/DeclareSafeKeys";
+import { MailgunEmailProvider, MailjetEmailProvider } from "./email";
 
 export interface User {
     id: string;
@@ -31,7 +32,20 @@ export interface EmailVerification {
 }
 
 export class AccountsController {
-    constructor(public readonly server: AccountServer) {}
+    mailgunProvider: MailgunEmailProvider;
+    mailjetProvider: MailjetEmailProvider;
+
+    constructor(public readonly server: AccountServer) {
+        this.mailgunProvider = new MailgunEmailProvider(this.server);
+        this.mailjetProvider = new MailjetEmailProvider(this.server);
+    }
+
+    getEmailProvider() {
+        if (this.mailgunProvider.isAvailable()) return this.mailgunProvider;
+        if (this.mailjetProvider.isAvailable()) return this.mailjetProvider;
+
+        return undefined;
+    }
 
     async getUserByEmail(email: string) {
         const { rows: foundUsers } = await this.server.postgresClient.query(`
@@ -73,12 +87,10 @@ export class AccountsController {
         return createdUsers[0] as User|undefined;
     }
 
-    canSendEmailVerification(): this is { server: { mgClient: IMailgunClient; config: { mailgun: { domain: string; api_key: string; } } } } {
-        return this.server.mgClient !== undefined;
-    }
-
     async sendEmailVerificationIntent(email: string, verificationId: string) {
-        if (!this.canSendEmailVerification()) throw new Error("Email verification not set up on this server.");
+        const provider = this.getEmailProvider();
+        if (!provider) throw new Error("Email verification not set up on this server.");
+
         await this.server.postgresClient.query(`
             UPDATE email_verification
             SET last_sent = NOW()
@@ -86,19 +98,15 @@ export class AccountsController {
         `, [ verificationId ]);
         try {
             const verifyUrl = this.server.config.base_account_server_url + "/api/v2/verify?t=" + verificationId;
-            
-            const sendEmail = await this.server.mgClient.messages.create(this.server.config.mailgun.domain, {
-                from: `Mouthwash.gg Accounts <accounts@${this.server.config.mailgun.domain}>`,
-                to: email,
-                subject: "Mouthwash: Verify Email Address",
-                text: "Click the following link verify your email address to login: " + verifyUrl,
-                html: `Click the following link verify your email address to login: <a href="${verifyUrl}">${verifyUrl}</a>`
-            });
-        
-            if (sendEmail.message === undefined) throw new mediator.InternalServerError(new Error("Failed to send verification e-mail"));
-        } catch (e) {
+            await provider.sendVerificationEmail(email, verifyUrl);
+        } catch (e: any) {
+            this.server.mediatorServer.logger.error(e);
             throw new mediator.InternalServerError(new Error("Failed to send verification e-mail"));
         }
+    }
+
+    canSendEmailVerification() {
+        return !!this.getEmailProvider();
     }
 
     async createEmailVerificationIntent(userId: string) {

@@ -1,6 +1,7 @@
 import * as mediator from "mouthwash-mediator";
 import * as bcrypt from "bcrypt";
 import * as ark from "arktype";
+import express from "express";
 import { BaseRoute } from "../BaseRoute";
 import { DisplayNameAlreadyInUse, EmailAlreadyInUseError, InvalidBodyError, TooManyVerificationEmailsError, UserNotFoundError } from "../../errors";
 
@@ -16,6 +17,7 @@ export const resendVerificationEmailRequestValidator = ark.type({
 
 export class AccountsRoute extends BaseRoute {
     @mediator.Endpoint(mediator.HttpMethod.POST, "/v2/accounts")
+    @mediator.Middleware(express.json())
     async onCreateAccount(transaction: mediator.Transaction<{}>) {
         const { data, problems } = createUserRequestValidator(transaction.getBody());
         if (data === undefined) throw new InvalidBodyError(problems);
@@ -42,6 +44,7 @@ export class AccountsRoute extends BaseRoute {
     }
 
     @mediator.Endpoint(mediator.HttpMethod.POST, "/v2/accounts/resend_verification")
+    @mediator.Middleware(express.json())
     async onResendEmailVerification(transaction: mediator.Transaction<{}>){ 
         const { data, problems } = resendVerificationEmailRequestValidator(transaction.getBody());
         if (data === undefined) throw new InvalidBodyError(problems);

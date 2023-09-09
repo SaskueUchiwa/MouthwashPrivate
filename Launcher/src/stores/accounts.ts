@@ -2,7 +2,7 @@ import { writable } from "svelte/store";
 
 export const loading = Symbol("loading");
 export const unavailable = Symbol("unavailable");
-export const accountUrl = writable("https://accounts.mouthwash.midlight.studio");
+export const accountUrl = writable("http://localhost:8000");
 
 export interface UserLogin {
     id: string;
