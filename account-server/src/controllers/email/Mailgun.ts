@@ -20,12 +20,24 @@ export class MailgunEmailProvider extends EmailProvider {
     async sendVerificationEmail(email: string, verifyUrl: string) {
         if (!this.mgClient) throw new Error("Mailgun client not initialized");
 
-        const sendEmail = await this.mgClient.messages.create(process.env.VERIFICATION_EMAIL as string, {
+        await this.mgClient.messages.create(process.env.VERIFICATION_EMAIL as string, {
             from: `Polus.GG: Rewritten Accounts <${process.env.VERIFICATION_EMAIL as string}>`,
             to: email,
             subject: "Verify Email Address to Sign Up",
             text: "Click the following link verify your email address to login: " + verifyUrl,
             html: `Click the following link verify your email address to login: <a href="${verifyUrl}">${verifyUrl}</a>`
+        });
+    }
+
+    async sendResetPasswordEmail(email: string, displayName: string, code: string) {
+        if (!this.mgClient) throw new Error("Mailgun client not initialized");
+
+        await this.mgClient.messages.create(process.env.VERIFICATION_EMAIL as string, {
+            from: `Polus.GG: Rewritten Accounts <${process.env.VERIFICATION_EMAIL as string}>`,
+            to: email,
+            subject: "Code to Reset Your Account Password",
+            text: `You requested to reset your password for your account '${displayName}', use the following code in the launcher to do so: ${code}`,
+            html: `You requested to reset your password for your account '${displayName}', use the following code in the launcher to do so: <pre>${code}</pre>`
         });
     }
 

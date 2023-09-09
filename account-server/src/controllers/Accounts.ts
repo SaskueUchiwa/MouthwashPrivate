@@ -1,7 +1,7 @@
 import * as mediator from "mouthwash-mediator";
 import * as crypto from "crypto";
+import * as bcrypt from "bcrypt";
 import { AccountServer } from "../AccountServer";
-import { IMailgunClient } from "mailgun.js/Interfaces";
 import { DeclareSafeKeys } from "../types/DeclareSafeKeys";
 import { MailgunEmailProvider, MailjetEmailProvider } from "./email";
 
@@ -29,6 +29,14 @@ export interface EmailVerification {
     last_sent: Date;
     num_retries: string;
     verified_at: Date|null;
+}
+
+export interface PasswordReset {
+    id: string;
+    user_id: string;
+    code: string;
+    sent_at: Date;
+    accepted_at: Date|null;
 }
 
 export class AccountsController {
@@ -77,7 +85,8 @@ export class AccountsController {
         return foundUsers[0] as User|undefined;
     }
 
-    async createUser(displayName: string, email: string, passwordHash: string, emailVerified: boolean) {
+    async createUser(displayName: string, email: string, password: string, emailVerified: boolean) {
+        const passwordHash = await bcrypt.hash(password, 12);
         const { rows: createdUsers } = await this.server.postgresClient.query(`
             INSERT INTO users(id, email, password_hash, created_at, banned_until, muted_until, game_settings, email_verified, cosmetic_hat, cosmetic_pet, cosmetic_skin, display_name)
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
@@ -168,5 +177,89 @@ export class AccountsController {
         `, [ gameSettings, userId ]);
 
         return rowsUpdated.rowCount > 0;
+    }
+
+    canValidatePasswordReset() {
+        return !!this.getEmailProvider();
+    }
+
+    static codeChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    
+    generateResetPasswordCode() {
+        let str = "";
+        for (let i = 0; i < 5; i++) {
+            str += AccountsController.codeChars[Math.floor(Math.random() * AccountsController.codeChars.length)];
+        }
+        return str;
+    }
+
+    async getResetPasswordIntentById(id: string) {
+        const { rows: foundResetPasswordIntents } = await this.server.postgresClient.query(`
+            SELECT *
+            FROM password_reset
+            WHERE id = $1
+        `, [ id ]);
+
+        return foundResetPasswordIntents[0] as PasswordReset|undefined;
+    }
+
+    async getResetPasswordIntents(userId: string) {
+        const { rows: foundResetPasswordIntents } = await this.server.postgresClient.query(`
+            SELECT *
+            FROM password_reset
+            WHERE user_id = $1
+        `, [ userId ]);
+
+        return foundResetPasswordIntents as PasswordReset[];
+    }
+
+    async sendResetPasswordIntent(email: string, displayName: string, code: string) {
+        const provider = this.getEmailProvider();
+        if (!provider) throw new Error("Password resets not set up on this server.");
+
+        try {
+            await provider.sendResetPasswordEmail(email, displayName, code);
+        } catch (e: any) {
+            this.server.mediatorServer.logger.error(e);
+            throw new mediator.InternalServerError(new Error("Failed to send password reset e-mail"));
+        }
+    }
+
+    async acceptResetPasswordIntent(resetId: string, userId: string, newPassword: string) {
+        const { rows: updatedResetPasswordIntents } = await this.server.postgresClient.query(`
+            UPDATE password_reset
+            SET accepted_at = NOW()
+            WHERE id = $1
+            RETURNING *
+        `, [ resetId ]);
+
+        const updatedResetPasswordIntent = updatedResetPasswordIntents[0] as PasswordReset|undefined;
+        if (!updatedResetPasswordIntent)
+            return false;
+
+        const newPasswordHash = await bcrypt.hash(newPassword, 12);
+        const { rows: updatedUsers } = await this.server.postgresClient.query(`
+            UPDATE users
+            SET users.password_hash = $2
+            WHERE id = $1
+            RETURNING *
+        `, [ userId, newPasswordHash ]);
+
+        if (updatedUsers.length === 0)
+            return false;
+
+        return updatedResetPasswordIntents[0] as PasswordReset|undefined;
+    }
+
+    async createResetPasswordIntent(userId: string) {
+        const randomCode = this.generateResetPasswordCode();
+
+        const { rows: createdResetPasswordIntents } = await this.server.postgresClient.query(`
+            INSERT INTO password_reset(id, user_id, code, sent_at, accepted_at)
+            VALUES ($1, $2, $3, NOW(), NULL)
+            RETURNING *
+        `, [ crypto.randomUUID(), userId, randomCode ]);
+
+        return createdResetPasswordIntents[0] as PasswordReset|undefined;
     }
 }
