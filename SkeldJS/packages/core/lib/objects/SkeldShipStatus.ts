@@ -1,5 +1,6 @@
 import { HazelReader, Vector2 } from "@skeldjs/util";
 import { SpawnType, SystemType } from "@skeldjs/constant";
+import { TheSkeldTasks } from "@skeldjs/data";
 
 import { ShipStatusData, InnerShipStatus } from "./InnerShipStatus";
 
@@ -32,7 +33,7 @@ export class SkeldShipStatus<RoomType extends Hostable = Hostable> extends Inner
         [SystemType.MedBay]: [10],
         [SystemType.Security]: [6],
         [SystemType.LowerEngine]: [4, 11]
-    }
+    };
 
     initialSpawnCenter = new Vector2(-0.72, 0.62);
     meetingSpawnCenter = new Vector2(-0.72, 0.62);
@@ -40,18 +41,18 @@ export class SkeldShipStatus<RoomType extends Hostable = Hostable> extends Inner
     constructor(
         room: RoomType,
         spawnType: SpawnType,
-        netid: number,
+        netId: number,
         ownerid: number,
         flags: number,
         data?: HazelReader | ShipStatusData
     ) {
-        super(room, spawnType, netid, ownerid, flags, data);
+        super(room, spawnType, netId, ownerid, flags, data);
     }
 
     getComponent<T extends Networkable>(
         component: NetworkableConstructor<T>
     ): T|undefined {
-        if (component === SkeldShipStatus as NetworkableConstructor<any>) {
+        if (this.spawnType === SpawnType.SkeldShipStatus && component === SkeldShipStatus as NetworkableConstructor<any>) {
             return this.components[0] as unknown as T;
         }
 
@@ -104,11 +105,14 @@ export class SkeldShipStatus<RoomType extends Hostable = Hostable> extends Inner
             new AutoOpenDoor(autodoor, 10, true),
             new AutoOpenDoor(autodoor, 11, true),
             new AutoOpenDoor(autodoor, 12, true),
-            new AutoOpenDoor(autodoor, 13, true),
         ];
     }
 
     getDoorsInRoom(room: SystemType) {
         return SkeldShipStatus.roomDoors[room] || [];
+    }
+
+    getTasks() {
+        return Object.values(TheSkeldTasks);
     }
 }

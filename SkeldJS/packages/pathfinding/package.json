@@ -1,8 +1,7 @@
 {
   "name": "@skeldjs/pathfinding",
-  "version": "2.14.35",
+  "version": "2.15.49",
   "main": "./dist/lib/index.js",
-  "types": "./index.ts",
   "publishConfig": {
     "types": "./dist/index.d.ts"
   },
@@ -24,9 +23,9 @@
   },
   "devDependencies": {
     "@skeldjs/client": "workspace:*",
-    "@types/heap": "^0.2.28",
-    "@types/mocha": "^8.2.0",
-    "@types/node": "^14.14.16",
+    "@types/heap": "^0.2.29",
+    "@types/mocha": "^9.1.0",
+    "@types/node": "^17.0.18",
     "ts-node": "latest",
     "typescript": "latest"
   },

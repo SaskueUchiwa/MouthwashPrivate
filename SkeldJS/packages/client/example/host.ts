@@ -1,52 +1,63 @@
-import { Int2Code } from "@skeldjs/util";
+import { GameCode } from "@skeldjs/util";
 import * as skeldjs from "../index";
+import { AuthMethod, EosHttpApi, QuickChatMode } from "../index";
 
-const connectRegion = process.argv[2];
+const clientId = "xyza7891qtrmoYLr86we6DlfCA1RRsp8";
+const clientSecret = "nGThQanzvthA2HPaARXe/xutzsKyx5WJveNkBx44ti4";
 
 (async () => {
-    const client = new skeldjs.SkeldjsClient("2021.6.30s", { attemptAuth: false, messageOrdering: true });
+    const randomDeviceModel = EosHttpApi.generateRandomDeviceModel();
+    const { access_token } = await EosHttpApi.authRequestGetDeviceIdAccessToken(clientId, clientSecret, randomDeviceModel);
+
+    const account = await EosHttpApi.authRequestEosAccessToken({
+        grantType: "external_auth",
+        externalAuthType: "deviceid_access_token",
+        clientId: clientId,
+        clientSecret: clientSecret,
+        deploymentId: "3ce14d8292084c80a8364a8b5f0dfbf4",
+        nonce: Math.random().toString(16).substring(2),
+        displayName: "edqxr",
+        externalAuthToken: access_token
+    });
+
+    const client = new skeldjs.SkeldjsClient("2023.5.20.0s", "weakeyes", {
+        authMethod: AuthMethod.SecureTransport,
+        useHttpMatchmaker: true,
+        idToken: account.id_token,
+        eosProductUserId: account.product_user_id,
+        chatMode: QuickChatMode.FreeChat
+    });
 
     console.log("Connecting to server..");
-    await client.connect(connectRegion, "weakeyes");
-
-    client.on("player.join", ev => {
-        client.myPlayer?.control?.setName("weakeyes");
-        client.myPlayer?.control?.setColor(skeldjs.Color.Red);
-        client.setSettings({
-            votingTime: 30,
-            discussionTime: 0
-        });
-    });
+    await client.connect("https://matchmaker-eu.among.us", 443);
 
     console.log("Creating game..");
-    const code = await client.createGame(
-        {
-            maxPlayers: 10,
-            map: skeldjs.GameMap.TheSkeld,
-            numImpostors: 2,
-            killCooldown: 1
-        }
-    );
+    const code = await client.createGame({ maxPlayers: 15 });
+    console.log("Join @ %s", GameCode.convertIntToString(code));
 
-    client.on("room.endgameintent", ev => {
-        if (ev.intentName === skeldjs.AmongUsEndGames.PlayersKill) {
-            ev.cancel();
-        }
-    });
+    // console.log(await client.joinGame(process.argv[2]));
 
-    client.on("room.selectimpostors", ev => {
-        ev.setImpostors([...ev.room.players.values()].filter(player => player !== client.myPlayer));
-    });
+    await client.myPlayer?.control?.checkName("Edward");
+    await client.myPlayer?.control?.checkColor(skeldjs.Color.Blue);
+    await client.myPlayer?.control?.setName("Edward");
+    await client.myPlayer?.control?.setColor(skeldjs.Color.Blue);
+    await client.myPlayer?.control?.setHat(skeldjs.Hat.NoHat);
+    await client.myPlayer?.control?.setSkin(skeldjs.Skin.None);
+    await client.myPlayer?.control?.setPet(skeldjs.Pet.EmptyPet);
+    await client.myPlayer?.control?.setNameplate(skeldjs.Nameplate.NoPlate);
+    await client.myPlayer?.control?.setVisor(skeldjs.Visor.EmptyVisor);
 
     client.on("player.chat", ev => {
-        client.startGame();
+        if (ev.chatMessage === "/init") {
+            for (let i = 0; i < 5; i++) {
+                client.createFakePlayer(true);
+            }
+        } else if (ev.chatMessage === "/start") {
+            client.startGame();
+        }
     });
 
-    console.log(
-        "Created game @ " +
-            Int2Code(code as number) +
-            " on " +
-            connectRegion +
-            " servers."
-    );
+    client.on("client.disconnect", ev => {
+        console.log(ev);
+    });
 })();

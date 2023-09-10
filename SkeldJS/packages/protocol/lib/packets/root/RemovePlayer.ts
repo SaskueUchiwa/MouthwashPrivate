@@ -1,5 +1,5 @@
 import { DisconnectReason, RootMessageTag } from "@skeldjs/constant";
-import { Code2Int, HazelReader, HazelWriter } from "@skeldjs/util";
+import { GameCode, HazelReader, HazelWriter } from "@skeldjs/util";
 
 import { MessageDirection } from "../../PacketDecoder";
 import { BaseRootMessage } from "./BaseRootMessage";
@@ -9,61 +9,61 @@ export class RemovePlayerMessage extends BaseRootMessage {
     messageTag = RootMessageTag.RemovePlayer as const;
 
     readonly code: number;
-    readonly clientid: number;
-    readonly hostid!: number;
+    readonly clientId: number;
+    readonly hostId!: number;
     readonly reason: DisconnectReason;
 
     constructor(
         code: string | number,
-        clientid: number,
+        clientId: number,
         reason: DisconnectReason,
-        hostid?: number
+        hostId?: number
     ) {
         super();
 
         if (typeof code === "string") {
-            this.code = Code2Int(code);
+            this.code = GameCode.convertStringToInt(code);
         } else {
             this.code = code;
         }
 
-        this.clientid = clientid;
+        this.clientId = clientId;
         this.reason = reason;
 
-        if (hostid) this.hostid = hostid;
+        if (hostId) this.hostId = hostId;
     }
 
     static Deserialize(reader: HazelReader, direction: MessageDirection) {
         if (direction === MessageDirection.Clientbound) {
             const code = reader.int32();
-            const clientid = reader.int32();
-            const hostid = reader.int32();
+            const clientId = reader.int32();
+            const hostId = reader.int32();
             const reason = reader.uint8();
 
-            return new RemovePlayerMessage(code, clientid, reason, hostid);
+            return new RemovePlayerMessage(code, clientId, reason, hostId);
         } else {
             const code = reader.int32();
-            const clientid = reader.packed();
+            const clientId = reader.packed();
             const reason = reader.uint8();
 
-            return new RemovePlayerMessage(code, clientid, reason);
+            return new RemovePlayerMessage(code, clientId, reason);
         }
     }
 
     Serialize(writer: HazelWriter, direction: MessageDirection) {
         if (direction === MessageDirection.Clientbound) {
             writer.int32(this.code);
-            writer.int32(this.clientid);
-            writer.int32(this.hostid);
+            writer.int32(this.clientId);
+            writer.int32(this.hostId);
             writer.uint8(this.reason);
         } else {
             writer.int32(this.code);
-            writer.packed(this.clientid);
+            writer.packed(this.clientId);
             writer.uint8(this.reason);
         }
     }
 
     clone() {
-        return new RemovePlayerMessage(this.code, this.clientid, this.reason, this.hostid);
+        return new RemovePlayerMessage(this.code, this.clientId, this.reason, this.hostId);
     }
 }

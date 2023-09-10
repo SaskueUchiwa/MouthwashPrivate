@@ -19,10 +19,13 @@ import {
     JoinedGameMessage,
     JoinGameMessage,
     KickPlayerMessage,
+    QueryPlatformIdsMessage,
     RedirectMessage,
     RemoveGameMessage,
     RemovePlayerMessage,
     ReportPlayerMessage,
+    SetActivePodTypeMessage,
+    SetGameSessionMessage,
     StartGameMessage,
     WaitForHostMessage,
 } from "./packets/root";
@@ -41,17 +44,20 @@ import {
     AddVoteMessage,
     CastVoteMessage,
     CheckColorMessage,
+    CheckMurderMessage,
     CheckNameMessage,
+    CheckProtectMessage,
     ClearVoteMessage,
     ClimbLadderMessage,
     CloseDoorsOfTypeMessage,
     CloseMessage,
     CompleteTaskMessage,
     EnterVentMessage,
-    ExiledMessage,
+    PetMessage,
     ExitVentMessage,
     MurderPlayerMessage,
     PlayAnimationMessage,
+    ProtectPlayerMessage,
     RepairSystemMessage,
     ReportDeadBodyMessage,
     SendChatMessage,
@@ -61,11 +67,15 @@ import {
     SetHatMessage,
     SetInfectedMessage,
     SetNameMessage,
+    SetNameplateMessage,
     SetPetMessage,
+    SetRoleMessage,
     SetScanner,
     SetSkinMessage,
     SetStartCounterMessage,
     SetTasksMessage,
+    SetVisorMessage,
+    ShapeshiftMessage,
     SnapToMessage,
     StartMeetingMessage,
     SyncSettingsMessage,
@@ -77,6 +87,8 @@ import {
 import {
     VentilationSystemMessage
 } from "./packets/system";
+
+import { PacketDecoderConfig } from "./misc";
 
 export enum MessageDirection {
     Clientbound,
@@ -116,17 +128,27 @@ export interface Deserializable {
 }
 
 export type MessageMapKey = `${string}:${number}`;
+export type MessageListener<T extends Serializable, ContextType> = (
+    message: T,
+    direction: MessageDirection,
+    context: ContextType
+) => void
 
 export class PacketDecoder<ContextType = any> {
-    listeners: Map<MessageMapKey, Set<(
-            message: Serializable,
-            direction: MessageDirection,
-            context: ContextType
-        ) => void>
+    config: PacketDecoderConfig;
+
+    listeners: Map<MessageMapKey, MessageListener<Serializable, ContextType>[]
     >;
     types: Map<MessageMapKey, Deserializable>;
 
-    constructor() {
+    constructor(config: Partial<PacketDecoderConfig> = {}) {
+        this.config = {
+            useDtlsLayout: false,
+            writeUnknownRootMessages: false,
+            writeUnknownGameData: false,
+            ...config
+        };
+
         this.listeners = new Map;
         this.types = new Map;
 
@@ -159,10 +181,13 @@ export class PacketDecoder<ContextType = any> {
             JoinedGameMessage,
             JoinGameMessage,
             KickPlayerMessage,
+            QueryPlatformIdsMessage,
             RedirectMessage,
             RemoveGameMessage,
             RemovePlayerMessage,
             ReportPlayerMessage,
+            SetActivePodTypeMessage,
+            SetGameSessionMessage,
             StartGameMessage,
             WaitForHostMessage
         );
@@ -173,7 +198,6 @@ export class PacketDecoder<ContextType = any> {
             DespawnMessage,
             ReadyMessage,
             RpcMessage,
-            SceneChangeMessage,
             SpawnMessage
         );
 
@@ -181,37 +205,45 @@ export class PacketDecoder<ContextType = any> {
             AddVoteMessage,
             CastVoteMessage,
             CheckColorMessage,
+            CheckMurderMessage,
             CheckNameMessage,
+            CheckProtectMessage,
             ClearVoteMessage,
             ClimbLadderMessage,
             CloseMessage,
             CloseDoorsOfTypeMessage,
             CompleteTaskMessage,
             EnterVentMessage,
-            ExiledMessage,
+            PetMessage,
             ExitVentMessage,
             MurderPlayerMessage,
             PlayAnimationMessage,
+            ProtectPlayerMessage,
             RepairSystemMessage,
             ReportDeadBodyMessage,
+            SceneChangeMessage,
             SendChatMessage,
             SendChatNoteMessage,
             SendQuickChatMessage,
             SetColorMessage,
-            SetHatMessage,
             SetInfectedMessage,
             SetNameMessage,
+            SetNameplateMessage,
             SetPetMessage,
+            SetRoleMessage,
             SetScanner,
             SetSkinMessage,
             SetStartCounterMessage,
             SetTasksMessage,
+            SetVisorMessage,
+            ShapeshiftMessage,
             SnapToMessage,
             StartMeetingMessage,
             SyncSettingsMessage,
             UpdateSystemMessage,
             UsePlatformMessage,
-            VotingCompleteMessage
+            VotingCompleteMessage,
+            SetHatMessage
         );
 
         this.register(
@@ -229,7 +261,8 @@ export class PacketDecoder<ContextType = any> {
      * @param messageClasses The packet or packets to register.
      */
     register(...messageClasses: Deserializable[]) {
-        for (const messageClass of messageClasses) {
+        for (let i = 0; i < messageClasses.length; i++) {
+            const messageClass = messageClasses[i];
             this.types.set(`${messageClass.messageType}:${messageClass.messageTag}`, messageClass);
         }
     }
@@ -246,8 +279,8 @@ export class PacketDecoder<ContextType = any> {
         context: ContextType
     ) {
         if (message.children) {
-            for (const child of message.children) {
-                await this.emitDecoded(child, direction, context);
+            for (let i = 0; i < message.children.length; i++) {
+                await this.emitDecoded(message.children[i], direction, context);
             }
         }
 
@@ -266,8 +299,8 @@ export class PacketDecoder<ContextType = any> {
         context: ContextType
     ) {
         if (message.children) {
-            for (const child of message.children) {
-                await this.emitDecodedSerial(child, direction, context);
+            for (let i = 0; i < message.children.length; i++) {
+                await this.emitDecodedSerial(message.children[i], direction, context);
             }
         }
 
@@ -284,11 +317,12 @@ export class PacketDecoder<ContextType = any> {
 
         if (messageClass) {
             const listeners = this.getListeners(messageClass);
-
-            await Promise.all(
-                [...listeners].map(listener =>
-                    listener(message, direction, context as ContextType))
-            );
+            const promises = [];
+            for (let i = 0; i < listeners.length; i++) {
+                const listener = listeners[i];
+                promises.push(listener(message, direction, context));
+            }
+            await Promise.all(promises);
         }
     }
 
@@ -302,8 +336,9 @@ export class PacketDecoder<ContextType = any> {
         if (messageClass) {
             const listeners = this.getListeners(messageClass);
 
-            for (const listener of listeners) {
-                await listener(message, direction, context as ContextType);
+            for (let i = 0; i < listeners.length; i++) {
+                const listener = listeners[i];
+                await listener(message, direction, context);
             }
         }
     }
@@ -315,16 +350,10 @@ export class PacketDecoder<ContextType = any> {
      */
     getListeners<T extends Deserializable>(
         messageClass: Deserializable
-    ): Set<
-        (
-            message: GetSerialized<T>,
-            direction: MessageDirection,
-            context: ContextType
-        ) => void
-    > {
+    ): MessageListener<GetSerialized<T>, ContextType>[] {
         const msgKey = `${messageClass.messageType}:${messageClass.messageTag}` as MessageMapKey;
         const cachedListeners = this.listeners.get(msgKey);
-        const listeners = cachedListeners || new Set;
+        const listeners = cachedListeners || [];
 
         if (!cachedListeners)
             this.listeners.set(msgKey, listeners);
@@ -341,11 +370,7 @@ export class PacketDecoder<ContextType = any> {
      */
     on<T extends Deserializable>(
         messageClass: T,
-        listener: (
-            message: GetSerialized<T>,
-            direction: MessageDirection,
-            context: ContextType
-        ) => void
+        listener: MessageListener<GetSerialized<T>, ContextType>
     ): () => void;
     /**
      * Listen to any of several messages being sent through the decoder.
@@ -355,11 +380,7 @@ export class PacketDecoder<ContextType = any> {
      */
     on<T extends Deserializable[]>(
         messageClass: T,
-        listener: (
-            message: GetSerialized<T[number]>,
-            direction: MessageDirection,
-            context: ContextType
-        ) => void
+        listener: MessageListener<GetSerialized<T[number]>, ContextType>
     ): () => void;
     on(
         messageClass: any,
@@ -370,15 +391,15 @@ export class PacketDecoder<ContextType = any> {
         ) => void
     ) {
         if (Array.isArray(messageClass)) {
-            for (const single of messageClass) {
+            for (let i = 0; i < messageClass.length; i++) {
+                const single = messageClass[i];
                 const listeners = this.getListeners(single);
-
-                listeners.add(listener);
+                listeners.push(listener);
             }
         } else {
             const listeners = this.getListeners(messageClass);
 
-            listeners.add(listener);
+            listeners.push(listener);
         }
 
         return () => this.off(messageClass, listener);
@@ -391,11 +412,7 @@ export class PacketDecoder<ContextType = any> {
      */
     off<T extends Deserializable>(
         messageClass: T,
-        listener: (
-            message: GetSerialized<T>,
-            direction: MessageDirection,
-            context: ContextType
-        ) => void
+        listener: MessageListener<GetSerialized<T>, ContextType>
     ): void;
     /**
      * Remove a listener from several messages being listened to.
@@ -404,30 +421,28 @@ export class PacketDecoder<ContextType = any> {
      */
     off<T extends Deserializable[]>(
         messageClass: T,
-        listener: (
-            message: GetSerialized<T[number]>,
-            direction: MessageDirection,
-            context: ContextType
-        ) => void
+        listener: MessageListener<GetSerialized<T[number]>, ContextType>
     ): void;
     off(
         messageClass: any,
-        listener: (
-            message: any,
-            direction: MessageDirection,
-            context: ContextType
-        ) => void
+        listener: MessageListener<any, ContextType>
     ) {
         if (Array.isArray(messageClass)) {
-            for (const single of messageClass) {
+            for (let i = 0; i < messageClass.length; i++) {
+                const single = messageClass[i];
                 const listeners = this.getListeners(single);
 
-                listeners.delete(listener);
+                const idx = listeners.indexOf(listener);
+                if (idx > -1) {
+                    listeners.splice(idx, 1);
+                }
             }
         } else {
             const listeners = this.getListeners(messageClass);
-
-            listeners.delete(listener);
+            const idx = listeners.indexOf(listener);
+            if (idx > -1) {
+                listeners.splice(idx, 1);
+            }
         }
     }
 
@@ -439,11 +454,7 @@ export class PacketDecoder<ContextType = any> {
      */
     once<T extends Deserializable>(
         messageClass: T,
-        listener: (
-            message: GetSerialized<T>,
-            direction: MessageDirection,
-            context: ContextType
-        ) => void
+        listener: MessageListener<GetSerialized<T>, ContextType>
     ): () => void;
     /**
      * Listen to any of several messages being sent through the decoder once.
@@ -453,11 +464,7 @@ export class PacketDecoder<ContextType = any> {
      */
     once<T extends Deserializable[]>(
         messageClass: T,
-        listener: (
-            message: GetSerialized<T[number]>,
-            direction: MessageDirection,
-            context: ContextType
-        ) => void
+        listener: MessageListener<GetSerialized<T[number]>, ContextType>
     ): () => void;
     once(
         messageClass: any,

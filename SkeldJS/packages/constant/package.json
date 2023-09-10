@@ -1,8 +1,7 @@
 {
   "name": "@skeldjs/constant",
-  "version": "2.14.35",
+  "version": "2.15.49",
   "main": "./dist/index.js",
-  "types": "./index.ts",
   "publishConfig": {
     "types": "./dist/index.d.ts"
   },
@@ -17,6 +16,8 @@
     "@skeldjs/util": "workspace:*"
   },
   "devDependencies": {
+    "@types/node": "latest",
+    "ts-node": "latest",
     "typescript": "latest"
   },
   "files": [

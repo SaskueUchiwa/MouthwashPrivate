@@ -1,8 +1,11 @@
-import { BaseGameDataMessage, ReadyMessage } from "@skeldjs/protocol";
+import { BaseGameDataMessage, PlatformSpecificData, ReadyMessage } from "@skeldjs/protocol";
+import { BasicEvent, EventEmitter, ExtractEventTypes } from "@skeldjs/events";
+import { Platform } from "@skeldjs/constant";
 
 import {
     CustomNetworkTransform,
     CustomNetworkTransformEvents,
+    GameData,
     PlayerControl,
     PlayerControlEvents,
     PlayerPhysics,
@@ -19,8 +22,10 @@ import {
     PlayerSetHostEvent,
     PlayerSpawnEvent,
 } from "./events";
-import { BasicEvent, EventEmitter, ExtractEventTypes } from "@skeldjs/events";
+
 import { NetworkableEvents } from "./Networkable";
+import { PlayerInfo } from "./misc";
+import { BaseRole } from "./roles";
 
 export type PlayerDataEvents<RoomType extends Hostable = Hostable> = NetworkableEvents<RoomType> &
     PlayerControlEvents<RoomType> &
@@ -49,11 +54,6 @@ export class PlayerData<RoomType extends Hostable = Hostable> extends EventEmitt
     room: RoomType;
 
     /**
-     * This player's server-unique client ID.
-     */
-    clientId: number;
-
-    /**
      * Whether or not this player is readied up to start the game.
      */
     isReady: boolean;
@@ -68,23 +68,61 @@ export class PlayerData<RoomType extends Hostable = Hostable> extends EventEmitt
      */
     stream: BaseGameDataMessage[];
 
-    character: PlayerControl<RoomType>|undefined;
+    /**
+     * This player's player control component.
+     */
+    control: PlayerControl<RoomType>|undefined;
 
-    constructor(room: RoomType, clientId: number) {
+    /**
+     * The actual instance of this player's role manager, see {@link PlayerInfo.roleType}
+     * to know which role this is.
+     */
+    role?: BaseRole;
+
+    private _playerInfoCachedPlayerId?: number;
+    private _playerInfoCached?: PlayerInfo;
+    private _cacheGameData?: GameData;
+
+    constructor(
+        room: RoomType,
+        /**
+         * This player's server-unique client ID.
+         */
+        public readonly clientId: number,
+        /**
+         * The player's login name, not necessarily the display name, see {@link PlayerInfo}.
+         */
+        public readonly username: string,
+        /**
+         * The platform that the player is playing on.
+         */
+        public readonly platform = new PlatformSpecificData(Platform.Unknown, "Unknown"),
+        /**
+         * The level/rank of the player.
+         */
+        public readonly playerLevel = 0,
+        /**
+         * The player's innersloth friend code.
+         */
+        public readonly friendCode = "",
+        /**
+         * The player's unique global UUID.
+         */
+        public readonly puid = ""
+    ) {
         super();
 
         this.room = room;
-        this.clientId = clientId;
 
         this.stream = [];
         this.isReady = false;
         this.inScene = false;
 
-        this.character = undefined;
+        this.control = undefined;
 
         this.on("component.spawn", () => {
             if (this.hasSpawned) {
-                this.emit(new PlayerSpawnEvent(this.room, this));
+                this.emitSync(new PlayerSpawnEvent(this.room, this));
             }
         });
     }
@@ -95,38 +133,71 @@ export class PlayerData<RoomType extends Hostable = Hostable> extends EventEmitt
         return super.emit(event);
     }
 
-    /**
-     * The player's control component.
-     */
-    get control(): PlayerControl<RoomType>|undefined {
-        return this.character?.getComponent(PlayerControl) as PlayerControl<RoomType>|undefined;
+    async emitSerial<Event extends BasicEvent>(event: Event): Promise<Event> {
+        this.room.emitSerial(event);
+
+        return super.emitSerial(event);
+    }
+
+    emitSync<Event extends BasicEvent>(event: Event): Event {
+        this.room.emitSync(event);
+
+        return super.emitSync(event);
     }
 
     /**
      * The player's physics component.
      */
     get physics(): PlayerPhysics<RoomType>|undefined {
-        return this.character?.getComponent(PlayerPhysics) as PlayerPhysics<RoomType>|undefined;
+        return this.control?.getComponent(PlayerPhysics) as PlayerPhysics<RoomType>|undefined;
     }
 
     /**
      * The player's movement component.
      */
     get transform(): CustomNetworkTransform<RoomType>|undefined {
-        return this.character?.getComponent(CustomNetworkTransform) as CustomNetworkTransform<RoomType>|undefined;
-    }
-
-    get isFakePlayer() {
-        return this.character && this.clientId === 0;
+        return this.control?.getComponent(CustomNetworkTransform) as CustomNetworkTransform<RoomType>|undefined;
     }
 
     /**
-     * The player's information.
+     * Whether or not this player is a fake player, as in they are entirely
+     * client-side and have no real player behind them.
      */
-    get info() {
-        if (this.playerId === undefined) return undefined;
+    get isFakePlayer() {
+        return this.control && this.clientId === 0;
+    }
 
-        return this.room.gameData?.players?.get(this.playerId);
+    /**
+     * The player's game information, such as dead/impostor/disconnected states,
+     * hats, names, pets, etc.
+     */
+    get playerInfo(): PlayerInfo|undefined {
+        if (this.playerId === undefined) {
+            this._playerInfoCachedPlayerId = undefined;
+            this._playerInfoCached = undefined;
+            this._cacheGameData = undefined;
+            return undefined;
+        }
+
+        if (this.playerId === this._playerInfoCachedPlayerId && this._playerInfoCached && this.room.gameData === this._cacheGameData) {
+            return this._playerInfoCached;
+        }
+
+        this._playerInfoCachedPlayerId = this.playerId;
+        this._cacheGameData = this.room.gameData;
+        this._playerInfoCached = this._cacheGameData?.players?.get(this.playerId);
+
+        return this._playerInfoCached;
+    }
+
+    /**
+     * Shorthand for `player.playerInfo.defaultOutfit.name`.
+     *
+     * This will return the player's name as it appears in-game, not including
+     * the name of the player that they might have shapeshifted into.
+     */
+    get playerName() {
+        return this.playerInfo?.defaultOutfit.name;
     }
 
     /**
@@ -160,23 +231,23 @@ export class PlayerData<RoomType extends Hostable = Hostable> extends EventEmitt
     /**
      * Mark as readied up to start the game.
      */
-    async ready() {
+    async setReady() {
         this.isReady = true;
         await this.emit(new PlayerReadyEvent(this.room, this));
 
-        if (this.isMe && !this.isHost) {
-            await this.room.broadcast([new ReadyMessage(this.clientId)]);
+        if (this.isMe) {
+            await this.room.broadcast([ new ReadyMessage(this.clientId) ]);
         }
     }
 
     /**
      * Despawn all components on the player,
      */
-    despawn() {
-        if (!this.character)
+    destroy() {
+        if (!this.control)
             return;
 
-        for (const component of this.character.components) {
+        for (const component of this.control.components) {
             component.despawn();
         }
     }

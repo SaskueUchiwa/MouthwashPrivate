@@ -26,7 +26,7 @@ type Listener<Event extends Eventable> = (ev: Event) => void | Promise<void>;
 export class EventEmitter<Events extends EventData> {
     private readonly listeners: Map<
         string,
-        Set<Listener<BasicEvent>>
+        Listener<any>[]
     >;
 
     constructor() {
@@ -38,9 +38,11 @@ export class EventEmitter<Events extends EventData> {
     ): Promise<Event> {
         const listeners = this.getListeners<Event>(event.eventName);
 
-        await Promise.all(
-            [...listeners].map(lis => lis(event))
-        );
+        const promises = [];
+        for (let i = 0; i < listeners.length; i++) {
+            promises.push(listeners[i](event));
+        }
+        await Promise.all(promises);
 
         return event;
     }
@@ -50,8 +52,20 @@ export class EventEmitter<Events extends EventData> {
     ): Promise<Event> {
         const listeners = this.getListeners<Event>(event.eventName);
 
-        for (const listener of listeners) {
-            await listener(event);
+        for (let i = 0; i < listeners.length; i++) {
+            await listeners[i](event);
+        }
+
+        return event;
+    }
+
+    emitSync<Event extends BasicEvent>(
+        event: Event
+    ): Event {
+        const listeners = this.getListeners<Event>(event.eventName);
+
+        for (let i = 0; i < listeners.length; i++) {
+            listeners[i](event);
         }
 
         return event;
@@ -129,7 +143,7 @@ export class EventEmitter<Events extends EventData> {
 
     removeListeners(event: string) {
         const listeners = this.getListeners(event);
-        listeners.clear();
+        listeners.splice(0);
     }
 
     removeAllListeners() {

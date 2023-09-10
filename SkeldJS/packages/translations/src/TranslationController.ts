@@ -1,5 +1,16 @@
-import { Hostable, Language, PlayerData, StringNames } from "@skeldjs/core";
-import { QuickChatMessageData, QuickChatPhraseMessageData, QuickChatPlayerMessageData, QuickChatSentenceMessageData } from "@skeldjs/protocol";
+import {
+    Hostable,
+    Language,
+    PlayerData,
+    StringNames
+} from "@skeldjs/core";
+
+import {
+    QuickChatMessageData,
+    QuickChatPhraseMessageData,
+    QuickChatPlayerMessageData,
+    QuickChatSentenceMessageData
+} from "@skeldjs/protocol";
 
 import { AllTranslations } from "./translations";
 
@@ -15,7 +26,7 @@ export class TranslationController {
     constructor(public readonly room?: Hostable) {}
 
     private getPlayerName(playerId: number) {
-        return this.room?.getPlayerByPlayerId(playerId)?.info?.name || "";
+        return this.room?.getPlayerByPlayerId(playerId)?.playerInfo?.defaultOutfit.name || "";
     }
 
     private getQuickchatTranslation(stringName: StringNames, language: Language) {
@@ -55,7 +66,7 @@ export class TranslationController {
             }
 
             if (element instanceof PlayerData) {
-                return element.info?.name || "";
+                return element.playerInfo?.defaultOutfit.name || "";
             }
 
             return this.getPlayerName(element.playerId);
@@ -126,5 +137,16 @@ export class TranslationController {
         }
 
         return "";
+    }
+
+    /**
+     * Get the translation string of a cosmetic.
+     * @param cosmeticId The ID of the cosmetic to get the name of.
+     * @param language The language to translate the cosmetic name into.
+     * @returns The cosmetic name as translated into the given language.
+     */
+    getCosmeticName(cosmeticId: string, language: Language) {
+        const cosmeticTranslations = AllTranslations[language]["Cosmetic"] as Record<string, string>;
+        return cosmeticTranslations[cosmeticId];
     }
 }

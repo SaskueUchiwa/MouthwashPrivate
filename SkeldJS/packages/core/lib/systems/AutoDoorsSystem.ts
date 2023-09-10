@@ -62,7 +62,7 @@ export class AutoDoorsSystem<RoomType extends Hostable = Hostable> extends Syste
         if (spawn) {
             for (let i = 0; i < this.doors.length; i++) {
                 const open = reader.bool();
-                this.doors.push(new AutoOpenDoor(this, i, open));
+                this.doors[i] = new AutoOpenDoor(this, i, open);
             }
         } else {
             const mask = reader.upacked();

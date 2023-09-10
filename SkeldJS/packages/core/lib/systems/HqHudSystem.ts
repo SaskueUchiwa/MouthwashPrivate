@@ -19,8 +19,8 @@ import { SystemStatusEvents } from "./events";
 import { Hostable } from "../Hostable";
 
 export interface UserConsolePair {
-    playerid: number;
-    consoleid: number;
+    playerId: number;
+    consoleId: number;
 }
 
 export interface HqHudSystemData {
@@ -87,7 +87,7 @@ export class HqHudSystem<RoomType extends Hostable = Hostable> extends SystemSta
 
     private _getIdx(consoleId: number, playerId: number) {
         return this.activeConsoles.findIndex(
-            (pair) => pair.consoleid === consoleId && pair.playerid === playerId
+            (pair) => pair.consoleId === consoleId && pair.playerId === playerId
         );
     }
 
@@ -109,10 +109,10 @@ export class HqHudSystem<RoomType extends Hostable = Hostable> extends SystemSta
 
         for (let i = 0; i < beforeActive.length; i++) {
             const console = beforeActive[i];
-            const idx = this._getIdx(console.consoleid, console.playerid);
-            const player = this.ship.room.getPlayerByPlayerId(console.playerid);
+            const idx = this._getIdx(console.consoleId, console.playerId);
+            const player = this.ship.room.getPlayerByPlayerId(console.playerId);
             if (player && idx === -1) {
-                this._closeConsole(console.consoleid, player, undefined);
+                this._closeConsole(console.consoleId, player, undefined);
             }
         }
 
@@ -122,7 +122,7 @@ export class HqHudSystem<RoomType extends Hostable = Hostable> extends SystemSta
             this._completeConsole(reader.uint8(), undefined, undefined);
         }
         if (beforeCompleted === 2 && numCompleted === 0) {
-            this.emit(
+            this.emitSync(
                 new SystemSabotageEvent(
                     this.room,
                     this,
@@ -132,7 +132,7 @@ export class HqHudSystem<RoomType extends Hostable = Hostable> extends SystemSta
             );
         }
         if (beforeCompleted < 2 && numCompleted === 2) {
-            this.emit(
+            this.emitSync(
                 new SystemRepairEvent(
                     this.room,
                     this,
@@ -150,8 +150,8 @@ export class HqHudSystem<RoomType extends Hostable = Hostable> extends SystemSta
         for (let i = 0; i < this.activeConsoles.length; i++) {
             const active = this.activeConsoles[i];
 
-            writer.uint8(active.playerid);
-            writer.uint8(active.consoleid);
+            writer.uint8(active.playerId);
+            writer.uint8(active.consoleId);
         }
 
         const completed = [...this.completedConsoles];
@@ -204,14 +204,14 @@ export class HqHudSystem<RoomType extends Hostable = Hostable> extends SystemSta
         }
     }
 
-    private async _openConsole(consoleid: number, player: PlayerData, rpc: RepairSystemMessage|undefined) {
+    private async _openConsole(consoleId: number, player: PlayerData, rpc: RepairSystemMessage|undefined) {
         if (player.playerId === undefined)
             return;
 
-        const idx = this._getIdx(consoleid, player.playerId);
+        const idx = this._getIdx(consoleId, player.playerId);
 
         if (idx === -1) {
-            const consoleEntry = { consoleid, playerid: player.playerId };
+            const consoleEntry = { consoleId, playerId: player.playerId };
             this.activeConsoles.push(consoleEntry);
             this.dirty = true;
             const ev = await this.emit(
@@ -220,7 +220,7 @@ export class HqHudSystem<RoomType extends Hostable = Hostable> extends SystemSta
                     this,
                     rpc,
                     player,
-                    consoleid
+                    consoleId
                 )
             );
             if (ev.reverted) {
@@ -228,8 +228,8 @@ export class HqHudSystem<RoomType extends Hostable = Hostable> extends SystemSta
                 if (newIdx > -1) this.activeConsoles.splice(newIdx, 1);
                 return;
             }
-            if (ev.alteredConsoleId !== consoleid) {
-                consoleEntry.consoleid = ev.alteredConsoleId;
+            if (ev.alteredConsoleId !== consoleId) {
+                consoleEntry.consoleId = ev.alteredConsoleId;
             }
         }
     }
@@ -246,18 +246,18 @@ export class HqHudSystem<RoomType extends Hostable = Hostable> extends SystemSta
         if (!this.room.myPlayer)
             return;
 
-        if (this.room.hostIsMe) {
+        if (this.ship.canBeManaged()) {
             await this.openConsoleAs(consoleId, this.room.myPlayer);
         } else {
             this._sendRepair(0x40 | consoleId);
         }
     }
 
-    private async _closeConsole(consoleid: number, player: PlayerData, rpc: RepairSystemMessage|undefined) {
+    private async _closeConsole(consoleId: number, player: PlayerData, rpc: RepairSystemMessage|undefined) {
         if (player.playerId === undefined)
             return;
 
-        const idx = this._getIdx(consoleid, player.playerId);
+        const idx = this._getIdx(consoleId, player.playerId);
 
         if (idx > -1) {
             const consoleEntry = this.activeConsoles[idx];
@@ -269,7 +269,7 @@ export class HqHudSystem<RoomType extends Hostable = Hostable> extends SystemSta
                     this,
                     rpc,
                     player,
-                    consoleid
+                    consoleId
                 )
             );
             if (ev.reverted) {
@@ -290,16 +290,16 @@ export class HqHudSystem<RoomType extends Hostable = Hostable> extends SystemSta
         if (!this.room.myPlayer)
             return;
 
-        if (this.room.hostIsMe) {
+        if (this.ship.canBeManaged()) {
             await this.closeConsoleAs(consoleId, this.room.myPlayer);
         } else {
             await this._sendRepair(0x20 | consoleId);
         }
     }
 
-    private async _completeConsole(consoleid: number, player: PlayerData|undefined, rpc: RepairSystemMessage|undefined) {
-        if (!this.completedConsoles.has(consoleid)) {
-            this.completedConsoles.add(consoleid);
+    private async _completeConsole(consoleId: number, player: PlayerData|undefined, rpc: RepairSystemMessage|undefined) {
+        if (!this.completedConsoles.has(consoleId)) {
+            this.completedConsoles.add(consoleId);
             this.dirty = true;
             const ev = await this.emit(
                 new HqHudConsoleCompleteEvent(
@@ -307,11 +307,11 @@ export class HqHudSystem<RoomType extends Hostable = Hostable> extends SystemSta
                     this,
                     rpc,
                     player,
-                    consoleid
+                    consoleId
                 )
             );
             if (ev.reverted) {
-                this.completedConsoles.delete(consoleid);
+                this.completedConsoles.delete(consoleId);
             }
         }
     }
@@ -321,7 +321,7 @@ export class HqHudSystem<RoomType extends Hostable = Hostable> extends SystemSta
      * @param consoleId The ID of the console to mark as completed.
      */
     async completeConsole(consoleId: number) {
-        if (this.room.hostIsMe) {
+        if (this.ship.canBeManaged()) {
             await this._completeConsole(consoleId, this.room.myPlayer, undefined);
         } else {
             await this._sendRepair(0x10 | consoleId);
@@ -349,7 +349,7 @@ export class HqHudSystem<RoomType extends Hostable = Hostable> extends SystemSta
     }
 
     async repair() {
-        if (this.room.hostIsMe) {
+        if (this.ship.canBeManaged()) {
             await this._repair(this.room.myPlayer, undefined);
         } else {
             await this.completeConsole(0);

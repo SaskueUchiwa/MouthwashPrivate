@@ -4,8 +4,9 @@ import {
     AlterGameTag,
     GameState,
     Hostable,
+    HostableConfig,
     HostableEvents,
-    HostableOptions,
+    Platform,
     PlayerSceneChangeEvent,
     RoomSetPrivacyEvent,
     SpawnFlag,
@@ -29,19 +30,27 @@ import {
     DataMessage,
     AlterGameMessage,
     ReadyMessage,
+    PlatformSpecificData,
+    PlayerJoinData,
+    PacketDecoder
 } from "@skeldjs/protocol";
 
-export type SkeldjsStateManagerEvents = HostableEvents;
+export type SkeldjsStateManagerEvents<T extends SkeldjsStateManager = any> = HostableEvents<T>;
 
 export class SkeldjsStateManager<
     T extends SkeldjsStateManagerEvents = SkeldjsStateManagerEvents
 > extends Hostable<T> {
-    clientId: number;
+    protected _cachedPlatform?: PlatformSpecificData;
+    protected _cachedName?: string;
 
-    constructor(options: HostableOptions = {}) {
-        super({ doFixedUpdate: false, ...options });
+    clientId: number;
+    decoder: PacketDecoder;
+
+    constructor(config: HostableConfig = {}) {
+        super({ doFixedUpdate: false, ...config });
 
         this.clientId = 0;
+        this.decoder = new PacketDecoder;
 
         this.decoder.on(HostGameMessage, (message, direction) => {
             if (direction === MessageDirection.Clientbound) {
@@ -54,8 +63,15 @@ export class SkeldjsStateManager<
                 direction === MessageDirection.Clientbound &&
                 message.code === this.code
             ) {
-                await this.handleJoin(message.clientid);
-                await this.setHost(message.hostid);
+                await this.setHost(message.hostId);
+                await this.handleJoin(new PlayerJoinData(
+                    message.clientId,
+                    message.playerName,
+                    message.platform,
+                    message.playerLevel,
+                    message.puid,
+                    message.friendCode
+                ));
             }
         });
 
@@ -82,8 +98,8 @@ export class SkeldjsStateManager<
                 direction === MessageDirection.Clientbound &&
                 message.code === this.code
             ) {
-                await this.handleLeave(message.clientid);
-                await this.setHost(message.hostid);
+                await this.setHost(message.hostId);
+                await this.handleLeave(message.clientId);
             }
         });
 
@@ -96,7 +112,7 @@ export class SkeldjsStateManager<
                     message.recipientid === this.clientId
                 ) {
                     for (const child of message._children) {
-                        this.decoder.emitDecoded(child, direction, context);
+                        this.decoder.emit(child, direction, context);
                     }
                 }
             }
@@ -104,13 +120,20 @@ export class SkeldjsStateManager<
 
         this.decoder.on(JoinedGameMessage, async (message, direction) => {
             if (direction === MessageDirection.Clientbound) {
-                this.clientId = message.clientid;
-                this.state = GameState.NotStarted;
+                this.clientId = message.clientId;
+                this.gameState = GameState.NotStarted;
                 await this.setCode(message.code);
-                await this.setHost(message.hostid);
-                await this.handleJoin(message.clientid);
-                for (let i = 0; i < message.others.length; i++) {
-                    await this.handleJoin(message.others[i]);
+                await this.setHost(message.hostId);
+                await this.handleJoin(new PlayerJoinData(
+                    message.clientId,
+                    this._cachedName || "SkeldJS",
+                    this._cachedPlatform || new PlatformSpecificData(Platform.StandaloneSteamPC, "Steam"),
+                    0,
+                    "",
+                    ""
+                ));
+                for (let i = 0; i < message.otherPlayers.length; i++) {
+                    await this.handleJoin(message.otherPlayers[i]);
                 }
             }
         });
@@ -130,7 +153,7 @@ export class SkeldjsStateManager<
                 );
 
                 if (ev.alteredPrivacy !== messagePrivacy) {
-                    await this.broadcast([], true, undefined, [
+                    await this.broadcast([], [
                         new AlterGameMessage(
                             this.code,
                             AlterGameTag.ChangePrivacy,
@@ -146,7 +169,7 @@ export class SkeldjsStateManager<
         });
 
         this.decoder.on(DataMessage, message => {
-            const component = this.netobjects.get(message.netid);
+            const component = this.netobjects.get(message.netId);
 
             if (component) {
                 const reader = HazelReader.from(message.data);
@@ -155,7 +178,7 @@ export class SkeldjsStateManager<
         });
 
         this.decoder.on(RpcMessage, async message => {
-            const component = this.netobjects.get(message.netid);
+            const component = this.netobjects.get(message.netId);
 
             if (component) {
                 try {
@@ -173,7 +196,7 @@ export class SkeldjsStateManager<
                 return;
             }
 
-            this.spawnPrefab(
+            this.spawnPrefabOfType(
                 message.spawnType,
                 message.ownerid,
                 message.flags,
@@ -184,7 +207,7 @@ export class SkeldjsStateManager<
         });
 
         this.decoder.on(DespawnMessage, message => {
-            const component = this.netobjects.get(message.netid);
+            const component = this.netobjects.get(message.netId);
 
             if (component) {
                 this._despawnComponent(component);
@@ -192,7 +215,7 @@ export class SkeldjsStateManager<
         });
 
         this.decoder.on(SceneChangeMessage, async message => {
-            const player = this.players.get(message.clientid);
+            const player = this.players.get(message.clientId);
 
             if (player) {
                 if (message.scene === "OnlineGame") {
@@ -211,12 +234,12 @@ export class SkeldjsStateManager<
                     } else {
                         if (this.hostIsMe) {
                             await this.broadcast(
-                                this._getExistingObjectSpawn(),
-                                true,
-                                player
+                                this.getExistingObjectSpawn(),
+                                undefined,
+                                [ player ]
                             );
 
-                            this.spawnPrefab(
+                            this.spawnPrefabOfType(
                                 SpawnType.Player,
                                 player.clientId,
                                 SpawnFlag.IsClientCharacter
@@ -230,10 +253,10 @@ export class SkeldjsStateManager<
         });
 
         this.decoder.on(ReadyMessage, message => {
-            const player = this.players.get(message.clientid);
+            const player = this.players.get(message.clientId);
 
             if (player) {
-                player.ready();
+                player.setReady();
             }
         });
     }
@@ -241,7 +264,7 @@ export class SkeldjsStateManager<
     protected _reset() {
         this.players.clear();
         this.netobjects.clear();
-        this.stream = [];
+        this.messageStream = [];
         this.code = 0;
         this.hostId = 0;
         this.settings = new GameSettings;

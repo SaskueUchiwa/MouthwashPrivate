@@ -1,6 +1,6 @@
 import { HazelReader, HazelWriter, sleep } from "@skeldjs/util";
 
-import { ChatNoteType, GameOverReason, PlayerDataFlags, RpcMessageTag, SpawnType } from "@skeldjs/constant";
+import { ChatNoteType, GameOverReason, RpcMessageTag, SpawnType } from "@skeldjs/constant";
 
 import {
     BaseRpcMessage,
@@ -70,12 +70,12 @@ export class MeetingHud<RoomType extends Hostable = Hostable> extends Networkabl
     constructor(
         room: RoomType,
         spawnType: SpawnType,
-        netid: number,
+        netId: number,
         ownerid: number,
         flags: number,
         data?: HazelReader | MeetingHudData
     ) {
-        super(room, spawnType, netid, ownerid, flags, data);
+        super(room, spawnType, netId, ownerid, flags, data);
 
         this.dirtyBit ||= 0;
         this.voteStates ||= new Map;
@@ -99,21 +99,23 @@ export class MeetingHud<RoomType extends Hostable = Hostable> extends Networkabl
                     }));
         }
 
-        this.ranOutOfTimeTimeout = setTimeout(() => {
-            for (const [ , voteState ] of this.voteStates) {
-                if (voteState.votedForId === 255) {
-                    voteState.setMissed();
+        if (this.room.settings.votingTime > 0) {
+            this.ranOutOfTimeTimeout = setTimeout(() => {
+                for (const [ , voteState ] of this.voteStates) {
+                    if (voteState.votedForId === 255) {
+                        voteState.setMissed();
+                    }
                 }
-            }
 
-            this.checkForVoteComplete(true);
-        }, 8000 + this.room.settings.discussionTime * 1000 + this.room.settings.votingTime * 1000);
+                this.checkForVoteComplete(true);
+            }, 8000 + this.room.settings.discussionTime * 1000 + this.room.settings.votingTime * 1000);
+        }
     }
 
     getComponent<T extends Networkable>(
         component: NetworkableConstructor<T>
     ): T|undefined {
-        if (component === MeetingHud as NetworkableConstructor<any>) {
+        if (this.spawnType === SpawnType.MeetingHud && component === MeetingHud as NetworkableConstructor<any>) {
             return this.components[0] as unknown as T;
         }
 
@@ -144,7 +146,7 @@ export class MeetingHud<RoomType extends Hostable = Hostable> extends Networkabl
             this.voteStates.set(playerId, newState);
 
             if (!oldState?.hasVoted && newState.hasVoted) {
-                this.emit(
+                this.emitSync(
                     new MeetingHudVoteCastEvent(
                         this.room,
                         this,
@@ -154,7 +156,7 @@ export class MeetingHud<RoomType extends Hostable = Hostable> extends Networkabl
                     )
                 );
             } else if (oldState?.votedFor && !newState.hasVoted) {
-                this.emit(
+                this.emitSync(
                     new MeetingHudClearVoteEvent(
                         this.room,
                         this,
@@ -214,7 +216,7 @@ export class MeetingHud<RoomType extends Hostable = Hostable> extends Networkabl
     }
 
     private _rpcClose() {
-        this.room.stream.push(
+        this.room.messageStream.push(
             new RpcMessage(this.netId, new CloseMessage)
         );
     }
@@ -260,17 +262,10 @@ export class MeetingHud<RoomType extends Hostable = Hostable> extends Networkabl
                 }
             }
 
-            if (numSkips >= exiledVotes) {
+            if (numSkips >= exiledVotes)
                 exiled = undefined;
-            }
 
             this.votingComplete(tie, exiled);
-            sleep(5000).then(() => {
-                if (this.exiled?.info) {
-                    this.exiled.info.flags |= PlayerDataFlags.IsDead;
-                }
-                this.close();
-            });
         }
     }
 
@@ -278,11 +273,11 @@ export class MeetingHud<RoomType extends Hostable = Hostable> extends Networkabl
         const voter = this.voteStates.get(rpc.votingid);
         const player = this.room.getPlayerByPlayerId(rpc.votingid);
         const suspect =
-            rpc.suspectid === 0xfd
+            rpc.suspectid === VoteStateSpecialId.SkippedVote
                 ? undefined
                 : this.room.getPlayerByPlayerId(rpc.suspectid);
 
-        if (this.room.hostIsMe && player && voter && (suspect || rpc.suspectid === 0xfd)) {
+        if (this.canBeManaged() && player && voter && (suspect || rpc.suspectid === VoteStateSpecialId.SkippedVote)) {
             this._castVote(voter, suspect);
 
             const ev = await this.emit(
@@ -331,7 +326,7 @@ export class MeetingHud<RoomType extends Hostable = Hostable> extends Networkabl
                         : 255
                 )
             )
-        ], true, this.room.hostId);
+        ], undefined, [ this.room.hostId ]);
     }
 
     /**
@@ -343,7 +338,7 @@ export class MeetingHud<RoomType extends Hostable = Hostable> extends Networkabl
      * @example
      *```typescript
      * // Make everyone vote a certain player.
-     * for ([ clientid, player ] of room.players) {
+     * for ([ clientId, player ] of room.players) {
      *   if (player !== suspect) {
      *     room.meetinghud.castVote(player, suspect);
      *   }
@@ -363,7 +358,7 @@ export class MeetingHud<RoomType extends Hostable = Hostable> extends Networkabl
             const votingState = this.voteStates.get(player.playerId);
 
             if (votingState) {
-                if (this.room.hostIsMe) {
+                if (this.canBeManaged()) {
                     this._castVote(votingState, _suspect);
 
                     const ev = await this.emit(
@@ -423,7 +418,7 @@ export class MeetingHud<RoomType extends Hostable = Hostable> extends Networkabl
         }
     }
 
-    private async _rpcClearVote(voter: PlayerVoteArea<RoomType>) {
+    private async _rpcClearVote(voter: PlayerData) {
         await this.room.broadcast(
             [
                 new RpcMessage(
@@ -431,8 +426,8 @@ export class MeetingHud<RoomType extends Hostable = Hostable> extends Networkabl
                     new ClearVoteMessage
                 ),
             ],
-            true,
-            this.room.getPlayerByPlayerId(voter.playerId)
+            undefined,
+            [ voter ]
         );
     }
 
@@ -457,7 +452,7 @@ export class MeetingHud<RoomType extends Hostable = Hostable> extends Networkabl
                         _voter.player!
                     )
                 );
-                await this._rpcClearVote(_voter);
+                await this._rpcClearVote(player);
             }
         }
     }
@@ -472,7 +467,8 @@ export class MeetingHud<RoomType extends Hostable = Hostable> extends Networkabl
             return new PlayerVoteState(this.room, state.playerId, state.votedForId);
         });
 
-        await this._votingComplete(playerStates, rpc.tie, exiled);
+        this._populateStates(playerStates);
+        await this._votingComplete(rpc.tie, exiled);
 
         await this.emit(
             new MeetingHudVotingCompleteEvent(
@@ -486,64 +482,71 @@ export class MeetingHud<RoomType extends Hostable = Hostable> extends Networkabl
         );
     }
 
-    private async _votingComplete(
-        states: PlayerVoteState<RoomType>[],
-        tie: boolean,
-        exiled?: PlayerData<RoomType>
-    ) {
+    private _populateStates(states: PlayerVoteState<RoomType>[]) {
         for (let i = 0; i < states.length; i++) {
             const state = this.voteStates.get(i);
             if (state) {
                 state.votedForId = states[i].votedForId;
             }
         }
+    }
+
+    private async _votingComplete(
+        tie: boolean,
+        exiled?: PlayerData<RoomType>
+    ) {
         this.tie = tie;
         this.exiled = exiled;
 
-        await this.exiled?.control?.kill("exiled");
+        if (this.canBeManaged()) {
+            await sleep(5000);
+            await exiled?.control?.kill("exiled");
+            this.close();
+            await sleep(5000);
 
-        if (exiled && this.room.gameData) {
-            let aliveCrewmates = 0;
-            let aliveImpostors = 0;
-            for (const [ , playerInfo ] of this.room.gameData.players) {
-                if (!playerInfo.isDisconnected && !playerInfo.isDead)
-                {
-                    if (playerInfo.isImpostor)
+            if (exiled && this.room.gameData) {
+                let aliveCrewmates = 0;
+                let aliveImpostors = 0;
+                for (const [ , playerInfo ] of this.room.gameData.players) {
+                    if (!playerInfo.isDisconnected && !playerInfo.isDead)
                     {
-                        aliveImpostors++;
-                    } else {
-                        aliveCrewmates++;
+                        if (playerInfo.isImpostor)
+                        {
+                            aliveImpostors++;
+                        } else {
+                            aliveCrewmates++;
+                        }
                     }
                 }
-            }
 
-            if (exiled.info?.isImpostor) {
-                if (aliveImpostors <= 0) {
-                    this.room.registerEndGameIntent(
-                        new EndGameIntent<PlayersVoteOutEndgameMetadata>(
-                            AmongUsEndGames.PlayersVoteOut,
-                            GameOverReason.HumansByVote,
-                            {
-                                exiled,
-                                aliveCrewmates,
-                                aliveImpostors
-                            }
-                        )
-                    );
-                }
-            } else {
-                if (aliveCrewmates <= aliveImpostors) {
-                    this.room.registerEndGameIntent(
-                        new EndGameIntent<PlayersVoteOutEndgameMetadata>(
-                            AmongUsEndGames.PlayersVoteOut,
-                            GameOverReason.ImpostorByVote,
-                            {
-                                exiled,
-                                aliveCrewmates,
-                                aliveImpostors
-                            }
-                        )
-                    );
+                if (exiled.playerInfo?.isImpostor) {
+                    if (aliveImpostors <= 0) {
+                        this.room.registerEndGameIntent(
+                            new EndGameIntent<PlayersVoteOutEndgameMetadata>(
+                                AmongUsEndGames.PlayersVoteOut,
+                                GameOverReason.HumansByVote,
+                                {
+                                    exiled,
+                                    aliveCrewmates,
+                                    aliveImpostors
+                                }
+                            )
+                        );
+                    }
+                } else {
+                    if (aliveCrewmates <= aliveImpostors) {
+                        this.room.registerEndGameIntent(
+                            new EndGameIntent<PlayersVoteOutEndgameMetadata>(
+                                AmongUsEndGames.PlayersVoteOut,
+                                GameOverReason.ImpostorByVote,
+                                {
+                                    exiled,
+                                    aliveCrewmates,
+                                    aliveImpostors
+                                }
+                            )
+                        );
+                    }
                 }
             }
         }
@@ -557,7 +560,7 @@ export class MeetingHud<RoomType extends Hostable = Hostable> extends Networkabl
         tie: boolean,
         exiled?: PlayerData<RoomType>
     ) {
-        this.room.stream.push(
+        this.room.messageStream.push(
             new RpcMessage(
                 this.netId,
                 new VotingCompleteMessage(
@@ -582,10 +585,11 @@ export class MeetingHud<RoomType extends Hostable = Hostable> extends Networkabl
             i++;
         }
 
-        await this._votingComplete(voteStates, tie, _exiled);
+        this._populateStates(voteStates);
         this._rpcVotingComplete(voteStates, tie, _exiled);
+        await this._votingComplete(tie, _exiled);
 
-        this.emit(
+        this.emitSync(
             new MeetingHudVotingCompleteEvent(
                 this.room,
                 this,

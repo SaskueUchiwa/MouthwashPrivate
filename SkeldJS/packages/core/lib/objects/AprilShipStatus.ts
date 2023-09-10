@@ -1,5 +1,6 @@
 import { HazelReader, Vector2 } from "@skeldjs/util";
 import { SpawnType, SystemType } from "@skeldjs/constant";
+import { TheSkeldTasks } from "@skeldjs/data";
 
 import { ShipStatusData, InnerShipStatus } from "./InnerShipStatus";
 
@@ -32,7 +33,7 @@ export class AprilShipStatus<RoomType extends Hostable = Hostable> extends Inner
         [SystemType.Electrical]: [9],
         [SystemType.Storage]: [1, 7, 12],
         [SystemType.LowerEngine]: [4, 11]
-    }
+    };
 
     initialSpawnCenter = new Vector2(0.72, 0.62);
     meetingSpawnCenter = new Vector2(0.72, 0.62);
@@ -40,18 +41,18 @@ export class AprilShipStatus<RoomType extends Hostable = Hostable> extends Inner
     constructor(
         room: RoomType,
         spawnType: SpawnType,
-        netid: number,
+        netId: number,
         ownerid: number,
         flags: number,
         data?: HazelReader | ShipStatusData
     ) {
-        super(room, spawnType, netid, ownerid, flags, data);
+        super(room, spawnType, netId, ownerid, flags, data);
     }
 
     getComponent<T extends Networkable>(
         component: NetworkableConstructor<T>
     ): T|undefined {
-        if (component === AprilShipStatus as NetworkableConstructor<any>) {
+        if (this.spawnType === SpawnType.AprilShipStatus && component === AprilShipStatus as NetworkableConstructor<any>) {
             return this.components[0] as unknown as T;
         }
 
@@ -110,5 +111,9 @@ export class AprilShipStatus<RoomType extends Hostable = Hostable> extends Inner
 
     getDoorsInRoom(room: SystemType) {
         return AprilShipStatus.roomDoors[room] || [];
+    }
+
+    getTasks() {
+        return Object.values(TheSkeldTasks);
     }
 }

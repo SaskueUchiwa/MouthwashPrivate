@@ -1,6 +1,7 @@
 import { HazelReader, Vector2 } from "@skeldjs/util";
 import { RpcMessageTag, SpawnType, SystemType } from "@skeldjs/constant";
 import { RepairSystemMessage } from "@skeldjs/protocol";
+import { AirshipTasks } from "@skeldjs/data";
 
 import { ShipStatusData, InnerShipStatus } from "./InnerShipStatus";
 
@@ -98,18 +99,18 @@ export class AirshipStatus<RoomType extends Hostable = Hostable> extends InnerSh
     constructor(
         room: RoomType,
         spawnType: SpawnType,
-        netid: number,
-        ownerid: number,
+        netId: number,
+        ownerId: number,
         flags: number,
         data?: HazelReader | ShipStatusData
     ) {
-        super(room, spawnType, netid, ownerid, flags, data);
+        super(room, spawnType, netId, ownerId, flags, data);
     }
 
     getComponent<T extends Networkable>(
         component: NetworkableConstructor<T>
     ): T|undefined {
-        if (component === AirshipStatus as NetworkableConstructor<any>) {
+        if (this.spawnType === SpawnType.Airship && component === AirshipStatus as NetworkableConstructor<any>) {
             return this.components[0] as unknown as T;
         }
 
@@ -220,7 +221,7 @@ export class AirshipStatus<RoomType extends Hostable = Hostable> extends InnerSh
         let count = 0;
         while (hashSet.size < AirshipStatus.electricalRooms.length && count++ < 10000) {
             const door = electricaldoors.doors[room[Math.floor(Math.random() * room.length)]];
-            const doorSet = AirshipStatus.electricalRooms.find(r => r !== room && r.includes(door.id));
+            const doorSet = AirshipStatus.electricalRooms.find(r => r !== room && r.includes(door.doorId));
 
             if (!doorSet)
                 continue;
@@ -259,5 +260,9 @@ export class AirshipStatus<RoomType extends Hostable = Hostable> extends InnerSh
 
     getDoorsInRoom(room: SystemType) {
         return AirshipStatus.roomDoors[room] || [];
+    }
+
+    getTasks() {
+        return Object.values(AirshipTasks);
     }
 }

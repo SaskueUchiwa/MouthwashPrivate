@@ -1,7 +1,7 @@
 import { HazelReader, HazelWriter, Vector2 } from "@skeldjs/util";
+import { ExtractEventTypes } from "@skeldjs/events";
 
 import {
-    GameMap,
     RpcMessageTag,
     SpawnType,
     SystemType,
@@ -10,14 +10,10 @@ import {
 } from "@skeldjs/constant";
 
 import {
-    AirshipTasks,
-    MiraHQTasks,
-    PolusTasks,
-    TheSkeldTasks
-} from "@skeldjs/data";
-
-import { ExtractEventTypes } from "@skeldjs/events";
-import { BaseRpcMessage,CloseDoorsOfTypeMessage,RepairSystemMessage } from "@skeldjs/protocol";
+    BaseRpcMessage,
+    CloseDoorsOfTypeMessage,
+    RepairSystemMessage
+} from "@skeldjs/protocol";
 
 import {
     AutoDoorsSystemEvents,
@@ -92,16 +88,16 @@ export type ShipStatusEvents<RoomType extends Hostable = Hostable> = Networkable
     SabotageSystemEvents<RoomType> &
     SecurityCameraSystemEvents<RoomType> &
     SwitchSystemEvents<RoomType> &
-    ExtractEventTypes<[ RoomSelectImpostorsEvent<RoomType> ]>;
+    ExtractEventTypes<[ RoomAssignRolesEvent<RoomType> ]>;
 
 export type ShipStatusType =
-    | SpawnType.ShipStatus
-    | SpawnType.Headquarters
-    | SpawnType.PlanetMap
+    | SpawnType.SkeldShipStatus
+    | SpawnType.MiraShipStatus
+    | SpawnType.Polus
     | SpawnType.AprilShipStatus
     | SpawnType.Airship;
 
-export class InnerShipStatus<RoomType extends Hostable = Hostable> extends Networkable<
+export abstract class InnerShipStatus<RoomType extends Hostable = Hostable> extends Networkable<
     ShipStatusData,
     ShipStatusEvents<RoomType>,
     RoomType
@@ -116,12 +112,12 @@ export class InnerShipStatus<RoomType extends Hostable = Hostable> extends Netwo
     constructor(
         room: RoomType,
         spawnType: SpawnType,
-        netid: number,
+        netId: number,
         ownerid: number,
         flags: number,
         data?: HazelReader | ShipStatusData
     ) {
-        super(room, spawnType, netid, ownerid, flags, data);
+        super(room, spawnType, netId, ownerid, flags, data);
 
         if (!this.systems) {
             this.systems = new Map;
@@ -199,7 +195,7 @@ export class InnerShipStatus<RoomType extends Hostable = Hostable> extends Netwo
         }
     }
 
-    private async _handleRepairSystem(rpc: RepairSystemMessage) {
+    protected async _handleRepairSystem(rpc: RepairSystemMessage) {
         const system = this.systems.get(rpc.systemId) as SystemStatus;
         const player = this.room.getPlayerByNetId(rpc.netId);
 
@@ -208,58 +204,7 @@ export class InnerShipStatus<RoomType extends Hostable = Hostable> extends Netwo
         }
     }
 
-    /**
-     * Randomly select players to be the Impostor. Called after a game is started
-     * and emits a {@link RoomSelectImpostorsEvent} which can be used to alter the
-     * results of this function.
-     */
-    async selectImpostors() {
-        const available = [...this.room.players.values()].filter(
-            (player) =>
-                player.info && !player.info.isDisconnected && !player.info.isDead
-        );
-        const max = available.length < 7 ? 1 : available.length < 9 ? 2 : 3;
-        const impostors: PlayerData[] = [];
-
-        for (
-            let i = 0;
-            i < Math.min(this.room.settings.numImpostors, max);
-            i++
-        ) {
-            const random = ~~(Math.random() * available.length);
-            impostors.push(available[random]);
-            available.splice(random, 1);
-        }
-
-        const ev = await this.emit(
-            new RoomSelectImpostorsEvent(
-                this.room,
-                impostors
-            )
-        );
-
-        if (!ev.canceled && this.room.host?.control) {
-            await this.room.host.control.setImpostors(ev.alteredImpostors);
-        }
-    }
-
-    private getTasksForMap(map: number) {
-        switch (map) {
-            case GameMap.TheSkeld:
-                return Object.values(TheSkeldTasks);
-            case GameMap.MiraHQ:
-                return Object.values(MiraHQTasks);
-            case GameMap.Polus:
-                return Object.values(PolusTasks);
-            case GameMap.AprilFoolsTheSkeld:
-                return Object.values(TheSkeldTasks);
-            case GameMap.Airship:
-                return Object.values(AirshipTasks);
-        }
-        return [];
-    }
-
-    private addTasksFromList(start: number, count: number, tasks: number[], usedTaskTypes: Set<TaskType>, unusedTasks: TaskDataModel[]) {
+    protected addTasksFromList(start: number, count: number, tasks: number[], usedTaskTypes: Set<TaskType>, unusedTasks: TaskInfo[]) {
         if (unusedTasks.length === 0) {
             return start;
         }
@@ -290,8 +235,11 @@ export class InnerShipStatus<RoomType extends Hostable = Hostable> extends Netwo
         return start;
     }
 
+    /**
+     * Randomly assign tasks to all players, using data from @skeldjs/data.
+     */
     async assignTasks() {
-        const allTasks = this.getTasksForMap(this.room.settings.map);
+        const allTasks = this.getTasks();
         const numCommon = this.room.settings.commonTasks;
         const numLong = this.room.settings.longTasks;
         const numShort = this.room.settings.shortTasks;
@@ -326,7 +274,7 @@ export class InnerShipStatus<RoomType extends Hostable = Hostable> extends Netwo
         let shortIdx = 0;
         let longIdx = 0;
         for (const [ , player ] of this.room.players) {
-            if (!player.info)
+            if (!player.playerInfo)
                 continue;
 
             usedTaskTypes.clear();
@@ -335,13 +283,17 @@ export class InnerShipStatus<RoomType extends Hostable = Hostable> extends Netwo
             shortIdx = this.addTasksFromList(shortIdx, numShort, playerTasks, usedTaskTypes, allShort);
             longIdx = this.addTasksFromList(longIdx, numLong, playerTasks, usedTaskTypes, allLong);
 
-            player.info.setTaskIds(playerTasks);
-            player.info.setTaskStates(playerTasks.map((task, taskIdx) => {
-                return new TaskState(taskIdx, false);
-            }));
+            await player.playerInfo.setTaskIds(playerTasks);
         }
     }
 
+    /**
+     * Get the spawn position of a player whether they are about to spawn after
+     * starting or whether they are about to spawn after a meeting.
+     * @param player The player or player ID to determine the position of.
+     * @param initialSpawn Whther or not this is a spawn after starting the game.
+     * @returns The spawn position of the player.
+     */
     getSpawnPosition(player: PlayerData|number, initialSpawn: boolean) {
         const playerId = typeof player === "number"
             ? player
@@ -356,15 +308,31 @@ export class InnerShipStatus<RoomType extends Hostable = Hostable> extends Netwo
             .add(new Vector2(0, 0.3636));
     }
 
-    spawnPlayer(player: PlayerData, initialSpawn: boolean) {
+    /**
+     * Teleport a player to their spawn position, calculated using
+     * {@link InnerShipStatus.getSpawnPosition}.
+     * @param player The player to determine the position of.
+     * @param initialSpawn Whether or not this is a spawn after starting the game.
+     * @param broadcast Whether or not to broadcast the updates.
+     */
+    spawnPlayer(player: PlayerData, initialSpawn: boolean, broadcast: boolean) {
         if (player.playerId === undefined)
             return;
 
-        player.transform?.snapTo(this.getSpawnPosition(player, initialSpawn));
+        const spawnPosition = this.getSpawnPosition(player, initialSpawn);
+        player.transform?.snapTo(spawnPosition, broadcast);
     }
 
-    getDoorsInRoom(room: SystemType): number[] {
-        void room;
-        return [];
-    }
+    /**
+     * Get all tasks for this map.
+     * @returns A list of tasks for this map.
+     */
+    abstract getTasks(): TaskInfo[];
+
+    /**
+     * Get the door IDs used to connect to a room.
+     * @param room The room to get the door IDs for.
+     * @returns The door IDs that connect to the room.
+     */
+    abstract getDoorsInRoom(room: SystemType): number[];
 }

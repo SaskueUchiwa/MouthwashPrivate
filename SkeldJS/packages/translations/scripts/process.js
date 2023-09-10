@@ -1,7 +1,6 @@
-import { Language, StringNames } from "@skeldjs/constant";
-
-import fs from "fs/promises";
-import path from "path";
+const { Language, StringNames } = require("@skeldjs/constant");
+const fs = require("fs/promises");
+const path = require("path");
 
 const nameToLanguageId = {
     "English": Language.English,
@@ -34,7 +33,7 @@ function escape(translationStr) {
 
     let outputText = `import { Language, StringNames } from "@skeldjs/constant";
 
-export const AllTranslations: Record<Language, Partial<Record<StringNames, string|Record<string, string>>>> = {
+export const AllTranslations: Record<Language, Partial<Record<StringNames|string, string|Record<string, string>>>> = {
 `;
 
     for (const langugeName in translations) {
@@ -56,14 +55,7 @@ export const AllTranslations: Record<Language, Partial<Record<StringNames, strin
             if (!stringNamePath)
                 continue;
 
-            const [ stringName, ...path ] = stringNamePath.split("_");
-
-            const stringId = StringNames[stringName];
-
-            if (stringId === undefined) {
-                console.error("No string name found for: %s", stringName);
-                continue;
-            }
+            const [ stringName, ...path ] = stringNamePath.split(/[_\.]/);
 
             if (path.length) {
                 if (typeof translationMap[stringName] === "object") {
@@ -95,13 +87,18 @@ export const AllTranslations: Record<Language, Partial<Record<StringNames, strin
 
         for (const stringName in processedTranslations[languageName]) {
             const stringText = processedTranslations[languageName][stringName];
+
+            const stringCodeName = StringNames[stringName]
+                ? "[StringNames." + stringName + "]"
+                : "\"" + stringName + "\"";
+
             if (typeof stringText === "string") {
-                outputText += `${TAB}${TAB}[StringNames.${stringName}]: "${stringText}",\n`;
+                outputText += `${TAB}${TAB}${stringCodeName}: "${stringText.trim()}",\n`;
             } else {
-                outputText += `${TAB}${TAB}[StringNames.${stringName}]: {\n`;
+                outputText += `${TAB}${TAB}${stringCodeName}: {\n`;
 
                 for (const pathName in processedTranslations[languageName][stringName]) {
-                    outputText += `${TAB}${TAB}${TAB}"${pathName}": "${processedTranslations[languageName][stringName][pathName]}",\n`;
+                    outputText += `${TAB}${TAB}${TAB}"${pathName}": "${processedTranslations[languageName][stringName][pathName]?.trim()}",\n`;
                 }
 
                 outputText = outputText.substr(0, outputText.length - 2); // remove ending ,

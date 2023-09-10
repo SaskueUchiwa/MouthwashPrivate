@@ -1,6 +1,8 @@
 import { HazelReader, Vector2 } from "@skeldjs/util";
 import { SpawnType, SystemType } from "@skeldjs/constant";
 
+import { MiraHQTasks } from "@skeldjs/data";
+
 import {
     DeconSystem,
     HqHudSystem,
@@ -27,18 +29,18 @@ export class MiraShipStatus<RoomType extends Hostable = Hostable> extends InnerS
     constructor(
         room: RoomType,
         spawnType: SpawnType,
-        netid: number,
+        netId: number,
         ownerid: number,
         flags: number,
         data?: HazelReader | ShipStatusData
     ) {
-        super(room, spawnType, netid, ownerid, flags, data);
+        super(room, spawnType, netId, ownerid, flags, data);
     }
 
     getComponent<T extends Networkable>(
         component: NetworkableConstructor<T>
     ): T|undefined {
-        if (component === MiraShipStatus as NetworkableConstructor<any>) {
+        if (this.spawnType === SpawnType.MiraShipStatus && component === MiraShipStatus as NetworkableConstructor<any>) {
             return this.components[0] as unknown as T;
         }
 
@@ -77,5 +79,13 @@ export class MiraShipStatus<RoomType extends Hostable = Hostable> extends InnerS
             timer: 10000,
             state: 0,
         }));
+    }
+
+    getDoorsInRoom(room: SystemType) {
+        return [];
+    }
+
+    getTasks() {
+        return Object.values(MiraHQTasks);
     }
 }

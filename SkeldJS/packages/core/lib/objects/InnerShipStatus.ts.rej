@@ -1,0 +1,42 @@
+--- packages/core/lib/objects/InnerShipStatus.ts
++++ packages/core/lib/objects/InnerShipStatus.ts
+@@ -31,30 +27,21 @@ import {
+     SecurityCameraSystemEvents,
+     SwitchSystemEvents,
+     SystemStatus,
++    SystemStatusEvents
+ } from "../systems";
+ 
+ import { Networkable, NetworkableEvents } from "../Networkable";
+ import { Hostable } from "../Hostable";
+ import { PlayerData } from "../PlayerData";
+-import { SystemStatusEvents } from "../systems/events";
+-import { RoomSelectImpostorsEvent } from "../events";
+-import { TaskState } from "../misc/PlayerInfo";
+-
+-interface ConsoleDataModel {
+-    index: number;
+-    usableDistance: number;
+-    position: {
+-        x: number;
+-        y: number;
+-    };
+-}
+ 
+-interface TaskDataModel {
+-    index: number;
+-    hudText: string;
+-    taskType: TaskType;
+-    length: TaskLength;
+-    consoles: Record<number, ConsoleDataModel>;
++import { BaseRole } from "../roles";
++import { RoomAssignRolesEvent } from "../events";
++import { TaskInfo } from "@skeldjs/data";
++
++export interface RoleAssignmentData {
++    roleCtr: typeof BaseRole;
++    chance: number;
++    count: number;
+ }
+ 
+ function shuffleArray(array: any[]) {

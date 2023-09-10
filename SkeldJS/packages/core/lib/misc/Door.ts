@@ -19,7 +19,7 @@ export class Door<RoomType extends Hostable = Hostable> extends EventEmitter<Doo
 
     constructor(
         protected system: AutoDoorsSystem<RoomType>|DoorsSystem<RoomType>|ElectricalDoorsSystem<RoomType>,
-        readonly id: number,
+        readonly doorId: number,
         isOpen: boolean
     ) {
         super();
@@ -27,14 +27,28 @@ export class Door<RoomType extends Hostable = Hostable> extends EventEmitter<Doo
         this.isOpen = isOpen;
     }
 
-    async emit<Event extends BasicEvent>(
-        event: Event
-    ): Promise<Event> {
+    async emit<Event extends BasicEvent>(event: Event): Promise<Event> {
         if (this.system) {
-            this.system.emit(event);
+            await this.system.emit(event);
         }
 
         return super.emit(event);
+    }
+
+    async emitSerial<Event extends BasicEvent>(event: Event): Promise<Event> {
+        if (this.system) {
+            await this.system.emitSerial(event);
+        }
+
+        return super.emitSerial(event);
+    }
+
+    emitSync<Event extends BasicEvent>(event: Event): Event {
+        if (this.system) {
+            this.system.emitSync(event);
+        }
+
+        return super.emitSync(event);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -62,13 +76,13 @@ export class Door<RoomType extends Hostable = Hostable> extends EventEmitter<Doo
      * Force the door open.
      */
     async open() {
-        await this.system.openDoor(this.id);
+        await this.system.openDoor(this.doorId);
     }
 
     /**
      * Force the door to close.
      */
     async close() {
-        await this.system.closeDoor(this.id);
+        await this.system.closeDoor(this.doorId);
     }
 }

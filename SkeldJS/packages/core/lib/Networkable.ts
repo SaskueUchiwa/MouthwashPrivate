@@ -1,5 +1,6 @@
 import { HazelReader, HazelWriter } from "@skeldjs/util";
-import { SpawnType } from "@skeldjs/constant";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { SpawnType, SpawnFlag } from "@skeldjs/constant";
 import { BaseRpcMessage } from "@skeldjs/protocol";
 import { BasicEvent, EventEmitter, ExtractEventTypes } from "@skeldjs/events";
 
@@ -12,8 +13,8 @@ export type NetworkableConstructor<T> = {
     new (
         room: Hostable<any>,
         spawnType: SpawnType,
-        netid: number,
-        ownerid: number,
+        netId: number,
+        ownerId: number,
         flags: number,
         data?: HazelReader | any
     ): T;
@@ -21,8 +22,8 @@ export type NetworkableConstructor<T> = {
     new (
         room: Hostable<any>,
         spawnType: SpawnType,
-        netid: number,
-        ownerid: number,
+        netId: number,
+        ownerId: number,
         flags: number,
         data?: HazelReader | any,
         object?: Networkable<any, any>
@@ -80,11 +81,19 @@ export class Networkable<
 
     components: Networkable<any, NetworkableEvents, RoomType>[];
 
+    get owner(): Hostable|PlayerData<RoomType>|undefined {
+        if (this.ownerId !== -2) {
+            return this.room.players.get(this.ownerId);
+        }
+
+        return this.room;
+    }
+
     constructor(
         room: RoomType,
         spawnType: SpawnType,
-        netid: number,
-        ownerid: number,
+        netId: number,
+        ownerId: number,
         flags: number,
         data?: HazelReader | DataT
     ) {
@@ -92,8 +101,8 @@ export class Networkable<
 
         this.room = room;
         this.spawnType = spawnType;
-        this.netId = netid;
-        this.ownerId = ownerid;
+        this.netId = netId;
+        this.ownerId = ownerId;
         this.flags = flags;
 
         if (this.ownerId > -2) {
@@ -127,12 +136,24 @@ export class Networkable<
         return super.emit(event);
     }
 
-    get owner(): Hostable|PlayerData<RoomType>|undefined {
-        if (this.ownerId !== -2) {
-            return this.room.players.get(this.ownerId);
+    async emitSerial<Event extends BasicEvent>(event: Event): Promise<Event> {
+        if (this.player) {
+            await this.player.emitSerial(event);
+        } else if (this.owner) {
+            await this.owner.emitSerial(event);
         }
 
-        return this.room;
+        return super.emitSerial(event);
+    }
+
+    emitSync<Event extends BasicEvent>(event: Event): Event {
+        if (this.player) {
+            this.player.emitSync(event);
+        } else if (this.owner) {
+            this.owner.emitSync(event);
+        }
+
+        return super.emitSync(event);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-empty-function
@@ -180,5 +201,12 @@ export class Networkable<
      */
     despawn(): void {
         return this.room.despawnComponent(this);
+    }
+
+    /**
+     * Whether or not this object
+     */
+    canBeManaged() {
+        return this.room.canManageObject(this);
     }
 }

@@ -9,10 +9,17 @@ import {
     SpawnType,
     RootMessageTag,
     GameMap,
-    GameKeyword
+    GameKeyword,
+    Platform,
+    Language,
+    Hat,
+    Skin,
+    Pet,
+    Visor,
+    Nameplate
 } from "@skeldjs/constant";
 
-import { DisconnectMessages, MatchmakingServers } from "@skeldjs/data";
+import { DisconnectMessages } from "@skeldjs/data";
 
 import {
     AcknowledgePacket,
@@ -25,25 +32,40 @@ import {
     ReliablePacket,
     UnreliablePacket,
     GameDataMessage,
-    SceneChangeMessage,
     JoinGameMessage,
     RedirectMessage,
     BaseRootPacket,
     MessageDirection,
     HostGameMessage,
-    AllGameSettings,
-    GetGameListMessage,
     GameListing,
     RemovePlayerMessage,
-    StartGameMessage
+    StartGameMessage,
+    PingPacket,
+    AllGameSettings,
+    SceneChangeMessage,
+    PlatformSpecificData
 } from "@skeldjs/protocol";
 
-import { Code2Int, VersionInfo, HazelWriter, HazelReader } from "@skeldjs/util";
-import { LobbyBehaviour, PlayerData, PlayerJoinEvent, RoomID } from "@skeldjs/core";
+import {
+    VersionInfo,
+    HazelWriter,
+    HazelReader,
+    GameCode,
+    DeepPartial
+} from "@skeldjs/util";
+
+import {
+    LobbyBehaviour,
+    PlayerData,
+    PlayerJoinEvent,
+    RoomID
+} from "@skeldjs/core";
+
 import { SkeldjsStateManager, SkeldjsStateManagerEvents } from "@skeldjs/state";
 import { ExtractEventTypes } from "@skeldjs/events";
+import { DtlsSocket } from "@skeldjs/dtls";
 
-import { ClientConfig } from "./interface/ClientConfig";
+import { AuthMethod, ClientConfig, FindGamesOptions, PortOptions } from "./interfaces";
 
 import {
     ClientConnectEvent,
@@ -52,17 +74,23 @@ import {
     ClientJoinEvent,
 } from "./events";
 
+import { ConnectError, JoinError } from "./errors";
+
 import { AuthClient } from "./AuthClient";
-import { JoinError } from "./errors/JoinError";
+import { HttpMatchmakerClient } from "./HttpMatchmakerClient";
 
 const lookupDns = util.promisify(dns.lookup);
 
-export interface SentPacket {
-    nonce: number;
-    ackd: boolean;
+export class SentPacket {
+    constructor(
+        public readonly sentAt: number,
+        public readonly nonce: number,
+        public readonly buffer: Buffer,
+        public readonly wasAcked: boolean
+    ) {}
 }
 
-export type SkeldjsClientEvents = SkeldjsStateManagerEvents &
+export type SkeldjsClientEvents = SkeldjsStateManagerEvents<SkeldjsClient> &
     ExtractEventTypes<
         [
             ClientConnectEvent,
@@ -81,74 +109,71 @@ export class SkeldjsClient extends SkeldjsStateManager<SkeldjsClientEvents> {
     /**
      * The options for the client.
      */
-    options: ClientConfig;
-
+    config: ClientConfig;
     /**
      * The datagram socket for the client.
      */
-    socket?: dgram.Socket;
-
+    socket?: DtlsSocket|dgram.Socket;
     /**
      * Auth client responsible for getting an authentication token from the
      * connected-to server.
      */
-    auth: AuthClient;
-
+    authClient: AuthClient;
+    /**
+     * Http matchmaker client responsible for retrieving information about games
+     * on the server to connect to.
+     */
+    httpMatchmakerClient: HttpMatchmakerClient;
     /**
      * The IP of the server that the client is currently connected to.
      */
     ip?: string;
-
     /**
      * The port of the server that the client is currently connected to.
      */
     port?: number;
-
     /**
      * An array of 8 of the most recent packets received from the server.
      */
     packetsReceived: number[];
-
     /**
      * An array of 8 of the most recent packet sent by the client.
      */
     packetsSent: SentPacket[];
 
     private _nonce = 0;
-
     /**
      * Whether or not the client is currently connected to a server.
      */
     connected!: boolean;
-
     /**
      * Whether or not the client has sent a disconnect packet.
      */
     sent_disconnect!: boolean;
-
     /**
      * Whether or not the client is identified with the connected server.
      */
     identified!: boolean;
-
     /**
      * The username of the client.
      */
-    username?: string;
-
+    username: string;
     /**
      * The version of the client.
      */
     version: VersionInfo;
-
     /**
      * The client ID of the client.
      */
-    clientId!: number;
-
-    token?: number;
-
+    clientId: number;
+    /**
+     * The next nonce that the client is expecting to receive from the server.
+     */
     nextExpectedNonce?: number;
+    /**
+     * A map from nonce->message that were received from the server with an
+     * unexpected nonce (out of order).
+     */
     unorderedMessageMap: Map<number, ReliablePacket>;
 
     /**
@@ -162,21 +187,29 @@ export class SkeldjsClient extends SkeldjsStateManager<SkeldjsClientEvents> {
      */
     constructor(
         version: string | number | VersionInfo,
+        username: string,
         options: Partial<ClientConfig> = {}
     ) {
         super({ doFixedUpdate: true });
 
-        this.options = {
+        this.config = {
             doFixedUpdate: true,
-            attemptAuth: true,
+            authMethod: AuthMethod.SecureTransport,
+            useHttpMatchmaker: true,
             allowHost: true,
-            language: GameKeyword.English,
+            language: Language.English,
             chatMode: QuickChatMode.FreeChat,
             messageOrdering: false,
+            platform: new PlatformSpecificData(Platform.StandaloneItch, "TESTNAME"),
+            idToken: "",
+            eosProductUserId: "", // crypto.randomBytes(16).toString("hex"),
             ...options
         };
 
-        this.auth = new AuthClient(this);
+        this.username = username;
+
+        this.authClient = new AuthClient(this);
+        this.httpMatchmakerClient = new HttpMatchmakerClient(this);
 
         if (version instanceof VersionInfo) {
             this.version = version;
@@ -187,33 +220,46 @@ export class SkeldjsClient extends SkeldjsStateManager<SkeldjsClientEvents> {
         this.packetsReceived = [];
         this.packetsSent = [];
 
+        this.clientId = 0;
+
         this.nextExpectedNonce = undefined;
         this.unorderedMessageMap = new Map;
 
         this._reset();
 
-        this.stream = [];
+        this.messageStream = [];
 
         this.decoder.on(DisconnectPacket, (message) => {
-            this.disconnect(message.reason, message.message);
+            if (this.identified && !this.sent_disconnect) {
+                this.send(new DisconnectPacket(DisconnectReason.ServerRequest, undefined, false));
+                this.sent_disconnect = true;
+            }
+            this.emitSync(
+                new ClientDisconnectEvent(
+                    this,
+                    message.reason,
+                    message.message || DisconnectMessages[message.reason as keyof typeof DisconnectMessages]
+                )
+            );
+            this._reset();
         });
 
         this.decoder.on(AcknowledgePacket, (message) => {
-            const sent = this.packetsSent.find(
-                (s) => s.nonce === message.nonce
-            );
-            if (sent) sent.ackd = true;
+            const idx = this.packetsSent.findIndex(sentPacket => sentPacket.buffer);
+            if (idx > 0) {
+                this.packetsSent.splice(idx, 1);
+            }
 
             for (const missing of message.missingPackets) {
                 if (missing < this.packetsReceived.length) {
-                    this.ack(this.packetsReceived[missing]);
+                    this.acknowledgeNonce(this.packetsReceived[missing]);
                 }
             }
         });
 
         this.decoder.on(RemovePlayerMessage, async (message) => {
-            if (message.clientid === this.clientId) {
-                await this.disconnect(DisconnectReason.None);
+            if (message.clientId === this.clientId) {
+                await this.disconnect(message.reason);
             }
         });
     }
@@ -237,75 +283,80 @@ export class SkeldjsClient extends SkeldjsStateManager<SkeldjsClientEvents> {
     }
 
     get hostIsMe() {
-        return this.hostId === this.clientId && this.options.allowHost || false;
+        return this.hostId === this.clientId && this.config.allowHost || false;
     }
 
-    private async ack(nonce: number) {
-        await this.send(
+    pingInterval(socket: DtlsSocket|dgram.Socket) {
+        if (this.socket !== socket)
+            return;
+
+        this.send(new PingPacket(this.getNextNonce()));
+
+        let flag = false;
+        for (let i = 0; i < this.packetsSent.length; i++) {
+            const sentPacket = this.packetsSent[i];
+            if (Date.now() > sentPacket.sentAt + 1500) {
+                if (sentPacket.wasAcked) {
+                    flag = true;
+                } else {
+                    this.socket.send(sentPacket.buffer);
+                }
+            }
+        }
+        if (!flag) {
+            this.disconnect(DisconnectReason.InternalNonceFailure);
+            return;
+        }
+
+        setTimeout(this.pingInterval.bind(this, socket), 1500);
+    }
+
+    private acknowledgeNonce(nonce: number) {
+        this.send(
             new AcknowledgePacket(
                 nonce,
                 this.packetsSent
-                    .filter((packet) => packet.ackd)
+                    .filter((packet) => !packet.wasAcked)
                     .map((_, i) => i)
             )
         );
     }
 
-    /**
-     * Connect to a region or IP. Optionally identify with a username (can be done later with the {@link SkeldjsClient.identify} method).
-     * @param host The hostname to connect to.
-     * @param username The username to identify with
-     * @param token The authorisation token. Currently unavailable, working on account system.
-     * @param port The port to connect to.
-     * @param pem The public certificate of the server.
-     * @example
-     *```typescript
-     * // Connect to an official Among Us region.
-     * await connect("NA", "weakeyes", 432432);
-     *
-     * // Connect to a locally hosted private server.
-     * await connect("127.0.0.1", "weakeyes", 3423432);
-     * ```
-     */
-    async connect(
-        host: "NA" | "EU" | "AS",
-        username?: string,
-        port?: number
-    ): Promise<void>;
-    async connect(
-        host: string,
-        username?: string,
-        port?: number
-    ): Promise<void>;
-    async connect(
-        host: string,
-        username?: string,
-        port: number = 22023
-    ) {
-        await this.disconnect();
-
-        if (host in MatchmakingServers) {
-            return await this.connect(
-                MatchmakingServers[host as "NA"|"EU"|"AS"][0],
-                username,
-                22023
-            );
-        }
-
+    async _connect(host: string, port: number|PortOptions) {
         const ip = await lookupDns(host);
+        this.ip = ip.address;
 
         this.nextExpectedNonce = undefined;
-        this.ip = ip.address;
-        this.port = port;
+        this.port = typeof port === "number"
+            ? port
+            : port.insecureGameServer;
 
-        this.token = this.options.attemptAuth
-            ? await this.auth.getAuthToken(this.ip, this.port + 2)
-            : 0;
+        if (this.config.authMethod === AuthMethod.SecureTransport) {
+            this.port = typeof port === "object"
+                ? port.secureGameServer
+                : this.port + 3;
 
-        this.socket = dgram.createSocket("udp4");
-        this.connected = true;
+            this.decoder.config.useDtlsLayout = true;
+        } else {
+            this.decoder.config.useDtlsLayout = false;
+        }
+
+        const authToken = this.config.authMethod === AuthMethod.NonceExchange
+            ? await this.authClient.getAuthToken(
+                this.ip,
+                typeof port === "object"
+                    ? port.authServer
+                    : this.port + 2,
+                Platform.StandaloneSteamPC,
+                this.config.eosProductUserId
+            ) : 0;
+
+        this.socket = this.config.authMethod === AuthMethod.SecureTransport
+            ? new DtlsSocket
+            : dgram.createSocket("udp4");
 
         this.socket.on("message", this.handleInboundMessage.bind(this));
+        setTimeout(this.pingInterval.bind(this), 50);
 
         const ev = await this.emit(
             new ClientConnectEvent(
@@ -316,10 +367,47 @@ export class SkeldjsClient extends SkeldjsStateManager<SkeldjsClientEvents> {
         );
 
         if (!ev.canceled) {
-            if (typeof username === "string") {
-                await this.identify(username, this.token);
+            if (this.socket instanceof DtlsSocket) {
+                await this.socket.connect(this.port, this.ip);
+                this.connected = true;
+            }
+            if (typeof this.username === "string") {
+                await this.identify(this.username, authToken);
             }
         }
+    }
+
+    /**
+     * Connect to a region or IP. Optionally identify with {@link SkeldsClient.username} (can be done later with the {@link SkeldjsClient.identify} method).
+     * @param host The hostname to connect to.
+     * @param port The port to connect to.
+     * @param eosProductUserId An Epic Online Services user ID to use, found in the "show account id" in the game account settings.
+     * @example
+     *```typescript
+     * // Connect to an official Among Us region.
+     * await connect("https://matchmaker.among.us", "weakeyes", 443);
+     *
+     * // Connect to a locally hosted private server.
+     * await connect("127.0.0.1", "weakeyes", 3423432);
+     * ```
+     */
+    async connect(
+        host: string,
+        port?: number|PortOptions
+    ) {
+        this.disconnect();
+
+        if (this.config.useHttpMatchmaker) {
+            this.httpMatchmakerClient.hostname = host.startsWith("http") ? host : "https://" + host;
+            this.httpMatchmakerClient.port = typeof port === "undefined"
+                ? 22021
+                : typeof port === "number"
+                    ? port
+                    : port.httpMatchmaker;
+            return;
+        }
+
+        await this._connect(host, port || 22023);
     }
 
     protected _reset() {
@@ -335,7 +423,7 @@ export class SkeldjsClient extends SkeldjsStateManager<SkeldjsClientEvents> {
         this.sent_disconnect = false;
         this.connected = false;
         this.identified = false;
-        this.username = undefined;
+        this._nonce = 0;
 
         this.packetsSent = [];
         this.packetsReceived = [];
@@ -346,13 +434,13 @@ export class SkeldjsClient extends SkeldjsStateManager<SkeldjsClientEvents> {
     /**
      * Disconnect from the server currently connected to.
      */
-    async disconnect(reason?: DisconnectReason, message?: string) {
+    disconnect(reason?: DisconnectReason, message?: string) {
         if (this.connected) {
             if (this.identified && !this.sent_disconnect) {
-                await this.send(new DisconnectPacket(reason, message, true));
+                this.send(new DisconnectPacket(reason, message, true));
                 this.sent_disconnect = true;
             }
-            this.emit(
+            this.emitSync(
                 new ClientDisconnectEvent(
                     this,
                     reason,
@@ -371,12 +459,12 @@ export class SkeldjsClient extends SkeldjsStateManager<SkeldjsClientEvents> {
      * await client.identify("weakeyes");
      * ```
      */
-    async identify(username: string, token: number = 0) {
+    async identify(username: string, authToken: number) {
         const ev = await this.emit(
             new ClientIdentifyEvent(
                 this,
                 username,
-                token
+                authToken
             )
         );
 
@@ -384,42 +472,66 @@ export class SkeldjsClient extends SkeldjsStateManager<SkeldjsClientEvents> {
             return;
 
         const nonce = this.getNextNonce();
-        await this.send(
+        this.send(
             new HelloPacket(
                 nonce,
                 this.version,
                 username,
-                token,
-                this.options.language,
-                this.options.chatMode
+                this.config.authMethod === AuthMethod.SecureTransport
+                    ? this.httpMatchmakerClient.matchmakerToken!
+                    : authToken,
+                this.config.language,
+                this.config.chatMode,
+                this.config.platform,
+                undefined
             )
         );
 
-        await this.decoder.waitf(AcknowledgePacket, ack => ack.nonce ===  nonce);
+        await new Promise((res, rej) => {
+            // eslint-disable-next-line @typescript-eslint/no-this-alias
+            const _this = this;
 
-        this.identified = true;
-        this.username = username;
-        this.token = token;
-    }
+            function onAck(ack: AcknowledgePacket) {
+                if (ack.nonce === nonce) {
+                    _this.decoder.off(AcknowledgePacket, onAck);
+                    _this.off("client.disconnect", onDisconnect);
 
-    protected _send(buffer: Buffer): Promise<number> {
-        return new Promise((resolve, reject) => {
-            if (!this.socket) {
-                return resolve(0);
+                    res(ack);
+                }
             }
 
-            this.socket.send(buffer, this.port, this.ip, (err, written) => {
-                if (err) return reject(err);
+            function onDisconnect(ev: ClientDisconnectEvent) {
+                _this.decoder.off(AcknowledgePacket, onAck);
+                _this.off("client.disconnect", onDisconnect);
 
-                resolve(written);
-            });
+                rej(new ConnectError(ev.reason, ev.message || DisconnectMessages[ev.reason] || ""));
+            }
+
+            this.decoder.on(AcknowledgePacket, onAck);
+            this.on("client.disconnect", onDisconnect);
         });
+
+        this.identified = true;
+        this._cachedPlatform = this.config.platform;
+        this._cachedName = username;
+    }
+
+    private _send(buffer: Buffer) {
+        if (!this.socket) {
+            return;
+        }
+
+        if (this.socket instanceof DtlsSocket) {
+            this.socket.send(buffer);
+        } else {
+            this.socket.send(buffer, this.port, this.ip);
+        }
     }
 
     /**
      * Send a packet to the connected server.
      */
-    async send(packet: BaseRootPacket): Promise<void> {
+    send(packet: BaseRootPacket): void {
         if (!this.socket) {
             return;
         }
@@ -434,41 +546,13 @@ export class SkeldjsClient extends SkeldjsStateManager<SkeldjsClientEvents> {
             writer.write(packet, MessageDirection.Serverbound, this.decoder);
             writer.realloc(writer.cursor);
 
-            await this._send(writer.buffer);
+            this._send(writer.buffer);
 
             if ((packet as any).nonce !== undefined) {
-                const sent = {
-                    nonce: (packet as any).nonce,
-                    ackd: false,
-                };
+                const sent = new SentPacket(Date.now(), (packet as any).nonce, writer.buffer, false);
 
                 this.packetsSent.unshift(sent);
                 this.packetsSent.splice(8);
-
-                let attempts = 0;
-                const interval: NodeJS.Timeout = setInterval(async () => {
-                    if (sent.ackd) {
-                        return clearInterval(interval);
-                    } else {
-                        if (
-                            !this.packetsSent.find(
-                                (packet) => sent.nonce === packet.nonce
-                            )
-                        ) {
-                            return clearInterval(interval);
-                        }
-
-                        if (++attempts > 8) {
-                            await this.disconnect();
-                            clearInterval(interval);
-                        }
-
-                        if ((await this._send(writer.buffer)) === null) {
-                            await this.disconnect();
-                            clearInterval(interval);
-                        }
-                    }
-                }, 1500);
             }
         } else {
             const writer = HazelWriter.alloc(512);
@@ -476,52 +560,63 @@ export class SkeldjsClient extends SkeldjsStateManager<SkeldjsClientEvents> {
             writer.write(packet, MessageDirection.Serverbound, this.decoder);
             writer.realloc(writer.cursor);
 
-            await this._send(writer.buffer);
+            this._send(writer.buffer);
         }
     }
 
     /**
      * Broadcast a message to a specific player or to all players in the game.
-     * @param messages The messages to broadcast.
-     * @param reliable Whether or not the message should be acknowledged by the server.
-     * @param recipient The optional recipient of the messages.
-     * @param payload Additional payloads to be sent to the server. (Not necessarily broadcasted to all players, or even the recipient.)
+     * @param gamedata The gamedata messages to broadcast
+     * @param payloads Any payloads to send to the server (won't go to any recipients in particular)
+     * @param include Which players to include in the broadcast
+     * @param exclude Which players to exclude from the broadcast
+     * @param reliable Whether or not this message is reliable and should be acknowledged by the server
      */
     async broadcast(
-        messages: BaseGameDataMessage[],
-        reliable: boolean = true,
-        recipient: PlayerData | number | undefined = undefined,
-        payloads: BaseRootMessage[] = []
+        gamedata: BaseGameDataMessage[],
+        payloads: BaseRootMessage[] = [],
+        include?: (PlayerData|number)[],
+        exclude?: (PlayerData|number)[],
+        reliable = true
     ) {
-        const recipientid = typeof recipient === "number"
-            ? recipient
-            : recipient?.clientId;
+        const includedSet = include || [...this.players.values()];
+        const excludedSet = new Set(exclude);
 
-        if (recipientid !== undefined) {
-            const children = [
-                ...(messages.length
-                    ? [new GameDataToMessage(this.code, recipientid, messages)]
-                    : []),
-                ...payloads,
-            ];
+        const actualInclude = excludedSet.size
+            ? includedSet.filter(include => !excludedSet.has(include))
+            : includedSet;
 
-            await this.send(
-                reliable
-                    ? new ReliablePacket(this.getNextNonce(), children)
-                    : new UnreliablePacket(children)
-            );
+        const actualPayloads = [...payloads];
+        if (actualInclude.length === this.players.size) {
+            if (gamedata.length) {
+                actualPayloads.push(
+                    new GameDataMessage(
+                        this.code,
+                        gamedata
+                    )
+                );
+            }
         } else {
-            const children = [
-                ...(messages.length
-                    ? [new GameDataMessage(this.code, messages)]
-                    : []),
-                ...payloads,
-            ];
+            if (gamedata.length) {
+                for (const player of actualInclude) {
+                    actualPayloads.push(
+                        new GameDataToMessage(
+                            this.code,
+                            typeof player === "number"
+                                ? player
+                                : player.clientId,
+                            gamedata
+                        )
+                    );
+                }
+            }
+        }
 
-            await this.send(
+        if (actualPayloads.length) {
+            this.send(
                 reliable
-                    ? new ReliablePacket(this.getNextNonce(), children)
-                    : new UnreliablePacket(children)
+                    ? new ReliablePacket(this.getNextNonce(), actualPayloads)
+                    : new UnreliablePacket(actualPayloads)
             );
         }
     }
@@ -533,7 +628,6 @@ export class SkeldjsClient extends SkeldjsStateManager<SkeldjsClientEvents> {
             return;
 
         const parsedReliable = parsedPacket as ReliablePacket;
-
         const isReliable = parsedReliable.nonce !== undefined && parsedPacket.messageTag !== SendOption.Acknowledge;
 
         if (isReliable) {
@@ -544,13 +638,13 @@ export class SkeldjsClient extends SkeldjsStateManager<SkeldjsClientEvents> {
             this.packetsReceived.unshift(parsedReliable.nonce);
             this.packetsReceived.splice(8);
 
-            await this.ack(parsedReliable.nonce);
+            this.acknowledgeNonce(parsedReliable.nonce);
 
             if (parsedReliable.nonce < this.nextExpectedNonce - 1) {
                 return;
             }
 
-            if (parsedReliable.nonce !== this.nextExpectedNonce && this.options.messageOrdering) {
+            if (parsedReliable.nonce !== this.nextExpectedNonce && this.config.messageOrdering) {
                 if (!this.unorderedMessageMap.has(parsedReliable.nonce)) {
                     this.unorderedMessageMap.set(parsedReliable.nonce, parsedReliable);
                 }
@@ -563,7 +657,7 @@ export class SkeldjsClient extends SkeldjsStateManager<SkeldjsClientEvents> {
 
         await this.decoder.emitDecoded(parsedPacket, MessageDirection.Clientbound, undefined);
 
-        if (isReliable && this.options.messageOrdering) {
+        if (isReliable && this.config.messageOrdering) {
             // eslint-disable-next-line no-constant-condition
             while (true) {
                 const nextMessage = this.unorderedMessageMap.get(this.nextExpectedNonce!);
@@ -601,9 +695,9 @@ export class SkeldjsClient extends SkeldjsStateManager<SkeldjsClientEvents> {
         }
 
         if (this.hostIsMe) {
-            this.spawnPrefab(SpawnType.Player, this.myPlayer.clientId);
+            this.spawnPrefabOfType(SpawnType.Player, this.myPlayer.clientId);
         } else {
-            await this.send(
+            this.send(
                 new ReliablePacket(this.getNextNonce(), [
                     new GameDataMessage(this.code, [
                         new SceneChangeMessage(this.clientId, "OnlineGame"),
@@ -617,15 +711,95 @@ export class SkeldjsClient extends SkeldjsStateManager<SkeldjsClientEvents> {
                 return;
 
             if (this.lobbyBehaviour) {
-                const spawnPosition = LobbyBehaviour.spawnPositions[ev.player.playerId];
+                const spawnPosition = LobbyBehaviour.spawnPositions[ev.player.playerId % LobbyBehaviour.spawnPositions.length];
                 const offsetted = spawnPosition
                     .add(spawnPosition.negate().normalize());
 
-                ev.player.transform?.snapTo(offsetted);
+                ev.player.transform?.snapTo(offsetted, false);
             } else if (this.shipStatus) {
                 const spawnPosition = this.shipStatus.getSpawnPosition(ev.player, true);
-                ev.player.transform?.snapTo(spawnPosition);
+                ev.player.transform?.snapTo(spawnPosition, false);
             }
+        }
+    }
+
+    async _joinGame(code: RoomID, doSpawn: boolean): Promise<number> {
+        if (!this.ip) {
+            throw new Error("Tried to join while not connected.");
+        }
+
+        if (!this.identified) {
+            throw new Error("Tried to join while not identified.");
+        }
+
+        if (this.myPlayer && this.code !== code) {
+            throw new Error("Already in a room, leave first before joining another");
+        }
+
+        this.send(
+            new ReliablePacket(
+                this.getNextNonce(),
+                [
+                    new JoinGameMessage(code, true)
+                ]
+            )
+        );
+
+        const message = await new Promise<RedirectMessage|ClientDisconnectEvent|PlayerJoinEvent>(resolve => {
+            // eslint-disable-next-line @typescript-eslint/no-this-alias
+            const _this = this;
+            function removeListeners() {
+                _this.decoder.off(RedirectMessage, onRedirectMessage);
+                _this.off("player.join", onPlayerJoin);
+                _this.off("client.disconnect", onDisconnect);
+            }
+
+            function onRedirectMessage(message: RedirectMessage) {
+                resolve(message);
+                removeListeners();
+            }
+
+            function onDisconnect(ev: ClientDisconnectEvent) {
+                resolve(ev);
+                removeListeners();
+            }
+
+            function onPlayerJoin(ev: PlayerJoinEvent) {
+                resolve(ev);
+                removeListeners();
+            }
+
+            this.decoder.on(RedirectMessage, onRedirectMessage);
+            this.on("client.disconnect", onDisconnect);
+            this.on("player.join", onPlayerJoin);
+        });
+
+        if (message instanceof ClientDisconnectEvent)
+            throw new JoinError(message.reason, message.message || DisconnectMessages[message.reason || DisconnectReason.Error]);
+
+        if (message instanceof PlayerJoinEvent) {
+            if (doSpawn) {
+                await this.spawnSelf();
+
+                this.myPlayer?.control?.setHat(Hat.NoHat);
+                this.myPlayer?.control?.setSkin(Skin.None);
+                this.myPlayer?.control?.setPet(Pet.EmptyPet);
+                this.myPlayer?.control?.setVisor(Visor.EmptyVisor);
+                this.myPlayer?.control?.setNameplate(Nameplate.NoPlate);
+            }
+
+            return this.code;
+        }
+
+        switch (message.messageTag) {
+            case RootMessageTag.Redirect:
+                this.disconnect();
+                await this.connect(
+                    message.ip,
+                    message.port
+                );
+
+                return await this._joinGame(code, doSpawn);
         }
     }
 
@@ -639,81 +813,88 @@ export class SkeldjsClient extends SkeldjsStateManager<SkeldjsClientEvents> {
      * await client.joinGame("ABCDEF");
      * ```
      */
-    async joinGame(code: RoomID, doSpawn: boolean = true): Promise<RoomID> {
+    async joinGame(code: RoomID, doSpawn: boolean = true): Promise<number> {
         if (typeof code === "undefined") {
             throw new TypeError("No code provided.");
         }
 
         if (typeof code === "string") {
-            return this.joinGame(Code2Int(code), doSpawn);
+            return this.joinGame(GameCode.convertStringToInt(code), doSpawn);
         }
 
-        if (!this.ip) {
-            throw new Error("Tried to join while not connected.");
+        if (this.config.useHttpMatchmaker) {
+            await this.httpMatchmakerClient.login();
+            const { ip, port } = await this.httpMatchmakerClient.getIpToJoinGame(code);
+            await this._connect(ip, port);
         }
 
-        if (!this.identified) {
-            throw new Error("Tried to join while not identified.");
-        }
+        return await this._joinGame(code, doSpawn);
+    }
 
-        if (this.myPlayer && this.code !== code) {
-            const username = this.username;
-            await this.disconnect();
-            await this.connect(this.ip, username, this.port);
-        }
-
-        await this.send(
-            new ReliablePacket(
-                this.getNextNonce(),
-                [
-                    new JoinGameMessage(code)
-                ]
-            )
+    async _createGame(settings: GameSettings, filterTags: string[], doJoin: boolean): Promise<number> {
+        this.send(
+            new ReliablePacket(this.getNextNonce(), [
+                new HostGameMessage(settings, filterTags),
+            ])
         );
 
-        const data = await Promise.race([
-            this.decoder.waitf(
-                JoinGameMessage,
-                (message) => message.error !== undefined
-            ),
-            this.decoder.wait(RedirectMessage),
-            this.wait("client.disconnect"),
-            this.waitf("player.join", ev => ev.player.clientId === this.clientId)
-        ]);
-
-        if (data instanceof ClientDisconnectEvent) {
-            throw new JoinError(data.reason, data.message || DisconnectMessages[data.reason || DisconnectReason.None]);
-        }
-
-        if (data instanceof PlayerJoinEvent) {
-            if (doSpawn) {
-                await this.spawnSelf();
+        const message = await new Promise<RedirectMessage|HostGameMessage|ClientDisconnectEvent>(resolve => {
+            // eslint-disable-next-line @typescript-eslint/no-this-alias
+            const _this = this;
+            function removeListeners() {
+                _this.decoder.off(RedirectMessage, onRedirectMessage);
+                _this.decoder.off(HostGameMessage, onHostGameMessage);
+                _this.off("client.disconnect", onDisconnect);
             }
 
-            return this.code;
+            function onRedirectMessage(message: RedirectMessage) {
+                resolve(message);
+                removeListeners();
+            }
+
+            function onHostGameMessage(message: HostGameMessage) {
+                resolve(message);
+                removeListeners();
+            }
+
+            function onDisconnect(ev: ClientDisconnectEvent) {
+                resolve(ev);
+                removeListeners();
+            }
+
+            this.decoder.on(RedirectMessage, onRedirectMessage);
+            this.decoder.on(HostGameMessage, onHostGameMessage);
+            this.on("client.disconnect", onDisconnect);
+        });
+
+        if (message instanceof ClientDisconnectEvent) {
+            throw new JoinError(message.reason, message.message || DisconnectMessages[message.reason || DisconnectReason.Error]);
         }
 
-        const { message } = data;
-
         switch (message.messageTag) {
-            case RootMessageTag.JoinGame:
-                throw new JoinError(message.error, message.message || DisconnectMessages[message.error || DisconnectReason.None]);
             case RootMessageTag.Redirect:
-                const username = this.username;
-                await this.disconnect();
                 await this.connect(
                     message.ip,
-                    username,
                     message.port
                 );
 
-                return await this.joinGame(code, doSpawn);
+                return await this._createGame(settings, filterTags, doJoin);
+            case RootMessageTag.HostGame:
+                this.settings.patch(settings);
+
+                if (doJoin) {
+                    await this._joinGame(message.code, true);
+                    return message.code;
+                } else {
+                    return message.code;
+                }
         }
     }
 
     /**
      * Create a game with given settings.
-     * @param host_settings The settings to create the game with.
+     * @param hostSettings The settings to create the game with.
+     * @param filterTags The search tags to use for the created game.
      * @param doJoin Whether or not to join the game after created.
      * @returns The game code of the room.
      * @example
@@ -727,68 +908,27 @@ export class SkeldjsClient extends SkeldjsStateManager<SkeldjsClientEvents> {
      * ```
      */
     async createGame(
-        host_settings: Partial<AllGameSettings> = {},
-        chatMode: QuickChatMode = QuickChatMode.FreeChat,
+        hostSettings: DeepPartial<AllGameSettings> = {},
+        filterTags = ["Beginner", "Casual", "Serious", "Expert"],
         doJoin: boolean = true
     ): Promise<number> {
         const settings = new GameSettings({
-            ...host_settings,
+            ...hostSettings,
             version: 2,
         });
 
-        await this.send(
-            new ReliablePacket(this.getNextNonce(), [
-                new HostGameMessage(settings, chatMode),
-            ])
-        );
-
-        const data= await Promise.race([
-            this.decoder.waitf(
-                JoinGameMessage,
-                (message) => message.error !== undefined
-            ),
-            this.decoder.wait(RedirectMessage),
-            this.decoder.wait(HostGameMessage),
-            this.wait("client.disconnect"),
-        ]);
-
-        if (data instanceof ClientDisconnectEvent) {
-            throw new JoinError(data.reason, data.message || DisconnectMessages[data.reason || DisconnectReason.None]);
+        if (this.config.useHttpMatchmaker) {
+            await this.httpMatchmakerClient.login();
+            const { ip, port } = await this.httpMatchmakerClient.getIpToHostGame();
+            await this._connect(ip, port);
         }
 
-        const { message } = data;
-
-        switch (message.messageTag) {
-            case RootMessageTag.JoinGame:
-                throw new JoinError(message.error, DisconnectMessages[message.error || DisconnectReason.None] || message.message);
-            case RootMessageTag.Redirect:
-                const username = this.username;
-
-                await this.disconnect();
-                await this.connect(
-                    message.ip,
-                    username,
-                    message.port
-                );
-
-                return await this.createGame(host_settings, chatMode, doJoin);
-            case RootMessageTag.HostGame:
-                this.settings.patch(settings);
-
-                if (doJoin) {
-                    await this.joinGame(message.code);
-                    return message.code;
-                } else {
-                    return message.code;
-                }
-        }
+        return await this._createGame(settings, filterTags, doJoin);
     }
 
     /**
      * Search for public games.
-     * @param maps The maps of games to look for. If a number, it will be a bitfield of the maps, else, it will be an array of the maps.
-     * @param impostors The number of impostors to look for. 0 for any amount.
-     * @param keyword The language of the game to look for, use {@link GameKeyword.All} for any.
+     * @param options Search options to further slim down the search results.
      * @returns An array of game listings.
      * @example
 	 *```typescript
@@ -803,44 +943,24 @@ export class SkeldjsClient extends SkeldjsStateManager<SkeldjsClientEvents> {
      * const code = await game.join();
      * ```
 	 */
-    async findGames(
-        maps: number | GameMap[] = 0x7 /* all maps */,
-        impostors = 0 /* any impostors */,
-        keyword = GameKeyword.All,
-        quickchat = QuickChatMode.QuickChat
-    ): Promise<GameListing[]> {
-        if (Array.isArray(maps)) {
-            return await this.findGames(
-                maps.reduce(
-                    (acc, cur) => acc | (1 << cur),
-                    0
-                ) /* convert to bitfield */,
-                impostors,
-                keyword
-            );
-        }
-
-        const options = new GameSettings({
-            map: maps,
+    async findGames(options: Partial<FindGamesOptions> = {}): Promise<GameListing[]> {
+        const fullOptions: FindGamesOptions = {
+            maps: [ GameMap.TheSkeld, GameMap.MiraHQ, GameMap.Polus, GameMap.AprilFoolsTheSkeld, GameMap.Airship ],
             numImpostors: 0,
-            keywords: GameKeyword.English,
-        });
+            chatLanguage: GameKeyword.All,
+            quickChatMode: QuickChatMode.FreeChat,
+            filterTags: ["Beginner", "Casual", "Serious", "Expert"],
+            ...options
+        };
 
-        await this.send(
-            new ReliablePacket(this.getNextNonce(), [
-                new GetGameListMessage(options, quickchat),
-            ])
-        );
-
-        const { message } = await this.decoder.wait(GetGameListMessage);
-
-        return message.gameList;
+        const mapBitfield = fullOptions.maps.reduce((acc, cur) => acc | (1 << cur), 0);
+        return await this.httpMatchmakerClient.findGames(mapBitfield, fullOptions.chatLanguage, fullOptions.quickChatMode, 0xff, fullOptions.numImpostors);
     }
 
     /**
      * Ask the server to start a game.
      */
     async startGame() {
-        await this.broadcast([], true, undefined, [new StartGameMessage(this.code)]);
+        await this.broadcast([], [ new StartGameMessage(this.code) ]);
     }
 }

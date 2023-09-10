@@ -1,5 +1,6 @@
 import { SpawnType, SystemType } from "@skeldjs/constant";
 import { HazelReader, Vector2 } from "@skeldjs/util";
+import { PolusTasks } from "@skeldjs/data";
 
 import {
     DeconSystem,
@@ -33,7 +34,7 @@ export class PolusShipStatus<RoomType extends Hostable = Hostable> extends Inner
         [SystemType.Laboratory]: [9, 10],
         [SystemType.Storage]: [11],
         [SystemType.Decontamination]: [12, 13, 14, 15]
-    }
+    };
 
     initialSpawnCenter = new Vector2(16.64, 2.2);
     meetingSpawnCenter = new Vector2(17.726, -16.286);
@@ -42,18 +43,18 @@ export class PolusShipStatus<RoomType extends Hostable = Hostable> extends Inner
     constructor(
         room: RoomType,
         spawnType: SpawnType,
-        netid: number,
+        netId: number,
         ownerid: number,
         flags: number,
         data?: HazelReader | ShipStatusData
     ) {
-        super(room, spawnType, netid, ownerid, flags, data);
+        super(room, spawnType, netId, ownerid, flags, data);
     }
 
     getComponent<T extends Networkable>(
         component: NetworkableConstructor<T>
     ): T|undefined {
-        if (component === PolusShipStatus as NetworkableConstructor<any>) {
+        if (this.spawnType === SpawnType.Polus && component === PolusShipStatus as NetworkableConstructor<any>) {
             return this.components[0] as unknown as T;
         }
 
@@ -139,5 +140,9 @@ export class PolusShipStatus<RoomType extends Hostable = Hostable> extends Inner
 
     getDoorsInRoom(room: SystemType) {
         return PolusShipStatus.roomDoors[room] || [];
+    }
+
+    getTasks() {
+        return Object.values(PolusTasks);
     }
 }
