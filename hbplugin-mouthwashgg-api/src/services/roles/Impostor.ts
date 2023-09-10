@@ -45,7 +45,7 @@ export class Impostor extends BaseRole {
 
     async markImpostor() {
         this.giveFakeTasks();
-        this.player.info?.setImpostor(true);
+        this.player.playerInfo?.setImpostor(true);
     }
 
     async createKillButton() {
@@ -61,7 +61,7 @@ export class Impostor extends BaseRole {
         );
 
         this._killButton?.on("mwgg.button.click", ev => {
-            if (!this._killButton || !this.isKillButtonEnabled() || this._killButton.currentTime > 0 || !this._killTarget || this.player.info?.isDead)
+            if (!this._killButton || !this.isKillButtonEnabled() || this._killButton.currentTime > 0 || !this._killTarget || this.player.playerInfo?.isDead)
                 return;
 
             if (this._killTarget.transform) {
@@ -82,7 +82,7 @@ export class Impostor extends BaseRole {
             return undefined;
         }
 
-        if (this.player.physics && this.player.physics.ventid > -1) {
+        if (this.player.physics && this.player.physics.ventId > -1) {
             return undefined;
         }
 

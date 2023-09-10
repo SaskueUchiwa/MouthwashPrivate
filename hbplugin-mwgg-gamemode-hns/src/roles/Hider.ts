@@ -79,7 +79,7 @@ export class Hider extends Crewmate {
 
     @EventListener("player.move", ListenerType.Player)
     async onPlayerMove(ev: PlayerMoveEvent) {
-        const playerInfo = this.player.info;
+        const playerInfo = this.player.playerInfo;
         if (!playerInfo || playerInfo.isDead)
             return;
 

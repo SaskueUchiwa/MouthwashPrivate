@@ -22,7 +22,7 @@ export class CameraControllerService {
         if (this.cameras.has(player))
             throw new Error("Player already has a camera");
 
-        const spawnedObject = this.plugin.room.spawnPrefab(
+        const spawnedObject = this.plugin.room.spawnPrefabOfType(
             MouthwashSpawnType.CameraController,
             player.clientId,
             0,

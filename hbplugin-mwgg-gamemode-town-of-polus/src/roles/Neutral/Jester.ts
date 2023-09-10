@@ -55,7 +55,7 @@ export class Jester extends BaseRole {
     async onPlayerDie(ev: PlayerDieEvent) {
         if (ev.reason === "exiled") {
             const players = this.api.getEndgamePlayers();
-            const myPlayerInfo = this.player.info;
+            const myPlayerInfo = this.player.playerInfo;
 
             this.room.registerEndGameIntent(
                 new EndGameIntent(

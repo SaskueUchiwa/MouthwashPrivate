@@ -3,11 +3,14 @@ import { HazelReader, HazelWriter } from "@skeldjs/util";
 import {
     BaseRpcMessage,
     CheckColorMessage,
+    CheckMurderMessage,
     CheckNameMessage,
+    CheckProtectMessage,
     CompleteTaskMessage,
     ComponentSpawnData,
     GameSettings,
     MurderPlayerMessage,
+    ProtectPlayerMessage,
     QuickChatMessageData,
     QuickChatPhraseMessageData,
     QuickChatPlayerMessageData,
@@ -19,11 +22,14 @@ import {
     SendQuickChatMessage,
     SetColorMessage,
     SetHatMessage,
-    SetInfectedMessage,
     SetNameMessage,
+    SetNameplateMessage,
     SetPetMessage,
+    SetRoleMessage,
     SetSkinMessage,
     SetStartCounterMessage,
+    SetVisorMessage,
+    ShapeshiftMessage,
     SpawnMessage,
     StartMeetingMessage,
     SyncSettingsMessage,
@@ -47,6 +53,8 @@ import {
     RoleType,
     GameState
 } from "@skeldjs/constant";
+
+import { ExtractEventTypes } from "@skeldjs/events";
 
 import {
     PlayerCheckColorEvent,
@@ -980,7 +988,7 @@ export class PlayerControl<RoomType extends Hostable = Hostable> extends Network
         if (caller.playerId === undefined)
             return;
 
-        const spawnMeetinghud = this.room.spawnPrefab(
+        const spawnMeetinghud = this.room.spawnPrefabOfType(
             SpawnType.MeetingHud,
             -2,
             undefined,
@@ -1022,12 +1030,12 @@ export class PlayerControl<RoomType extends Hostable = Hostable> extends Network
 
         for (const [ , player ] of this.room.players) {
             const playerPhysics = player.physics;
-            if (playerPhysics && playerPhysics.ventid !== -1) {
-                playerPhysics.exitVent(playerPhysics.ventid)
+            if (playerPhysics && playerPhysics.ventId !== -1) {
+                playerPhysics.exitVent(playerPhysics.ventId)
             }
         }
         
-        this.room.stream.push(
+        this.room.messageStream.push(
             new SpawnMessage(
                 SpawnType.MeetingHud,
                 -2,

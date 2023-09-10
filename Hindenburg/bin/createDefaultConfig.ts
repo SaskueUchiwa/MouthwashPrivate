@@ -1,4 +1,4 @@
-import { Hat, Skin } from "@skeldjs/constant";
+import { Hat, Skin, Visor } from "@skeldjs/constant";
 import { HindenburgConfig } from "../src";
 
 export function createDefaultConfig(): HindenburgConfig {
@@ -10,6 +10,9 @@ export function createDefaultConfig(): HindenburgConfig {
         exitConfirmation: true,
         defaultLanguage: "en",
         acceptedVersions: [ "2022.9.2.0" ],
+        matchmaker: {
+            port: 22021
+        },
         socket: {
             port: 22023,
             additionalPorts: [],
@@ -73,8 +76,9 @@ export function createDefaultConfig(): HindenburgConfig {
             serverPlayer: {
                 name: "<color=yellow>[Server]</color>",
                 color: "Yellow",
-                hat: Hat.None,
-                skin: Skin.None
+                hat: Hat.NoHat,
+                skin: Skin.None,
+                visor: Visor.EmptyVisor
             },
             createTimeout: 10
         },
@@ -84,7 +88,8 @@ export function createDefaultConfig(): HindenburgConfig {
                 updateRate: 1,
                 visionChecks: false,
                 deadChecks: true
-            }
+            },
+            disablePerspectives: false
         }
     };
 }

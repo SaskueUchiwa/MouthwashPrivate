@@ -157,7 +157,7 @@ export class AssetLoaderService {
         const assetBundle = await AssetBundle.loadFromUrl(AssetBundleIds[assetRef.bundleLocation], false);
         const asset = assetBundle.getAssetSafe(assetRef.assetPath);
 
-        const connections = this.plugin.room.getConnections(setFor, true);
+        const connections = this.plugin.room.getRealConnections(setFor);
 
         if (!connections)
             return;

@@ -102,7 +102,7 @@ export class IdentityThief extends BaseRole {
         );
 
         this._stealButton?.on("mwgg.button.click", ev => {
-            if (!this._target || !this._stealButton || this._stealButton.currentTime > 0 || this.player.info?.isDead)
+            if (!this._target || !this._stealButton || this._stealButton.currentTime > 0 || this.player.playerInfo?.isDead)
                 return;
             
             const stealRole = this.api.roleService.getPlayerRole(this._target[1]);

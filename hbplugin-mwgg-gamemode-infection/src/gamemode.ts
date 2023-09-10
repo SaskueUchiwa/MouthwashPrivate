@@ -324,7 +324,7 @@ export class InfectionGamemodePlugin extends BaseGamemodePlugin {
         let completeTasks = 0;
         const players = [];
         for (const [ , player ] of this.room.players) {
-            const playerInfo = player.info;
+            const playerInfo = player.playerInfo;
             if (playerInfo && !playerInfo.isDisconnected && (this.api.hudService.getPlayerHud(player).allowTaskInteraction && justInfected !== player)) {
                 for (const task of playerInfo.taskStates) {
                     totalTasks++;

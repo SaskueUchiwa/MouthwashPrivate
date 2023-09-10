@@ -12,14 +12,24 @@ import vorpal from "vorpal";
 import {
     AirshipStatus,
     AprilShipStatus,
+    BaseRole,
+    CrewmateRole,
     CustomNetworkTransform,
+    EngineerRole,
     GameData,
+    GuardianAngelRole,
+    HideAndSeekManager,
+    ImpostorRole,
     LobbyBehaviour,
     MeetingHud,
     MiraShipStatus,
+    NormalGameManager,
     PlayerControl,
     PlayerPhysics,
     PolusShipStatus,
+    RoleType,
+    ScientistRole,
+    ShapeshifterRole,
     SkeldShipStatus,
     SpawnType,
     VoteBanSystem
@@ -36,6 +46,7 @@ import {
     getPluginRegisteredMessages,
     isHindenburgPlugin,
     shouldPreventLoading,
+    getPluginRegisteredRoles,
     WorkerImportPluginEvent,
     WorkerLoadPluginEvent,
     getPluginRegisteredPrefabs,
@@ -210,6 +221,10 @@ export class LoadedPlugin<PluginCtr extends typeof RoomPlugin | typeof WorkerPlu
      * All registered spawn prefabs for the plugin, created with {@link RegisterPrefab}.
      */
     registeredPrefabs: RegisteredPrefab[];
+    /**
+     * All registered player roles for the plugin, created with {@link RegisterRole}.
+     */
+    registeredRoles: typeof BaseRole[];
 
     constructor(public readonly importedPlugin: ImportedPlugin<PluginCtr>, public readonly pluginInstance: PluginInstanceType<PluginCtr>) {
         this.loadedChatCommands = [];
@@ -219,6 +234,7 @@ export class LoadedPlugin<PluginCtr extends typeof RoomPlugin | typeof WorkerPlu
         this.loadedMatchmakerEndpoints = [];
         this.loadedRegisteredMessages = [];
         this.registeredPrefabs = [];
+        this.registeredRoles = [];
     }
 
     isWorkerPlugin(): this is LoadedPlugin<typeof WorkerPlugin> {
@@ -349,10 +365,10 @@ export class PluginLoader {
     static isRoomPlugin(pluginCtr: SomePluginCtr): pluginCtr is typeof RoomPlugin {
         let currentCtr: SomePluginCtr = pluginCtr;
         while (currentCtr !== null) {
+            currentCtr = Object.getPrototypeOf(currentCtr);
+
             if (currentCtr === RoomPlugin)
                 return true;
-        
-            currentCtr = Object.getPrototypeOf(currentCtr);
         }
         return false;
     }
@@ -733,16 +749,18 @@ export class PluginLoader {
     }
 
     private applyRegisteredPrefabs(room: Room) {
-        room.spawnPrefabs = new Map([
-            [SpawnType.ShipStatus, [SkeldShipStatus]],
+        room.registeredPrefabs = new Map([
+            [SpawnType.SkeldShipStatus, [SkeldShipStatus]],
             [SpawnType.MeetingHud, [MeetingHud]],
             [SpawnType.LobbyBehaviour, [LobbyBehaviour]],
             [SpawnType.GameData, [GameData, VoteBanSystem]],
             [SpawnType.Player, [PlayerControl, PlayerPhysics, CustomNetworkTransform]],
-            [SpawnType.Headquarters, [MiraShipStatus]],
-            [SpawnType.PlanetMap, [PolusShipStatus]],
+            [SpawnType.MiraShipStatus, [MiraShipStatus]],
+            [SpawnType.Polus, [PolusShipStatus]],
             [SpawnType.AprilShipStatus, [AprilShipStatus]],
-            [SpawnType.Airship, [AirshipStatus]]
+            [SpawnType.Airship, [AirshipStatus]],
+            [SpawnType.HideAndSeekManager, [ HideAndSeekManager ]],
+            [SpawnType.NormalGameManager, [ NormalGameManager ]]
         ]);
 
         for (const [, loadedPlugin] of room.workerPlugins) {
@@ -754,6 +772,29 @@ export class PluginLoader {
         for (const [, loadedPlugin] of room.loadedPlugins) {
             for (const registeredPrefab of loadedPlugin.registeredPrefabs) {
                 room.registerPrefab(registeredPrefab.spawnType, registeredPrefab.components);
+            }
+        }
+    }
+
+    private applyRegisteredRoles(room: Room) {
+        room.registeredRoles = new Map([
+            [RoleType.Crewmate, CrewmateRole],
+            [RoleType.Engineer, EngineerRole],
+            [RoleType.GuardianAngel, GuardianAngelRole],
+            [RoleType.Impostor, ImpostorRole],
+            [RoleType.Scientist, ScientistRole],
+            [RoleType.Shapeshifter, ShapeshifterRole]
+        ]);
+
+        for (const [, loadedPlugin] of room.workerPlugins) {
+            for (const registeredRole of loadedPlugin.registeredRoles) {
+                room.registerRole(registeredRole);
+            }
+        }
+
+        for (const [, loadedPlugin] of room.loadedPlugins) {
+            for (const registeredRole of loadedPlugin.registeredRoles) {
+                room.registerRole(registeredRole);
             }
         }
     }
@@ -780,7 +821,7 @@ export class PluginLoader {
                 const key = `${messageCtr.messageType}:${messageCtr.messageTag}` as const;
 
                 if (options.attachTo === MessageHandlerAttach.Room && room) {
-                    const listeners = [...(room.decoder.listeners.get(key) || [])];
+                    const listeners = room.decoder.listeners.get(key) || [];
                     room.decoder.listeners.delete(key);
 
                     room.decoder.on(messageCtr, (message, direction, ctx) => {
@@ -789,7 +830,7 @@ export class PluginLoader {
                         }));
                     });
                 } else if (options.attachTo === MessageHandlerAttach.Worker) {
-                    const listeners = [...(this.worker.decoder.listeners.get(key) || [])];
+                    const listeners = this.worker.decoder.listeners.get(key) || [];
                     this.worker.decoder.listeners.delete(key);
 
                     this.worker.decoder.on(messageCtr, (message, direction, ctx) => {
@@ -919,15 +960,18 @@ export class PluginLoader {
 
         const messageHandlers = getPluginMessageHandlers(initPlugin);
         const registeredPrefabs = getPluginRegisteredPrefabs(importedPlugin.pluginCtr);
+        const registeredRoles = getPluginRegisteredRoles(importedPlugin.pluginCtr);
 
         loadedPlugin.loadedMessageHandlers = [...messageHandlers];
         loadedPlugin.registeredPrefabs = [...registeredPrefabs];
+        loadedPlugin.registeredRoles = [...registeredRoles];
 
         if (loadedPlugin.isRoomPlugin() && room) {
             room.loadedPlugins.set(importedPlugin.pluginCtr.meta.id, loadedPlugin);
             this.applyChatCommands(room);
             this.applyMessageHandlers(room);
             this.applyRegisteredPrefabs(room);
+            this.applyRegisteredRoles(room);
 
             room.logger.info("Loaded plugin: %s", initPlugin);
         }
@@ -960,6 +1004,9 @@ export class PluginLoader {
 
             this.applyMessageHandlers();
             this.applyRegisteredMessages();
+            if (loadedPlugin.loadedMatchmakerEndpoints.length && this.worker.matchmaker) {
+                this.worker.matchmaker.restart();
+            }
 
             this.worker.logger.info("Loaded plugin globally: %s", initPlugin);
         }
@@ -1050,12 +1097,16 @@ export class PluginLoader {
             room.loadedPlugins.delete(pluginId);
             this.applyChatCommands(room);
             this.applyRegisteredPrefabs(room);
+            this.applyRegisteredRoles(room);
 
             room.logger.info("Unloaded plugin: %s", loadedPlugin.pluginInstance);
         } else {
             this.worker.loadedPlugins.delete(pluginId);
             this.applyMessageHandlers();
             this.applyRegisteredMessages();
+            if (loadedPlugin.loadedMatchmakerEndpoints.length && this.worker.matchmaker) {
+                this.worker.matchmaker.restart();
+            }
             this.worker.logger.info("Unloaded plugin globally: %s", loadedPlugin.pluginInstance);
         }
 

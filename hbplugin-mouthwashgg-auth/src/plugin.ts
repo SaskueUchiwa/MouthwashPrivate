@@ -18,9 +18,9 @@ export interface UserAccountModel {
     banned_until: string|null;
     muted_until: string|null;
     game_settings: any;
-    cosmetic_hat: number;
-    cosmetic_pet: number;
-    cosmetic_skin: number;
+    cosmetic_hat: string;
+    cosmetic_pet: string;
+    cosmetic_skin: string;
 }
 
 export interface UserSessionModel {
@@ -32,7 +32,7 @@ export interface UserSessionModel {
 export interface BundleItemModel {
     id: string;
     name: string;
-    among_us_id: number;
+    among_us_id: string;
     resource_path: string;
     resource_id: number;
     asset_bundle_url: string;
@@ -222,7 +222,7 @@ export class MouthwashAuthPlugin extends WorkerPlugin {
         }
     }
 
-    async updateUserCosmetics(clientId: string, hatId: number, petId: number, skinId: number) {
+    async updateUserCosmetics(clientId: string, hatId: string, petId: string, skinId: string) {
         await this.make("PUT", "/api/v2/internal/users/" + clientId + "/cosmetics", {
             cosmetic_hat: hatId,
             cosmetic_pet: petId,

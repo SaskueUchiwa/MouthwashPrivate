@@ -103,7 +103,7 @@ export class Swooper extends Impostor {
         const deadPlayersOrSelf = [];
         const alivePlayers = [];
         for (const [ , player ] of this.room.players) {
-            const playerInfo = player.info;
+            const playerInfo = player.playerInfo;
             if (player === this.player || (playerInfo && playerInfo.isDead)) {
                 deadPlayersOrSelf.push(player);
                 continue;

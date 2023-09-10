@@ -38,8 +38,9 @@ import { Networkable, NetworkableEvents } from "../Networkable";
 import { Hostable } from "../Hostable";
 import { PlayerData } from "../PlayerData";
 import { SystemStatusEvents } from "../systems/events";
-import { RoomSelectImpostorsEvent } from "../events";
-import { TaskState } from "../misc/PlayerInfo";
+import { BaseRole } from "../roles";
+import { RoomAssignRolesEvent } from "../events";
+import { TaskInfo } from "@skeldjs/data";
 
 interface ConsoleDataModel {
     index: number;
@@ -56,6 +57,11 @@ interface TaskDataModel {
     taskType: TaskType;
     length: TaskLength;
     consoles: Record<number, ConsoleDataModel>;
+}
+export interface RoleAssignmentData {
+    roleCtr: typeof BaseRole;
+    chance: number;
+    count: number;
 }
 
 function shuffleArray(array: any[]) {

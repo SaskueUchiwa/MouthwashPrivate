@@ -367,7 +367,7 @@ async function checkConfigDeprecations(config: HindenburgConfig, configFilename:
     worker.logger.info("");
     worker.logger.info("Listening on:");
 
-    const listeningPort = worker.config.socket.port;
+    const listeningPort = worker.matchmaker?.port || worker.config.socket.port;
     if (!worker.config.logging.hideSensitiveInfo) {
         worker.logger.info(chalk.grey`External: ${chalk.white(externalIp)}:${listeningPort}`);
     }

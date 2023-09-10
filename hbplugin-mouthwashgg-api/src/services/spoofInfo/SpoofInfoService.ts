@@ -16,7 +16,7 @@ export class SpoofInfoService {
 
     setDead(player: PlayerData<Room>) {
         const cachedInfo = this.spoofedInfo.get(player);
-        const spoofedInfo = cachedInfo || new SpoofedInfo(player, player.info?.isDead || false);
+        const spoofedInfo = cachedInfo || new SpoofedInfo(player, player.playerInfo?.isDead || false);
 
         if (!cachedInfo) {
             this.spoofedInfo.set(player, spoofedInfo);
@@ -26,7 +26,7 @@ export class SpoofInfoService {
     }
 
     isDead(player: PlayerData<Room>) {
-        if (player.info?.isDead) {
+        if (player.playerInfo?.isDead) {
             return true;
         }
 

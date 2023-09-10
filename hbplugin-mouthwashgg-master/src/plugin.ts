@@ -5,10 +5,10 @@ import {
     EventListener,
     WorkerBeforeJoinEvent,
     RoomBeforeCreateEvent,
-    Int2Code,
     DisconnectReason,
     ReliablePacket,
-    RedirectMessage
+    RedirectMessage,
+    GameCode
 } from "@skeldjs/hindenburg";
 
 import * as ioredis from "ioredis";
@@ -115,7 +115,7 @@ export class MouthwashggMasterPlugin extends WorkerPlugin {
     async onBeforeJoin(ev: WorkerBeforeJoinEvent) {
         ev.cancel();
 
-        const roomKeyValue = await this.redisClient.get("ROOM:" + Int2Code(ev.gameCode));
+        const roomKeyValue = await this.redisClient.get("ROOM:" + GameCode.convertIntToString(ev.gameCode));
         if (roomKeyValue === null) {
             await ev.client.disconnect(DisconnectReason.GameNotFound);
             return;

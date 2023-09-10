@@ -110,7 +110,7 @@ export class GameOptionsService {
         }
 
         this.gameOptions.set(option.key, option);
-        await this.plugin.room.broadcast([], true, undefined, [
+        await this.plugin.room.broadcast([], [
             new SetGameOptionMessage(
                 0,
                 option
@@ -130,7 +130,7 @@ export class GameOptionsService {
 
         gameOption.setValue(value, validate);
         this.updateCachedValue(gameOption, value);
-        await this.plugin.room.broadcast([], true, undefined, [
+        await this.plugin.room.broadcast([], [
             new SetGameOptionMessage(
                 0,
                 gameOption
@@ -154,7 +154,7 @@ export class GameOptionsService {
             return;
 
         this.gameOptions.delete(key);
-        await this.plugin.room.broadcast([], true, undefined, [
+        await this.plugin.room.broadcast([], [
             new DeleteGameOptionMessage(
                 0,
                 gameOption.key
@@ -261,7 +261,7 @@ export class GameOptionsService {
         if (diffOptions.length > 0) {
             const chunkedArr = chunkArr(diffOptions, 8);
             for (const messageChunk of chunkedArr) {
-                await this.plugin.room.broadcast([], true, undefined, messageChunk);
+                await this.plugin.room.broadcast([], messageChunk);
             }
             return true;
         }

@@ -117,7 +117,7 @@ export class HudService {
         if (!Array.isArray(sendTo))
             throw new TypeError("Expected array of players for 'sendTo', got " + typeof sendTo);
 
-        const connections = this.plugin.room.getConnections(sendTo, true);
+        const connections = this.plugin.room.getRealConnections(sendTo);
 
         await this.plugin.room.broadcastMessages([], [
             new DisplaySystemAnnouncementMessage(content)
@@ -151,7 +151,7 @@ export class HudService {
             this.getPlayerHud(player).chatVisible = visible;
         }
         
-        const connections = this.plugin.room.getConnections(setFor, true);
+        const connections = this.plugin.room.getRealConnections(setFor);
 
         await this.plugin.room.broadcastMessages([
             new RpcMessage(
@@ -180,7 +180,7 @@ export class HudService {
         if (!this.plugin.room.gameData)
             return;
             
-        const connections = this.plugin.room.getConnections(closeFor, true);
+        const connections = this.plugin.room.getRealConnections(closeFor);
 
         await this.plugin.room.broadcastMessages([
             new RpcMessage(
@@ -211,7 +211,7 @@ export class HudService {
             this.getPlayerHud(player).hudItemVisibility.set(item, visible);
         }
         
-        const connections = this.plugin.room.getConnections(setFor, true);
+        const connections = this.plugin.room.getRealConnections(setFor);
 
         await this.plugin.room.broadcastMessages([], [
             new SetHudVisibility(
@@ -467,7 +467,7 @@ export class HudService {
         if (playerButtons.has(buttonId))
             throw new Error("Player already has button with id '" + buttonId + "'");
 
-        const spawnedObject = this.plugin.room.spawnPrefab(
+        const spawnedObject = this.plugin.room.spawnPrefabOfType(
             MouthwashSpawnType.Button,
             -2,
             0,

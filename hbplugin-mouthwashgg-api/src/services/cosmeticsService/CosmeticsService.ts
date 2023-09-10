@@ -7,7 +7,7 @@ import { chunkArr } from "../../util/chunkArr";
 
 interface LoadedCosmetic {
     id: string;
-    among_us_id: number;
+    among_us_id: string;
     resource_id: number;
     resource_path: string;
     asset_bundle_url: string;
@@ -157,16 +157,16 @@ export class CosmeticsService {
             if (player.clientId === client.clientId)
                 continue;
 
-            const playerInfo = player.info;
+            const playerInfo = player.playerInfo;
             if (!playerInfo) continue;
 
             const playerControl = player.control;
             if (!playerControl) continue;
 
             rpcs.push(
-                new RpcMessage(playerControl.netId, new SetHatMessage(playerInfo.hat)),
-                new RpcMessage(playerControl.netId, new SetPetMessage(playerInfo.pet)),
-                new RpcMessage(playerControl.netId, new SetSkinMessage(playerInfo.skin))
+                new RpcMessage(playerControl.netId, new SetHatMessage(playerInfo.defaultOutfit.hatId)),
+                new RpcMessage(playerControl.netId, new SetPetMessage(playerInfo.defaultOutfit.petId)),
+                new RpcMessage(playerControl.netId, new SetSkinMessage(playerInfo.defaultOutfit.skinId))
             );
         }
 

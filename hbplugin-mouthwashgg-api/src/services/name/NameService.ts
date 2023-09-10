@@ -26,7 +26,7 @@ export class PlayerNameManager {
     }
 
     getName(): string {
-        let originalName = this.player.info?.name ?? "???";
+        let originalName = this.player.playerInfo?.defaultOutfit.name ?? "???";
         
         for (const nameTransform of this.nameTransforms) {
             originalName = nameTransform(originalName);
@@ -54,7 +54,7 @@ export class PlayerNameManagerPov extends PlayerNameManager {
     }
 
     getName() {
-        let originalName = this.player.info?.name ?? "???";
+        let originalName = this.player.playerInfo?.defaultOutfit.name ?? "???";
         
         for (const nameTransform of this.base.nameTransforms) {
             originalName = nameTransform(originalName);
@@ -218,7 +218,7 @@ export class NameService {
                         }
                     }
         
-                    promises.push(this._updateName(fromPov, player, player.info?.name ?? "???"));
+                    promises.push(this._updateName(fromPov, player, player.playerInfo?.defaultOutfit.name ?? "???"));
                 }
                 continue;
             }
@@ -243,7 +243,7 @@ export class NameService {
                     }
                 }
     
-                promises.push(this._updateName(fromPov, player, player.info?.name ?? "???"));
+                promises.push(this._updateName(fromPov, player, player.playerInfo?.defaultOutfit.name ?? "???"));
                 continue;
             }
 
@@ -357,7 +357,7 @@ export class NameService {
         const nameManager = povNameManager || this.nameManagers.get(player);
 
         return nameManager?.getName()
-            ?? player.info?.name
+            ?? player.playerInfo?.defaultOutfit.name
             ?? "???";
     }
 

@@ -78,7 +78,7 @@ export class EventEmitter<Events extends EventData> {
     on<K extends BasicEvent>(event: string, listener: Listener<K>): () => void;
     on(event: string, listener: Listener<any>): () => void {
         const listeners = this.getListeners(event);
-        listeners.add(listener);
+        listeners.push(listener);
 
         return this.off.bind(this, event, listener);
     }
@@ -129,12 +129,15 @@ export class EventEmitter<Events extends EventData> {
     off<K extends BasicEvent>(event: string, listener: Listener<K>): void;
     off(event: string, listener: Listener<any>) {
         const listeners = this.getListeners(event);
-        listeners.delete(listener);
+        const idx = listeners.indexOf(listener);
+        if (idx > -1) {
+            listeners.splice(idx, 1);
+        }
     }
 
-    getListeners<Event extends BasicEvent = BasicEvent>(event: string): Set<Listener<Event>> {
+    getListeners<Event extends BasicEvent = BasicEvent>(event: string): Listener<Event>[] {
         const cachedListeners = this.listeners.get(event);
-        const listeners = cachedListeners || new Set;
+        const listeners = cachedListeners || [];
         if (!cachedListeners) {
             this.listeners.set(event, listeners);
         }

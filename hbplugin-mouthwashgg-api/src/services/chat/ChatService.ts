@@ -2,7 +2,6 @@ import { v4 as uuidv4 } from "uuid";
 
 import {
     Color,
-    ColorCodes,
     Connection,
     Hat,
     Pet,
@@ -48,15 +47,15 @@ export class ChatService {
     }
 
     getStandardAppearance(sender: PlayerData, isVote: boolean) {
-        const playerColor = RGBA.playerBody(sender.info?.color ?? Color.Red);
+        const playerColor = RGBA.playerBody(sender.playerInfo?.defaultOutfit.color ?? Color.Red);
 
         return new ChatPlayerAppearance(
-            sender.info?.name ?? "???",
-            sender.info?.isDead ?? false,
+            sender.playerInfo?.defaultOutfit.name ?? "???",
+            sender.playerInfo?.isDead ?? false,
             isVote,
-            sender.info?.hat ?? Hat.None,
-            sender.info?.pet ?? Pet.None,
-            sender.info?.skin ?? Skin.None,
+            sender.playerInfo?.defaultOutfit.hatId ?? Hat.NoHat,
+            sender.playerInfo?.defaultOutfit.petId ?? Pet.EmptyPet,
+            sender.playerInfo?.defaultOutfit.skinId ?? Skin.None,
             playerColor.dark,
             playerColor.light,
             Palette.playerVisor // standard visor colour
@@ -66,7 +65,7 @@ export class ChatService {
     getStandardRecipients(sender: PlayerData<Room>) {
         const recipients: Connection[] = [];
 
-        if (!sender.info) {
+        if (!sender.playerInfo) {
             return recipients;
         }
 
@@ -76,7 +75,7 @@ export class ChatService {
             for (const [ clientId, connection ] of sender.room.connections) {
                 const player = sender.room.players.get(clientId);
     
-                if (player?.info?.isDead) {
+                if (player?.playerInfo?.isDead) {
                     recipients.push(connection);
                 }
             }

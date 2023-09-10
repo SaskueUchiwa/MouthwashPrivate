@@ -74,7 +74,7 @@ export class DeadBodyService {
             if (!spawnInfo.transform)
                 return;
 
-            const playerColor = RGBA.playerBody(spawnInfo.info?.color || Color.Red);
+            const playerColor = RGBA.playerBody(spawnInfo.playerInfo?.defaultOutfit.color || Color.Red);
             return await this._spawnDeadBodyFor({
                 color: playerColor.light,
                 shadowColor: playerColor.dark,
@@ -84,7 +84,7 @@ export class DeadBodyService {
         }
 
         const position = spawnInfo.position || Vector2.null;
-        const spawnedObject = this.plugin.room.spawnPrefab(
+        const spawnedObject = this.plugin.room.spawnPrefabOfType(
             MouthwashSpawnType.DeadBody,
             -2,
             0,
@@ -130,7 +130,7 @@ export class DeadBodyService {
         const cntWriter = HazelWriter.alloc(10);
         cntWriter.write(spawnedObject.components[1]);
 
-        const connections = players ? this.plugin.room.getConnections(players, true) : undefined;
+        const connections = players ? this.plugin.room.getRealConnections(players) : undefined;
 
         await this.plugin.room.broadcastMessages([
             new SpawnMessage(

@@ -57,7 +57,7 @@ export class Seeker extends Impostor {
             if (roleAssignment.player === this.player)
                 return false;
 
-            const playerInfo = roleAssignment.player.info;
+            const playerInfo = roleAssignment.player.playerInfo;
             return playerInfo && !playerInfo.isImpostor;
         }).length;
         
@@ -77,7 +77,7 @@ export class Seeker extends Impostor {
         const chatAccess = this.api.gameOptions.gameOptions.get(HnSOptionName.ChatAccess)?.getValue<EnumValue<"Off"|"Hiders Only"|"Everyone">>().selectedOption;
 
         this.api.hudService.setTaskInteraction(this.player, false);
-        this.player.info?.setImpostor(true);
+        this.player.playerInfo?.setImpostor(true);
         
         this.api.hudService.setHudItemVisibilityFor(HudItem.MapSabotageButtons, false, [ this.player ]);
         this.api.hudService.setHudItemVisibilityFor(HudItem.SabotageButton, true, [ this.player ]);
@@ -99,7 +99,7 @@ export class Seeker extends Impostor {
         );
 
         this._killButton?.on("mwgg.button.click", async ev => {
-            if (!this._killButton || !this.isKillButtonEnabled() || this._killButton.currentTime > 0 || !this._killTarget || this.player.info?.isDead)
+            if (!this._killButton || !this.isKillButtonEnabled() || this._killButton.currentTime > 0 || !this._killTarget || this.player.playerInfo?.isDead)
                 return;
 
             if (this._killTarget.transform) {

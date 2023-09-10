@@ -97,13 +97,13 @@ export class Sheriff extends Crewmate {
 
         this._shootButton?.on("mwgg.button.click", async ev => {
             const target = this._target;
-            if (!this._shootButton || this._shootButton.currentTime > 0 || !target || this.player.info?.isDead)
+            if (!this._shootButton || this._shootButton.currentTime > 0 || !target || this.player.playerInfo?.isDead)
                 return;
                 
             await this.quietMurder(target);
             await target.control?.murderPlayer(target);
 
-            if (target.info?.isImpostor) {
+            if (target.playerInfo?.isImpostor) {
                 this._shootButton.setCurrentTime(this._shootButton.maxTimer);
                 this.checkMurderEndGame();
             } else {
@@ -233,7 +233,7 @@ export class Sheriff extends Crewmate {
             return undefined;
         }
 
-        if (this.player.physics && this.player.physics.ventid > -1) {
+        if (this.player.physics && this.player.physics.ventId > -1) {
             return undefined;
         }
 

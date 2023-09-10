@@ -1,8 +1,3 @@
-# Mouthwash Hindenburg
-This is a _modified_ version of Hindenburg with the primary purpose of using **Modern Hindenburg** compatible with **Old Among Us/SkeldJS**. The latest version of Hindenburg has been pulled from the original repository (https://github.com/SkeldJS/Hindenburg), however the implementation of some internal behaviours has been back-tracked to SkeldJS **v2.14.35**, compatible with Among Us **v2021.6.30**.
-
-Additionally, it also implements socket-level packet rate limiting, implemented in the base server for performance reasons.
-
 # Hindenburg
 Hindenburg is a completely customisable and scalable Among Us server, complete
 with advanced plugins and a sophisticated and configurable anti-cheat.

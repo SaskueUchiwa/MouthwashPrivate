@@ -1,6 +1,5 @@
-import { PlayerData, Hostable } from "@skeldjs/core";
-import { Color, Hat, Skin } from "@skeldjs/constant";
-import { BaseRoom } from "../worker";
+import { PlayerData } from "@skeldjs/core";
+import { Color } from "@skeldjs/constant";
 
 export enum MessageSide {
     Left,
@@ -11,7 +10,7 @@ export enum MessageSide {
  * Options regarding sending a chat message into the room as the server, see
  * {@link Room.sendChat}
  */
-export interface SendChatOptions<HostableType extends Hostable> {
+export interface SendChatOptions {
     /**
      * The side of the chat box for the message to appear on for each player. Can only
      * send on the left side if there are at least 2 players in the room.
@@ -38,12 +37,12 @@ export interface SendChatOptions<HostableType extends Hostable> {
      *     return;
      *
      *   ev.room.sendChat("<color=red>Potential cheater detected: " + ev.player.info.name + "</color>", {
-     *     targets: [ ev.room.players.host ]
+     *     targets: [ ev.room.host ]
      *   });
      * }
      * ```
      */
-    targets: PlayerData<HostableType>[]|undefined;
+    targets: PlayerData[]|undefined;
     /**
      * The name of the player to appear as.
      * @example
@@ -72,20 +71,31 @@ export interface SendChatOptions<HostableType extends Hostable> {
      * ```ts
      * ev.room.sendChat("looking for salvation in a secular age", {
      *   name: "the 1975",
-     *   skin: Skin.Prisoner
+     *   skinId: Skin.Prisoner
      * })
      * ```
      */
-    skin: Skin;
+    skinId: string;
     /**
      * The hat that the player should be wearing in the chat message.
      * @example
      * ```ts
      * ev.room.sendChat("I'm a cowboy baby", {
      *   name: "Cowboy",
-     *   hat: Hat.TenGallonHat
+     *   hatId: Hat.TenGallonHat
      * })
      * ```
      */
-    hat: Hat;
+    hatId: string;
+    /**
+     * The visor that the player should be wearing in the chat message.
+     * @example
+     * ```ts
+     * ev.room.sendChat("wondering how I got this far", {
+     *   name: "scruffpuppie",
+     *   visorId: Hat.PolusIce
+     * })
+     * ```
+     */
+    visorId: string;
 }

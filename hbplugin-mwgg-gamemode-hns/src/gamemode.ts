@@ -169,7 +169,7 @@ export class HideAndSeekGamemodePlugin extends BaseGamemodePlugin {
                     )
                 ],
                 [],
-                this.room.getConnections([ seeker ], true),
+                this.room.getRealConnections([ seeker ]),
                 undefined,
                 true
             );
@@ -250,7 +250,7 @@ export class HideAndSeekGamemodePlugin extends BaseGamemodePlugin {
                     )
                 ],
                 [],
-                this.room.getConnections([ seeker ], true),
+                this.room.getRealConnections([ seeker ]),
                 undefined,
                 true
             );
@@ -264,7 +264,7 @@ export class HideAndSeekGamemodePlugin extends BaseGamemodePlugin {
             if (this._currentGameTime <= 0) {
                 let numHidersAlive = 0;
                 for (const hider of hiders) {
-                    const playerInfo = hider.info;
+                    const playerInfo = hider.playerInfo;
                     if (playerInfo && !playerInfo.isDead) {
                         numHidersAlive++;
                     }

@@ -13,12 +13,12 @@
   },
   "license": "GPL-3.0-only",
   "dependencies": {
+    "@skeldjs/client": "workspace:*",
     "@skeldjs/constant": "workspace:*",
     "@skeldjs/protocol": "workspace:*",
     "@skeldjs/util": "workspace:*"
   },
   "devDependencies": {
-    "@skeldjs/client": "workspace:*",
     "@types/mocha": "^9.1.0",
     "@types/node": "^17.0.18",
     "ts-node": "latest",

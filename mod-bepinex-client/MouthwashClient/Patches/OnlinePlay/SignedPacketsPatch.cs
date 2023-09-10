@@ -32,34 +32,32 @@ namespace MouthwashClient.Patches.OnlinePlay
 
         private static void SignByteArray(ref Il2CppStructArray<byte> bytes, ref int length)
         {
-            if (bytes[0] != 0x80 && bytes[0] != 10)
+            if (bytes[0] == 0x80 || bytes[0] == 10 || bytes[0] == 12) return;
+            
+            UserInformationWithAuthToken userInformation = LoginService.GetLoginInformation();
+            string clientId = userInformation.Id;
+            string[] parts = clientId.Split("-");
+            byte[] uuidAsBytes = new byte[16];
+            int i = 0;
+            foreach (string part in parts)
             {
-                UserInformationWithAuthToken userInformation = LoginService.GetLoginInformation();
-                string clientId = userInformation.Id;
-                string[] parts = clientId.Split("-");
-                byte[] uuidAsBytes = new byte[16];
-                int i = 0;
-                foreach (string part in parts)
-                {
-                    byte[] partBytes = Convert.FromHexString(part);
-                    partBytes.CopyTo(uuidAsBytes, i);
-                    i += partBytes.Length;
-                }
-
-                byte[] secretKey = Encoding.UTF8.GetBytes(userInformation.ClientToken);
-                HMACSHA1 hmac = new HMACSHA1(secretKey);
-                byte[] signBytes = hmac.ComputeHash(bytes);
-                PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage($"Hash size: {signBytes.Length}");
-
-                byte[] fullSignedPacket = new byte[1 + uuidAsBytes.Length + signBytes.Length + length];
-                fullSignedPacket[0] = 0x80;
-                uuidAsBytes.CopyTo(fullSignedPacket, 0x01);
-                signBytes.CopyTo(fullSignedPacket, 0x01 + uuidAsBytes.Length);
-                bytes.CopyTo(fullSignedPacket, 0x01 + uuidAsBytes.Length + signBytes.Length);
-
-                bytes = fullSignedPacket;
-                length = fullSignedPacket.Length;
+                byte[] partBytes = Convert.FromHexString(part);
+                partBytes.CopyTo(uuidAsBytes, i);
+                i += partBytes.Length;
             }
+
+            byte[] secretKey = Encoding.UTF8.GetBytes(userInformation.ClientToken);
+            HMACSHA1 hmac = new HMACSHA1(secretKey);
+            byte[] signBytes = hmac.ComputeHash(bytes);
+
+            byte[] fullSignedPacket = new byte[1 + uuidAsBytes.Length + signBytes.Length + length];
+            fullSignedPacket[0] = 0x80;
+            uuidAsBytes.CopyTo(fullSignedPacket, 0x01);
+            signBytes.CopyTo(fullSignedPacket, 0x01 + uuidAsBytes.Length);
+            bytes.CopyTo(fullSignedPacket, 0x01 + uuidAsBytes.Length + signBytes.Length);
+
+            bytes = fullSignedPacket;
+            length = fullSignedPacket.Length;
         }
     }
 }

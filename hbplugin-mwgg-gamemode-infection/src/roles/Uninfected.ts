@@ -31,7 +31,7 @@ export class Uninfected extends BaseRole {
         await this.api.nameService.removeEmojiFor(this.player, this.metadata.emoji, [ this.player ]);
         await this.api.nameService.addEmoji(this.player, this.metadata.emoji);
 
-        this.player.info?.setImpostor(true); // to give sabotage button
+        this.player.playerInfo?.setImpostor(true); // to give sabotage button
     }
 
     async onRemove() {}

@@ -107,7 +107,7 @@ export class DeadBody extends Networkable<DeadBodyData, DeadBodyEvents, Room> im
     }
 
     protected _rpcReport(reporterPlayer: PlayerData<Room>) {
-        this.room.stream.push(new RpcMessage(this.netId, new ReportDeadBodyMessage(reporterPlayer.control!.netId)));
+        this.room.messageStream.push(new RpcMessage(this.netId, new ReportDeadBodyMessage(reporterPlayer.control!.netId)));
     }
 
     async report(reporterPlayer: PlayerData<Room>) {

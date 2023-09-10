@@ -1,5 +1,5 @@
 import { AllGameSettings } from "@skeldjs/protocol";
-import { HostableOptions } from "@skeldjs/core";
+import { HostableConfig } from "@skeldjs/core";
 
 export interface PluginConfig {
     /**
@@ -8,6 +8,14 @@ export interface PluginConfig {
      */
     loadDirectory: boolean;
     [key: string]: boolean|Record<string, unknown>;
+}
+
+export interface MatchmakerConfig {
+    /**
+     * The port that the matchmaker should listen on.
+     * @default 22021
+     */
+    port: number;
 }
 
 export interface SocketConfig {
@@ -95,9 +103,9 @@ export interface AnticheatRuleConfig {
     rules: Record<string, AnticheatRuleConfig|string|number|boolean>;
 }
 
-export type ConnectionsFormatOptions = "id"|"ip"|"ping"|"room"|"level"|"version"|"language";
+export type ConnectionsFormatOptions = "id"|"ip"|"ping"|"room"|"level"|"version"|"platform"|"language";
 export type RoomFormatOptions = "players"|"map"|"issaah"|"privacy";
-export type PlayerFormatOptions = "id"|"ping"|"level"|"ishost"|"language";
+export type PlayerFormatOptions = "id"|"ping"|"level"|"ishost"|"platform"|"language";
 
 export interface LoggingConfig {
     /**
@@ -252,21 +260,21 @@ export interface ServerPlayerOptions {
      * Check out the [Official Wiki page for hats](https://among-us.fandom.com/wiki/Hats)
      * for IDs to use.
      */
-    hat?: number;
+    hat?: string;
     /**
      * The ID of the skin of the player for a message sent by the server in game chat.
      *
      * Check out the [Official Wiki page for skins](https://among-us.fandom.com/wiki/Skins)
      * for IDs to use.
      */
-    skin?: number;
+    skin?: string;
     /**
      * The ID of the visor of the player for a message sent by the server in game chat.
      *
      * Check out the [Official Wiki page for visors](https://among-us.fandom.com/wiki/Visors)
      * for IDs to use.
      */
-    visor?: number;
+    visor?: string;
 }
 
 export interface RateLimitConfig {
@@ -306,7 +314,7 @@ export interface AdvancedRoomOptions {
     unknownObjects: "all"|boolean|(string|number)[];
 }
 
-export interface RoomsConfig extends HostableOptions {
+export interface RoomsConfig extends HostableConfig {
     /**
      * Whether or not to make sure players have the same chat mode as the host
      * before joining.
@@ -389,6 +397,11 @@ export interface OptimizationsConfig {
      * most likely to put a lot of strain on the server.
      */
     movement: MovementOptimizations;
+    /**
+     * Whether or not to completely disable the perspective API for Hindenburg.
+     * @default false
+     */
+    disablePerspectives: boolean;
 }
 
 export interface HindenburgConfig {
@@ -430,6 +443,10 @@ export interface HindenburgConfig {
      * Accepted game versions that clients can connect with.
      */
     acceptedVersions: string[];
+    /**
+     * Configuration for the included Hindenburg http matchmaker.
+     */
+    matchmaker: boolean|MatchmakerConfig;
     /**
      * Options regarding the socket that the server listens on.
      */

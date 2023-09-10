@@ -7,11 +7,12 @@ import {
     Language,
     GameState,
     GameKeyword,
-    TaskBarUpdate,
+    TaskBarMode,
     KillDistance,
     GameMap,
     SendOption,
     QuickChatMode,
+    Platform,
     GameOverReason
 } from "@skeldjs/constant";
 
@@ -27,23 +28,25 @@ import {
     GameListing,
     GameSettings,
     GetGameListMessage,
+    HelloPacket,
     HostGameMessage,
     JoinGameMessage,
     KickPlayerMessage,
     MessageDirection,
+    NormalPacket,
     PacketDecoder,
     PingPacket,
+    PlatformSpecificData,
+    QueryPlatformIdsMessage,
     ReliablePacket,
-    StartGameMessage
+    StartGameMessage,
+    UnknownRootMessage
 } from "@skeldjs/protocol";
 
 import {
-    Int2Code,
-    Code2Int,
+    GameCode,
     HazelWriter,
-    VersionInfo,
-    V2Gen,
-    V1Gen
+    VersionInfo
 } from "@skeldjs/util";
 
 import { EventEmitter, ExtractEventTypes } from "@skeldjs/events";
@@ -57,6 +60,7 @@ import { HindenburgConfig, RoomsConfig, MessageSide, ValidSearchTerm } from "../
 
 import { Connection, SentPacket } from "./Connection";
 import { Room } from "./Room";
+import { Perspective } from "./Perspective";
 import { RoomEvents, SpecialClientId } from "./BaseRoom";
 
 import {
@@ -74,7 +78,7 @@ import { LoadedPlugin, PluginLoader, WorkerPlugin } from "../handlers";
 
 import i18n from "../i18n";
 import { Logger } from "../logger";
-import { ModdedHelloPacket } from "../packets";
+import { Matchmaker } from "../matchmaker";
 
 const byteSizes = ["bytes", "kb", "mb", "gb", "tb"];
 function formatBytes(bytes: number) {
@@ -142,6 +146,11 @@ export class Worker extends EventEmitter<WorkerEvents> {
     listenSockets: Map<number, dgram.Socket>;
 
     /**
+     * The Http matchmaker for the server, if enabled, see {@link HindenburgConfig.matchmaker}.
+     */
+    matchmaker?: Matchmaker;
+
+    /**
      * All client connections connected to this server, mapped by their address:port,
      * see {@link Connection.address}.
      */
@@ -200,13 +209,20 @@ export class Worker extends EventEmitter<WorkerEvents> {
 
         this.listenSockets = new Map;
 
+        if (this.config.matchmaker)
+            this.matchmaker = new Matchmaker(this);
+
         this.lastClientId = 0;
         this.connections = new Map;
         this.rooms = new Map;
 
         this.acceptedVersions = config.acceptedVersions.map(x => VersionInfo.from(x).encode());
 
-        this.decoder = new PacketDecoder;
+        this.decoder = new PacketDecoder({
+            useDtlsLayout: config.socket.useDtlsLayout,
+            writeUnknownGameData: true,
+            writeUnknownRootMessages: true
+        });
 
         this.vorpal.delimiter(chalk.greenBright("hindenburg~$")).show();
         this.vorpal
@@ -225,7 +241,7 @@ export class Worker extends EventEmitter<WorkerEvents> {
                 const roomName = args["room code"]?.toUpperCase();
                 const codeId = roomName && (roomName === "LOCAL"
                     ? 0x20
-                    : Code2Int(roomName));
+                    : GameCode.convertStringToInt(roomName));
 
                 let num_disconnected = 0;
 
@@ -274,7 +290,7 @@ export class Worker extends EventEmitter<WorkerEvents> {
 
                 const codeId = roomName === "LOCAL"
                     ? 0x20
-                    : Code2Int(roomName);
+                    : GameCode.convertStringToInt(roomName);
 
                 const room = this.rooms.get(codeId);
 
@@ -297,12 +313,12 @@ export class Worker extends EventEmitter<WorkerEvents> {
 
                 const codeId = roomName === "LOCAL"
                     ? 0x20
-                    : Code2Int(roomName);
+                    : GameCode.convertStringToInt(roomName);
 
                 const room = this.rooms.get(codeId);
 
                 if (room) {
-                    if (room.state === GameState.Started) {
+                    if (room.gameState === GameState.Started) {
                         this.logger.error("Game already started: %s", room);
                         return;
                     }
@@ -332,12 +348,12 @@ export class Worker extends EventEmitter<WorkerEvents> {
 
                 const codeId = roomName === "LOCAL"
                     ? 0x20
-                    : Code2Int(roomName);
+                    : GameCode.convertStringToInt(roomName);
 
                 const room = this.rooms.get(codeId);
 
                 if (room) {
-                    if (room.state === GameState.NotStarted) {
+                    if (room.gameState === GameState.NotStarted) {
                         this.logger.error("Game not started: %s", room);
                         return;
                     }
@@ -386,7 +402,7 @@ export class Worker extends EventEmitter<WorkerEvents> {
                     : "";
 
                 const extendable = roomName
-                    ? this.rooms.get(Code2Int(roomName))
+                    ? this.rooms.get(GameCode.convertStringToInt(roomName))
                     : this;
 
                 if (!extendable) {
@@ -419,7 +435,7 @@ export class Worker extends EventEmitter<WorkerEvents> {
                     : "";
 
                 const extendable = roomName
-                    ? this.rooms.get(Code2Int(roomName))
+                    ? this.rooms.get(GameCode.convertStringToInt(roomName))
                     : this;
 
                 if (!extendable) {
@@ -469,7 +485,7 @@ export class Worker extends EventEmitter<WorkerEvents> {
                     : "";
 
                 const extendable = roomName
-                    ? this.rooms.get(Code2Int(roomName))
+                    ? this.rooms.get(GameCode.convertStringToInt(roomName))
                     : this;
 
                 if (!extendable)
@@ -481,7 +497,7 @@ export class Worker extends EventEmitter<WorkerEvents> {
                 }
 
                 if (roomName) {
-                    const room = this.rooms.get(Code2Int(roomName));
+                    const room = this.rooms.get(GameCode.convertStringToInt(roomName));
 
                     if (!room) {
                         this.logger.warn("Couldn't find a room with code: %s", roomName);
@@ -524,7 +540,7 @@ export class Worker extends EventEmitter<WorkerEvents> {
                 const roomName = args["room code"].toUpperCase();
                 const codeId = roomName === "LOCAL"
                     ? 0x20
-                    : Code2Int(roomName);
+                    : GameCode.convertStringToInt(roomName);
 
                 const room = this.rooms.get(codeId);
 
@@ -554,7 +570,7 @@ export class Worker extends EventEmitter<WorkerEvents> {
                 const roomName = args["room code"].toUpperCase();
                 const codeId = roomName === "LOCAL"
                     ? 0x20
-                    : Code2Int(roomName);
+                    : GameCode.convertStringToInt(roomName);
 
                 const room = this.rooms.get(codeId);
                 const clientId = parseInt(args["client id"]);
@@ -623,7 +639,7 @@ export class Worker extends EventEmitter<WorkerEvents> {
                 const roomName = args["room code"].toUpperCase();
                 const codeId = roomName === "LOCAL"
                     ? 0x20
-                    : Code2Int(roomName);
+                    : GameCode.convertStringToInt(roomName);
 
                 const room = this.rooms.get(codeId);
 
@@ -633,6 +649,38 @@ export class Worker extends EventEmitter<WorkerEvents> {
                     for (let i = 0; i < players.length; i++) {
                         const [ , player ] = players[i];
                         this.logger.info("%s) %s", i + 1, player);
+                    }
+                } else {
+                    this.logger.error("Couldn't find room: %s", roomName);
+                }
+            });
+
+        this.vorpal
+            .command("list pov <room code>", "List all active perspectives in a room.")
+            .alias("lspov")
+            .autocomplete({
+                data: async () => {
+                    return [...this.rooms.keys()].map(room => fmtCode(room).toLowerCase());
+                }
+            })
+            .action(async args => {
+                if (this.config.optimizations.disablePerspectives) {
+                    this.logger.warn("Perspectives are disabled");
+                    return;
+                }
+
+                const roomName = args["room code"].toUpperCase();
+                const codeId = roomName === "LOCAL"
+                    ? 0x20
+                    : GameCode.convertStringToInt(roomName);
+
+                const room = this.rooms.get(codeId);
+
+                if (room) {
+                    this.logger.info("%s perspective(s) in %s", room.activePerspectives.length, room);
+                    for (let i = 0; i < room.activePerspectives.length; i++) {
+                        const pov = room.activePerspectives[i];
+                        this.logger.info("%s) %s", i + 1, pov);
                     }
                 } else {
                     this.logger.error("Couldn't find room: %s", roomName);
@@ -650,7 +698,7 @@ export class Worker extends EventEmitter<WorkerEvents> {
                 const roomName = args["room code"].toUpperCase();
                 const codeId = roomName === "LOCAL"
                     ? 0x20
-                    : Code2Int(roomName);
+                    : GameCode.convertStringToInt(roomName);
 
                 const room = this.rooms.get(codeId);
 
@@ -676,7 +724,7 @@ export class Worker extends EventEmitter<WorkerEvents> {
                     this.logger.info("- confirm ejects: %s", room.settings.confirmEjects);
                     this.logger.info("- visual tasks: %s", room.settings.visualTasks);
                     this.logger.info("- anonymous votes: %s", room.settings.anonymousVotes);
-                    this.logger.info("- task bar updates: %s", TaskBarUpdate[room.settings.taskbarUpdates]);
+                    this.logger.info("- task bar updates: %s", TaskBarMode[room.settings.taskbarUpdates]);
                 } else {
                     this.logger.error("Couldn't find room: %s", roomName);
                 }
@@ -688,7 +736,7 @@ export class Worker extends EventEmitter<WorkerEvents> {
             .action(async args => {
                 const message = args.message.join(" ");
                 const roomCode = args.options.room
-                    ? Code2Int(args.options.room.toUpperCase?.())
+                    ? GameCode.convertStringToInt(args.options.room.toUpperCase?.())
                     : 0;
 
                 const foundRoom = this.rooms.get(roomCode);
@@ -771,6 +819,8 @@ export class Worker extends EventEmitter<WorkerEvents> {
         for (const additionalPort of this.config.socket.additionalPorts) {
             this._listenPort(additionalPort);
         }
+
+        this.matchmaker?.listen();
     }
 
     /**
@@ -819,7 +869,6 @@ export class Worker extends EventEmitter<WorkerEvents> {
 
     registerMessages() {
         this.decoder.register(GameDataMessage);
-        this.decoder.register(ModdedHelloPacket);
     }
 
     isVersionAccepted(version: VersionInfo|number): boolean {
@@ -833,7 +882,7 @@ export class Worker extends EventEmitter<WorkerEvents> {
     registerPacketHandlers() {
         this.decoder.listeners.clear();
 
-        this.decoder.on(ModdedHelloPacket, async (message, _direction, { sender }) => {
+        this.decoder.on(HelloPacket, async (message, _direction, { sender }) => {
             if (!sender)
                 return;
 
@@ -854,7 +903,8 @@ export class Worker extends EventEmitter<WorkerEvents> {
             sender.username = message.username;
             sender.chatMode = message.chatMode;
             sender.language = message.language;
-            sender.clientVersion = message.clientver;
+            sender.clientVersion = message.clientVer;
+            sender.platform = message.platform;
             sender.playerLevel = 0;
 
             if (!this.isVersionAccepted(sender.clientVersion)) {
@@ -877,7 +927,7 @@ export class Worker extends EventEmitter<WorkerEvents> {
                 return;
 
             if (!sender.sentDisconnect)
-                await sender.disconnect(message.reason || DisconnectReason.None);
+                await sender.disconnect(message.reason || DisconnectReason.ExitGame);
 
             this.removeConnection(sender);
         });
@@ -907,7 +957,7 @@ export class Worker extends EventEmitter<WorkerEvents> {
             const ev = await this.emit(
                 new RoomBeforeCreateEvent(
                     sender,
-                    message.options,
+                    message.gameSettings,
                     roomCode
                 )
             );
@@ -915,7 +965,7 @@ export class Worker extends EventEmitter<WorkerEvents> {
             if (ev.canceled)
                 return;
 
-            const room = await this.createRoom(ev.alteredRoomCode, message.options, sender);
+            const room = await this.createRoom(ev.alteredRoomCode, message.gameSettings, sender);
 
             this.logger.info("%s created room %s",
                 sender, room);
@@ -936,12 +986,35 @@ export class Worker extends EventEmitter<WorkerEvents> {
 
             if (
                 sender.room &&
-                sender.room.state !== GameState.Ended &&
+                sender.room.gameState !== GameState.Ended &&
                 sender.room.code !== message.code // extra checks so you can join back the same game
             )
                 return;
 
             await this.attemptJoin(sender, message.code);
+        });
+
+        this.decoder.on(QueryPlatformIdsMessage, async (message, _direction, { sender }) => {
+            if (!sender)
+                return;
+
+            const room = this.rooms.get(message.gameCode);
+            const playersPlatformSpecificData: PlatformSpecificData[] = [];
+
+            if (room) {
+                room.players.forEach(player => {
+                    playersPlatformSpecificData.push(player.platform);
+                });
+            }
+
+            await sender.sendPacket(
+                new ReliablePacket(
+                    sender.getNextNonce(),
+                    [
+                        new QueryPlatformIdsMessage(message.gameCode, playersPlatformSpecificData)
+                    ]
+                )
+            );
         });
 
         this.decoder.on(GameDataMessage, async (message, _direction, ctx) => {
@@ -953,11 +1026,53 @@ export class Worker extends EventEmitter<WorkerEvents> {
             if (!player || !ctx.sender.room)
                 return;
 
-            const notCanceled: BaseGameDataMessage[] = [];
-            await player.room.processMessagesAndGetNotCanceled(message.children, notCanceled, ctx);
+            if (player.room instanceof Perspective) {
+                const notCanceled: BaseGameDataMessage[] = [];
+                await player.room.processMessagesAndGetNotCanceled(message.children, notCanceled, ctx);
 
-            if (notCanceled.length > 0)
-                await player.room.broadcastMessages(notCanceled, [], undefined, [ ctx.sender ], ctx.reliable);
+                if (notCanceled.length > 0)
+                    await player.room.broadcastMessages(notCanceled, [], undefined, [ ctx.sender ], ctx.reliable);
+
+                const notCanceledOutgoing = await player.room.getNotCanceledOutgoing(message.children, MessageDirection.Serverbound, ctx.sender);
+
+                const notCanceledRoom: BaseGameDataMessage[] = [];
+                await player.room.parentRoom.processMessagesAndGetNotCanceled(notCanceledOutgoing, notCanceledRoom, ctx);
+
+                if (notCanceledRoom.length > 0)
+                    await player.room.parentRoom.broadcastMessages(notCanceledRoom, [], undefined, [ ctx.sender ], ctx.reliable);
+
+                for (let i = 0; i < player.room.parentRoom.activePerspectives.length; i++) {
+                    const activePerspective: Perspective = player.room.parentRoom.activePerspectives[i];
+                    if (activePerspective === player.room)
+                        continue;
+
+                    const notCanceledIncoming = await activePerspective.getNotCanceledIncoming(notCanceledOutgoing, MessageDirection.Serverbound, ctx.sender);
+                    const notCanceledPerspectiveGameData: BaseGameDataMessage[] = [];
+                    await activePerspective.processMessagesAndGetNotCanceled(notCanceledIncoming, notCanceledPerspectiveGameData, ctx);
+
+                    if (notCanceledPerspectiveGameData.length > 0) {
+                        await activePerspective.broadcastMessages(notCanceledPerspectiveGameData, [], undefined, [ ctx.sender ], ctx.reliable);
+                    }
+                }
+            } else {
+                for (let i = 0; i < player.room.activePerspectives.length; i++) {
+                    const activePerspective: Perspective = player.room.activePerspectives[i];
+
+                    const notCanceledIncoming = await activePerspective.getNotCanceledIncoming(message.children, MessageDirection.Serverbound, ctx.sender);
+                    const notCanceledPerspectiveGameData: BaseGameDataMessage[] = [];
+                    await activePerspective.processMessagesAndGetNotCanceled(notCanceledIncoming, notCanceledPerspectiveGameData, ctx);
+
+                    if (notCanceledPerspectiveGameData.length > 0) {
+                        await activePerspective.broadcastMessages(notCanceledPerspectiveGameData, [], undefined, [ ctx.sender ], ctx.reliable);
+                    }
+                }
+
+                const notCanceled: BaseGameDataMessage[] = [];
+                await player.room.processMessagesAndGetNotCanceled(message.children, notCanceled, ctx);
+
+                if (notCanceled.length > 0)
+                    await player.room.broadcastMessages(notCanceled, [], undefined, [ ctx.sender ], ctx.reliable);
+            }
         });
 
         this.decoder.on(GameDataToMessage, async (message, _direction, ctx) => {
@@ -965,22 +1080,53 @@ export class Worker extends EventEmitter<WorkerEvents> {
                 return;
 
             const player = ctx.sender.getPlayer();
+
             if (!ctx.sender.room || !player)
                 return;
 
             if (message.recipientid === SpecialClientId.Server) {
                 const recipientCtx: PacketContext = {...ctx, recipients: [ "server" ]};
 
-                const notCanceled: BaseGameDataMessage[] = [];
-                await player.room.processMessagesAndGetNotCanceled(message._children, notCanceled, recipientCtx);
+                if (player.room instanceof Perspective) {
+                    const notCanceled: BaseGameDataMessage[] = [];
+                    await player.room.processMessagesAndGetNotCanceled(message._children, notCanceled, recipientCtx);
+
+                    const notCanceledOutgoing = await player.room.getNotCanceledOutgoing(message._children, MessageDirection.Serverbound, recipientCtx.sender);
+
+                    const notCanceledRoom: BaseGameDataMessage[] = [];
+                    await player.room.parentRoom.processMessagesAndGetNotCanceled(notCanceledOutgoing, notCanceledRoom, recipientCtx);
+
+                    for (let i = 0; i < player.room.parentRoom.activePerspectives.length; i++) {
+                        const activePerspective: Perspective = player.room.parentRoom.activePerspectives[i];
+                        if (activePerspective === player.room)
+                            continue;
+
+                        const notCanceledIncoming = await activePerspective.getNotCanceledIncoming(notCanceledOutgoing, MessageDirection.Serverbound, recipientCtx.sender);
+                        const notCanceledPerspectiveGameData: BaseGameDataMessage[] = [];
+                        await activePerspective.processMessagesAndGetNotCanceled(notCanceledIncoming, notCanceledPerspectiveGameData, recipientCtx);
+                    }
+                } else {
+                    const notCanceled: BaseGameDataMessage[] = [];
+                    await player.room.processMessagesAndGetNotCanceled(message._children, notCanceled, recipientCtx);
+
+                    for (let i = 0; i < player.room.activePerspectives.length; i++) {
+                        const activePerspective: Perspective = player.room.activePerspectives[i];
+                        if (activePerspective === player.room)
+                            continue;
+
+                        const notCanceledIncoming = await activePerspective.getNotCanceledIncoming(message._children, MessageDirection.Serverbound, recipientCtx.sender);
+                        const notCanceledPerspectiveGameData: BaseGameDataMessage[] = [];
+                        await activePerspective.processMessagesAndGetNotCanceled(notCanceledIncoming, notCanceledPerspectiveGameData, recipientCtx);
+                    }
+                }
                 return;
             }
 
-            // if (player.room.config.serverAsHost && message.recipientid !== SpecialClientId.Temp) {
-            //     const client = player.room.players.get(message.recipientid);
-            //     player.room.logger.warn("Got recipient of game data from %s to %s despite room being in Server-as-a-Host",
-            //         ctx.sender, client || "id " + message.recipientid);
-            // }
+            if (player.room.config.serverAsHost && message.recipientid !== SpecialClientId.Temp) {
+                const client = player.room.players.get(message.recipientid);
+                player.room.logger.warn("Got recipient of game data from %s to %s despite room being in Server-as-a-Host",
+                    ctx.sender, client || "id " + message.recipientid);
+            }
 
             const connection = player.room.connections.get(message.recipientid);
             if (!connection) {
@@ -1008,7 +1154,7 @@ export class Worker extends EventEmitter<WorkerEvents> {
             }
 
             ctx.sender.room?.decoder.emitDecoded(message, direction, ctx);
-            await ctx.sender.room?.broadcast([], true, undefined, [
+            await ctx.sender.room?.broadcast([], [
                 new AlterGameMessage(ctx.sender.room.code, message.alterTag, message.value)
             ]);
         });
@@ -1058,7 +1204,7 @@ export class Worker extends EventEmitter<WorkerEvents> {
                 return sender.disconnect(DisconnectReason.Hacking);
             }
 
-            const targetConnection = sender.room.connections.get(message.clientid);
+            const targetConnection = sender.room.connections.get(message.clientId);
 
             if (!targetConnection)
                 return;
@@ -1101,7 +1247,11 @@ export class Worker extends EventEmitter<WorkerEvents> {
                     roomAge,
                     room.settings.map,
                     room.settings.numImpostors,
-                    room.settings.maxPlayers
+                    room.settings.maxPlayers,
+                    room.host?.platform || new PlatformSpecificData(
+                        Platform.Unknown,
+                        "UNKNOWN"
+                    )
                 );
 
                 if (ignoreSearchTerms === true) {
@@ -1263,6 +1413,27 @@ export class Worker extends EventEmitter<WorkerEvents> {
             }
         }
 
+        if (newConfig.matchmaker) {
+            if (this.matchmaker) {
+                // prepare thyself for the worst if statement
+                if ((typeof newConfig.matchmaker === "boolean" && (typeof this.config.matchmaker !== "boolean" && this.config.matchmaker.port !== 80)) ||
+                    (typeof newConfig.matchmaker === "object" && (typeof this.config.matchmaker === "boolean" ? (newConfig.matchmaker.port !== 80) : (newConfig.matchmaker.port !== this.config.matchmaker.port)))
+                ) {
+                    this.config.matchmaker = newConfig.matchmaker;
+                    this.matchmaker.restart();
+                    this.pluginLoader;
+                }
+            } else {
+                this.config.matchmaker = newConfig.matchmaker;
+                this.matchmaker = new Matchmaker(this);
+                this.matchmaker.listen();
+            }
+        } else if (!newConfig.matchmaker && this.matchmaker) {
+            this.config.matchmaker = newConfig.matchmaker || false;
+            this.matchmaker.destroy();
+            this.matchmaker = undefined;
+        }
+
         if (newConfig.plugins) {
             const pluginKeys = Object.keys(newConfig.plugins);
             for (let i = 0; i < pluginKeys.length; i++) {
@@ -1361,12 +1532,6 @@ export class Worker extends EventEmitter<WorkerEvents> {
      * @param rinfo Information about the remote that sent this data.
      */
     async handleMessage(listenSocket: dgram.Socket, buffer: Buffer, rinfo: dgram.RemoteInfo) {
-        if (buffer.byteLength > this.config.rateLimit.maxPacketSizeBytes) {
-            this.logger.info("Connection at %s:%s sent packet of size %s (%s over maximum)",
-                rinfo.address, rinfo.port, buffer.byteLength, (buffer.byteLength - this.config.rateLimit.maxPacketSizeBytes));
-            return;
-        }
-        
         try {
             const parsedPacket = this.decoder.parse(buffer, MessageDirection.Serverbound);
 
@@ -1377,12 +1542,13 @@ export class Worker extends EventEmitter<WorkerEvents> {
             }
 
             const parsedReliable = parsedPacket as ReliableSerializable;
+
             const cachedConnection = this.connections.get(rinfo.address + ":" + rinfo.port);
 
             try {
-                const date = Date.now();
                 if (cachedConnection) {
                     const isReliable = parsedReliable.nonce !== undefined && parsedPacket.messageTag !== SendOption.Acknowledge;
+                    const date = Date.now();
                     if (isReliable) {
                         if (cachedConnection.reliableRecordTimestamp + this.config.rateLimit.windowReliableMs < date) {
                             cachedConnection.reliableRecordTimestamp = Date.now();
@@ -1417,24 +1583,51 @@ export class Worker extends EventEmitter<WorkerEvents> {
                             )
                         );
 
-                        if (parsedReliable.nonce < cachedConnection.nextExpectedNonce - 1) {
-                            this.logger.warn("%s is behind (got %s, last nonce was %s)",
-                                cachedConnection, parsedReliable.nonce, cachedConnection.nextExpectedNonce - 1);
-                            return;
-                        }
-
-                        if (parsedReliable.nonce !== cachedConnection.nextExpectedNonce && this.config.socket.messageOrdering) {
-                            this.logger.warn("%s holding packet with nonce %s, expected %s",
-                                cachedConnection, parsedReliable.nonce, cachedConnection.nextExpectedNonce);
-
-                            if (!cachedConnection.unorderedMessageMap.has(parsedReliable.nonce)) {
-                                cachedConnection.unorderedMessageMap.set(parsedReliable.nonce, parsedReliable);
+                        const isNormal = parsedReliable.messageTag === SendOption.Unreliable ||
+                            parsedReliable.messageTag === SendOption.Reliable;
+                        if (isNormal) {
+                            const parsedNormal = parsedPacket as NormalPacket;
+                            for (let i = 0; i < parsedNormal.children.length; i++) {
+                                const child = parsedNormal.children[i];
+                                if (child instanceof UnknownRootMessage) {
+                                    this.logger.warn("%s sent an unknown root message with tag %s",
+                                        cachedConnection, child.messageTag, child.bytes.toString("hex"));
+                                }
                             }
-
-                            return;
                         }
 
-                        cachedConnection.nextExpectedNonce++;
+                        /**
+                         * Patches a bug with reactor whereby the nonce sent for the mod declaration is 0,
+                         * this fixes TOU as well.
+                         */
+                        // const isBadReactor = parsedReliable.messageTag === SendOption.Reliable
+                        //     && parsedReliable.nonce === 0
+                        //     && (parsedReliable as ReliablePacket)
+                        //         .children.every(child => {
+                        //             return child instanceof ReactorMessage
+                        //                 && child.children[0].messageTag === ReactorMessageTag.ModDeclaration;
+                        //         });
+
+                        // if (!isBadReactor && parsedReliable.nonce < cachedConnection.nextExpectedNonce - 1) {
+                        //     this.logger.warn("%s is behind (got %s, last nonce was %s)",
+                        //         cachedConnection, parsedReliable.nonce, cachedConnection.nextExpectedNonce - 1);
+                        //     return;
+                        // }
+
+                        // if (!isBadReactor && parsedReliable.nonce !== cachedConnection.nextExpectedNonce && this.config.socket.messageOrdering) {
+                        //     this.logger.warn("%s holding packet with nonce %s, expected %s",
+                        //         cachedConnection, parsedReliable.nonce, cachedConnection.nextExpectedNonce);
+
+                        //     if (!cachedConnection.unorderedMessageMap.has(parsedReliable.nonce)) {
+                        //         cachedConnection.unorderedMessageMap.set(parsedReliable.nonce, parsedReliable);
+                        //     }
+
+                        //     return;
+                        // }
+
+                        // if (!isBadReactor) {
+                        //     cachedConnection.nextExpectedNonce++;
+                        // }
                     } else if (parsedPacket.messageTag !== SendOption.Acknowledge) {
                         if (cachedConnection.unreliableRecordTimestamp + this.config.rateLimit.windowUnreliableMs < date) {
                             cachedConnection.unreliableRecordTimestamp = Date.now();
@@ -1535,9 +1728,9 @@ export class Worker extends EventEmitter<WorkerEvents> {
             throw new RangeError("Expected to generate a 4 or 6 digit room code.");
         }
 
-        let roomCode = len === 4 ? V1Gen() : V2Gen();
+        let roomCode = len === 4 ? GameCode.generateV1() : GameCode.generateV2();
         while (this.rooms.get(roomCode))
-            roomCode = len === 4 ? V1Gen() : V2Gen();
+            roomCode = len === 4 ? GameCode.generateV1() : GameCode.generateV2();
 
         return roomCode;
     }
@@ -1552,7 +1745,7 @@ export class Worker extends EventEmitter<WorkerEvents> {
      */
     async createRoom(code: number, options: GameSettings, createdBy: Connection|undefined) {
         if (this.rooms.has(code))
-            throw new Error("A room with code '" + Int2Code(code) + "' already exists.");
+            throw new Error("A room with code '" + GameCode.convertIntToString(code) + "' already exists.");
 
         const copyConfiguration: RoomsConfig = {
             ...this.config.rooms
@@ -1604,7 +1797,7 @@ export class Worker extends EventEmitter<WorkerEvents> {
             return connection.disconnect(DisconnectReason.GameFull);
         }
 
-        if (ev.alteredRoom.state === GameState.Started) {
+        if (ev.alteredRoom.gameState === GameState.Started) {
             this.logger.warn("%s attempted to join %s but the game had already started",
                 connection, foundRoom);
             return connection.disconnect(DisconnectReason.GameStarted);

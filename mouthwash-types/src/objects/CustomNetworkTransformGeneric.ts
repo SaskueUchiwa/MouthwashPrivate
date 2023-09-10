@@ -60,7 +60,7 @@ export class CustomNetworkTransformGeneric extends Networkable<CustomNetworkTran
     }
 
     private async _rpcSetPosition(position: Vector2, sendTo?: PlayerData[]) {
-        const connections = sendTo ? this.room.getConnections(sendTo, true) : undefined;
+        const connections = sendTo ? this.room.getRealConnections(sendTo) : undefined;
         this.room.broadcastMessages([
             new RpcMessage(
                 this.netId,

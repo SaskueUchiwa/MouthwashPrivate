@@ -80,7 +80,7 @@ export class Engineer extends Crewmate {
         });
 
         this._fixButton?.on("mwgg.button.click", ev => {
-            if (!this._lastSabotagedSystem || this.player.info?.isDead)
+            if (!this._lastSabotagedSystem || this.player.playerInfo?.isDead)
                 return;
                     
             this._lastSabotagedSystem.repair();
@@ -101,7 +101,7 @@ export class Engineer extends Crewmate {
 
     @EventListener("player.startmeeting", ListenerType.Room)
     async onStartMeeting(ev: PlayerStartMeetingEvent<Room>) {
-        if (this._engineerUses === EngineerUses.PerRound && !this.player.info?.isDead && !this._fixButton) {
+        if (this._engineerUses === EngineerUses.PerRound && !this.player.playerInfo?.isDead && !this._fixButton) {
             await this.spawnFixButton();
         }
     }

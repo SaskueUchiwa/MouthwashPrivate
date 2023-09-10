@@ -14,7 +14,8 @@ import {
     SpawnType,
     HazelWriter,
     DisconnectPacket,
-    DisconnectReason
+    DisconnectReason,
+    PingPacket
 } from "@skeldjs/hindenburg";
 
 import {
@@ -39,7 +40,6 @@ import {
     MouthwashMeetingHud,
     MouthwashSpawnType,
     OverwriteGameOver,
-    PingPacket,
     ReportDeadBodyMessage,
     SetChatMessageMessage,
     SetChatVisibilityMessage,
@@ -69,7 +69,6 @@ import { MouthwashApiPlugin, ClientFetchResourceResponseEvent } from "hbplugin-m
 @RegisterMessage(FetchResourceMessage)
 @RegisterMessage(ModstampSetStringMessage)
 @RegisterMessage(OverwriteGameOver)
-@RegisterMessage(PingPacket)
 @RegisterMessage(SetChatMessageMessage)
 @RegisterMessage(SetChatVisibilityMessage)
 @RegisterMessage(SetGameOptionMessage)
@@ -115,7 +114,7 @@ export class MouthwashPlugin extends WorkerPlugin {
                     continue;
                 }
 
-                connection.sendPacket(new PingPacket);
+                connection.sendPacket(new PingPacket(connection.getNextNonce()));
                 for (let i = 0; i < connection.sentPackets.length; i++) {
                     const sent = connection.sentPackets[i];
                     if (!sent.acked) {
@@ -142,7 +141,7 @@ export class MouthwashPlugin extends WorkerPlugin {
             return this.worker.handleMessage(listenSocket, message, rinfo);
         }
 
-        if (message[0] === SendOption.Acknowledge) {
+        if (message[0] === SendOption.Acknowledge || message[0] === SendOption.Ping) {
             return this.worker.handleMessage(listenSocket, message, rinfo);
         }
 

@@ -210,7 +210,7 @@ export class MeetingHud<RoomType extends Hostable = Hostable> extends Networkabl
         this.room["_despawnComponent"](this);
         if (this.room.shipStatus) {
             for (const [ , player ] of this.room.players) {
-                this.room.shipStatus.spawnPlayer(player, true);
+                this.room.shipStatus.spawnPlayer(player, true, true);
             }
         }
     }

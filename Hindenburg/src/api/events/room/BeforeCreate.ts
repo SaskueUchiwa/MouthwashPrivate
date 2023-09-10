@@ -1,7 +1,7 @@
 import { CancelableEvent } from "@skeldjs/events";
 import { GameSettings } from "@skeldjs/protocol";
+import { GameCode } from "@skeldjs/util";
 import { Connection } from "../../../worker";
-import { Code2Int } from "@skeldjs/util";
 
 /**
  * Emitted before a player successfully or unsuccessfully creates a room.
@@ -58,7 +58,7 @@ export class RoomBeforeCreateEvent extends CancelableEvent {
      */
     setCode(roomCode: number | string) {
         if (typeof roomCode === "string") {
-            this.setCode(Code2Int(roomCode));
+            this.setCode(GameCode.convertStringToInt(roomCode));
             return;
         }
 

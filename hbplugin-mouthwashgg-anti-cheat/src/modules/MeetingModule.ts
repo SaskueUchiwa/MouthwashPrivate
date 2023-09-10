@@ -48,7 +48,7 @@ export class MeetingModule extends EventTarget {
         const voterState = meetingHud?.voteStates.get(castVoteMessage.votingid);
         if (!voterState) return;
 
-        if (castVoteVoter.info?.isDead) {
+        if (castVoteVoter.playerInfo?.isDead) {
             return this.plugin.createInfraction(sender, InfractionName.ForbiddenRpcMeetingVote,
                 { voterPlayerId: castVoteMessage.votingid, suspectPlayerId: castVoteMessage.suspectid, alreadyVotedForPlayerId: voterState.votedForId }, InfractionSeverity.Medium);
         }
@@ -59,7 +59,7 @@ export class MeetingModule extends EventTarget {
         }
 
         if (castVoteSuspect) {
-            if (castVoteSuspect.info?.isDead) {
+            if (castVoteSuspect.playerInfo?.isDead) {
                 return this.plugin.createInfraction(sender, InfractionName.InvalidRpcMeetingVote,
                     { voterPlayerId: castVoteMessage.votingid, suspectPlayerId: castVoteMessage.suspectid, isDead: true }, InfractionSeverity.High);
             }
@@ -82,7 +82,7 @@ export class MeetingModule extends EventTarget {
 
     async onReportDeadBody(sender: Connection, component: DeadBody, reportDeadBodyMessage: ReportDeadBodyMessage) {
         const senderPlayer = sender.getPlayer();
-        const playerInfo = senderPlayer?.info;
+        const playerInfo = senderPlayer?.playerInfo;
         if (!playerInfo || playerInfo.isDead) {
             return this.plugin.createInfraction(sender, InfractionName.InvalidRpcReportDeadBody,
                 { reporterNetId: reportDeadBodyMessage.reporterNetId }, InfractionSeverity.Critical);

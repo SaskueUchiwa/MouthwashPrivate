@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks;
 using AmongUs.Data;
+using AmongUs.Data.Player;
 using HarmonyLib;
 using MouthwashClient.Services;
 using Reactor.Utilities;
@@ -28,6 +29,7 @@ namespace MouthwashClient.Patches
             {
                 DestroyableSingleton<EOSManager>.Instance.HideCallbackWaitAnim();
                 Reactor.Patches.ReactorVersionShower.UpdateText();
+                DataManager.Player.Account.LoginStatus = EOSManager.AccountLoginStatus.LoggedIn;
             };
             DestroyableSingleton<AmongUsClient>.Instance.StartCoroutine(LoginService.Initialize());
             _onceLogin = true;

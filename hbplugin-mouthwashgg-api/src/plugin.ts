@@ -9,7 +9,6 @@ import {
     PlayerJoinEvent,
     PlayerLeaveEvent,
     PlayerCheckNameEvent,
-    RoomSelectImpostorsEvent,
     RoomGameStartEvent,
     GameMap,
     sleep,
@@ -26,9 +25,8 @@ import {
     ReliablePacket,
     RpcMessage,
     SetInfectedMessage,
-    TaskBarUpdate,
+    TaskBarMode,
     PlayerCompleteTaskEvent,
-    FinalTaskState,
     PlayerMurderEvent,
     PlayerStartMeetingEvent,
     PlayerData,
@@ -102,9 +100,9 @@ const mapNameToNumber = {
 };
 
 const taskBarUpdateNameToNumber = {
-    "Always": TaskBarUpdate.Always,
-    "Meetings": TaskBarUpdate.Meetings,
-    "Never": TaskBarUpdate.Never
+    "Always": TaskBarMode.Normal,
+    "Meetings": TaskBarMode.MeetingOnly,
+    "Never": TaskBarMode.Invisible
 };
 
 const killDistanceNameToNumber = {
@@ -315,14 +313,14 @@ export class MouthwashApiPlugin extends RoomPlugin {
         const player = connection.getPlayer();
         if (!player) return;
 
-        const playerInfo = player.info;
+        const playerInfo = player.playerInfo;
         if (!playerInfo) return;
 
         const connectionUser = await this.authApi.getConnectionUser(connection);
         if (!connectionUser) return;
 
-        if (connectionUser.cosmetic_hat !== playerInfo.hat || connectionUser.cosmetic_pet !== playerInfo.pet || connectionUser.cosmetic_skin !== playerInfo.skin) {
-            await this.authApi.updateUserCosmetics(connectionUser.id, playerInfo.hat, playerInfo.pet, playerInfo.skin);
+        if (connectionUser.cosmetic_hat !== playerInfo.defaultOutfit.hatId || connectionUser.cosmetic_pet !== playerInfo.defaultOutfit.petId || connectionUser.cosmetic_skin !== playerInfo.defaultOutfit.skinId) {
+            await this.authApi.updateUserCosmetics(connectionUser.id, playerInfo.defaultOutfit.hatId, playerInfo.defaultOutfit.petId, playerInfo.defaultOutfit.skinId);
         }
     }
 
@@ -362,8 +360,8 @@ export class MouthwashApiPlugin extends RoomPlugin {
 
         if (!this.roomCreator) this.roomCreator = connection;
         
-        if (ev.player.info) {
-            ev.player.info.name = connectionUser.display_name;
+        if (ev.player.playerInfo) {
+            ev.player.playerInfo.defaultOutfit.name = connectionUser.display_name;
         }
 
         await this.nameService.updateAllNames();
@@ -518,18 +516,18 @@ export class MouthwashApiPlugin extends RoomPlugin {
         await this.chatService.broadcastMessage(chatMessage);
     }
 
-    @EventListener("room.selectimpostors")
-    async onSelectImpostors(ev: RoomSelectImpostorsEvent<Room>) {
-        ev.cancel();
-        if (this.room.host?.control) {
-            await this.room.broadcast([
-                new RpcMessage(
-                    this.room.host.control.netId,
-                    new SetInfectedMessage([])
-                )
-            ]);
-        }
-    }
+    // @EventListener("room.selectimpostors")
+    // async onSelectImpostors(ev: RoomSelectImpostorsEvent<Room>) {
+    //     ev.cancel();
+    //     if (this.room.host?.control) {
+    //         await this.room.broadcast([
+    //             new RpcMessage(
+    //                 this.room.host.control.netId,
+    //                 new SetInfectedMessage([])
+    //             )
+    //         ]);
+    //     }
+    // }
 
     @EventListener("room.gamestart")
     async onGameStart(ev: RoomGameStartEvent) {
@@ -690,7 +688,7 @@ export class MouthwashApiPlugin extends RoomPlugin {
             );
         } else if (ev.intentName === AmongUsEndGames.PlayersVoteOut) {
             const metadata = ev.metadata as PlayersVoteOutEndgameMetadata;
-            if (metadata.exiled.info?.isImpostor) {
+            if (metadata.exiled.playerInfo?.isImpostor) {
                 this.room.registerEndGameIntent(
                     new EndGameIntent(
                         MouthwashEndGames.CrewmateVotedOut,
@@ -855,7 +853,7 @@ export class MouthwashApiPlugin extends RoomPlugin {
         let completeTasks = 0;
         const players = [];
         for (const [ , player ] of this.room.players) {
-            const playerInfo = player.info;
+            const playerInfo = player.playerInfo;
             if (playerInfo && !playerInfo.isDisconnected && this.hudService.getPlayerHud(player).allowTaskInteraction) {
                 for (const task of playerInfo.taskStates) {
                     totalTasks++;
