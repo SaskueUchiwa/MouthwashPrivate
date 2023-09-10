@@ -168,7 +168,7 @@ export class MouthwashPlugin extends WorkerPlugin {
 
                 const hmacHash = message.slice(17, 37);
                 const signedMessage = crypto.createHmac("sha1", sessionInfo.client_token).update(message.slice(37)).digest();
-                if (crypto.timingSafeEqual(hmacHash, signedMessage)) {
+                if (hmacHash.length === signedMessage.length && crypto.timingSafeEqual(hmacHash, signedMessage)) {
                     return this.worker.handleMessage(listenSocket, message.slice(37), rinfo);
                 }
             } else {
@@ -176,6 +176,7 @@ export class MouthwashPlugin extends WorkerPlugin {
                     await connection.disconnect("Invalid login, try logging in again through the launcher.");
                 } else {
                     const disconnectPacket = new DisconnectPacket(DisconnectReason.Custom, "Invalid login, try logging in again through the launcher.");
+                    this.logger.info("Disconnected unknown client due to invalid login");
                     const writer = HazelWriter.alloc(64);
                     writer.uint8(SendOption.Disconnect);
                     writer.write(disconnectPacket);
