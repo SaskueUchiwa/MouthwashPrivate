@@ -34,6 +34,26 @@ namespace MouthwashClient.Patches
         }
     }
 
+    [HarmonyPatch(typeof(EOSManager), nameof(EOSManager.ProductUserId), MethodType.Getter)]
+    public static class FalsifyEOSProductUserIdPatch
+    {
+        public static bool Prefix(EOSManager __instance, ref string __result)
+        {
+            __result = "";
+            return false;
+        }
+    }
+
+    [HarmonyPatch(typeof(AccountManager), nameof(AccountManager.CanPlayOnline))]
+    public static class AllowOnlinePlayPatch
+    {
+        public static bool Prefix(AccountManager __instance, ref bool __result)
+        {
+            __result = true;
+            return false;
+        }
+    }
+
     [HarmonyPatch(typeof(EOSManager), nameof(EOSManager.StartInitialLoginFlow))]
     public static class PreventEOSLoginPatch
     {

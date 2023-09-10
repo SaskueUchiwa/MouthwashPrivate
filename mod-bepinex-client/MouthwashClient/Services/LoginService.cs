@@ -50,8 +50,8 @@ namespace MouthwashClient.Services
     
     public static class LoginService
     {
-        static private UserInformationWithAuthToken? _cachedUserInformation;
-        static public string ErrorWhileLoggingIn = "";
+        private static UserInformationWithAuthToken? _cachedUserInformation;
+        public static string ErrorWhileLoggingIn = "";
 
         public static Action<string> ErrorCallback;
         public static Action DoneCallback;

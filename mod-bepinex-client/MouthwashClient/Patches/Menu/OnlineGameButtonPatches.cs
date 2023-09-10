@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using HarmonyLib;
 using MouthwashClient.Services;
+using Reactor.Utilities;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -27,7 +28,7 @@ namespace MouthwashClient.Patches.Menu
                 return false;
             }
             
-            __instance.StartCoroutine(CoStartGamePatch(__instance));
+            DestroyableSingleton<AmongUsClient>.Instance.StartCoroutine(CoStartGamePatch(__instance));
             return false;
         }
 
@@ -37,6 +38,7 @@ namespace MouthwashClient.Patches.Menu
             SoundManager.Instance.CrossFadeSound("MainBG", null, 0.5f, 1.5f);
             __instance.Foreground.gameObject.SetActive(true);
             yield return Effects.ColorFade(__instance.Foreground, Color.clear, Color.black, 0.2f);
+            PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage("Creating game..");
             yield return AmongUsClient.Instance.CoCreateOnlineGame();
         }
     }
