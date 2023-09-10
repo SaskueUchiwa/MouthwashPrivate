@@ -8,6 +8,7 @@
     "acceptedVersions": [
         "2023.5.20.0"
     ],
+    "matchmaker": false,
     "socket": {
         "port": 22023,
         "additionalPorts": [],
