@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using AmongUs.QuickChat;
 using HarmonyLib;
 using Hazel;
 using InnerNet;
@@ -37,11 +38,12 @@ namespace MouthwashClient.Patches.Lobby
             string playerHat = reader.ReadString();
             string playerPet = reader.ReadString();
             string playerSkin = reader.ReadString();
+            string playerVisor = reader.ReadString();
             Color backColor = ReadColor(reader);
             Color frontColor = ReadColor(reader);
             Color visorColor = ReadColor(reader);
             return new MouthwashChatMessageAppearance(playerName, isDead, isVote, playerHat,
-                playerPet, playerSkin, backColor, frontColor, visorColor);
+                playerPet, playerSkin, playerVisor, backColor, frontColor, visorColor);
         }
 
         public string PlayerName;
@@ -50,12 +52,13 @@ namespace MouthwashClient.Patches.Lobby
         public string PlayerHat;
         public string PlayerPet;
         public string PlayerSkin;
+        public string PlayerVisor;
         public Color BackColor;
         public Color FrontColor;
         public Color VisorColor;
 
         private MouthwashChatMessageAppearance(string playerName, bool isDead, bool isVote,
-            string playerHat, string playerPet, string playerSkin, Color backColor,
+            string playerHat, string playerPet, string playerSkin, string playerVisor, Color backColor,
             Color frontColor, Color visorColor)
         {
             PlayerName = playerName;
@@ -64,6 +67,7 @@ namespace MouthwashClient.Patches.Lobby
             PlayerHat = playerHat;
             PlayerPet = playerPet;
             PlayerSkin = playerSkin;
+            PlayerVisor = playerVisor;
             BackColor = backColor;
             FrontColor = frontColor;
             VisorColor = visorColor;
@@ -77,6 +81,7 @@ namespace MouthwashClient.Patches.Lobby
             writer.Write(PlayerHat);
             writer.Write(PlayerPet);
             writer.Write(PlayerSkin);
+            writer.Write(PlayerVisor);
             WriteColor(writer, BackColor);
             WriteColor(writer, FrontColor);
             WriteColor(writer, VisorColor);
@@ -186,7 +191,6 @@ namespace MouthwashClient.Patches.Lobby
                     hat.BackLayer.sharedMaterial = DestroyableSingleton<HatManager>.Instance.DefaultShader;
                 }
             }
-            PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage($"Hat color: {frontColor.r}, {frontColor.g}, {frontColor.b}, {frontColor.a}");
             SetCustomColors(hat.FrontLayer, frontColor, backColor, visorColor);
             if (hat.BackLayer)
             {
@@ -339,10 +343,12 @@ namespace MouthwashClient.Patches.Lobby
         public static void SetVisor(ChatBubble? bubble, MouthwashChatMessage chatMessage)
         {
             // Reconstructed from: VisorLayer.cs
-            // TODO: Chat Message visor appearance
-            VisorData foundVisor = DestroyableSingleton<HatManager>.Instance.GetVisorById("visor_EmptyVisor");
+            VisorData foundVisor = DestroyableSingleton<HatManager>.Instance.GetVisorById(chatMessage.Appearance.PlayerVisor);
+            bubble.Player.cosmetics.visor.currentVisor = foundVisor;
+            bubble.Player.cosmetics.visor.UnloadAsset();
             AddressableAssetGroup item = AddressableAssetHandler.GetOrCreate(bubble.Player.cosmetics.skin.gameObject).Item2;
             AddressableAsset<VisorViewData> asset = foundVisor.CreateAddressableAsset();
+            bubble.Player.cosmetics.visor.viewAsset = asset;
             item.Add(asset);
             asset.LoadAsync(new Action(delegate
             {
@@ -351,7 +357,6 @@ namespace MouthwashClient.Patches.Lobby
                     bubble.Player.cosmetics.skin.gameObject.IsDestroyedOrNull())
                     return;
 
-                bubble.Player.cosmetics.visor.currentVisor = foundVisor;
                 if (foundVisor.BehindHats)
                 {
                     bubble.Player.cosmetics.visor.transform.SetLocalZ(bubble.Player.cosmetics.visor.ZIndexSpacing * -1.5f);
@@ -457,7 +462,6 @@ namespace MouthwashClient.Patches.Lobby
             bubble.Player.ToggleName(false);
             bubble.maskLayer = 51 + bubble.PoolIndex;
             bubble.SetMaskLayer();
-            PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage($"Chat bubble {chatMessage.Uuid} set contents to {chatMessage.Content}");
             bubble.SetName(chatMessage.Appearance.PlayerName, chatMessage.Appearance.IsDead, chatMessage.Appearance.IsVote, Color.white);
             bubble.SetText(chatMessage.Content);
             bubble.AlignChildren();

@@ -8,7 +8,8 @@ import {
     PlayerData,
     Room,
     SendQuickChatMessage,
-    Skin
+    Skin,
+    Visor
 } from "@skeldjs/hindenburg";
 
 import {
@@ -56,6 +57,7 @@ export class ChatService {
             sender.playerInfo?.defaultOutfit.hatId ?? Hat.NoHat,
             sender.playerInfo?.defaultOutfit.petId ?? Pet.EmptyPet,
             sender.playerInfo?.defaultOutfit.skinId ?? Skin.None,
+            sender.playerInfo?.defaultOutfit.visorId ?? Visor.EmptyVisor,
             playerColor.dark,
             playerColor.light,
             Palette.playerVisor // standard visor colour

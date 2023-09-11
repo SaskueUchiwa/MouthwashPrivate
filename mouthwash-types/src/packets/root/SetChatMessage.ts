@@ -1,10 +1,7 @@
 import {
     BaseRootMessage,
-    Hat,
     HazelReader,
     HazelWriter,
-    Pet,
-    Skin,
     SendQuickChatMessage
 } from "@skeldjs/hindenburg";
 
@@ -19,6 +16,7 @@ export class ChatPlayerAppearance {
         public readonly playerHat: string,
         public readonly playerPet: string,
         public readonly playerSkin: string,
+        public readonly playerVisor: string,
         public readonly backColor: RGBA,
         public readonly frontColor: RGBA,
         public readonly visorColor: RGBA
@@ -31,10 +29,11 @@ export class ChatPlayerAppearance {
         const playerHat = reader.string();
         const playerPet = reader.string();
         const playerSkin = reader.string();
+        const playerVisor = reader.string();
         const backColor = reader.read(RGBA);
         const frontColor = reader.read(RGBA);
         const visorColor = reader.read(RGBA);
-        return new ChatPlayerAppearance(playerName, isDead, isVote, playerHat, playerPet, playerSkin, backColor, frontColor, visorColor)
+        return new ChatPlayerAppearance(playerName, isDead, isVote, playerHat, playerPet, playerSkin, playerVisor, backColor, frontColor, visorColor)
     }
 
     Serialize(writer: HazelWriter) {
@@ -44,6 +43,7 @@ export class ChatPlayerAppearance {
         writer.string(this.playerHat);
         writer.string(this.playerPet);
         writer.string(this.playerSkin);
+        writer.string(this.playerVisor);
         writer.write(this.backColor);
         writer.write(this.frontColor);
         writer.write(this.visorColor);
