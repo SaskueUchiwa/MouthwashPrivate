@@ -1,15 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using AmongUs.GameOptions;
 using HarmonyLib;
 using Hazel;
-using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using InnerNet;
 using MouthwashClient.Enums;
-using Reactor.Utilities;
-using Reactor.Utilities.Attributes;
-using TMPro;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
