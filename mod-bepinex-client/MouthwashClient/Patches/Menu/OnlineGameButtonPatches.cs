@@ -9,7 +9,7 @@ using UnityEngine.UI;
 namespace MouthwashClient.Patches.Menu
 {
     [HarmonyPatch(typeof(MainMenuManager), nameof(MainMenuManager.Start))]
-    public class SkipToOnlinePlayPatch
+    public static class SkipToOnlinePlayPatch
     {
         public static void Postfix(MainMenuManager __instance)
         {
@@ -18,7 +18,7 @@ namespace MouthwashClient.Patches.Menu
     }
 
     [HarmonyPatch(typeof(CreateGameOptions), nameof(CreateGameOptions.Show))]
-    public class SkipToStartGamePatch
+    public static class SkipToStartGamePatch
     {
         public static bool Prefix(CreateGameOptions __instance)
         {
@@ -44,7 +44,7 @@ namespace MouthwashClient.Patches.Menu
     }
 
     [HarmonyPatch(typeof(FindGameButton), nameof(FindGameButton.OnClick))]
-    public class PreventNonLoggedInFindGamePatch
+    public static class PreventNonLoggedInFindGamePatch
     {
         public static bool Prefix(FindGameButton __instance)
         {
@@ -59,7 +59,7 @@ namespace MouthwashClient.Patches.Menu
     }
     
     [HarmonyPatch(typeof(TransitionOpen), nameof(TransitionOpen.OnEnable))]
-    public class PreventNonLoggedInJoinGamePatch
+    public static class PreventNonLoggedInJoinGamePatch
     {
         public static bool Prefix(TransitionOpen __instance)
         {

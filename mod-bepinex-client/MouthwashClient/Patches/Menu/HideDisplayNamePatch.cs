@@ -6,7 +6,7 @@ using UnityEngine.SceneManagement;
 namespace MouthwashClient.Patches.Menu
 {
     [HarmonyPatch(typeof(AccountManager), nameof(AccountManager.OnSceneLoaded))]
-    public class HideDisplayNamePatch
+    public static class HideDisplayNamePatch
     {
         public static void Postfix(AccountManager __instance, [HarmonyArgument(0)] Scene scene)
         {

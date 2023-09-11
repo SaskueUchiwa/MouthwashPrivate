@@ -9,7 +9,7 @@ namespace MouthwashClient.Patches.Network
 {
     // Authors: Polus.gg developers
     [HarmonyPatch(typeof(UdpConnection), nameof(UdpConnection.ReliableMessageReceive))]
-    public class HazelPacketOrderingPatch {
+    public static class HazelPacketOrderingPatch {
         private static ushort _nextSequenceReceived;
         private static Dictionary<ushort, MessageReader> _packetQueue = new();
 
