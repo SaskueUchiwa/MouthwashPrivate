@@ -25,6 +25,7 @@ namespace MouthwashClient.Patches.Lobby
     public abstract class MouthwashGameOptionValue
     {
         public abstract void Serialize(MessageWriter writer);
+        public abstract string GetText();
     }
 
     public class MouthwashGameOptionBooleanValue : MouthwashGameOptionValue
@@ -45,6 +46,11 @@ namespace MouthwashClient.Patches.Lobby
         public override void Serialize(MessageWriter writer)
         {
             writer.Write(Enabled);
+        }
+
+        public override string GetText()
+        {
+            return Enabled ? "On" : "Off";
         }
     }
 
@@ -89,6 +95,11 @@ namespace MouthwashClient.Patches.Lobby
             writer.Write(ZeroIsInfinity);
             writer.Write(Suffix);
         }
+
+        public override string GetText()
+        {
+            return string.Format(Suffix, Value.ToString("0.##"));
+        }
     }
 
     public class MouthwashGameOptionEnumValue : MouthwashGameOptionValue
@@ -121,6 +132,11 @@ namespace MouthwashClient.Patches.Lobby
             {
                 writer.Write(option);
             }
+        }
+
+        public override string GetText()
+        {
+            return Options[SelectedIdx];
         }
     }
     
@@ -175,6 +191,11 @@ namespace MouthwashClient.Patches.Lobby
             }
             Value.Serialize(writer);
         }
+
+        public string GetText()
+        {
+            return $"{Key}: {Value.GetText()}";
+        }
     }
     
     public static class MouthwashGameOptionsPatches
@@ -216,6 +237,7 @@ namespace MouthwashClient.Patches.Lobby
                 OptionBehaviour[] existingOptions = __instance.GetComponentsInChildren<OptionBehaviour>(true);
 
                 List<Transform> allOptionItems = new();
+                ExistingGameOptions = ExistingGameOptions.OrderBy(a => a?.Priority ?? 0).ToList();
                 string lastCategory = "";
                 foreach (MouthwashGameOption? gameOption in ExistingGameOptions)
                 {
@@ -261,12 +283,8 @@ namespace MouthwashClient.Patches.Lobby
                                 Object.Instantiate(NumberOptionPrefab, optionsParent.transform)
                                     .GetComponent<NumberOption>();
                             numberOption.gameObject.SetActive(true);
-                            numberOption.Value = numberValue.Value;
-                            numberOption.Increment = numberValue.Step;
-                            numberOption.FormatString = "0.##";
-                            numberOption.ValidRange = new FloatRange(numberValue.Lower, numberValue.Upper);
-                            numberOption.ZeroIsInfinity = numberOption.ZeroIsInfinity;
                             numberOption.TitleText.text = gameOption.Key;
+                            numberOption.ValueText.text = string.Format(numberValue.Suffix, numberValue.Value.ToString("0.##"));
                             numberOption.name = gameOption.Key;
                             numberOption.OnValueChanged = new Action<OptionBehaviour>(behaviour => { });
                             allOptionItems.Add(numberOption.transform);
@@ -278,6 +296,7 @@ namespace MouthwashClient.Patches.Lobby
                                     .GetComponent<StringOption>();
                             stringOption.gameObject.SetActive(true);
                             stringOption.TitleText.text = gameOption.Key;
+                            stringOption.ValueText.text = enumValue.Options[enumValue.SelectedIdx];
                             stringOption.name = gameOption.Key;
                             stringOption.OnValueChanged = new Action<OptionBehaviour>(behaviour => { });
                             allOptionItems.Add(stringOption.transform);
@@ -306,18 +325,58 @@ namespace MouthwashClient.Patches.Lobby
             }
         }
 
-        [HarmonyPatch(typeof(GameSettingMenu), nameof(GameSettingMenu.Update))]
-        public static class RefreshGameOptionsWhenNecessaryPatch
+        public static string GetGameSettingsText()
         {
-            public static bool Prefix(GameSettingMenu __instance)
+            string text = "<size=80%>";
+            string lastCategory = "";
+            foreach (MouthwashGameOption? gameOption in ExistingGameOptions)
             {
-                if (AreOptionsDirty)
+                if (gameOption == null)
+                    continue;
+                
+                if (gameOption.Category != lastCategory && gameOption.Category != "")
                 {
-                    ExistingGameOptions = ExistingGameOptions.OrderBy(a => a?.Priority ?? 0).ToList();
-                    __instance.ShowSettingsByGameType();
-                    AreOptionsDirty = false;
+                    text += $"\n{gameOption.Category}\n";
                 }
-                return true;
+
+                lastCategory = gameOption.Category;
+                text += gameOption.Category == "" ? "" : "    ";
+                text += $"{gameOption.GetText()}\n";
+            }
+
+            text += "</size>";
+
+            return text;
+        }
+
+        [HarmonyPatch(typeof(LobbyBehaviour), nameof(LobbyBehaviour.FixedUpdate))]
+        public static class GameSettingsTextFixedUpdatePatch
+        {
+            public static bool Prefix(LobbyBehaviour __instance)
+            {
+                __instance.optionsTimer += Time.fixedDeltaTime;
+                if (__instance.optionsTimer < 0.25f)
+                {
+                    return false;
+                }
+                __instance.optionsTimer = 0f;
+                if (GameOptionsManager.Instance.CurrentGameOptions != null)
+                {
+                    if (AreOptionsDirty)
+                    {
+                        ExistingGameOptions = ExistingGameOptions.OrderBy(a => a?.Priority ?? 0).ToList();
+                        GameSettingMenu settingMenu = Object.FindObjectOfType<GameSettingMenu>();
+                        if (settingMenu != null)
+                        {
+                            settingMenu.ShowSettingsByGameType();
+                        }
+                        AreOptionsDirty = false;
+                    }
+                    DestroyableSingleton<HudManager>.Instance.GameSettings.text = GetGameSettingsText();
+                    DestroyableSingleton<HudManager>.Instance.GameSettings.gameObject.SetActive(true);
+                }
+
+                return false;
             }
         }
 
@@ -326,7 +385,6 @@ namespace MouthwashClient.Patches.Lobby
         {
             public static bool Prefix(NumberOption __instance)
             {
-                __instance.FixedUpdate();
                 return false;
             }
         }
@@ -354,24 +412,6 @@ namespace MouthwashClient.Patches.Lobby
         {
             public static bool Prefix(NumberOption __instance)
             {
-                if (__instance.oldValue != __instance.Value)
-                {
-                    MouthwashGameOption? gameOption = ExistingGameOptions.Find(x => x?.Key == __instance.TitleText.text);
-                    if (gameOption is not { Value: MouthwashGameOptionNumberValue numberValue })
-                    {
-                        return true;
-                    }
-
-                    __instance.oldValue = __instance.Value;
-                    if (__instance.ZeroIsInfinity && Mathf.Abs(__instance.Value) < 0.0001f)
-                    {
-                        __instance.ValueText.text = "∞";
-                        return false;
-                    }
-
-                    __instance.ValueText.text = __instance.Value.ToString(__instance.FormatString);
-                    __instance.ValueText.text = string.Format(numberValue.Suffix, __instance.ValueText.text);
-                }
                 return false;
             }
         }
@@ -385,9 +425,16 @@ namespace MouthwashClient.Patches.Lobby
                 if (gameOption is not { Value: MouthwashGameOptionNumberValue numberValue })
                     return true;
                 
-                __instance.Value = __instance.ValidRange.Clamp(__instance.Value + __instance.Increment);
-                numberValue.Value = __instance.Value;
+                numberValue.Value = Mathf.Clamp(numberValue.Value + numberValue.Step, numberValue.Lower, numberValue.Upper);
+                
                 SendUpdateOption(gameOption);
+                if (numberValue.ZeroIsInfinity && Mathf.Abs(numberValue.Value) < 0.0001f)
+                {
+                    __instance.ValueText.text = "∞";
+                    return false;
+                }
+
+                __instance.ValueText.text = string.Format(numberValue.Suffix, numberValue.Value.ToString("0.##"));
                 return false;
             }
         }
@@ -401,9 +448,16 @@ namespace MouthwashClient.Patches.Lobby
                 if (gameOption is not { Value: MouthwashGameOptionNumberValue numberValue })
                     return true;
                 
-                __instance.Value = __instance.ValidRange.Clamp(__instance.Value - __instance.Increment);
-                numberValue.Value = __instance.Value;
+                numberValue.Value = Mathf.Clamp(numberValue.Value - numberValue.Step, numberValue.Lower, numberValue.Upper);
+                
                 SendUpdateOption(gameOption);
+                if (numberValue.ZeroIsInfinity && Mathf.Abs(numberValue.Value) < 0.0001f)
+                {
+                    __instance.ValueText.text = "∞";
+                    return false;
+                }
+
+                __instance.ValueText.text = string.Format(numberValue.Suffix, numberValue.Value.ToString("0.##"));
                 return false;
             }
         }
@@ -413,18 +467,6 @@ namespace MouthwashClient.Patches.Lobby
         {
             public static bool Prefix(StringOption __instance)
             {
-                if (__instance.oldValue != __instance.Value)
-                {
-                    MouthwashGameOption? gameOption = ExistingGameOptions.Find(x => x?.Key == __instance.TitleText.text);
-                    if (gameOption is not { Value: MouthwashGameOptionEnumValue enumValue })
-                    {
-                        return true;
-                    }
-                    
-                    __instance.oldValue = __instance.Value;
-                    __instance.ValueText.text = enumValue.Options[enumValue.SelectedIdx];
-                }
-
                 return false;
             }
         }
@@ -442,9 +484,7 @@ namespace MouthwashClient.Patches.Lobby
                 enumValue.SelectedIdx = (uint)Mathf.Clamp((float)enumValue.SelectedIdx + 1, 0, enumValue.Options.Length - 1);
                 if (enumValue.SelectedIdx == previous)
                     return false;
-                __instance.Value = Mathf.Clamp(__instance.Value - 1, 0, enumValue.Options.Length - 1);
-                PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage($"Set {gameOption.Key} to {enumValue.Options[enumValue.SelectedIdx]}");
-                PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage($"Options {string.Join(", ", enumValue.Options)} idx: {enumValue.SelectedIdx}, previous: {previous}");
+                __instance.ValueText.text = enumValue.Options[enumValue.SelectedIdx];
                 SendUpdateOption(gameOption);
                 return false;
             }
@@ -463,9 +503,7 @@ namespace MouthwashClient.Patches.Lobby
                 enumValue.SelectedIdx = (uint)Mathf.Clamp((float)enumValue.SelectedIdx - 1, 0, enumValue.Options.Length - 1);
                 if (enumValue.SelectedIdx == previous)
                     return false;
-                __instance.Value = Mathf.Clamp(__instance.Value - 1, 0, enumValue.Options.Length - 1);
-                PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage($"Set {gameOption.Key} to {enumValue.Options[enumValue.SelectedIdx]}");
-                PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage($"Options {string.Join(", ", enumValue.Options)} idx: {enumValue.SelectedIdx}, previous: {previous}");
+                __instance.ValueText.text = enumValue.Options[enumValue.SelectedIdx];
                 SendUpdateOption(gameOption);
                 return false;
             }
@@ -476,18 +514,6 @@ namespace MouthwashClient.Patches.Lobby
         {
             public static bool Prefix(ToggleOption __instance)
             {
-                if (__instance.oldValue != __instance.GetBool())
-                {
-                    MouthwashGameOption? gameOption = ExistingGameOptions.Find(x => x?.Key == __instance.TitleText.text);
-                    if (gameOption is not { Value: MouthwashGameOptionBooleanValue boolValue })
-                    {
-                        return true;
-                    }
-                    
-                    __instance.oldValue = __instance.GetBool();
-                    __instance.CheckMark.enabled = boolValue.Enabled;
-                }
-
                 return false;
             }
         }
@@ -501,8 +527,8 @@ namespace MouthwashClient.Patches.Lobby
                 if (gameOption is not { Value: MouthwashGameOptionBooleanValue boolValue })
                     return true;
 
-                __instance.CheckMark.enabled = !__instance.CheckMark.enabled;
-                boolValue.Enabled = __instance.GetBool();
+                boolValue.Enabled = !boolValue.Enabled;
+                __instance.CheckMark.enabled = boolValue.Enabled;
                 SendUpdateOption(gameOption);
                 return false;
             }
