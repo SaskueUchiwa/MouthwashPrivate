@@ -6,6 +6,7 @@ import {
     Hat,
     Pet,
     PlayerData,
+    QuickChatMessageData,
     Room,
     SendQuickChatMessage,
     Skin,
@@ -30,7 +31,7 @@ export class ChatMessage {
         public readonly uuid: string,
         public readonly alignment: ChatMessageAlignment|undefined,
         public readonly playerAppearance: ChatPlayerAppearance,
-        public readonly messageContent: SendQuickChatMessage|string,
+        public readonly messageContent: QuickChatMessageData|string,
         public readonly sender: PlayerData<Room>|undefined,
         public readonly recipients: Connection[]|undefined
     ) {
@@ -88,7 +89,7 @@ export class ChatService {
         return undefined;
     }
 
-    createMessage(content: string|SendQuickChatMessage, appearance: ChatPlayerAppearance, sender: PlayerData<Room>) {
+    createMessage(content: string|QuickChatMessageData, appearance: ChatPlayerAppearance, sender: PlayerData<Room>) {
         const uuid = uuidv4().replace(/-/g, "");
 
         const chatMessage = new ChatMessage(
@@ -105,7 +106,7 @@ export class ChatService {
         return chatMessage;
     }
 
-    createMessageFor(content: string|SendQuickChatMessage, appearance: ChatPlayerAppearance, sender: PlayerData<Room>, recipients: Connection[]|undefined) {
+    createMessageFor(content: string|QuickChatMessageData, appearance: ChatPlayerAppearance, sender: PlayerData<Room>, recipients: Connection[]|undefined) {
         const uuid = uuidv4().replace(/-/g, "");
 
         const chatMessage = new ChatMessage(
@@ -134,7 +135,9 @@ export class ChatService {
                     chatMessage.alignment || ChatMessageAlignment.Right,
                     chatMessage.playerAppearance,
                     0,
-                    chatMessage.messageContent
+                    typeof chatMessage.messageContent === "string"
+                        ? chatMessage.messageContent
+                        : new SendQuickChatMessage(chatMessage.messageContent)
                 )
             ], [ senderConnnection ]);
         }
@@ -145,7 +148,9 @@ export class ChatService {
                 chatMessage.alignment || ChatMessageAlignment.Left,
                 chatMessage.playerAppearance,
                 0,
-                chatMessage.messageContent
+                typeof chatMessage.messageContent === "string"
+                    ? chatMessage.messageContent
+                    : new SendQuickChatMessage(chatMessage.messageContent)
             )
         ], chatMessage.recipients, senderConnnection ? [ senderConnnection ] : undefined);
     }

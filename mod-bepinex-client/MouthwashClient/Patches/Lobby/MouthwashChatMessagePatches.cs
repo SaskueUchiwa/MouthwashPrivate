@@ -105,26 +105,37 @@ namespace MouthwashClient.Patches.Lobby
             MouthwashChatMessageAppearance appearance = MouthwashChatMessageAppearance.Deserialize(reader);
             float pitch = reader.ReadSingle();
             bool isQuickChat = reader.ReadBoolean();
-            string content = reader.ReadString();
-
-            return new MouthwashChatMessage(uuid, alignment, appearance, pitch, content);
+            if (isQuickChat)
+            {
+                QuickChatPhraseBuilderResult content = QuickChatNetData.Deserialize(reader);
+                return new MouthwashChatMessage(uuid, alignment, appearance, pitch, true, null, content);
+            }
+            else
+            {
+                string content = reader.ReadString();
+                return new MouthwashChatMessage(uuid, alignment, appearance, pitch, false, content, null);
+            }
         }
 
         public string Uuid;
         public MouthwashChatMessageAlignment Alignment;
         public MouthwashChatMessageAppearance Appearance;
         public float Pitch;
-        public string Content;
+        public bool IsQuickChat;
+        public string? Content;
+        public QuickChatPhraseBuilderResult? QuickChatContent;
 
         private MouthwashChatMessage(string uuid, MouthwashChatMessageAlignment alignment,
-            MouthwashChatMessageAppearance appearance,
-            float pitch, string content)
+            MouthwashChatMessageAppearance appearance, float pitch, bool isQuickChat,
+            string? content, QuickChatPhraseBuilderResult? quickChatContent)
         {
             Uuid = uuid;
             Alignment = alignment;
             Appearance = appearance;
             Pitch = pitch;
+            IsQuickChat = isQuickChat;
             Content = content;
+            QuickChatContent = quickChatContent;
         }
 
         public void Serialize(MessageWriter writer)
@@ -133,8 +144,15 @@ namespace MouthwashClient.Patches.Lobby
             writer.Write((byte)Alignment);
             Appearance.Serialize(writer);
             writer.Write(Pitch);
-            writer.Write(false);
-            writer.Write(Content);
+            writer.Write(IsQuickChat);
+            if (IsQuickChat)
+            {
+                QuickChatNetData.Serialize(QuickChatContent, writer);
+            }
+            else
+            {
+                writer.Write(Content);
+            }
         }
     }
     
@@ -463,7 +481,14 @@ namespace MouthwashClient.Patches.Lobby
             bubble.maskLayer = 51 + bubble.PoolIndex;
             bubble.SetMaskLayer();
             bubble.SetName(chatMessage.Appearance.PlayerName, chatMessage.Appearance.IsDead, chatMessage.Appearance.IsVote, Color.white);
-            bubble.SetText(chatMessage.Content);
+            if (chatMessage.IsQuickChat)
+            {
+                bubble.SetText(chatMessage.QuickChatContent!.ToChatText());
+            }
+            else
+            {
+                bubble.SetText(chatMessage.Content);
+            }
             bubble.AlignChildren();
             chat.AlignAllBubbles();
             SetBodyColor(bubble.Player.cosmetics, chatMessage.Appearance.FrontColor, chatMessage.Appearance.BackColor,

@@ -23,14 +23,13 @@ import {
     PlayersVoteOutEndgameMetadata,
     RoomGameEndEvent,
     ReliablePacket,
-    RpcMessage,
-    SetInfectedMessage,
     TaskBarMode,
     PlayerCompleteTaskEvent,
     PlayerMurderEvent,
     PlayerStartMeetingEvent,
     PlayerData,
-    RoomGameReadyEvent
+    RoomGameReadyEvent,
+    PlayerSendQuickChatEvent
 } from "@skeldjs/hindenburg";
 
 import { MouthwashAuthPlugin } from "hbplugin-mouthwashgg-auth";
@@ -504,6 +503,20 @@ export class MouthwashApiPlugin extends RoomPlugin {
 
     @EventListener("player.chat")
     async onPlayerChat(ev: PlayerSendChatEvent<Room>) {
+        if (ev.message?.canceled)
+            return;
+
+        ev.message?.cancel();
+
+        const recipients = this.chatService.getStandardRecipients(ev.player);
+        const appearance = this.chatService.getStandardAppearance(ev.player, false);
+        const chatMessage = this.chatService.createMessageFor(ev.chatMessage, appearance, ev.player, recipients);
+
+        await this.chatService.broadcastMessage(chatMessage);
+    }
+
+    @EventListener("player.quickchat")
+    async onPlayerQuickChat(ev: PlayerSendQuickChatEvent<Room>) {
         if (ev.message?.canceled)
             return;
 

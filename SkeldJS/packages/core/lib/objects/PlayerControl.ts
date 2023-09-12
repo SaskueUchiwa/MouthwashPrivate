@@ -11,10 +11,10 @@ import {
     GameSettings,
     MurderPlayerMessage,
     ProtectPlayerMessage,
+    QuickChatComplexMessageData,
     QuickChatMessageData,
-    QuickChatPhraseMessageData,
     QuickChatPlayerMessageData,
-    QuickChatSentenceMessageData,
+    QuickChatSimpleMessageData,
     ReportDeadBodyMessage,
     RpcMessage,
     SendChatMessage,
@@ -1253,12 +1253,12 @@ export class PlayerControl<RoomType extends Hostable = Hostable> extends Network
     sendQuickChat(message: PlayerData|StringNames, format?: (PlayerData|StringNames)[]) {
         const quickChatMessage = typeof message === "number"
             ? format
-                ? new QuickChatSentenceMessageData(message, format.map(format => {
+                ? new QuickChatComplexMessageData(message, format.map(format => {
                     return typeof format === "number"
-                        ? format
+                        ? new QuickChatSimpleMessageData(format)
                         : new QuickChatPlayerMessageData(format.playerId!);
                 }))
-                : new QuickChatPhraseMessageData(message)
+                : new QuickChatSimpleMessageData(message)
             : new QuickChatPlayerMessageData(message.playerId!);
 
         this.emitSync(
