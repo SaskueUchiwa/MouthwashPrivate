@@ -13,4 +13,8 @@ export interface AccountServerConfig {
     }|false;
     base_account_server_url: string;
     path_prefix: string;
+    supabase: {
+        base_api_url: string;
+        service_role_token: string;
+    }|false;
 }

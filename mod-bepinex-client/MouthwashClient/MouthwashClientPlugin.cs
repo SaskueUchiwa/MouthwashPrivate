@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Net.Http;
+using System.Threading.Tasks;
 using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Unity.IL2CPP;
@@ -19,9 +20,13 @@ namespace MouthwashClient
 
         public ConfigEntry<string> ConfigName { get; private set; }
 
+        public HttpClient httpClient;
+
         public override void Load()
         {
             Harmony.PatchAll();
+
+            httpClient = new();
         }
     }
 }

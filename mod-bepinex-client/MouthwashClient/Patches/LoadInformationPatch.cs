@@ -31,7 +31,7 @@ namespace MouthwashClient.Patches
                 Reactor.Patches.ReactorVersionShower.UpdateText();
                 DataManager.Player.Account.LoginStatus = EOSManager.AccountLoginStatus.LoggedIn;
             };
-            DestroyableSingleton<AmongUsClient>.Instance.StartCoroutine(LoginService.Initialize());
+            DestroyableSingleton<AmongUsClient>.Instance.StartCoroutine(LoginService.CoInitialize());
             _onceLogin = true;
         }
     }

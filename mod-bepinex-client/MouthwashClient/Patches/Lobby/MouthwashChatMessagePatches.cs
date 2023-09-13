@@ -497,7 +497,7 @@ namespace MouthwashClient.Patches.Lobby
         }
         
         [HarmonyPatch(typeof(InnerNetClient), nameof(InnerNetClient.HandleMessage))]
-        public static class HandleGameOptionsAddDeletePatch
+        public static class HandleChatMessageAddDeletePatch
         {
             public static bool Prefix(InnerNetClient __instance,
                 [HarmonyArgument(0)] MessageReader reader, [HarmonyArgument(1)] SendOption sendOption)

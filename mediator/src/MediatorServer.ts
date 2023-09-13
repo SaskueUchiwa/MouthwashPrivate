@@ -40,7 +40,7 @@ export class MediatorServer<RouteType extends { new(...args: any[]): any }> {
         this._routeInitArgs = args;
         this.expressServer = express();
 
-        this.expressServer.use(express.json());
+        this.expressServer.use(express.json({ limit: "10mb" }));
 
         this.expressServer.use((req, res, next) => {
             res.header("Access-Control-Allow-Origin", config.crossDomains.join(", "));

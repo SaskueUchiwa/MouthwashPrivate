@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections;
-using System.IO;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading.Tasks;
 using Reactor.Utilities;
-using UnityEngine;
-using UnityEngine.Networking;
 
 namespace MouthwashClient.Services
 {
@@ -27,11 +26,11 @@ namespace MouthwashClient.Services
         [JsonPropertyName("display_name")]
         public string DisplayName { get; set; }
         [JsonPropertyName("cosmetic_hat")]
-        public int CosmeticHat { get; set; }
+        public string CosmeticHat { get; set; }
         [JsonPropertyName("cosmetic_pet")]
-        public int CosmeticPet { get; set; }
+        public string CosmeticPet { get; set; }
         [JsonPropertyName("cosmetic_skin")]
-        public int CosmeticSkin { get; set; }
+        public string CosmeticSkin { get; set; }
     }
 
     public class UserInformationWithAuthToken : UserInformation
@@ -53,15 +52,10 @@ namespace MouthwashClient.Services
         private static UserInformationWithAuthToken? _cachedUserInformation;
         public static string ErrorWhileLoggingIn = "";
 
-        public static Action<string> ErrorCallback;
+        public static System.Action<string> ErrorCallback;
         public static Action DoneCallback;
 
-        public static void ErrorPopup(string text)
-        {
-            ErrorWhileLoggingIn = text;
-        }
-        
-        public static IEnumerator Initialize()
+        public static IEnumerator CoInitialize()
         {
             _cachedUserInformation = null;
             
@@ -78,22 +72,32 @@ namespace MouthwashClient.Services
             string url = $"{Environment.GetEnvironmentVariable("MWGG_ACCOUNTS_URL")!}/api/v2/auth/check";
             PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage($"Authenticating with account server @ POST {url}");
 
-            UnityWebRequest checkAuthRequest = UnityWebRequest.Post(url, "");
-            checkAuthRequest.SetRequestHeader("Authorization", $"Bearer {userCredentials.ClientToken}");
+            HttpRequestMessage request = new()
+            {
+                Method = HttpMethod.Post,
+                Headers = { Authorization = new AuthenticationHeaderValue("Bearer", userCredentials.ClientToken) },
+                RequestUri = new Uri(url),
+                Content = new ByteArrayContent(new byte[]{ })
+            };
+            Task<HttpResponseMessage> responseTask = PluginSingleton<MouthwashClientPlugin>.Instance.httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+            if (!responseTask.IsCompleted)
+                yield return null;
 
-            yield return checkAuthRequest.SendWebRequest();
-            PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage($"Authentication status: {checkAuthRequest.result}..");
+            PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage($"Authentication status: {responseTask.Result.StatusCode}..");
             
-            if (checkAuthRequest.result != UnityWebRequest.Result.Success)
+            if (!responseTask.Result.IsSuccessStatusCode)
             {
                 ErrorCallback(
                     "Failed to get information about your login.\nMake sure you start the game through\nthe launcher.");
                 yield break;
             }
 
-            string checkAuthResponseText = checkAuthRequest.downloadHandler.text;
+            Task<string> responseContentTask = responseTask.Result.Content.ReadAsStringAsync();
+            if (!responseContentTask.IsCompleted)
+                yield return null;
+
             StandardApiResponse<UserInformationWithAuthToken>? userInformation =
-                JsonSerializer.Deserialize<StandardApiResponse<UserInformationWithAuthToken>>(checkAuthResponseText);
+                JsonSerializer.Deserialize<StandardApiResponse<UserInformationWithAuthToken>>(responseContentTask.Result);
             if (userInformation == null)
             {
                 ErrorCallback(

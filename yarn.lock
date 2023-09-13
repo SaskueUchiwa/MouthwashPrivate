@@ -5153,6 +5153,7 @@ __metadata:
     reflect-metadata: 0.1.13
     ts-node: latest
     typescript: latest
+    undici: ^5.24.0
   languageName: unknown
   linkType: soft
 
@@ -7100,7 +7101,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"undici@npm:^5.2.0":
+"undici@npm:^5.2.0, undici@npm:^5.24.0":
   version: 5.24.0
   resolution: "undici@npm:5.24.0"
   dependencies:

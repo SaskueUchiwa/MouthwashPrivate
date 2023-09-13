@@ -10,6 +10,10 @@ export interface Bundle {
     price_usd: number;
     added_at: Date;
     asset_bundle_id: string;
+    stripe_item_id: string;
+    valuation: string;
+    tags: string;
+    description: string;
 }
 
 export interface BundleItem {
@@ -32,6 +36,11 @@ export interface UserPerk {
 export interface UserPerkSettings {
     id: string;
     settings: any;
+}
+
+export interface StripeItem {
+    id: string;
+    stripe_price_id: string;
 }
 
 export class CosmeticsController {
