@@ -1,6 +1,5 @@
 import { AccountServer } from "../AccountServer";
 
-
 export interface Bundle {
     id: string;
     name: string;
@@ -69,7 +68,7 @@ export class CosmeticsController {
         return foundPerks.map(perk => ({ id: perk.perk_id, settings: perk.perk_settings })) as UserPerkSettings[];
     }
 
-    async setPlayerCosmetics(userId: string, hatId: number, petId: number, skinId: number) {
+    async setPlayerCosmetics(userId: string, hatId: string, petId: string, skinId: string) {
         const rowsUpdated = await this.server.postgresClient.query(`
             UPDATE users
             SET cosmetic_hat = $1, cosmetic_pet = $2, cosmetic_skin = $3

@@ -33,6 +33,7 @@ import {
     DisplayStartGameScreenMessage,
     DisplaySystemAnnouncementMessage,
     FetchResourceMessage,
+    FetchResponseType,
     Graphic,
     LoadHatMessage,
     LoadPetMessage,

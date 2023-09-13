@@ -109,20 +109,20 @@ export class AssetLoaderService {
                 plugin.worker.off("client.disconnect", onClientDisconnect);
             }, timeout);
             
-            function onFetchResponse(ev: ClientFetchResourceResponseEvent) {
+            function onFetchResponse(ev: ClientFetchResourceResponseEvent, removeListener: () => void) {
                 if (ev.client === connection && ev.response.responseType === FetchResponseType.Ended && ev.resourceId === assetBundle.bundleId) {
                     clearTimeout(sleep);
-                    plugin.room.off("mwgg.client.fetchresponse", onFetchResponse);
+                    removeListener();
                     plugin.worker.off("client.disconnect", onClientDisconnect);
                     resolve();
                 }
             }
 
-            function onClientDisconnect(ev: ClientDisconnectEvent) {
+            function onClientDisconnect(ev: ClientDisconnectEvent, removeListener: () => void) {
                 if (ev.client === connection) {
                     clearTimeout(sleep);
                     plugin.room.off("mwgg.client.fetchresponse", onFetchResponse);
-                    plugin.worker.off("client.disconnect", onClientDisconnect);
+                    removeListener();
                     reject(new Error("Client disconnected"));
                 }
             }

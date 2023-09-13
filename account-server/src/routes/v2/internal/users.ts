@@ -5,9 +5,9 @@ import { InvalidBodyError, UserNotFoundError } from "../../../errors";
 import { InternalController } from "../../../controllers";
 
 export const updateCosmeticsRequestValidator = ark.type({
-    cosmetic_hat: "number",
-    cosmetic_pet: "number",
-    cosmetic_skin: "number"
+    cosmetic_hat: "string",
+    cosmetic_pet: "string",
+    cosmetic_skin: "string"
 });
 
 export class UsersRoute extends BaseRoute {
