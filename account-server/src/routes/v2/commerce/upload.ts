@@ -78,7 +78,6 @@ export class UploadRoute extends BaseRoute {
         const bundleData = Buffer.from(data.bundle_data_base_64, "base64");
 
         const hash = crypto.createHash("sha256").update(bundleData).digest("hex").toUpperCase();
-        console.log(hash);
 
         const bundleMeta = {
             assetBundleId: data.base_resource_id,

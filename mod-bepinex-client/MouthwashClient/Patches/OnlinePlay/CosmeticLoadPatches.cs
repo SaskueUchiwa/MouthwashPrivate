@@ -44,6 +44,71 @@ namespace MouthwashClient.Patches.OnlinePlay
 			}
 		}
         
+        public static void UpdateMaterial(HatParent hat, HatViewData hatViewData, int colorId)
+        {
+            // Reconstructed from: HatParent.cs
+            if (hatViewData && hatViewData.AltShader)
+            {
+                hat.FrontLayer.sharedMaterial = hatViewData.AltShader;
+                if (hat.BackLayer)
+                {
+                    hat.BackLayer.sharedMaterial = hatViewData.AltShader;
+                }
+            }
+            else
+            {
+                hat.FrontLayer.sharedMaterial = DestroyableSingleton<HatManager>.Instance.DefaultShader;
+                if (hat.BackLayer)
+                {
+                    hat.BackLayer.sharedMaterial = DestroyableSingleton<HatManager>.Instance.DefaultShader;
+                }
+            }
+            PlayerMaterial.SetColors(colorId, hat.FrontLayer);
+            if (hat.BackLayer)
+            {
+	            PlayerMaterial.SetColors(colorId, hat.BackLayer);
+            }
+            hat.FrontLayer.material.SetInt(PlayerMaterial.MaskLayer, hat.matProperties.MaskLayer);
+            if (hat.BackLayer)
+            {
+	            hat.BackLayer.material.SetInt(PlayerMaterial.MaskLayer, hat.matProperties.MaskLayer);
+            }
+            PlayerMaterial.MaskType maskType = hat.matProperties.MaskType;
+            if (maskType == PlayerMaterial.MaskType.ScrollingUI)
+            {
+                if (hat.FrontLayer)
+                {
+                    hat.FrontLayer.maskInteraction = SpriteMaskInteraction.VisibleInsideMask;
+                }
+                if (hat.BackLayer)
+                {
+                    hat.BackLayer.maskInteraction = SpriteMaskInteraction.VisibleInsideMask;
+                }
+            }
+            else if (maskType == PlayerMaterial.MaskType.Exile)
+            {
+                if (hat.FrontLayer)
+                {
+                    hat.FrontLayer.maskInteraction = SpriteMaskInteraction.VisibleOutsideMask;
+                }
+                if (hat.BackLayer)
+                {
+                    hat.BackLayer.maskInteraction = SpriteMaskInteraction.VisibleOutsideMask;
+                }
+            }
+            else
+            {
+                if (hat.FrontLayer)
+                {
+                    hat.FrontLayer.maskInteraction = SpriteMaskInteraction.None;
+                }
+                if (hat.BackLayer)
+                {
+                    hat.BackLayer.maskInteraction = SpriteMaskInteraction.None;
+                }
+            }
+        }
+        
         [HarmonyPatch(typeof(HatParent), nameof(HatParent.SetHat), typeof(int))]
         public static class CosmeticSetHatNormalPatch
         {
@@ -68,9 +133,9 @@ namespace MouthwashClient.Patches.OnlinePlay
                     }
 
                     __instance.UnloadAsset();
-                    __instance.hatDataAsset = null;
+                    __instance.hatDataAsset = null;	
                     PopulateFromHatViewData(__instance, hatViewData);
-                    __instance.SetMaterialColor(color);
+                    UpdateMaterial(__instance, hatViewData, color);
                     return false;
                 }
 
@@ -102,7 +167,7 @@ namespace MouthwashClient.Patches.OnlinePlay
 			        __instance.UnloadAsset();
 			        __instance.hatDataAsset = null;
 			        PopulateFromHatViewData(__instance, hatViewData);
-			        __instance.SetMaterialColor(colorId);
+			        UpdateMaterial(__instance, hatViewData, colorId);
 			        return false;
 		        }
 

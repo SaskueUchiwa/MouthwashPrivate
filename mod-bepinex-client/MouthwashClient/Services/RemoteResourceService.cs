@@ -35,7 +35,7 @@ namespace MouthwashClient.Services
     
     public static class RemoteResourceService
     {
-        public static Dictionary<int, ResourceFetchState> ExistingResourceFetchStates = new();
+        public static Dictionary<int, ResourceFetchState?> ExistingResourceFetchStates = new();
         public static Dictionary<int, AssetBundle> LoadedAssetBundles = new();
 
         public static Dictionary<string, ScriptableObject> MockViewDataAddressable = new();
@@ -81,51 +81,57 @@ namespace MouthwashClient.Services
                 return false;
             
             LoadedAssetBundles.TryAdd(resourceId, bundle);
-            PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogWarning(
-                $"Asset names: {string.Join(", ", bundle.AllAssetNames())}");
-            TextAsset? manifestText =
-                bundle.LoadAsset<TextAsset>(bundle.AllAssetNames()
-                    .FirstOrDefault(x => x.Contains("manifest.json"), ""));
-            if (manifestText != null)
+            string manifestFilePath = bundle.AllAssetNames()
+                .FirstOrDefault(x => x.Contains("manifest.json"), "");
+            if (!string.IsNullOrEmpty(manifestFilePath))
             {
-                PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage(manifestText.text);
-                CosmeticBundleManifest? manifest = Utf8Json.JsonSerializer.Deserialize<CosmeticBundleManifest>(manifestText.text);
-                if (manifest != null)
+                TextAsset? manifestText =
+                    bundle.LoadAsset<TextAsset>(manifestFilePath);
+                if (manifestText != null)
                 {
-                    PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogWarning(
-                        $"Manifest: {manifest}");
-                    PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogWarning(
-                        $"Manifest.References: {manifest.References}");
-                    foreach (KeyValuePair<string, string> entry in manifest.References)
+                    PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage(manifestText.text);
+                    CosmeticBundleManifest? manifest = Utf8Json.JsonSerializer.Deserialize<CosmeticBundleManifest>(manifestText.text);
+                    if (manifest != null)
                     {
-                        PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogWarning(
-                            $"{entry.Key} = {entry.Value}");
-                        CosmeticData? bundleCosmeticData = bundle.LoadAsset<CosmeticData>(entry.Key);
-                        ScriptableObject? bundleCosmeticViewData = bundle.LoadAsset<ScriptableObject>(entry.Value);
-
-                        if (bundleCosmeticData == null)
+                        foreach (KeyValuePair<string, string> entry in manifest.References)
                         {
                             PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogWarning(
-                                $"Cosmetic data at {entry.Key} was null");
-                            continue;
-                        }
-                        
-                        if (bundleCosmeticViewData == null)
-                        {
-                            PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogWarning(
-                                $"Cosmetic data at {entry.Value} was null");
-                            continue;
-                        }
+                                $"{entry.Key} = {entry.Value}");
+                            CosmeticData? bundleCosmeticData = bundle.LoadAsset<CosmeticData>(entry.Key);
+                            ScriptableObject? bundleCosmeticViewData = bundle.LoadAsset<ScriptableObject>(entry.Value);
 
-                        MockViewDataAddressable.TryAdd(bundleCosmeticData.ProductId, bundleCosmeticViewData);
-                        LoadedCosmetics.TryAdd(bundleCosmeticData.ProductId, bundleCosmeticData);
-                        HatData? hatData = bundleCosmeticData.TryCast<HatData>();
-                        PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogWarning(
-                            $"Adding {bundleCosmeticData.ProductId} as a hat.. {hatData}");
-                        if (hatData != null)
-                        {
-                            hatData.Free = true;
-                            DestroyableSingleton<HatManager>.Instance.allHats = DestroyableSingleton<HatManager>.Instance.allHats.AddItem(hatData).ToArray();
+                            if (bundleCosmeticData == null)
+                            {
+                                PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogWarning(
+                                    $"Cosmetic data at {entry.Key} was null");
+                                continue;
+                            }
+                            
+                            if (bundleCosmeticViewData == null)
+                            {
+                                PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogWarning(
+                                    $"Cosmetic data at {entry.Value} was null");
+                                continue;
+                            }
+
+                            MockViewDataAddressable.TryAdd(bundleCosmeticData.ProductId, bundleCosmeticViewData);
+                            LoadedCosmetics.TryAdd(bundleCosmeticData.ProductId, bundleCosmeticData);
+                            HatData? hatData = bundleCosmeticData.TryCast<HatData>();
+                            if (hatData != null)
+                            {
+                                hatData.Free = true;
+                                DestroyableSingleton<HatManager>.Instance.allHats = DestroyableSingleton<HatManager>.Instance.allHats.AddItem(hatData).ToArray();
+                            }
+
+                            HatViewData? hatViewData = bundleCosmeticViewData.TryCast<HatViewData>();
+                            if (hatViewData != null)
+                            {
+                                if (hatViewData.AltShader != null && hatViewData.AltShader.name == "PlayerShaderLol")
+                                {
+                                    PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage($"Material Used: {hatViewData.AltShader.name}");
+                                    // hatViewData.AltShader = DestroyableSingleton<HatManager>.Instance.PlayerMaterial;
+                                }
+                            }
                         }
                     }
                 }
@@ -155,11 +161,14 @@ namespace MouthwashClient.Services
                 yield break;
             }
 
-            if (ExistingResourceFetchStates.TryGetValue(resourceId, out ResourceFetchState existingFetchState))
+            if (ExistingResourceFetchStates.TryGetValue(resourceId, out ResourceFetchState? existingFetchState))
             {
-                while (!existingFetchState.IsCompleted)
-                    yield return null;
-                yield break;
+                if (existingFetchState != null)
+                {
+                    while (!existingFetchState.IsCompleted)
+                        yield return null;
+                    yield break;
+                }
             }
 
             ResourceFetchState fetchState = new()
@@ -183,6 +192,7 @@ namespace MouthwashClient.Services
             {
                 SendFetchResourceFailed(resourceId, (int)getHashResponse.Result.StatusCode);
                 fetchState.IsCompleted = true;
+                ExistingResourceFetchStates.Remove(resourceId);
                 yield break;
             }
             Task<string> getHashResponseContent = getHashResponse.Result.Content.ReadAsStringAsync();
@@ -202,6 +212,7 @@ namespace MouthwashClient.Services
                     $"Got wrong hash '{Convert.ToHexString(hashResponse)}' vs '{Convert.ToHexString(hash)}' for resource of ID {resourceId}");
                 SendFetchResourceFailed(resourceId, FetchFailedReasons.InvalidHash);
                 fetchState.IsCompleted = true;
+                ExistingResourceFetchStates.Remove(resourceId);
                 yield break;
             }
             
@@ -220,6 +231,7 @@ namespace MouthwashClient.Services
             {
                 SendFetchResourceFailed(resourceId, (int)getContentsResponse.Result.StatusCode);
                 fetchState.IsCompleted = true;
+                ExistingResourceFetchStates.Remove(resourceId);
                 yield break;
             }
             SendFetchResourceStarted(resourceId, int.Parse(getContentsResponse.Result.Content.Headers.GetValues("Content-Length").First()));
@@ -238,12 +250,14 @@ namespace MouthwashClient.Services
                     $"Got content with wrong hash '{Convert.ToHexString(actualContentHash)}' vs '{Convert.ToHexString(hashResponse)}' for resource of ID {resourceId}");
                 SendFetchResourceFailed(resourceId, FetchFailedReasons.IncorrectHash);
                 fetchState.IsCompleted = true;
+                ExistingResourceFetchStates.Remove(resourceId);
                 yield break;
             }
             
             PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogInfo(
                 $"Successfully fetched resource of ID {resourceId} ({Convert.ToHexString(actualContentHash)})");
             fetchState.IsCompleted = true;
+            ExistingResourceFetchStates.Remove(resourceId);
             SendFetchResourceEnded(resourceId, false);
             if (!LoadResource(resourceId, getContentsResponseContent.Result, resourceType))
             {
