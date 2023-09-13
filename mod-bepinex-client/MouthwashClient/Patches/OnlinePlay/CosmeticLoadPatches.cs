@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text.RegularExpressions;
 using HarmonyLib;
 using MouthwashClient.Services;
 using PowerTools;
@@ -230,6 +231,25 @@ namespace MouthwashClient.Patches.OnlinePlay
 	        }
         }
 
-        
+        [HarmonyPatch(typeof(CosmeticData), nameof(CosmeticData.GetItemName))]
+        public static class ResolveMouthwashItemName
+        {
+	        public static bool Prefix(CosmeticData __instance, ref string __result)
+	        {
+		        if (RemoteResourceService.LoadedCosmetics.TryGetValue(__instance.ProductId, out CosmeticData? cosmeticData))
+		        {
+			        if (cosmeticData == null)
+				        return true;
+
+			        string withoutTag = cosmeticData.ProductId.Replace("mwgg_", "");
+			        string sentenceCase = Regex.Replace(withoutTag, "(?!^)[A-Z]", m => " " + m.Value);
+
+			        __result = sentenceCase;
+			        return false;
+		        }
+
+		        return true;
+	        }
+        }
     }
 }
