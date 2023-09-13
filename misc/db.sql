@@ -11,9 +11,9 @@ create table users
     game_settings  json    not null,
     email_verified boolean not null,
     display_name   varchar not null,
-    cosmetic_hat   integer,
-    cosmetic_pet   integer,
-    cosmetic_skin  integer
+    cosmetic_hat   varchar,
+    cosmetic_pet   varchar,
+    cosmetic_skin  varchar
 );
 
 alter table users
@@ -156,18 +156,44 @@ alter table user_perk
 
 create table asset_bundle
 (
-    id                uuid not null
+    id  uuid not null
         constraint asset_bundle_pk
             primary key,
-    bundle_asset_path varchar,
-    url               varchar
+    url varchar
 );
 
 alter table asset_bundle
     owner to postgres;
 
-create unique index asset_bundle_bundle_asset_path_uindex
-    on asset_bundle (bundle_asset_path);
+create table checkout_session
+(
+    id                       uuid                     not null
+        constraint checkout_session_pk
+            primary key,
+    user_id                  uuid                     not null
+        constraint checkout_session_users_id_fk
+            references users,
+    stripe_price_id          varchar                  not null,
+    bundle_id                varchar,
+    created_at               timestamp with time zone not null,
+    canceled_at              timestamp with time zone,
+    stripe_payment_intent_id varchar,
+    completed_at             timestamp with time zone
+);
+
+alter table checkout_session
+    owner to postgres;
+
+create table stripe_item
+(
+    id              uuid not null
+        constraint stripe_item_pk
+            primary key,
+    stripe_price_id varchar
+);
+
+alter table stripe_item
+    owner to postgres;
 
 create table bundle
 (
@@ -183,11 +209,24 @@ create table bundle
     added_at         timestamp with time zone not null,
     asset_bundle_id  uuid
         constraint bundle_asset_bundle_id_fk
-            references asset_bundle
+            references asset_bundle,
+    stripe_item_id   uuid
+        constraint bundle_stripe_item_id_fk
+            references stripe_item,
+    valuation        varchar                  not null,
+    tags             varchar default ''::character varying,
+    description      varchar default ''::character varying
 );
 
 alter table bundle
     owner to postgres;
+
+create index bundle_search_term_idx
+    on bundle using gin (to_tsvector('english'::regconfig,
+                                     (((name::text || ' '::text) || description::text) || ' '::text) || tags::text));
+
+create index bundle_valuation_index
+    on bundle (valuation);
 
 create table bundle_item
 (
@@ -197,10 +236,11 @@ create table bundle_item
         constraint bundle_item_bundle_id_foreign
             references bundle,
     name          varchar not null,
-    among_us_id   integer not null,
+    among_us_id   varchar not null,
     resource_path varchar not null,
     type          varchar not null,
-    resource_id   integer not null
+    resource_id   integer not null,
+    valuation     varchar not null
 );
 
 alter table bundle_item
@@ -224,3 +264,23 @@ create table user_owned_item
 
 alter table user_owned_item
     owner to postgres;
+
+create table password_reset
+(
+    id          uuid                     not null
+        constraint password_reset_pk
+            primary key,
+    user_id     uuid                     not null
+        constraint password_reset_users_id_fk
+            references users,
+    code        varchar                  not null,
+    sent_at     timestamp with time zone not null,
+    accepted_at timestamp with time zone
+);
+
+alter table password_reset
+    owner to postgres;
+
+create index password_reset_code_index
+    on password_reset (code);
+
