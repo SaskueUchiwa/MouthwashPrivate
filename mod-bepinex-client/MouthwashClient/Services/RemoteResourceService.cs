@@ -129,6 +129,9 @@ namespace MouthwashClient.Services
                                 continue;
                             }
 
+                            bundleCosmeticData.DontDestroy();
+                            bundleCosmeticViewData.DontDestroy();
+
                             PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage($"Added {bundleCosmeticData.ProductId} to mock addressable");
                             MockViewDataAddressable.TryAdd(bundleCosmeticData.ProductId, bundleCosmeticViewData);
                             LoadedCosmetics.TryAdd(bundleCosmeticData.ProductId, bundleCosmeticData);

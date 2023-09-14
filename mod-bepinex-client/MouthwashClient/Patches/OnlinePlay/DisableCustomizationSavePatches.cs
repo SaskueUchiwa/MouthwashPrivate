@@ -4,6 +4,7 @@ using AmongUs.Data.Player;
 using AmongUs.GameOptions;
 using HarmonyLib;
 using InnerNet;
+using Reactor.Utilities;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -76,9 +77,6 @@ namespace MouthwashClient.Patches.OnlinePlay
                 }
                 __instance.CmdCheckName(DataManager.Player.Customization.Name);
                 __instance.CmdCheckColor(DataManager.Player.Customization.Color);
-                __instance.RpcSetPet("pet_EmptyPet");
-                __instance.RpcSetHat("hat_NoHat");
-                __instance.RpcSetSkin("skin_None");
                 __instance.RpcSetVisor(DataManager.Player.Customization.Visor); // TODO: save visor + nameplate server-side
                 __instance.RpcSetNamePlate(DataManager.Player.Customization.NamePlate);
                 __instance.RpcSetLevel(DataManager.Player.Stats.Level);
@@ -98,7 +96,6 @@ namespace MouthwashClient.Patches.OnlinePlay
             {
                 __instance.clickKillCollider.enabled = false;
             }
-            yield break;
         }
     }
 }

@@ -116,7 +116,7 @@ namespace MouthwashClient.Patches.OnlinePlay
             public static bool Prefix(HatParent __instance, [HarmonyArgument(0)] int color)
             {
                 if (RemoteResourceService.MockViewDataAddressable.TryGetValue(__instance.Hat.ProductId,
-                        out ScriptableObject viewData))
+                        out ScriptableObject? viewData))
                 {
 	                if (viewData == null)
 		                return true;
