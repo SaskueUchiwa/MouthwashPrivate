@@ -12,6 +12,7 @@ using MouthwashClient.Enums;
 using Reactor.Utilities;
 using Reactor.Utilities.Extensions;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace MouthwashClient.Services
 {
@@ -50,12 +51,23 @@ namespace MouthwashClient.Services
             return System.IO.Path.Join(cacheDirectory, resourceId + (resourceType == ResourceType.AssetBundle ? ".bundle" : ""));
         }
 
-        public static bool TryLoadResourceFromCache(int resourceId, out byte[] contents, ResourceType resourceType)
+        public static bool TryLoadResourceFromCache(int resourceId, byte[] hash, out byte[] contents, ResourceType resourceType)
         {
             string cacheFile = GetResourceCacheFile(resourceId, resourceType);
+
             if (System.IO.File.Exists(cacheFile))
             {
-                contents = System.IO.File.ReadAllBytes(cacheFile);
+                byte[] unverifiedContents = System.IO.File.ReadAllBytes(cacheFile);
+                SHA256Managed sha256Managed = new();
+                byte[] contentsHash = sha256Managed.ComputeHash(unverifiedContents);
+                if (!hash.SequenceEqual(contentsHash)) // if it's a different hash then the cache is invalidated
+                {
+                    System.IO.File.Delete(cacheFile);
+                    contents = new byte[] { };
+                    return false;
+                }
+
+                contents = unverifiedContents;
                 return true;
             }
 
@@ -72,14 +84,20 @@ namespace MouthwashClient.Services
 
         public static bool LoadAssetBundle(int resourceId, byte[] contents)
         {
+            PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage(
+                $"Checking asset bundle for {resourceId}.");
             if (LoadedAssetBundles.ContainsKey(resourceId))
                 return true;
+            
+            PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage(
+                $"Loading asset bundle from memory for {resourceId}.");
             
             AssetBundle bundle = AssetBundle.LoadFromMemory(contents);
 
             if (bundle == null)
                 return false;
-            
+                        
+            bundle.LoadAllAssets();
             LoadedAssetBundles.TryAdd(resourceId, bundle);
             string manifestFilePath = bundle.AllAssetNames()
                 .FirstOrDefault(x => x.Contains("manifest.json"), "");
@@ -89,14 +107,11 @@ namespace MouthwashClient.Services
                     bundle.LoadAsset<TextAsset>(manifestFilePath);
                 if (manifestText != null)
                 {
-                    PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage(manifestText.text);
                     CosmeticBundleManifest? manifest = Utf8Json.JsonSerializer.Deserialize<CosmeticBundleManifest>(manifestText.text);
                     if (manifest != null)
                     {
                         foreach (KeyValuePair<string, string> entry in manifest.References)
                         {
-                            PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogWarning(
-                                $"{entry.Key} = {entry.Value}");
                             CosmeticData? bundleCosmeticData = bundle.LoadAsset<CosmeticData>(entry.Key);
                             ScriptableObject? bundleCosmeticViewData = bundle.LoadAsset<ScriptableObject>(entry.Value);
 
@@ -106,7 +121,7 @@ namespace MouthwashClient.Services
                                     $"Cosmetic data at {entry.Key} was null");
                                 continue;
                             }
-                            
+
                             if (bundleCosmeticViewData == null)
                             {
                                 PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogWarning(
@@ -114,25 +129,17 @@ namespace MouthwashClient.Services
                                 continue;
                             }
 
+                            PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage($"Added {bundleCosmeticData.ProductId} to mock addressable");
                             MockViewDataAddressable.TryAdd(bundleCosmeticData.ProductId, bundleCosmeticViewData);
                             LoadedCosmetics.TryAdd(bundleCosmeticData.ProductId, bundleCosmeticData);
                             HatData? hatData = bundleCosmeticData.TryCast<HatData>();
                             if (hatData != null)
                             {
-                                hatData.Free = true;
                                 DestroyableSingleton<HatManager>.Instance.allHats = DestroyableSingleton<HatManager>.Instance.allHats.AddItem(hatData).ToArray();
                             }
-
-                            HatViewData? hatViewData = bundleCosmeticViewData.TryCast<HatViewData>();
-                            if (hatViewData != null)
-                            {
-                                if (hatViewData.AltShader != null && hatViewData.AltShader.name == "PlayerShaderLol")
-                                {
-                                    PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage($"Material Used: {hatViewData.AltShader.name}");
-                                    // hatViewData.AltShader = DestroyableSingleton<HatManager>.Instance.PlayerMaterial;
-                                }
-                            }
                         }
+
+                        DestroyableSingleton<HatManager>.Instance.GetUnlockedHats();
                     }
                 }
             }
@@ -145,13 +152,31 @@ namespace MouthwashClient.Services
             if (resourceType == ResourceType.AssetBundle) return LoadAssetBundle(resourceId, contents);
             return false;
         }
+
+        public static bool IsResourceLoaded(int resourceId, ResourceType resourceType)
+        {
+            if (resourceType == ResourceType.AssetBundle) return LoadedAssetBundles.ContainsKey(resourceId);
+            return false;
+        }
         
         public static IEnumerator CoFetchResourceAtLocationAndVerify(int resourceId, string location, byte[] hash, ResourceType resourceType)
         {
-            if (TryLoadResourceFromCache(resourceId, out byte[] contents, resourceType))
+            PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage(
+                $"Server asked for resource of ID {resourceId}.");
+            
+            if (IsResourceLoaded(resourceId, resourceType))
+            {
+                PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage(
+                    $"Resource of ID {resourceId} already loaded.");
+                SendFetchResourceEnded(resourceId, true);
+                yield break;
+            }
+
+            if (TryLoadResourceFromCache(resourceId, hash, out byte[] contents, resourceType))
             {
                 PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogInfo(
                     $"Resource of ID {resourceId} was retrieved from cache successfully.");
+                yield return null;
                 if (!LoadResource(resourceId, contents, resourceType))
                 {
                     PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogError(
@@ -264,7 +289,8 @@ namespace MouthwashClient.Services
                 PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogError(
                     $"Failed to load resource of ID {resourceId} ({resourceType})");
             }
-            LoadResource(resourceId, getContentsResponseContent.Result, resourceType);
+
+            AddResourceToCache(resourceId, getContentsResponseContent.Result, resourceType);
         }
         
         public static class FetchFailedReasons {

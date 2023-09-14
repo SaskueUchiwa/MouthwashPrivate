@@ -17,9 +17,9 @@ export interface Bundle {
 
 export interface BundleItem {
     id: string;
-    bundle_id: number;
+    bundle_id: string;
     name: string;
-    among_us_id: number;
+    among_us_id: string;
     resource_path: number;
     type: "HAT"|"PET";
     resource_id: number;

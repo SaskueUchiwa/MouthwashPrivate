@@ -115,13 +115,9 @@ namespace MouthwashClient.Patches.OnlinePlay
         {
             public static bool Prefix(HatParent __instance, [HarmonyArgument(0)] int color)
             {
-	            PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogWarning(
-		            $"Setting hat {__instance.Hat.name}");
                 if (RemoteResourceService.MockViewDataAddressable.TryGetValue(__instance.Hat.ProductId,
                         out ScriptableObject viewData))
                 {
-	                PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogWarning(
-		                $"Is Mouthwash hat");
 	                if (viewData == null)
 		                return true;
 	                
@@ -149,8 +145,9 @@ namespace MouthwashClient.Patches.OnlinePlay
         {
 	        public static bool Prefix(HatParent __instance, [HarmonyArgument(0)] int colorId)
 	        {
-		        PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogWarning(
-			        $"Setting idle animation {__instance.Hat}");
+		        if (__instance.Hat == null)
+			        return false;
+		        
 		        if (RemoteResourceService.MockViewDataAddressable.TryGetValue(__instance.Hat.ProductId,
 			            out ScriptableObject viewData))
 		        {
@@ -181,8 +178,6 @@ namespace MouthwashClient.Patches.OnlinePlay
         {
 	        public static bool Prefix(CosmeticsCache._CoAddHat_d__12 __instance, ref bool __result)
 	        {
-		        PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogWarning(
-			        $"Cancelling add hat if {__instance.id} is in remote resource loaded cosmetics");
 		        if (RemoteResourceService.LoadedCosmetics.TryGetValue(__instance.id, out CosmeticData? cosmeticData))
 		        {
 			        if (cosmeticData == null)
@@ -202,8 +197,6 @@ namespace MouthwashClient.Patches.OnlinePlay
         {
 	        public static bool Prefix(CosmeticsCache __instance, ref HatViewData __result, [HarmonyArgument(0)] string id)
 	        {
-		        PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogWarning(
-			        $"Getting cached hat {id}");
 		        if (RemoteResourceService.LoadedCosmetics.TryGetValue(id, out CosmeticData? cosmeticData))
 		        {
 			        if (cosmeticData == null)

@@ -41,9 +41,6 @@ export class CosmeticsService {
         const clientUser = await this.plugin.authApi.getConnectionUser(connection);
         if (!clientUser) return;
 
-        const ownedCosmeticIdsSet = new Set(clientUser.owned_cosmetics.map(cosmetic => cosmetic.id));
-
-        const messages: (LoadHatMessage|LoadPetMessage)[] = [];
         const promises = [];
         const recipLoadedCosmetics = this.getLoadedCosmetics(connection);
         for (const [ cosmeticId, loadedCosmetic ] of this.roomLoadedCosmetics) {
@@ -53,11 +50,7 @@ export class CosmeticsService {
             const assetBundle = await AssetBundle.loadFromUrl(loadedCosmetic.asset_bundle_url, false);
             await this.plugin.assetLoader.assertLoaded(connection, assetBundle);
 
-            promises.push(this.plugin.assetLoader.waitForLoaded(connection, assetBundle).then(() => {
-                messages.push(loadedCosmetic.type === "HAT"
-                    ? new LoadHatMessage(loadedCosmetic.among_us_id, loadedCosmetic.resource_id, ownedCosmeticIdsSet.has(loadedCosmetic.id))
-                    : new LoadPetMessage(loadedCosmetic.among_us_id, loadedCosmetic.resource_id, ownedCosmeticIdsSet.has(loadedCosmetic.id)));
-            }).catch(() => {}));
+            promises.push(this.plugin.assetLoader.waitForLoaded(connection, assetBundle).catch(() => {}));
 
             recipLoadedCosmetics.set(loadedCosmetic.id, {
                 id: loadedCosmetic.id,
@@ -69,14 +62,7 @@ export class CosmeticsService {
                 is_owned: false
             });
         }
-
         await Promise.all(promises);
-        const sendPromises = [];
-        const chunkedMessages = chunkArr(messages, 20);
-        for (const chunk of chunkedMessages) {
-            sendPromises.push(connection.sendPacket(new ReliablePacket(connection.getNextNonce(), chunk)));
-        }
-        await Promise.all(sendPromises);
     }
 
     async loadClientCosmeticsToRoom(client: Connection) {
@@ -109,11 +95,7 @@ export class CosmeticsService {
                 const assetBundle = await AssetBundle.loadFromUrl(ownedCosmetic.asset_bundle_url, false);
                 await this.plugin.assetLoader.assertLoaded(connection, assetBundle);
 
-                promises.push(this.plugin.assetLoader.waitForLoaded(connection, assetBundle).then(() => {
-                    messages.push(ownedCosmetic.type === "HAT"
-                        ? new LoadHatMessage(ownedCosmetic.among_us_id, ownedCosmetic.resource_id, client === connection)
-                        : new LoadPetMessage(ownedCosmetic.among_us_id, ownedCosmetic.resource_id, client === connection));
-                }).catch(() => {}));
+                promises.push(this.plugin.assetLoader.waitForLoaded(connection, assetBundle).catch(() => {}));
                         
                 this.roomLoadedCosmetics.set(ownedCosmetic.id, {
                     id: ownedCosmetic.id,
@@ -127,15 +109,6 @@ export class CosmeticsService {
             }
         }
         await Promise.all(promises);
-
-        const sendPromises = [];
-        for (const [ connection, messages ] of connectionMessages) {
-            const chunkedMessages = chunkArr(messages, 20);
-            for (const chunk of chunkedMessages) {
-                sendPromises.push(connection.sendPacket(new ReliablePacket(connection.getNextNonce(), chunk)));
-            }
-        }
-        await Promise.all(sendPromises);
     }
 
     async updatePlayerCosmetics(client: Connection, playerControl: PlayerControl) {
@@ -143,7 +116,7 @@ export class CosmeticsService {
         
         const clientUser = await this.plugin.authApi.getConnectionUser(client);
         if (!clientUser) return;
-        
+
         if (playerControl) {
             playerControl.setHat(clientUser.cosmetic_hat);
             playerControl.setPet(clientUser.cosmetic_pet);

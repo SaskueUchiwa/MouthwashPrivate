@@ -30,6 +30,11 @@ namespace MouthwashClient.Patches
                 DestroyableSingleton<EOSManager>.Instance.HideCallbackWaitAnim();
                 Reactor.Patches.ReactorVersionShower.UpdateText();
                 DataManager.Player.Account.LoginStatus = EOSManager.AccountLoginStatus.LoggedIn;
+                DataManager.Player.customization.hat = LoginService.GetLoginInformation().CosmeticHat;
+                DataManager.Player.customization.pet = LoginService.GetLoginInformation().CosmeticPet;
+                DataManager.Player.customization.skin = LoginService.GetLoginInformation().CosmeticSkin;
+                DestroyableSingleton<AmongUsClient>.Instance.StartCoroutine(CosmeticOwnershipService
+                    .CoLoadOwnedCosmetics());
             };
             DestroyableSingleton<AmongUsClient>.Instance.StartCoroutine(LoginService.CoInitialize());
             _onceLogin = true;

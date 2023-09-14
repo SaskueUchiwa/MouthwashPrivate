@@ -40,7 +40,6 @@ namespace MouthwashClient.Services
         public static LoginUserCredentials? GetLoginUserCredentials()
         {
             string? loginToken = Environment.GetEnvironmentVariable("MWGG_LOGIN_TOKEN");
-            PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage($"Login token: {loginToken}");
             if (loginToken == null)
             {
                 return null;
