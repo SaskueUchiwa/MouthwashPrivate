@@ -12,7 +12,6 @@ using MouthwashClient.Enums;
 using Reactor.Utilities;
 using Reactor.Utilities.Extensions;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
 namespace MouthwashClient.Services
 {
@@ -290,7 +289,7 @@ namespace MouthwashClient.Services
                     $"Failed to load resource of ID {resourceId} ({resourceType})");
             }
 
-            if (sendResponse) AddResourceToCache(resourceId, getContentsResponseContent.Result, resourceType);
+            AddResourceToCache(resourceId, getContentsResponseContent.Result, resourceType);
         }
         
         public static class FetchFailedReasons {

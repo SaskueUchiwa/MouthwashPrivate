@@ -6,6 +6,8 @@ using Hazel;
 using InnerNet;
 using Innersloth.Assets;
 using MouthwashClient.Enums;
+using MouthwashClient.Patches.OnlinePlay;
+using MouthwashClient.Services;
 using Reactor.Utilities;
 using UnityEngine;
 
@@ -179,80 +181,19 @@ namespace MouthwashClient.Patches.Lobby
 
             return poolBehavior.Get<ChatBubble>();
         }
-
-        public static void SetCustomColors(Renderer rend, Color frontColor, Color backColor, Color visorColor)
+        
+        public static T? GetMockAddressableCosmetic<T>(AddressableAsset<T>? addressableAsset, string cosmeticId) where T : ScriptableObject
         {
-            // Reconstructed from: PlayerMaterial.cs
-            rend.material.SetColor("_BackColor", backColor);
-            rend.material.SetColor("_BodyColor", frontColor);
-            rend.material.SetColor("_VisorColor", visorColor);
-        }
+            if (RemoteResourceService.MockViewDataAddressable.TryGetValue(cosmeticId, 
+                    out ScriptableObject? viewData))
+            {
+                if (viewData == null)
+                    return null;
 
-        public static void SetHatAppearanceColors(HatParent hat, Color frontColor, Color backColor, Color visorColor)
-        {
-            // Reconstructed from: HatParent.cs
-            AddressableAsset<HatViewData> addressableAsset = hat.hatDataAsset;
-            HatViewData hatViewData = (addressableAsset != null) ? addressableAsset.GetAsset() : null;
-            if (hatViewData && hatViewData.AltShader)
-            {
-                hat.FrontLayer.sharedMaterial = hatViewData.AltShader;
-                if (hat.BackLayer)
-                {
-                    hat.BackLayer.sharedMaterial = hatViewData.AltShader;
-                }
+                return viewData.TryCast<T>();
             }
-            else
-            {
-                hat.FrontLayer.sharedMaterial = DestroyableSingleton<HatManager>.Instance.DefaultShader;
-                if (hat.BackLayer)
-                {
-                    hat.BackLayer.sharedMaterial = DestroyableSingleton<HatManager>.Instance.DefaultShader;
-                }
-            }
-            SetCustomColors(hat.FrontLayer, frontColor, backColor, visorColor);
-            if (hat.BackLayer)
-            {
-                SetCustomColors(hat.BackLayer, frontColor, backColor, visorColor);
-            }
-            hat.FrontLayer.material.SetInt(PlayerMaterial.MaskLayer, hat.matProperties.MaskLayer);
-            if (hat.BackLayer)
-            {
-                hat.BackLayer.material.SetInt(PlayerMaterial.MaskLayer, hat.matProperties.MaskLayer);
-            }
-            PlayerMaterial.MaskType maskType = hat.matProperties.MaskType;
-            if (maskType == PlayerMaterial.MaskType.ScrollingUI)
-            {
-                if (hat.FrontLayer)
-                {
-                    hat.FrontLayer.maskInteraction = SpriteMaskInteraction.VisibleInsideMask;
-                }
-                if (hat.BackLayer)
-                {
-                    hat.BackLayer.maskInteraction = SpriteMaskInteraction.VisibleInsideMask;
-                }
-            }
-            else if (maskType == PlayerMaterial.MaskType.Exile)
-            {
-                if (hat.FrontLayer)
-                {
-                    hat.FrontLayer.maskInteraction = SpriteMaskInteraction.VisibleOutsideMask;
-                }
-                if (hat.BackLayer)
-                {
-                    hat.BackLayer.maskInteraction = SpriteMaskInteraction.VisibleOutsideMask;
-                }
-            }
-            else
-            {
-                if (hat.FrontLayer)
-                {
-                    hat.FrontLayer.maskInteraction = SpriteMaskInteraction.None;
-                }
-                if (hat.BackLayer)
-                {
-                    hat.BackLayer.maskInteraction = SpriteMaskInteraction.None;
-                }
-            }
+
+            return addressableAsset?.GetAsset();
         }
 
         public static void SetSkinAppearanceColors(SkinLayer skin, Color frontColor, Color backColor, Color visorColor)
@@ -292,7 +233,7 @@ namespace MouthwashClient.Patches.Lobby
             skin.layer.material.SetInt(PlayerMaterial.MaskLayer, skin.matProperties.MaskLayer);
             if (skin.skin && skin.skin.MatchPlayerColor)
             {
-                SetCustomColors(skin.layer, frontColor, backColor, visorColor);
+                CosmeticLoadPatches.SetCustomColors(skin.layer, frontColor, backColor, visorColor);
             }
         }
 
@@ -326,14 +267,30 @@ namespace MouthwashClient.Patches.Lobby
             // Reconstructed from: HatParent.cs
             HatData foundHat = DestroyableSingleton<HatManager>.Instance.GetHatById(chatMessage.Appearance.PlayerHat);
             bubble.Player.cosmetics.hat.Hat = foundHat;
-            bubble.Player.cosmetics.hat.UnloadAsset();
-            bubble.Player.cosmetics.hat.hatDataAsset = bubble.Player.cosmetics.hat.Hat.CreateAddressableAsset();
-            bubble.Player.cosmetics.hat.hatDataAsset.LoadAsync(new Action(delegate
+            if (RemoteResourceService.MockViewDataAddressable.TryGetValue(bubble.Player.cosmetics.hat.Hat.ProductId, out ScriptableObject? viewData))
             {
-                bubble.Player.cosmetics.hat.PopulateFromHatViewData();
-                SetHatAppearanceColors(bubble.Player.cosmetics.hat, chatMessage.Appearance.FrontColor,
+                if (viewData == null)
+                    return;
+                
+                HatViewData? hatViewData = viewData.TryCast<HatViewData>();
+                if (hatViewData == null)
+                    return;
+                
+                CosmeticLoadPatches.PopulateFromHatViewData(bubble.Player.cosmetics.hat, hatViewData);
+                CosmeticLoadPatches.UpdateHatMaterial(bubble.Player.cosmetics.hat, hatViewData, true, chatMessage.Appearance.FrontColor,
                     chatMessage.Appearance.BackColor, chatMessage.Appearance.VisorColor);
-            }));
+            }
+            else
+            {
+                bubble.Player.cosmetics.hat.UnloadAsset();
+                bubble.Player.cosmetics.hat.hatDataAsset = bubble.Player.cosmetics.hat.Hat.CreateAddressableAsset();
+                bubble.Player.cosmetics.hat.hatDataAsset.LoadAsync(new Action(delegate
+                {
+                    bubble.Player.cosmetics.hat.PopulateFromHatViewData();
+                    CosmeticLoadPatches.UpdateHatMaterial(bubble.Player.cosmetics.hat, bubble.Player.cosmetics.hat.hatDataAsset.GetAsset(), true, chatMessage.Appearance.FrontColor,
+                        chatMessage.Appearance.BackColor, chatMessage.Appearance.VisorColor);
+                }));
+            }
         }
 
         public static void SetSkin(string skinId, ChatBubble? bubble, MouthwashChatMessage chatMessage)
@@ -404,14 +361,14 @@ namespace MouthwashClient.Patches.Lobby
             if (cosmetics.currentBodySprite != null)
             {
                 cosmetics.currentBodySprite.BodySprite.material.SetInt(PlayerMaterial.MaskLayer, cosmetics.bodyMatProperties.MaskLayer);
-                SetCustomColors(cosmetics.currentBodySprite.BodySprite, frontColor, backColor, visorColor);
+                CosmeticLoadPatches.SetCustomColors(cosmetics.currentBodySprite.BodySprite, frontColor, backColor, visorColor);
                 if (cosmetics.currentBodySprite != null && cosmetics.currentBodySprite.PettingHand != null)
                 {
-                    SetCustomColors(cosmetics.currentBodySprite.PettingHand.HandSprite, frontColor, backColor, visorColor);
+                    CosmeticLoadPatches.SetCustomColors(cosmetics.currentBodySprite.PettingHand.HandSprite, frontColor, backColor, visorColor);
                 }
                 if (cosmetics.currentBodySprite != null && cosmetics.currentBodySprite.HandHat != null)
                 {
-                    SetCustomColors(cosmetics.currentBodySprite.HandHat, frontColor, backColor, visorColor);
+                    CosmeticLoadPatches.SetCustomColors(cosmetics.currentBodySprite.HandHat, frontColor, backColor, visorColor);
                 }
             }
         }
@@ -454,13 +411,13 @@ namespace MouthwashClient.Patches.Lobby
             foreach (SpriteRenderer handRend in bubble.Player.Hands)
             {
                 handRend.sharedMaterial = CosmeticsLayer.GetBodyMaterial(PlayerMaterial.MaskType.ScrollingUI);
-                SetCustomColors(handRend, chatMessage.Appearance.FrontColor, chatMessage.Appearance.BackColor,
+                CosmeticLoadPatches.SetCustomColors(handRend, chatMessage.Appearance.FrontColor, chatMessage.Appearance.BackColor,
                     chatMessage.Appearance.VisorColor);
             }
             foreach (SpriteRenderer otherBodyRend in bubble.Player.OtherBodySprites)
             {
                 otherBodyRend.sharedMaterial = CosmeticsLayer.GetBodyMaterial(PlayerMaterial.MaskType.ScrollingUI);
-                SetCustomColors(otherBodyRend, chatMessage.Appearance.FrontColor, chatMessage.Appearance.BackColor,
+                CosmeticLoadPatches.SetCustomColors(otherBodyRend, chatMessage.Appearance.FrontColor, chatMessage.Appearance.BackColor,
                     chatMessage.Appearance.VisorColor);
             }
             if (chatMessage.Appearance.IsDead)
@@ -475,11 +432,11 @@ namespace MouthwashClient.Patches.Lobby
                 bubble.Player.cosmetics.SetHatColor(Palette.White);
                 bubble.Player.cosmetics.SetVisorAlpha(Palette.White.a);
             }
+            bubble.maskLayer = 51 + bubble.PoolIndex;
+            bubble.SetMaskLayer();
             SetHat(bubble, chatMessage);
             SetVisor(bubble, chatMessage);
             bubble.Player.ToggleName(false);
-            bubble.maskLayer = 51 + bubble.PoolIndex;
-            bubble.SetMaskLayer();
             bubble.SetName(chatMessage.Appearance.PlayerName, chatMessage.Appearance.IsDead, chatMessage.Appearance.IsVote, Color.white);
             if (chatMessage.IsQuickChat)
             {

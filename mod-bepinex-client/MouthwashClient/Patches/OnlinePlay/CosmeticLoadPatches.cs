@@ -10,9 +10,8 @@ namespace MouthwashClient.Patches.OnlinePlay
 {
     public static class CosmeticLoadPatches
     {
-        public static void PopulateFromHatViewData(HatParent hatParent, HatViewData asset)
+	    public static void PopulateFromHatViewData(HatParent hatParent, HatViewData asset)
 		{
-			hatParent.UpdateMaterial();
 			SpriteAnimNodeSync spriteAnimNodeSync = hatParent.SpriteSyncNode ?? hatParent.GetComponent<SpriteAnimNodeSync>();
 			if (spriteAnimNodeSync)
 			{
@@ -44,8 +43,16 @@ namespace MouthwashClient.Patches.OnlinePlay
 				hatParent.BackLayer.enabled = false;
 			}
 		}
+
+	    public static void SetCustomColors(Renderer rend, Color frontColor, Color backColor, Color visorColor)
+	    {
+		    // Reconstructed from: PlayerMaterial.cs
+		    rend.material.SetColor("_BackColor", backColor);
+		    rend.material.SetColor("_BodyColor", frontColor);
+		    rend.material.SetColor("_VisorColor", visorColor);
+	    }
         
-        public static void UpdateMaterial(HatParent hat, HatViewData hatViewData, int colorId)
+        public static void UpdateHatMaterial(HatParent hat, HatViewData hatViewData, bool setColors, Color frontColor, Color backColor, Color visorColor)
         {
             // Reconstructed from: HatParent.cs
             if (hatViewData && hatViewData.AltShader)
@@ -64,10 +71,14 @@ namespace MouthwashClient.Patches.OnlinePlay
                     hat.BackLayer.sharedMaterial = DestroyableSingleton<HatManager>.Instance.DefaultShader;
                 }
             }
-            PlayerMaterial.SetColors(colorId, hat.FrontLayer);
-            if (hat.BackLayer)
+
+            if (setColors)
             {
-	            PlayerMaterial.SetColors(colorId, hat.BackLayer);
+	            SetCustomColors(hat.FrontLayer, frontColor, backColor, visorColor);
+	            if (hat.BackLayer)
+	            {
+		            SetCustomColors(hat.BackLayer, frontColor, backColor, visorColor);
+	            }
             }
             hat.FrontLayer.material.SetInt(PlayerMaterial.MaskLayer, hat.matProperties.MaskLayer);
             if (hat.BackLayer)
@@ -132,7 +143,16 @@ namespace MouthwashClient.Patches.OnlinePlay
                     __instance.UnloadAsset();
                     __instance.hatDataAsset = null;	
                     PopulateFromHatViewData(__instance, hatViewData);
-                    UpdateMaterial(__instance, hatViewData, color);
+                    if (color >= 0 && color < Palette.PlayerColors.Length)
+                    {
+	                    UpdateHatMaterial(__instance, hatViewData, true, Palette.PlayerColors[color],
+		                    Palette.ShadowColors[color], Palette.VisorColor);
+                    }
+                    else
+                    {
+	                    UpdateHatMaterial(__instance, hatViewData, false, Color.white, Color.white, Color.white);
+                    }
+
                     return false;
                 }
 
@@ -165,7 +185,15 @@ namespace MouthwashClient.Patches.OnlinePlay
 			        __instance.UnloadAsset();
 			        __instance.hatDataAsset = null;
 			        PopulateFromHatViewData(__instance, hatViewData);
-			        UpdateMaterial(__instance, hatViewData, colorId);
+			        if (colorId >= 0 && colorId < Palette.PlayerColors.Length)
+			        {
+				        UpdateHatMaterial(__instance, hatViewData, true, Palette.PlayerColors[colorId],
+					        Palette.ShadowColors[colorId], Palette.VisorColor);
+			        }
+			        else
+			        {
+				        UpdateHatMaterial(__instance, hatViewData, false, Color.white, Color.white, Color.white);
+			        }
 			        return false;
 		        }
 
