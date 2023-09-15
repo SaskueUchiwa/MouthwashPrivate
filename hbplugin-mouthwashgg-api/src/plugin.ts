@@ -318,8 +318,15 @@ export class MouthwashApiPlugin extends RoomPlugin {
         const connectionUser = await this.authApi.getConnectionUser(connection);
         if (!connectionUser) return;
 
-        if (connectionUser.cosmetic_hat !== playerInfo.defaultOutfit.hatId || connectionUser.cosmetic_pet !== playerInfo.defaultOutfit.petId || connectionUser.cosmetic_skin !== playerInfo.defaultOutfit.skinId) {
-            await this.authApi.updateUserCosmetics(connectionUser.id, playerInfo.defaultOutfit.hatId, playerInfo.defaultOutfit.petId, playerInfo.defaultOutfit.skinId);
+        if (
+            connectionUser.cosmetic_hat !== playerInfo.defaultOutfit.hatId
+            || connectionUser.cosmetic_pet !== playerInfo.defaultOutfit.petId
+            || connectionUser.cosmetic_skin !== playerInfo.defaultOutfit.skinId
+            || connectionUser.cosmetic_color !== playerInfo.defaultOutfit.color
+            || connectionUser.cosmetic_visor !== playerInfo.defaultOutfit.visorId
+            || connectionUser.cosmetic_nameplate !== playerInfo.defaultOutfit.nameplateId
+        ) {
+            await this.authApi.updateUserCosmetics(connectionUser.id, playerInfo.defaultOutfit.hatId, playerInfo.defaultOutfit.petId, playerInfo.defaultOutfit.skinId, playerInfo.defaultOutfit.color, playerInfo.defaultOutfit.visorId, playerInfo.defaultOutfit.nameplateId);
         }
     }
 

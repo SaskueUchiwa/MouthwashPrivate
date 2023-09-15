@@ -102,11 +102,17 @@ export class UploadRoute extends BaseRoute {
         `, [ data.file_uuid ]);
         const existingBundle = existingBundles[0];
 
-        if (!existingBundle) {
+        if (existingBundle) {
             await this.server.postgresClient.query(`
-                INSERT INTO asset_bundle(id, url)
-                VALUES ($1, $2)
-            `, [ data.file_uuid, this.server.config.supabase.base_api_url + "/storage/v1/object/public/MouthwashAssets/" + data.file_uuid ]);
+                UPDATE asset_bundle
+                SET hash = $2
+                WHERE id = $1
+            `, [ data.file_uuid, hash ]);
+        } else {
+            await this.server.postgresClient.query(`
+                INSERT INTO asset_bundle(id, url, hash)
+                VALUES ($1, $2, $3)
+            `, [ data.file_uuid, this.server.config.supabase.base_api_url + "/storage/v1/object/public/MouthwashAssets/" + data.file_uuid, hash ]);
         }
 
         transaction.respondJson({});

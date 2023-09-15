@@ -31,6 +31,12 @@ namespace MouthwashClient.Services
         public string CosmeticPet { get; set; }
         [JsonPropertyName("cosmetic_skin")]
         public string CosmeticSkin { get; set; }
+        [JsonPropertyName("cosmetic_color")]
+        public int CosmeticColor { get; set; }
+        [JsonPropertyName("cosmetic_visor")]
+        public string CosmeticVisor { get; set; }
+        [JsonPropertyName("cosmetic_nameplate")]
+        public string CosmeticNameplate { get; set; }
     }
 
     public class UserInformationWithAuthToken : UserInformation
@@ -52,7 +58,7 @@ namespace MouthwashClient.Services
         private static UserInformationWithAuthToken? _cachedUserInformation;
         public static string ErrorWhileLoggingIn = "";
 
-        public static System.Action<string> ErrorCallback;
+        public static Action<string> ErrorCallback;
         public static Action DoneCallback;
 
         public static IEnumerator CoInitialize()

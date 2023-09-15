@@ -1273,7 +1273,6 @@ export class PlayerControl<RoomType extends Hostable = Hostable> extends Network
     }
 
     private async _handleSetHat(rpc: SetHatMessage) {
-        console.log("%s set hat to %s", this.player, rpc.hatId);
         const playerInfo = this.room.gameData?.players.get(this.playerId);
         const defaultOutfit = playerInfo?.defaultOutfit;
         const oldHat = defaultOutfit?.hatId;
@@ -1300,7 +1299,6 @@ export class PlayerControl<RoomType extends Hostable = Hostable> extends Network
     }
 
     private _rpcSetHat(hatId: string) {
-        console.log("%s set hat to %s", this.player, hatId);
         this.room.messageStream.push(
             new RpcMessage(
                 this.netId,

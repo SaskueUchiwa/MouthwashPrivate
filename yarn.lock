@@ -5136,6 +5136,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "mouthwash-account-server@workspace:account-server"
   dependencies:
+    "@skeldjs/constant": "workspace:*"
     "@types/bcrypt": ^5.0.0
     "@types/express": ^4.17.13
     "@types/node": latest

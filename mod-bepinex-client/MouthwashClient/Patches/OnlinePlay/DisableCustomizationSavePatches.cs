@@ -70,15 +70,11 @@ namespace MouthwashClient.Patches.OnlinePlay
                 PlayerControl.LocalPlayer = __instance;
                 if (Camera.main != null) Camera.main.GetComponent<FollowerCamera>().SetTarget(__instance);
                 __instance.SetName(DataManager.Player.Customization.Name, false);
-                __instance.SetColor((int)DataManager.Player.Customization.Color);
                 if (Application.targetFrameRate > 30)
                 {
                     __instance.MyPhysics.EnableInterpolation();
                 }
                 __instance.CmdCheckName(DataManager.Player.Customization.Name);
-                __instance.CmdCheckColor(DataManager.Player.Customization.Color);
-                __instance.RpcSetVisor(DataManager.Player.Customization.Visor); // TODO: save visor + nameplate server-side
-                __instance.RpcSetNamePlate(DataManager.Player.Customization.NamePlate);
                 __instance.RpcSetLevel(DataManager.Player.Stats.Level);
                 yield return null;
             }

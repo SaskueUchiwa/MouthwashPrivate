@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using AmongUs.Data;
 using AmongUs.Data.Player;
 using HarmonyLib;
@@ -25,6 +27,21 @@ namespace MouthwashClient.Patches
                 DestroyableSingleton<DiscordManager>.Instance.discordPopup.Show($"<size=150%>{s}</size>");
                 DestroyableSingleton<EOSManager>.Instance.HideCallbackWaitAnim();
             };
+            CosmeticOwnershipService.DoneCallback += () =>
+            {
+                HashSet<int> LoadedAssetBundleResourceIds = new();
+                foreach (OwnedBundleItem ownedItem in CosmeticOwnershipService.OwnedBundleItems)
+                {
+                    if (LoadedAssetBundleResourceIds.Contains(ownedItem.AssetBundleBaseResourceId))
+                        continue;
+
+                    DestroyableSingleton<AmongUsClient>.Instance.StartCoroutine(
+                        RemoteResourceService.CoFetchResourceAtLocationAndVerify(ownedItem.AssetBundleBaseResourceId,
+                            ownedItem.AssetBundleUrl,
+                            Convert.FromHexString(ownedItem.AssetBundleHash), ResourceType.AssetBundle, false));
+                    LoadedAssetBundleResourceIds.Add(ownedItem.AssetBundleBaseResourceId);
+                }
+            };
             LoginService.DoneCallback += () =>
             {
                 DestroyableSingleton<EOSManager>.Instance.HideCallbackWaitAnim();
@@ -33,6 +50,9 @@ namespace MouthwashClient.Patches
                 DataManager.Player.customization.hat = LoginService.GetLoginInformation().CosmeticHat;
                 DataManager.Player.customization.pet = LoginService.GetLoginInformation().CosmeticPet;
                 DataManager.Player.customization.skin = LoginService.GetLoginInformation().CosmeticSkin;
+                DataManager.Player.customization.colorID = (byte)LoginService.GetLoginInformation().CosmeticColor;
+                DataManager.Player.customization.visor = LoginService.GetLoginInformation().CosmeticVisor;
+                DataManager.Player.customization.namePlate = LoginService.GetLoginInformation().CosmeticNameplate;
                 DestroyableSingleton<AmongUsClient>.Instance.StartCoroutine(CosmeticOwnershipService
                     .CoLoadOwnedCosmetics());
             };

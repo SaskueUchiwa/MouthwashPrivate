@@ -21,6 +21,9 @@ export interface UserAccountModel {
     cosmetic_hat: string;
     cosmetic_pet: string;
     cosmetic_skin: string;
+    cosmetic_color: number;
+    cosmetic_visor: string;
+    cosmetic_nameplate: string;
 }
 
 export interface UserSessionModel {
@@ -222,11 +225,14 @@ export class MouthwashAuthPlugin extends WorkerPlugin {
         }
     }
 
-    async updateUserCosmetics(clientId: string, hatId: string, petId: string, skinId: string) {
+    async updateUserCosmetics(clientId: string, hatId: string, petId: string, skinId: string, colorId: number, visorId: string, nameplateId: string) {
         await this.make("PUT", "/api/v2/internal/users/" + clientId + "/cosmetics", {
             cosmetic_hat: hatId,
             cosmetic_pet: petId,
-            cosmetic_skin: skinId
+            cosmetic_skin: skinId,
+            cosmetic_color: colorId,
+            cosmetic_visor: visorId,
+            cosmetic_nameplate: nameplateId
         });
 
         const cachedUser = this.getCached(this.userCache, clientId);

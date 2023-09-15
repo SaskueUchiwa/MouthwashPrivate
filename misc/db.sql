@@ -1,19 +1,22 @@
 create table users
 (
-    id             uuid    not null
+    id                 uuid    not null
         constraint user_pkey
             primary key,
-    email          varchar not null,
-    password_hash  varchar not null,
-    created_at     timestamp with time zone,
-    banned_until   timestamp with time zone,
-    muted_until    timestamp with time zone,
-    game_settings  json    not null,
-    email_verified boolean not null,
-    display_name   varchar not null,
-    cosmetic_hat   varchar,
-    cosmetic_pet   varchar,
-    cosmetic_skin  varchar
+    email              varchar not null,
+    password_hash      varchar not null,
+    created_at         timestamp with time zone,
+    banned_until       timestamp with time zone,
+    muted_until        timestamp with time zone,
+    game_settings      json    not null,
+    email_verified     boolean not null,
+    display_name       varchar not null,
+    cosmetic_hat       varchar not null,
+    cosmetic_pet       varchar not null,
+    cosmetic_skin      varchar not null,
+    cosmetic_color     integer not null,
+    cosmetic_visor     varchar not null,
+    cosmetic_nameplate varchar not null
 );
 
 alter table users
@@ -156,10 +159,11 @@ alter table user_perk
 
 create table asset_bundle
 (
-    id  uuid not null
+    id   uuid    not null
         constraint asset_bundle_pk
             primary key,
-    url varchar
+    url  varchar not null,
+    hash varchar not null
 );
 
 alter table asset_bundle

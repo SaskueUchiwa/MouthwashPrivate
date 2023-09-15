@@ -7,7 +7,10 @@ import { InternalController } from "../../../controllers";
 export const updateCosmeticsRequestValidator = ark.type({
     cosmetic_hat: "string",
     cosmetic_pet: "string",
-    cosmetic_skin: "string"
+    cosmetic_skin: "string",
+    cosmetic_color: "number",
+    cosmetic_visor: "string",
+    cosmetic_nameplate: "string"
 });
 
 export class UsersRoute extends BaseRoute {
@@ -36,7 +39,7 @@ export class UsersRoute extends BaseRoute {
         const { data, problems } = updateCosmeticsRequestValidator(transaction.getBody());
         if (data === undefined) throw new InvalidBodyError(problems);
 
-        const success = await this.server.cosmeticsController.setPlayerCosmetics(user_id, data.cosmetic_hat, data.cosmetic_pet, data.cosmetic_skin);
+        const success = await this.server.cosmeticsController.setPlayerCosmetics(user_id, data.cosmetic_hat, data.cosmetic_pet, data.cosmetic_skin, data.cosmetic_color, data.cosmetic_visor, data.cosmetic_nameplate);
         if (!success) throw new UserNotFoundError({ id: user_id });
 
         transaction.respondJson({});

@@ -17,10 +17,13 @@ export interface User {
     cosmetic_hat: string;
     cosmetic_pet: string;
     cosmetic_skin: string;
+    cosmetic_color: number;
+    cosmetic_visor: string;
+    cosmetic_nameplate: string;
 }
 
-export type SafeUser = DeclareSafeKeys<User, "id"|"email"|"created_at"|"banned_until"|"muted_until"|"email_verified"|"display_name"|"cosmetic_hat"|"cosmetic_pet"|"cosmetic_skin">;
-export type PublicUser = DeclareSafeKeys<SafeUser, "id"|"created_at"|"display_name"|"cosmetic_hat"|"cosmetic_pet"|"cosmetic_skin">;
+export type SafeUser = DeclareSafeKeys<User, "id"|"email"|"created_at"|"banned_until"|"muted_until"|"email_verified"|"display_name"|"cosmetic_hat"|"cosmetic_pet"|"cosmetic_skin"|"cosmetic_color"|"cosmetic_visor"|"cosmetic_nameplate">;
+export type PublicUser = DeclareSafeKeys<SafeUser, "id"|"created_at"|"display_name"|"cosmetic_hat"|"cosmetic_pet"|"cosmetic_skin"|"cosmetic_color"|"cosmetic_visor"|"cosmetic_nameplate">;
 
 export interface EmailVerification {
     id: string;

@@ -2,7 +2,7 @@ import { writable } from "svelte/store";
 
 export const loading = Symbol("loading");
 export const unavailable = Symbol("unavailable");
-export const accountUrl = writable("https://accounts.mouthwash.midlight.studio");
+export const accountUrl = writable("http://localhost:8000");
 
 export interface UserLogin {
     id: string;
@@ -14,9 +14,12 @@ export interface UserLogin {
     display_name: string;
     client_token: string;
     logged_in_at: string;
-    cosmetic_hat: number;
-    cosmetic_pet: number;
-    cosmetic_skin: number;
+    cosmetic_hat: string;
+    cosmetic_pet: string;
+    cosmetic_skin: string;
+    cosmetic_color: number;
+    cosmetic_visor: string;
+    cosmetic_nameplate: string;
 }
 
 export interface GameLobbyInfo {

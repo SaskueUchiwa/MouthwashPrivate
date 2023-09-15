@@ -22,9 +22,11 @@ namespace MouthwashClient.Patches.OnlinePlay
                         string resourceLocation = reader.ReadString();
                         byte[] bytes = reader.ReadBytes(32);
                         uint resourceType = reader.ReadByte();
+                        PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage(
+                            $"Server asked for resource of ID {resourceId}.");
                         __instance.StartCoroutine(
                             RemoteResourceService.CoFetchResourceAtLocationAndVerify(resourceId, resourceLocation,
-                                bytes, (ResourceType)resourceType));
+                                bytes, (ResourceType)resourceType, true));
                         return false;
                 }
 

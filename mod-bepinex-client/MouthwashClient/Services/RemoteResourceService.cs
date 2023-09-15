@@ -162,16 +162,13 @@ namespace MouthwashClient.Services
             return false;
         }
         
-        public static IEnumerator CoFetchResourceAtLocationAndVerify(int resourceId, string location, byte[] hash, ResourceType resourceType)
+        public static IEnumerator CoFetchResourceAtLocationAndVerify(int resourceId, string location, byte[] hash, ResourceType resourceType, bool sendResponse)
         {
-            PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage(
-                $"Server asked for resource of ID {resourceId}.");
-            
             if (IsResourceLoaded(resourceId, resourceType))
             {
                 PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage(
                     $"Resource of ID {resourceId} already loaded.");
-                SendFetchResourceEnded(resourceId, true);
+                if (sendResponse) SendFetchResourceEnded(resourceId, true);
                 yield break;
             }
 
@@ -185,7 +182,7 @@ namespace MouthwashClient.Services
                     PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogError(
                         $"Failed to load resource of ID {resourceId} ({resourceType})");
                 }
-                SendFetchResourceEnded(resourceId, true);
+                if (sendResponse) SendFetchResourceEnded(resourceId, true);
                 yield break;
             }
 
@@ -218,7 +215,7 @@ namespace MouthwashClient.Services
                 yield return null;
             if (!getHashResponse.Result.IsSuccessStatusCode)
             {
-                SendFetchResourceFailed(resourceId, (int)getHashResponse.Result.StatusCode);
+                if (sendResponse) SendFetchResourceFailed(resourceId, (int)getHashResponse.Result.StatusCode);
                 fetchState.IsCompleted = true;
                 ExistingResourceFetchStates.Remove(resourceId);
                 yield break;
@@ -238,7 +235,7 @@ namespace MouthwashClient.Services
             {
                 PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogError(
                     $"Got wrong hash '{Convert.ToHexString(hashResponse)}' vs '{Convert.ToHexString(hash)}' for resource of ID {resourceId}");
-                SendFetchResourceFailed(resourceId, FetchFailedReasons.InvalidHash);
+                if (sendResponse) SendFetchResourceFailed(resourceId, FetchFailedReasons.InvalidHash);
                 fetchState.IsCompleted = true;
                 ExistingResourceFetchStates.Remove(resourceId);
                 yield break;
@@ -257,12 +254,12 @@ namespace MouthwashClient.Services
                 yield return null;
             if (!getContentsResponse.Result.IsSuccessStatusCode)
             {
-                SendFetchResourceFailed(resourceId, (int)getContentsResponse.Result.StatusCode);
+                if (sendResponse) SendFetchResourceFailed(resourceId, (int)getContentsResponse.Result.StatusCode);
                 fetchState.IsCompleted = true;
                 ExistingResourceFetchStates.Remove(resourceId);
                 yield break;
             }
-            SendFetchResourceStarted(resourceId, int.Parse(getContentsResponse.Result.Content.Headers.GetValues("Content-Length").First()));
+            if (sendResponse) SendFetchResourceStarted(resourceId, int.Parse(getContentsResponse.Result.Content.Headers.GetValues("Content-Length").First()));
             Task<byte[]> getContentsResponseContent = getContentsResponse.Result.Content.ReadAsByteArrayAsync();
             while (!getContentsResponseContent.IsCompleted)
                 yield return null;
@@ -276,7 +273,7 @@ namespace MouthwashClient.Services
             {
                 PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogError(
                     $"Got content with wrong hash '{Convert.ToHexString(actualContentHash)}' vs '{Convert.ToHexString(hashResponse)}' for resource of ID {resourceId}");
-                SendFetchResourceFailed(resourceId, FetchFailedReasons.IncorrectHash);
+                if (sendResponse) SendFetchResourceFailed(resourceId, FetchFailedReasons.IncorrectHash);
                 fetchState.IsCompleted = true;
                 ExistingResourceFetchStates.Remove(resourceId);
                 yield break;
@@ -286,14 +283,14 @@ namespace MouthwashClient.Services
                 $"Successfully fetched resource of ID {resourceId} ({Convert.ToHexString(actualContentHash)})");
             fetchState.IsCompleted = true;
             ExistingResourceFetchStates.Remove(resourceId);
-            SendFetchResourceEnded(resourceId, false);
+            if (sendResponse) SendFetchResourceEnded(resourceId, false);
             if (!LoadResource(resourceId, getContentsResponseContent.Result, resourceType))
             {
                 PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogError(
                     $"Failed to load resource of ID {resourceId} ({resourceType})");
             }
 
-            AddResourceToCache(resourceId, getContentsResponseContent.Result, resourceType);
+            if (sendResponse) AddResourceToCache(resourceId, getContentsResponseContent.Result, resourceType);
         }
         
         public static class FetchFailedReasons {

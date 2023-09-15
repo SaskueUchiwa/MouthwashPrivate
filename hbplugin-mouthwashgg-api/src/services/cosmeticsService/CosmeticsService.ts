@@ -121,6 +121,9 @@ export class CosmeticsService {
             playerControl.setHat(clientUser.cosmetic_hat);
             playerControl.setPet(clientUser.cosmetic_pet);
             playerControl.setSkin(clientUser.cosmetic_skin);
+            playerControl.setColor(clientUser.cosmetic_color);
+            playerControl.setVisor(clientUser.cosmetic_visor);
+            playerControl.setNameplate(clientUser.cosmetic_nameplate);
         }
     }
 
