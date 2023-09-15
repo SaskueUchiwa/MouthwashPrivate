@@ -70,6 +70,7 @@ namespace MouthwashClient.Patches.OnlinePlay
                 PlayerControl.LocalPlayer = __instance;
                 if (Camera.main != null) Camera.main.GetComponent<FollowerCamera>().SetTarget(__instance);
                 __instance.SetName(DataManager.Player.Customization.Name, false);
+                __instance.SetColor(DataManager.Player.Customization.Color);
                 if (Application.targetFrameRate > 30)
                 {
                     __instance.MyPhysics.EnableInterpolation();
