@@ -358,7 +358,7 @@ export class MouthwashApiPlugin extends RoomPlugin {
         const connection = ev.room.connections.get(ev.player.clientId);
         if (!connection) return;
 
-        const connectionUser = await this.authApi.getConnectionUser(connection);
+        const connectionUser = await this.authApi.getConnectionUser(connection, true);
         if (!connectionUser) {
             await connection.disconnect("Invalid login");
             return;

@@ -163,11 +163,10 @@ export class MouthwashAuthPlugin extends WorkerPlugin {
         }
     }
 
-    async getUser(clientId: string) {
+    async getUser(clientId: string, invalidateCache = false) {
         const cachedUser = this.getCached(this.userCache, clientId);
-        if (cachedUser) {
+        if (cachedUser && !invalidateCache)
             return cachedUser;
-        }
 
         const res = await this.make<InternalUserInformationModel>("GET", "/api/v2/internal/users/" + clientId);
         if (res.success) {
@@ -178,24 +177,23 @@ export class MouthwashAuthPlugin extends WorkerPlugin {
         return undefined;
     }
 
-    async getConnectionUser(connection: Connection) {
+    async getConnectionUser(connection: Connection, invalidateCache = false) {
         const cachedUser = this.connectionUserCache.get(connection);
 
-        if (!cachedUser) {
-            const cachedSession = this.connectionSessionCache.get(connection);
-            if (!cachedSession)
-                return undefined;
+        if (cachedUser && !invalidateCache)
+            return cachedUser;
 
-            const user = await this.getUser(cachedSession.user_id);
-            if (!user) {
-                return undefined;
-            }
+        const cachedSession = this.connectionSessionCache.get(connection);
+        if (!cachedSession)
+            return undefined;
 
-            this.connectionUserCache.set(connection, user);
-            return user;
+        const user = await this.getUser(cachedSession.user_id, invalidateCache);
+        if (!user) {
+            return undefined;
         }
 
-        return cachedUser;
+        this.connectionUserCache.set(connection, user);
+        return user;
     }
 
     async getSession(clientId: string) {
