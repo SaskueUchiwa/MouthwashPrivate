@@ -9,7 +9,8 @@ import {
     SpawnType,
     Vector2,
     Connection,
-    PlayerData
+    PlayerData,
+    BaseRpcMessage
 } from "@skeldjs/hindenburg";
 
 import { EdgeAlignment } from "../enums";
@@ -57,6 +58,11 @@ export class CustomNetworkTransformGeneric extends Networkable<CustomNetworkTran
         writer.packed(this.attachedToNetId);
         this.dirtyBit = 0;
         return true;
+    }
+
+    async HandleRpc(rpc: BaseRpcMessage) {
+        if (rpc instanceof SnapToMessage)
+            this._setPosition(rpc.position);
     }
 
     private async _rpcSetPosition(position: Vector2, sendTo?: PlayerData[]) {

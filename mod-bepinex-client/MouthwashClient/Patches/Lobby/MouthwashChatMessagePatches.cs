@@ -15,7 +15,7 @@ namespace MouthwashClient.Patches.Lobby
 {
     public class MouthwashChatMessageAppearance
     {
-        static Color ReadColor(MessageReader reader)
+        public static Color ReadColor(MessageReader reader)
         {
             byte r = reader.ReadByte();
             byte g = reader.ReadByte();
@@ -24,7 +24,7 @@ namespace MouthwashClient.Patches.Lobby
             return new Color(r / 255f, g / 255f, b / 255f, a / 255f);
         }
 
-        static void WriteColor(MessageWriter writer, Color color)
+        public static void WriteColor(MessageWriter writer, Color color)
         {
             writer.Write((byte)(color.r * 255f));
             writer.Write((byte)(color.g * 255f));

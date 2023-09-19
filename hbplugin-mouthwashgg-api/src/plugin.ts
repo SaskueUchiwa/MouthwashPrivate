@@ -29,7 +29,8 @@ import {
     PlayerStartMeetingEvent,
     PlayerData,
     RoomGameReadyEvent,
-    PlayerSendQuickChatEvent
+    PlayerSendQuickChatEvent,
+    Vector2
 } from "@skeldjs/hindenburg";
 
 import { MouthwashAuthPlugin } from "hbplugin-mouthwashgg-auth";
@@ -423,7 +424,7 @@ export class MouthwashApiPlugin extends RoomPlugin {
             this.gameOptions.syncFor([ connection ]);
         }
         
-        await this.cameraControllers.spawnCameraFor(ev.player);
+        const camera = await this.cameraControllers.spawnCameraFor(ev.player);
         
         const waitingForPlayerIdx = this.room.actingHostWaitingFor.indexOf(ev.player);
         if (waitingForPlayerIdx > -1) {
