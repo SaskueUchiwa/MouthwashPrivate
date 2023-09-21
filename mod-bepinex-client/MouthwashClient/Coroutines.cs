@@ -138,6 +138,8 @@ namespace MouthwashClient
                         next = new Il2CppEnumeratorWrapper(nextAsEnumerator);
                     break;
                 }
+                case IEnumerator:
+                    break;
                 default:
                     nextFrameCoroutines.Add(enumerator);
                     return;
@@ -161,7 +163,7 @@ namespace MouthwashClient
             public IEnumerator Coroutine;
         }
 
-        private class WebRequestEnumeratorWrapper : IEnumerator {
+        public class WebRequestEnumeratorWrapper : IEnumerator {
             private readonly UnityWebRequestAsyncOperation _webRequest;
 
             public WebRequestEnumeratorWrapper(UnityWebRequestAsyncOperation webRequest) {
@@ -181,7 +183,7 @@ namespace MouthwashClient
             public object Current => _webRequest.progress;
         }
 
-        private class Il2CppEnumeratorWrapper : IEnumerator {
+        public class Il2CppEnumeratorWrapper : IEnumerator {
             private readonly Il2CppSystem.Collections.IEnumerator _il2CPPEnumerator;
 
             public Il2CppEnumeratorWrapper(Il2CppSystem.Collections.IEnumerator il2CppEnumerator) {

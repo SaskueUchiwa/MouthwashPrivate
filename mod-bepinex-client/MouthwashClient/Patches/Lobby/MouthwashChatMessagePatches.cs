@@ -479,12 +479,11 @@ namespace MouthwashClient.Patches.Lobby
                         {
                             AddChatMessage(chatMessage);
                         }
-
-                        break;
+                        return false;
                     }
                     case (int)MouthwashRootPacketTag.DeleteChatMessage:
                     {
-                        break;
+                        return false;
                     }
                 }
                 return true;

@@ -7,6 +7,7 @@ using HarmonyLib;
 using MouthwashClient.Services;
 using Reactor;
 using Reactor.Utilities;
+using TMPro;
 using UnityEngine;
 
 namespace MouthwashClient
@@ -25,7 +26,6 @@ namespace MouthwashClient
         public override void Load()
         {
             Harmony.PatchAll();
-
             httpClient = new();
         }
     }

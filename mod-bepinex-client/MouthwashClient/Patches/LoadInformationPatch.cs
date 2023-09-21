@@ -1,12 +1,12 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using AmongUs.Data;
-using AmongUs.Data.Player;
 using HarmonyLib;
 using MouthwashClient.Services;
 using Reactor.Utilities;
-using UnityEngine;
+using TMPro;
 using UnityEngine.SceneManagement;
 
 namespace MouthwashClient.Patches
@@ -58,6 +58,26 @@ namespace MouthwashClient.Patches
             };
             DestroyableSingleton<AmongUsClient>.Instance.StartCoroutine(LoginService.CoInitialize());
             _onceLogin = true;
+
+            DestroyableSingleton<AmongUsClient>.Instance.StartCoroutine(LoadEmojis());
+        }
+        
+        public static IEnumerator LoadEmojis()
+        {
+            Task loadEmbeddedResourcesTask = EmbedResourcesService.CoLoadEmbeddedResources();
+            while (!loadEmbeddedResourcesTask.IsCompleted)
+                yield return null;
+            
+            if (EmbedResourcesService.LoadedAssetBundle != null)
+            {
+                TMP_Settings.instance.m_defaultSpriteAsset = EmbedResourcesService.LoadedAssetBundle.LoadAsset("Assets/Mods/Emojis/Emotes.asset")
+                    .Cast<TMP_SpriteAsset>();
+                PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage("Successfully loaded emojis!");
+            }
+            else
+            {
+                PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogError("Could not load TextMeshPro emojis");
+            }
         }
     }
 

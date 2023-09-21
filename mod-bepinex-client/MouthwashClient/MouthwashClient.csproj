@@ -22,6 +22,10 @@
         <PackageReference Include="BepInEx.IL2CPP.MSBuild" Version="2.0.1" PrivateAssets="all" ExcludeAssets="runtime" />
         <PackageReference Include="Utf8Json" Version="1.3.7" />
     </ItemGroup>
+    
+    <ItemGroup>
+        <EmbeddedResource Include="mouthwashresources" />
+    </ItemGroup>
 
     <Target Name="Copy" AfterTargets="Build" Condition="'$(AmongUs)' != ''">
         <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(AmongUs)/BepInEx/plugins/" UseSymboliclinksIfPossible="true" />

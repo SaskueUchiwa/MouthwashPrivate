@@ -30,7 +30,8 @@ import {
     PlayerData,
     RoomGameReadyEvent,
     PlayerSendQuickChatEvent,
-    Vector2
+    RoomAssignRolesEvent,
+    CrewmateRole
 } from "@skeldjs/hindenburg";
 
 import { MouthwashAuthPlugin } from "hbplugin-mouthwashgg-auth";
@@ -72,7 +73,8 @@ import {
     AssetReference,
     TargettableService,
     AssetBundleIds,
-    ButtonSpawnInfo
+    ButtonSpawnInfo,
+    Crewmate
 } from "./services";
 
 import {
@@ -591,12 +593,6 @@ export class MouthwashApiPlugin extends RoomPlugin {
             }
             await Promise.all(promises);
         }
-
-        sleep(500).then(async () => {
-            const roleAssignments = this.roleService.getRoleAssignments(this.gamemode?.getRoleCounts() || []);
-            const ev = await this.room.emit(new GamemodeBeforeRolesAssignedEvent(roleAssignments));
-            await this.roleService.assignAllRoles(ev.alteredRolesAssigned);
-        });
     }
 
     getEndgamePlayers() {
@@ -609,6 +605,13 @@ export class MouthwashApiPlugin extends RoomPlugin {
             }
         }
         return players;
+    }
+
+    @EventListener("room.assignroles") // we assign our own roles!
+    onRoomAssignRoles(ev: RoomAssignRolesEvent<Room>) {
+        for (const [ player ] of ev.roleAssignments) {
+            ev.setAssignment(player, CrewmateRole /* skeldjs/among us crewmate role */);
+        }
     }
 
     @EventListener("room.endgameintent")
@@ -860,7 +863,6 @@ export class MouthwashApiPlugin extends RoomPlugin {
             );
         }
         await Promise.all(promises);
-
         await this.room.emit(new GamemodeGameEndEvent(this.room, endGameScreens));
 
         await Promise.all([
@@ -874,6 +876,10 @@ export class MouthwashApiPlugin extends RoomPlugin {
     async onRoomGameReady(ev: RoomGameReadyEvent) {
         const { totalTasks, completeTasks, players } = this.computeTaskCounts();
         await Promise.all(players.map(player => this.hudService.setTaskCounts(player, totalTasks, completeTasks)));
+
+        const roleAssignments = this.roleService.getRoleAssignments(this.gamemode?.getRoleCounts() || []);
+        const ev2 = await this.room.emit(new GamemodeBeforeRolesAssignedEvent(roleAssignments));
+        await this.roleService.assignAllRoles(ev2.alteredRolesAssigned);
     }
 
     computeTaskCounts(): { totalTasks: number; completeTasks: number; players: PlayerData<Room>[] } {
