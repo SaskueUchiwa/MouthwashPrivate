@@ -83,8 +83,6 @@ export class AccountsRoute extends BaseRoute {
         const session = await this.server.sessionsController.validateAuthorization(transaction);
         const ownedItems = await this.server.cosmeticsController.getAllCosmeticItemsOwnedByUser(session.user_id);
 
-        console.log(ownedItems);
-
         transaction.respondJson(ownedItems);
     }
 
@@ -108,11 +106,11 @@ export class AccountsRoute extends BaseRoute {
             ownedItemMap.set(item.among_us_id, item);
         }
 
-        if (!amongUsHatsOfficial.has(data.cosmetic_hat)) this.assertHasItemOfType(ownedItemMap, data.cosmetic_hat, "HAT");
-        if (!amongUsPetsOfficial.has(data.cosmetic_pet)) this.assertHasItemOfType(ownedItemMap, data.cosmetic_pet, "PET");
-        if (!amongUsSkinsOfficial.has(data.cosmetic_skin)) this.assertHasItemOfType(ownedItemMap, data.cosmetic_skin, "SKIN");
-        if (!amongUsVisorsOfficial.has(data.cosmetic_visor)) this.assertHasItemOfType(ownedItemMap, data.cosmetic_visor, "VISOR");
-        if (!amongUsNameplatesOfficial.has(data.cosmetic_nameplate)) this.assertHasItemOfType(ownedItemMap, data.cosmetic_nameplate, "NAMEPLATE");
+        if (!amongUsHatsOfficial.has(data.cosmetic_hat) && data.cosmetic_hat !== "missing") this.assertHasItemOfType(ownedItemMap, data.cosmetic_hat, "HAT");
+        if (!amongUsPetsOfficial.has(data.cosmetic_pet) && data.cosmetic_pet !== "missing") this.assertHasItemOfType(ownedItemMap, data.cosmetic_pet, "PET");
+        if (!amongUsSkinsOfficial.has(data.cosmetic_skin) && data.cosmetic_skin !== "missing") this.assertHasItemOfType(ownedItemMap, data.cosmetic_skin, "SKIN");
+        if (!amongUsVisorsOfficial.has(data.cosmetic_visor) && data.cosmetic_visor !== "missing") this.assertHasItemOfType(ownedItemMap, data.cosmetic_visor, "VISOR");
+        if (!amongUsNameplatesOfficial.has(data.cosmetic_nameplate) && data.cosmetic_nameplate !== "missing") this.assertHasItemOfType(ownedItemMap, data.cosmetic_nameplate, "NAMEPLATE");
     
         const success = await this.server.cosmeticsController.setPlayerCosmetics(session.user_id, data.cosmetic_hat, data.cosmetic_pet, data.cosmetic_skin, data.cosmetic_color, data.cosmetic_visor, data.cosmetic_nameplate);
         if (!success) throw new mediator.InternalServerError(new Error(`Failed to set player cosmetics? user_id=${session.user_id}`));

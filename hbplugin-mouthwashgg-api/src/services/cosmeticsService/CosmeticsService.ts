@@ -1,4 +1,4 @@
-import { Connection, PlayerControl, ReliablePacket, Room, RpcMessage, SetHatMessage, SetPetMessage, SetSkinMessage } from "@skeldjs/hindenburg";
+import { Color, Connection, Hat, Nameplate, Pet, PlayerControl, ReliablePacket, Room, RpcMessage, SetColorMessage, SetHatMessage, SetNameplateMessage, SetPetMessage, SetSkinMessage, Skin, Visor } from "@skeldjs/hindenburg";
 import { LoadHatMessage, LoadPetMessage } from "mouthwash-types";
 
 import { MouthwashApiPlugin } from "../../plugin";
@@ -118,12 +118,12 @@ export class CosmeticsService {
         if (!clientUser) return;
 
         if (playerControl) {
-            playerControl.setHat(clientUser.cosmetic_hat);
-            playerControl.setPet(clientUser.cosmetic_pet);
-            playerControl.setSkin(clientUser.cosmetic_skin);
-            playerControl.setColor(clientUser.cosmetic_color);
-            playerControl.setVisor(clientUser.cosmetic_visor);
-            playerControl.setNameplate(clientUser.cosmetic_nameplate);
+            playerControl.setHat(clientUser.cosmetic_hat === "missing" ? Hat.NoHat : clientUser.cosmetic_hat);
+            playerControl.setPet(clientUser.cosmetic_pet === "missing" ? Pet.EmptyPet : clientUser.cosmetic_pet);
+            playerControl.setSkin(clientUser.cosmetic_skin === "missing" ? Skin.None : clientUser.cosmetic_skin);
+            playerControl.setColor(clientUser.cosmetic_color === -1 ? Color.Red : clientUser.cosmetic_color);
+            playerControl.setVisor(clientUser.cosmetic_visor === "missing" ? Visor.EmptyVisor : clientUser.cosmetic_visor);
+            playerControl.setNameplate(clientUser.cosmetic_nameplate === "missing" ? Nameplate.NoPlate : clientUser.cosmetic_nameplate);
         }
     }
 
@@ -142,7 +142,10 @@ export class CosmeticsService {
             rpcs.push(
                 new RpcMessage(playerControl.netId, new SetHatMessage(playerInfo.defaultOutfit.hatId)),
                 new RpcMessage(playerControl.netId, new SetPetMessage(playerInfo.defaultOutfit.petId)),
-                new RpcMessage(playerControl.netId, new SetSkinMessage(playerInfo.defaultOutfit.skinId))
+                new RpcMessage(playerControl.netId, new SetSkinMessage(playerInfo.defaultOutfit.skinId)),
+                new RpcMessage(playerControl.netId, new SetColorMessage(playerInfo.defaultOutfit.color)),
+                new RpcMessage(playerControl.netId, new SetPetMessage(playerInfo.defaultOutfit.visorId)),
+                new RpcMessage(playerControl.netId, new SetNameplateMessage(playerInfo.defaultOutfit.nameplateId))
             );
         }
 

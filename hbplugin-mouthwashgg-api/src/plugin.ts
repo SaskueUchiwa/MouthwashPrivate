@@ -47,7 +47,8 @@ import {
     OverwriteGameOver,
     WinSound,
     DeadBodyReportEvent,
-    RGBA
+    RGBA,
+    EdgeAlignment
 } from "mouthwash-types";
 
 import {
@@ -70,7 +71,8 @@ import {
     DeadBodyService,
     AssetReference,
     TargettableService,
-    AssetBundleIds
+    AssetBundleIds,
+    ButtonSpawnInfo
 } from "./services";
 
 import {
@@ -424,7 +426,12 @@ export class MouthwashApiPlugin extends RoomPlugin {
             this.gameOptions.syncFor([ connection ]);
         }
         
-        const camera = await this.cameraControllers.spawnCameraFor(ev.player);
+        await this.cameraControllers.spawnCameraFor(ev.player);
+
+        const asset = await this.assetLoader.resolveAssetReferenceFor(new AssetReference("PggResources/Global", "Assets/Mods/OfficialAssets/KillButton.png"), [ ev.player ]);
+
+        if (!asset)
+            return undefined;
         
         const waitingForPlayerIdx = this.room.actingHostWaitingFor.indexOf(ev.player);
         if (waitingForPlayerIdx > -1) {

@@ -109,4 +109,14 @@ namespace MouthwashClient.Patches
             return false;
         }
     }
+
+    [HarmonyPatch(typeof(EOSManager._WaitForLoginFlow_d__156), nameof(EOSManager._WaitForLoginFlow_d__156.MoveNext))]
+    public static class PreventWaitEOSLoggedInPatch
+    {
+        public static bool Prefix(EOSManager._WaitForLoginFlow_d__156 __instance, ref bool __result)
+        {
+            __result = false;
+            return false;
+        }
+    }
 }

@@ -3,6 +3,7 @@ using InnerNet;
 using MouthwashClient.Enums;
 using Reactor.Utilities.Attributes;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace MouthwashClient.Net
 {
@@ -23,10 +24,34 @@ namespace MouthwashClient.Net
     [RegisterInIl2Cpp]
     public class CustomNetworkTransformGeneric : InnerNetObject
     {
-        public EdgeAlignment Alignment = EdgeAlignment.None;
+        public static readonly FloatRange XRange = new(-50f, 50f);
+        public static readonly FloatRange YRange = new(-50f, 50f);
+        public static readonly LayerMask UILayer = LayerMask.NameToLayer("UI");
+        public static readonly LayerMask DefaultLayer = LayerMask.NameToLayer("Default");
+        
+        public EdgeAlignment alignment = EdgeAlignment.None;
         public Vector2 position = Vector2.zero;
         public float zPosition;
         public uint attachedToNetId;
+
+        public AspectPosition? aspectPosition;
+        
+        public bool AbsolutePositioning { get; set; }
+
+        public void Start()
+        {
+            GetAspectPosition();
+        }
+
+        public AspectPosition GetAspectPosition()
+        {
+            if (aspectPosition != null)
+                return aspectPosition;
+            
+            aspectPosition = gameObject.EnsureComponent<AspectPosition>();
+            aspectPosition.updateAlways = true;
+            return aspectPosition;
+        }
     
         public override void HandleRpc(byte callId, MessageReader reader)
         {
@@ -47,12 +72,18 @@ namespace MouthwashClient.Net
 
         public void Update()
         {
-            
+            if (transform.parent == null && alignment == EdgeAlignment.None)
+            {
+                transform.parent = DestroyableSingleton<AmongUsClient>.Instance.allObjectsFast.TryGetValue(attachedToNetId, out InnerNetObject parentObject)
+                    ? parentObject.transform
+                    : null;
+                if (!AbsolutePositioning) transform.localPosition = new Vector3(position.x, position.y, zPosition);
+            }
         }
 
         public override bool Serialize(MessageWriter writer, bool initialState)
         {
-            writer.Write((byte)Alignment);
+            writer.Write((byte)alignment);
             NetHelpers.WriteVector2(position, writer);
             writer.Write(zPosition);
             writer.WritePacked(attachedToNetId);
@@ -61,10 +92,25 @@ namespace MouthwashClient.Net
 
         public override void Deserialize(MessageReader reader, bool initialState)
         {
-            Alignment = (EdgeAlignment)reader.ReadByte();
+            alignment = (EdgeAlignment)reader.ReadByte();
+            AspectPosition _aspectPosition = GetAspectPosition();
+            _aspectPosition.Alignment = (AspectPosition.EdgeAlignments)alignment;
             position = NetHelpers.ReadVector2(reader);
             zPosition = reader.ReadSingle();
             attachedToNetId = reader.ReadPackedUInt32();
+            if (alignment == EdgeAlignment.None)
+            {
+                _aspectPosition.enabled = false;
+                gameObject.layer = DefaultLayer;
+            }
+            else
+            {
+                transform.parent = HudManager.Instance.gameObject.transform;
+                _aspectPosition.enabled = true;
+                _aspectPosition.DistanceFromEdge = new Vector3(-position.x, -position.y, zPosition);
+                _aspectPosition.AdjustPosition();
+                gameObject.layer = UILayer;
+            }
         }
     }
 }

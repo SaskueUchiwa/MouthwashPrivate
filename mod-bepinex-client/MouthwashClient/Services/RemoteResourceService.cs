@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using HarmonyLib;
@@ -12,6 +13,7 @@ using MouthwashClient.Enums;
 using Reactor.Utilities;
 using Reactor.Utilities.Extensions;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace MouthwashClient.Services
 {
@@ -32,6 +34,13 @@ namespace MouthwashClient.Services
         [JsonPropertyName("References")]
         public Dictionary<string, string> References;
     }
+
+    [Serializable]
+    public class AssetListing
+    {
+        public uint baseId;
+        public string[] assets;
+    }
     
     public static class RemoteResourceService
     {
@@ -40,6 +49,8 @@ namespace MouthwashClient.Services
 
         public static Dictionary<string, ScriptableObject> MockViewDataAddressable = new();
         public static Dictionary<string, CosmeticData> LoadedCosmetics = new();
+
+        public static Dictionary<uint, Object> CachedAssets = new();
 
         public static string GetResourceCacheFile(int resourceId, ResourceType resourceType)
         {
@@ -145,6 +156,34 @@ namespace MouthwashClient.Services
                     }
                 }
             }
+            TextAsset? assetsListText =
+                bundle.LoadAsset<TextAsset>("Assets/AssetListing.json");
+            if (assetsListText != null)
+            {
+                AssetListing? assetListing = Utf8Json.JsonSerializer.Deserialize<AssetListing>(assetsListText.text);
+                if (assetListing != null)
+                {
+                    uint baseId = assetListing.baseId;
+                    foreach (string assetPath in assetListing.assets)
+                    {
+                        baseId++;
+                        Object? listedAsset = bundle.LoadAsset<Object>(assetPath);
+                        if (listedAsset == null)
+                        {
+                            PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogError($"Could not load listed asset in resource with ID {resourceId}: {assetPath}");
+                            continue;
+                        }
+
+                        listedAsset.DontDestroy();
+                        CachedAssets.TryAdd(baseId, listedAsset);
+                        PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage($"Added {listedAsset.name} to cached assets");
+                    }
+                }
+                else
+                {
+                    PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogError($"Could not parse asset listing for resource with ID {resourceId}: {assetsListText.text}");
+                }
+            }
 
             return true;
         }
@@ -159,6 +198,17 @@ namespace MouthwashClient.Services
         {
             if (resourceType == ResourceType.AssetBundle) return LoadedAssetBundles.ContainsKey(resourceId);
             return false;
+        }
+
+        public static T? TryGetCachedAsset<T>(uint assetId) where T : Object
+        {
+            if (CachedAssets.TryGetValue(assetId, out Object? cachedAsset))
+            {
+                if (cachedAsset == null) return null;
+                return cachedAsset.TryCast<T>();
+            }
+
+            return null;
         }
         
         public static IEnumerator CoFetchResourceAtLocationAndVerify(int resourceId, string location, byte[] hash, ResourceType resourceType, bool sendResponse)
