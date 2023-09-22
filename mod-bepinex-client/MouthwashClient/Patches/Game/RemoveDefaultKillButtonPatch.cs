@@ -7,8 +7,12 @@ namespace MouthwashClient.Patches.Game
     {
         public static bool Prefix(ActionButton __instance)
         {
-            __instance.Hide();
-            return false;
+            if (__instance == DestroyableSingleton<HudManager>.Instance.KillButton)
+            {
+                __instance.Hide();
+                return false;
+            }
+            return true;
         }
     }
 }
