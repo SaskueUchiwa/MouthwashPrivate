@@ -59,6 +59,10 @@ namespace MouthwashClient.Patches.Behaviours
             cntGeneric.SpawnId = (uint)MouthwashSpawnType.Button;
             Graphic graphic = obj.AddComponent<Graphic>();
             ClickBehaviour clickBehaviour = obj.AddComponent<ClickBehaviour>();
+            BoxCollider2D collider = obj.AddComponent<BoxCollider2D>();
+            collider.size = new Vector2(1.15f, 1.15f);
+            collider.isTrigger = true;
+            obj.AddComponent<PassiveButton>();
 
             return cntGeneric;
         }
