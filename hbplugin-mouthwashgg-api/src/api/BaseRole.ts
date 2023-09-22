@@ -66,7 +66,7 @@ export class BaseRole {
                     column * -1.4,
                     row * -1.4
                 )),
-            alignment: EdgeAlignment.RightBottom,
+            alignment: EdgeAlignment.LeftBottom,
             asset,
             maxTimer: 10,
             currentTime: 10,
