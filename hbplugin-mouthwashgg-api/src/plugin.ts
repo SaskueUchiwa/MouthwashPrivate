@@ -92,9 +92,11 @@ import {
     getRegisteredRoles,
     isMouthwashGamemode,
     MouthwashEndGames,
+    MouthwashRole,
     RoleAlignment
 } from "./api";
 import { CosmeticsService } from "./services/cosmeticsService";
+import { BasicMouthwashRole } from "./roles";
 
 const mapNameToNumber = {
     "The Skeld": GameMap.TheSkeld,
@@ -610,7 +612,7 @@ export class MouthwashApiPlugin extends RoomPlugin {
     @EventListener("room.assignroles") // we assign our own roles!
     onRoomAssignRoles(ev: RoomAssignRolesEvent<Room>) {
         for (const [ player ] of ev.roleAssignments) {
-            ev.setAssignment(player, CrewmateRole /* skeldjs/among us crewmate role */);
+            ev.setAssignment(player, BasicMouthwashRole /* skeldjs/among us crewmate role */);
         }
     }
 

@@ -13,23 +13,17 @@ namespace MouthwashClient.Services
 
         public static async Task CoLoadEmbeddedResources()
         {
-            PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage("Loading resources 1..");
             if (LoadedAssetBundle != null)
                 return;
 
-            PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage("Loading resources 2..");
             Stream? embeddedResourceStream = Assembly.GetExecutingAssembly().GetManifestResourceStream("MouthwashClient.mouthwashresources");
             if (embeddedResourceStream == null)
                 return;
             
-            PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage("Loading resources 3..");
             byte[] embeddedResourceBuffer = new byte[embeddedResourceStream.Length];
-            PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage("Loading resources 4..");
             await embeddedResourceStream.ReadAsync(embeddedResourceBuffer, 0, embeddedResourceBuffer.Length);
-            PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage("Loading resources 5..");
-            PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage($"Loading resources 5 {embeddedResourceBuffer.Length}..");
             LoadedAssetBundle = AssetBundle.LoadFromMemory(embeddedResourceBuffer);
-            PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage("Loaded!");
+            PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage("Loaded embedded resources!");
         }
     }
 }

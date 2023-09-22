@@ -4,22 +4,25 @@ using Hazel;
 using InnerNet;
 using MouthwashClient.Enums;
 using MouthwashClient.Net;
+using Reactor.Utilities;
+using Reactor.Utilities.Extensions;
 using UnityEngine;
 
 namespace MouthwashClient.Patches.Game
 {
     public static class MouthwashRolePatches
     {
+        public static RoleBehaviour? MouthwashBasicRole;
+        
         [HarmonyPatch(typeof(RoleManager), nameof(RoleManager.SetRole))]
         public static class OnlyMouthwashRolePatch
         {
-            public static RoleBehaviour? MouthwashBasicRole;
-            
             public static bool Prefix(RoleManager __instance, ref RoleTypes roleType)
             {
                 if (MouthwashBasicRole == null)
                 {
                     GameObject roleContainerObject = new GameObject();
+                    roleContainerObject.name = "Basic Mouthwash Role";
                     MouthwashBasicRole = roleContainerObject.AddComponent<MouthwashRole>();
                 }
                 roleType = RoleTypes.Crewmate;
@@ -27,17 +30,69 @@ namespace MouthwashClient.Patches.Game
                 return true;
             }
         }
-        
+
         [HarmonyPatch(typeof(InnerNetClient), nameof(InnerNetClient.HandleMessage))]
-        public static bool Prefix(InnerNetClient __instance,
-            [HarmonyArgument(0)] MessageReader reader, [HarmonyArgument(1)] SendOption sendOption)
+        public static class MouthwashSetRoleTeamHandleMessagePatch
         {
-            switch (reader.Tag)
+            public static bool Prefix(InnerNetClient __instance,
+                [HarmonyArgument(0)] MessageReader reader, [HarmonyArgument(1)] SendOption sendOption)
             {
-                case (byte)MouthwashRootPacketTag.SetRoleTeam:
-                    break;
+                PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogWarning($"Got message {reader.Tag}");
+                switch (reader.Tag)
+                {
+                    case (byte)MouthwashRootPacketTag.SetRoleTeam:
+                        if (PlayerControl.LocalPlayer == null)
+                        {
+                            PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogWarning($"Got 'SetRoleTeam', but there was no local player");
+                            return false;
+                        }
+                        if (PlayerControl.LocalPlayer.Data == null)
+                        {
+                            PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogWarning($"Got 'SetRoleTeam', but the local player had no data");
+                            return false;
+                        }
+                        if (PlayerControl.LocalPlayer.Data.Role == null)
+                        {
+                            PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogWarning($"Got 'SetRoleTeam', but the local player had no role");
+                            return false;
+                        }
+                        MouthwashRole? mouthwashRole = PlayerControl.LocalPlayer.Data.Role.TryCast<MouthwashRole>();
+                        if (mouthwashRole == null)
+                        {
+                            PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogWarning($"Could not cast {mouthwashRole} to MouthwashRole");
+                            return false;
+                        }
+
+                        if (MouthwashBasicRole == null)
+                        {
+                            GameObject roleContainerObject = new GameObject();
+                            roleContainerObject.name = "Basic Mouthwash Role";
+                            MouthwashBasicRole = roleContainerObject.AddComponent<MouthwashRole>();
+                        }
+                        if (MouthwashBasicRole != null)
+                        {
+                            MouthwashBasicRole.TeamType = (RoleTeamTypes)reader.ReadByte();
+                        }
+                        mouthwashRole.TeamType = MouthwashBasicRole.TeamType;
+                        PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage($"Your team type: {mouthwashRole.TeamType} {!DestroyableSingleton<ExileController>.InstanceExists} {Object.FindObjectOfType<MapBehaviour>() == null} {MeetingHud.Instance == null}");
+                        
+                        /*DestroyableSingleton<HudManager>.Instance.SetHudActive(
+                            !DestroyableSingleton<ExileController>.InstanceExists
+                            && Object.FindObjectOfType<MapBehaviour>() == null
+                            && MeetingHud.Instance == null);*/
+                        return false;
+                }
+                return true;
             }
-            return true;
+        }
+
+        [HarmonyPatch(typeof(HudManager), nameof(HudManager.SetHudActive), typeof(PlayerControl), typeof(RoleBehaviour), typeof(bool))]
+        public static class Debugging
+        {
+            public static void Postfix(HudManager __instance, [HarmonyArgument(2)] bool isActive)
+            {
+                PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage($"Set hud active: {isActive}");
+            }
         }
     }
 }

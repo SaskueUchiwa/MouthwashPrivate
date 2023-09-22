@@ -260,7 +260,6 @@ export class RoleService {
             }
         }
         this.playerRoles.delete(role.player);
-        this.plugin.nameService.removeEmoji
     }
 
     async removeRole(player: PlayerData) {

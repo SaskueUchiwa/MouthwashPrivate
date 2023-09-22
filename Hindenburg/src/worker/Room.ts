@@ -105,7 +105,7 @@ export class Room extends BaseRoom {
      */
     disownObject(netObject: Networkable) {
         const ownership = this.ownershipGuards.get(netObject.netId);
-        if (!ownership || ownership !== this)
+        if (ownership && ownership !== this)
             throw new Error("Cannot disown object; an object with that network id isn't owned by this room");
 
         this.ownershipGuards.delete(netObject.netId);

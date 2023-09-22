@@ -1,5 +1,5 @@
-import { PlayerData, PlayerDieEvent, Room } from "@skeldjs/hindenburg";
-import { EnumValue, KeyCode, NumberValue, Palette } from "mouthwash-types";
+import { PlayerData, PlayerDieEvent, RoleTeamType, Room } from "@skeldjs/hindenburg";
+import { EnumValue, KeyCode, NumberValue, Palette, SetRoleTeamMessage } from "mouthwash-types";
 
 import {
     BaseRole,
@@ -45,7 +45,9 @@ export class Impostor extends BaseRole {
 
     async markImpostor() {
         this.giveFakeTasks();
-        this.player.playerInfo?.setImpostor(true);
+        await this.room.broadcast([], [
+            new SetRoleTeamMessage(RoleTeamType.Impostor)
+        ], [ this.player ]);
     }
 
     async createKillButton() {

@@ -1,6 +1,7 @@
 import {
     DoorsDoorCloseEvent,
     PlayerData,
+    RoleTeamType,
     Room
 } from "@skeldjs/hindenburg";
 
@@ -24,7 +25,8 @@ import {
     HudItem,
     KeyCode,
     Palette,
-    RGBA
+    RGBA,
+    SetRoleTeamMessage
 } from "mouthwash-types";
 import { HnSOptionName } from "../gamemode";
 import { hiderColor } from "./Hider";
@@ -77,7 +79,10 @@ export class Seeker extends Impostor {
         const chatAccess = this.api.gameOptions.gameOptions.get(HnSOptionName.ChatAccess)?.getValue<EnumValue<"Off"|"Hiders Only"|"Everyone">>().selectedOption;
 
         this.api.hudService.setTaskInteraction(this.player, false);
-        this.player.playerInfo?.setImpostor(true);
+        console.log("Setting role team to %s", RoleTeamType.Impostor);
+        await this.room.broadcast([], [
+            new SetRoleTeamMessage(RoleTeamType.Impostor)
+        ], [ this.player ]);
         
         this.api.hudService.setHudItemVisibilityFor(HudItem.MapSabotageButtons, false, [ this.player ]);
         this.api.hudService.setHudItemVisibilityFor(HudItem.SabotageButton, true, [ this.player ]);

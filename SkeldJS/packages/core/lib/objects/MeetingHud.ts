@@ -578,7 +578,10 @@ export class MeetingHud<RoomType extends Hostable = Hostable> extends Networkabl
     async votingComplete(tie: boolean = false, exiled?: PlayerDataResolvable) {
         const _exiled = exiled ? this.room.resolvePlayer(exiled) : undefined;
 
-        const voteStates: PlayerVoteState<RoomType>[] = new Array(this.room.gameData!.players.size);
+        if (!this.room.gameData)
+            return;
+
+        const voteStates: PlayerVoteState<RoomType>[] = new Array(this.room.gameData.players.size);
         let i = 0;
         for (const [ playerId, state ] of this.voteStates) {
             voteStates[i] = new PlayerVoteState(this.room, playerId, state.votedForId);

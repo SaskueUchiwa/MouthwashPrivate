@@ -1,5 +1,6 @@
 import {
     PlayerData,
+    RoleTeamType,
     Room
 } from "@skeldjs/hindenburg";
 import { AnticheatExceptions, InfractionName } from "hbplugin-mouthwashgg-anti-cheat";
@@ -12,7 +13,7 @@ import {
     RoleObjective
 } from "hbplugin-mouthwashgg-api";
 
-import { Palette } from "mouthwash-types";
+import { Palette, SetRoleTeamMessage } from "mouthwash-types";
 
 export const uninfectedColor = Palette.crewmateBlue;
 
@@ -31,7 +32,9 @@ export class Uninfected extends BaseRole {
         await this.api.nameService.removeEmojiFor(this.player, this.metadata.emoji, [ this.player ]);
         await this.api.nameService.addEmoji(this.player, this.metadata.emoji);
 
-        this.player.playerInfo?.setImpostor(true); // to give sabotage button
+        await this.room.broadcast([], [
+            new SetRoleTeamMessage(RoleTeamType.Impostor)
+        ], [ this.player ]); // to give sabotage button
     }
 
     async onRemove() {}

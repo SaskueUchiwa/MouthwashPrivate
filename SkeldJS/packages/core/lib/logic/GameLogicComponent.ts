@@ -1,4 +1,4 @@
-import { EventData, EventEmitter } from "@skeldjs/events";
+import { BasicEvent, EventData, EventEmitter } from "@skeldjs/events";
 import { BaseRpcMessage } from "@skeldjs/protocol";
 import { HazelReader, HazelWriter } from "@skeldjs/util";
 import { Hostable } from "../Hostable";
@@ -11,6 +11,30 @@ export abstract class GameLogicComponent<Events extends EventData, RoomType exte
         super();
 
         this.isDirty = false;
+    }
+
+    async emit<Event extends BasicEvent>(event: Event): Promise<Event> {
+        if (this.manager) {
+            this.manager.emit(event as any);
+        }
+
+        return super.emit(event);
+    }
+
+    async emitSerial<Event extends BasicEvent>(event: Event): Promise<Event> {
+        if (this.manager) {
+            this.manager.emitSerial(event as any);
+        }
+
+        return super.emitSerial(event);
+    }
+
+    emitSync<Event extends BasicEvent>(event: Event): Event {
+        if (this.manager) {
+            this.manager.emitSync(event as any);
+        }
+
+        return super.emitSync(event);
     }
 
     FixedUpdate(deltaTime: number) {}

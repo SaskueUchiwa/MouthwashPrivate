@@ -33,7 +33,6 @@ import {
     DisplayStartGameScreenMessage,
     DisplaySystemAnnouncementMessage,
     FetchResourceMessage,
-    FetchResponseType,
     Graphic,
     LoadHatMessage,
     LoadPetMessage,
@@ -50,6 +49,7 @@ import {
     SetOpacityMessage,
     SetOutlineMessage,
     SetQrContentsMessage,
+    SetRoleTeamMessage,
     SetTaskCountsMessage,
     SoundSource
 } from "mouthwash-types";
@@ -83,6 +83,7 @@ import { MouthwashApiPlugin, ClientFetchResourceResponseEvent } from "hbplugin-m
 @RegisterMessage(LoadPetMessage)
 @RegisterMessage(AllowTaskInteractionMessage)
 @RegisterMessage(SetTaskCountsMessage)
+@RegisterMessage(SetRoleTeamMessage)
 @RegisterPrefab(SpawnType.MeetingHud, [ MouthwashMeetingHud ])
 @RegisterPrefab(MouthwashSpawnType.Button, [ CustomNetworkTransformGeneric, Graphic, ClickBehaviour ] as typeof Networkable[])
 @RegisterPrefab(MouthwashSpawnType.DeadBody, [ DeadBody, CustomNetworkTransformGeneric ] as typeof Networkable[])
