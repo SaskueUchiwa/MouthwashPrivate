@@ -136,7 +136,7 @@ namespace MouthwashClient.Patches.Game
             __instance.BackgroundBar.transform.position = position;
             __instance.BackgroundBar.material.SetColor("_Color", IntroInformation.BackgroundColor);
             __instance.TeamTitle.text = IntroInformation.TitleText;
-            __instance.TeamTitle.color = Palette.White;
+            __instance.TeamTitle.color = IntroInformation.BackgroundColor;
             int maxDepth = Mathf.CeilToInt(7.5f);
             for (int i = 0; i < teamToShow.Length; i++)
             {
@@ -156,7 +156,7 @@ namespace MouthwashClient.Patches.Game
             }
             Color c = __instance.TeamTitle.color;
             Color fade = Color.black;
-            Color impColor = Color.white;
+            Color impColor = IntroInformation.BackgroundColor;
             Vector3 titlePos = __instance.TeamTitle.transform.localPosition;
             float timer = 0f;
             while (timer < 3f)
