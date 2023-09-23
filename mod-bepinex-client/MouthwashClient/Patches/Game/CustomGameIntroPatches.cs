@@ -246,6 +246,7 @@ namespace MouthwashClient.Patches.Game
             }
             yield return new CoroutineManager.Il2CppEnumeratorWrapper(ShipStatus.Instance.PrespawnStep());
             PlayerControl.LocalPlayer.AdjustLighting();
+            DestroyableSingleton<HudManager>.Instance.SetHudActive(true);
             yield return new CoroutineManager.Il2CppEnumeratorWrapper(__instance.CoFadeFullScreen(Color.black, Color.clear, 0.2f, false));
             __instance.FullScreen.transform.localPosition = new Vector3(0f, 0f, -500f);
             __instance.IsIntroDisplayed = false;

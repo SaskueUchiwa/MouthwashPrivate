@@ -1,4 +1,6 @@
 ﻿using HarmonyLib;
+using MouthwashClient.Enums;
+using Reactor.Utilities;
 
 namespace MouthwashClient.Patches.Game
 {
@@ -9,6 +11,7 @@ namespace MouthwashClient.Patches.Game
         {
             if (__instance == DestroyableSingleton<HudManager>.Instance.KillButton)
             {
+                PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage($"Removing kill button..");
                 __instance.Hide();
                 return false;
             }

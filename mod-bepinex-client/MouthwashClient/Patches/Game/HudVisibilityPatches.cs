@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using AmongUs.GameOptions;
 using HarmonyLib;
 using Hazel;
 using InnerNet;
 using MouthwashClient.Enums;
+using Reactor.Utilities;
 using Object = UnityEngine.Object;
 
 namespace MouthwashClient.Patches.Game
@@ -13,127 +15,135 @@ namespace MouthwashClient.Patches.Game
         public static HashSet<HudItem> hiddenItems = new();
 
         [HarmonyPatch(typeof(InnerNetClient), nameof(InnerNetClient.HandleMessage))]
-        public static bool Prefix(InnerNetClient __instance,
-            [HarmonyArgument(0)] MessageReader reader, [HarmonyArgument(1)] SendOption sendOption)
+        public static class SetHudVisibilityMessageHandlePatch
         {
-            switch (reader.Tag)
+            public static bool Prefix(InnerNetClient __instance,
+                [HarmonyArgument(0)] MessageReader reader, [HarmonyArgument(1)] SendOption sendOption)
             {
-                case (byte)MouthwashRootPacketTag.SetHudVisibility:
-                    HudItem hudItem = (HudItem)reader.ReadByte();
-                    bool isVisible = reader.ReadBoolean();
-                    if (isVisible) hiddenItems.Remove(hudItem); else hiddenItems.AddItem(hudItem);
-                    switch (hudItem)
-                    {
-                        case HudItem.AdminTable:
-                            HudManager.Instance.AdminButton.ToggleVisible(isVisible);
-                            MapConsole adminMapConsole = Object.FindObjectOfType<MapConsole>(true);
-                            if (adminMapConsole != null)
-                            {
-                                adminMapConsole.gameObject.SetActive(isVisible);
-                            }
-                            break;
-                        case HudItem.MapButton:
-                            HudManager.Instance.ToggleMapButton(isVisible);
-                            break;
-                        case HudItem.MapSabotageButtons:
-                            break;
-                        case HudItem.MapDoorButtons:
-                            break;
-                        case HudItem.SabotageButton:
-                            HudManager.Instance.SabotageButton.ToggleVisible(isVisible);
-                            break;
-                        case HudItem.VentButton:
-                            HudManager.Instance.ImpostorVentButton.ToggleVisible(isVisible);
-                            break;
-                        case HudItem.UseButton:
-                            HudManager.Instance.UseButton.ToggleVisible(isVisible);
-                            break;
-                        case HudItem.TaskProgressBar:
-                            ProgressTracker taskProgress = Object.FindObjectOfType<ProgressTracker>(true);
-                            if (taskProgress != null)
-                            {
-                                taskProgress.gameObject.SetActive(isVisible);
-                            }
-                            break;
-                        case HudItem.TaskListPopup:
-                            HudManager.Instance.TaskPanel.gameObject.SetActive(isVisible);
-                            break;
-                        case HudItem.ReportButton:
-                            HudManager.Instance.ReportButton.ToggleVisible(isVisible);
-                            break;
-                        case HudItem.CallMeetingButton:
-                            EmergencyMinigame emergencyMinigame = Object.FindObjectOfType<EmergencyMinigame>(true);
-                            if (emergencyMinigame != null)
-                            {
-                                emergencyMinigame.gameObject.SetActive(isVisible);
-                            }
-                            break;
-                        case HudItem.GameCode:
-                            DestroyableSingleton<GameStartManager>.Instance.GameRoomNameCode.gameObject.SetActive(isVisible);
-                            break;
-                        default:
-                            throw new ArgumentOutOfRangeException();
-                    }
-                    break;
-            }
-            return true;
-        }
-
-        [HarmonyPatch(typeof(HudManager), nameof(HudManager.ToggleMapButton))]
-        public static class MapButtonVisibilityPatch
-        {
-            public static bool Prefix(HudManager __instance)
-            {
-                if (hiddenItems.Contains(HudItem.MapButton))
+                switch (reader.Tag)
                 {
-                    __instance.MapButton.gameObject.SetActive(false);
-                    return false;
+                    case (byte)MouthwashRootPacketTag.SetHudVisibility:
+                        HudItem hudItem = (HudItem)reader.ReadByte();
+                        bool isVisible = reader.ReadBoolean();
+                        if (isVisible)
+                        {
+                            hiddenItems.Remove(hudItem);
+                        }
+                        else
+                        {
+                            hiddenItems.AddItem(hudItem);
+                        }
+                        return false;
                 }
                 return true;
             }
         }
 
-        [HarmonyPatch(typeof(ActionButton), nameof(ActionButton.ToggleVisible))]
-        public static class SabotageButtonVisibilityPatch
+        [HarmonyPatch(typeof(HudManager), nameof(HudManager.Start))]
+        public static class RefreshHudOnStartPatch
         {
-            public static bool Prefix(ActionButton __instance)
+            public static void Postfix(HudManager __instance)
             {
-                if (__instance == DestroyableSingleton<HudManager>.Instance.SabotageButton)
+                //__instance.SetHudActive(true);
+            }
+        }
+
+        [HarmonyPatch(typeof(HudManager), nameof(HudManager.SetHudActive), typeof(PlayerControl), typeof(RoleBehaviour), typeof(bool))]
+        public static class HudActiveModificationPatch
+        {
+            public static bool Prefix(HudManager __instance, [HarmonyArgument(0)] PlayerControl localPlayer,
+                [HarmonyArgument(1)] RoleBehaviour role,
+                [HarmonyArgument(2)] bool isActive)
+            {
+                // Adapted from: HudManager.cs
+                __instance.AbilityButton.ToggleVisible(isActive && !hiddenItems.Contains(HudItem.UseButton));
+                if (isActive && !hiddenItems.Contains(HudItem.UseButton))
                 {
-                    if (hiddenItems.Contains(HudItem.SabotageButton))
-                    {
-                        __instance.Hide();
-                        return false;
-                    }
-                } else if (__instance == DestroyableSingleton<HudManager>.Instance.ImpostorVentButton)
-                {
-                    if (hiddenItems.Contains(HudItem.VentButton))
-                    {
-                        __instance.Hide();
-                        return false;
-                    }
-                } else if (__instance == DestroyableSingleton<HudManager>.Instance.UseButton)
-                {
-                    if (hiddenItems.Contains(HudItem.UseButton))
-                    {
-                        __instance.Hide();
-                        return false;
-                    }
-                } else if (__instance == DestroyableSingleton<HudManager>.Instance.ReportButton)
-                {
-                    if (hiddenItems.Contains(HudItem.ReportButton))
-                    {
-                        __instance.Hide();
-                        return false;
-                    }
-                } else if (__instance == DestroyableSingleton<HudManager>.Instance.AdminButton)
-                {
-                    if (hiddenItems.Contains(HudItem.AdminTable))
-                    {
-                        __instance.Hide();
-                        return false;
-                    }
+                    __instance.UseButton.Refresh();
+                    __instance.AbilityButton.Refresh(role.Ability);
                 }
+                else
+                {
+                    __instance.UseButton.ToggleVisible(false);
+                    __instance.PetButton.ToggleVisible(false);
+                }
+                bool flag = localPlayer.Data != null && localPlayer.Data.IsDead;
+                __instance.ReportButton.ToggleVisible(isActive && !hiddenItems.Contains(HudItem.ReportButton) && !flag && GameManager.Instance.CanReportBodies() && ShipStatus.Instance != null);
+                __instance.KillButton.ToggleVisible(false);
+                __instance.SabotageButton.ToggleVisible(isActive && !hiddenItems.Contains(HudItem.SabotageButton) && role.IsImpostor);
+                __instance.AdminButton.ToggleVisible(isActive && !hiddenItems.Contains(HudItem.AdminTable) && role.IsImpostor);
+                __instance.ImpostorVentButton.ToggleVisible(isActive && !hiddenItems.Contains(HudItem.VentButton) && !flag && role.IsImpostor && GameOptionsManager.Instance.CurrentGameOptions.GameMode != GameModes.HideNSeek);
+                __instance.TaskPanel.gameObject.SetActive(isActive && !hiddenItems.Contains(HudItem.TaskListPopup));
+                __instance.roomTracker.gameObject.SetActive(isActive);
+                if (__instance.joystick != null)
+                {
+                    __instance.joystick.ToggleVisuals(isActive);
+                }
+                __instance.ToggleRightJoystick(isActive);
+                return false;
+            }
+        }
+
+        [HarmonyPatch(typeof(SabotageButton), nameof(SabotageButton.Refresh))]
+        public static class HideSabotageButtonPatch
+        {
+            public static bool Prefix(SabotageButton __instance)
+            {
+                if (hiddenItems.Contains(HudItem.SabotageButton))
+                {
+                    __instance.ToggleVisible(false);
+                    __instance.SetDisabled();
+                    return false;
+                }
+
+                return true;
+            }
+        }
+
+        [HarmonyPatch(typeof(ReportButton), nameof(ReportButton.SetActive))]
+        public static class HideReportButtonPatch
+        {
+            public static bool Prefix(ReportButton __instance)
+            {
+                if (hiddenItems.Contains(HudItem.ReportButton))
+                {
+                    __instance.ToggleVisible(false);
+                    __instance.SetDisabled();
+                    return false;
+                }
+
+                return true;
+            }
+        }
+
+        [HarmonyPatch(typeof(AdminButton), nameof(AdminButton.Refresh))]
+        public static class HideAdminButtonPatch
+        {
+            public static bool Prefix(AdminButton __instance)
+            {
+                if (hiddenItems.Contains(HudItem.AdminTable))
+                {
+                    __instance.ToggleVisible(false);
+                    __instance.SetDisabled();
+                    return false;
+                }
+
+                return true;
+            }
+        }
+
+        [HarmonyPatch(typeof(HudManager), nameof(HudManager.ToggleUseAndPetButton))]
+        public static class HideUseButtonPatch
+        {
+            public static bool Prefix(HudManager __instance)
+            {
+                if (hiddenItems.Contains(HudItem.UseButton))
+                {
+                    __instance.UseButton.ToggleVisible(false);
+                    __instance.PetButton.ToggleVisible(false);
+                    return false;
+                }
+
                 return true;
             }
         }
