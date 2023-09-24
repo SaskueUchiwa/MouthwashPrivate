@@ -129,25 +129,25 @@ export class CosmeticsService {
             let validColor = clientUser.cosmetic_color === -1 ? Color.Red : clientUser.cosmetic_color;
             let newColor = validColor;
 
-            if (this.plugin.room.gameData) {
-                const players = [...this.plugin.room.gameData.players.values()];
-                let i = 0;
-                while (
-                    players.some(
-                        (player) =>
-                            player.playerId !== playerControl.playerId &&
-                            player.defaultOutfit.color === newColor
-                    )
-                ) {
-                    newColor++;
-                    if (newColor >= 18)
-                        newColor = 0;
+            // if (this.plugin.room.gameData) {
+            //     const players = [...this.plugin.room.gameData.players.values()];
+            //     let i = 0;
+            //     while (
+            //         players.some(
+            //             (player) =>
+            //                 player.playerId !== playerControl.playerId &&
+            //                 player.defaultOutfit.color === newColor
+            //         )
+            //     ) {
+            //         newColor++;
+            //         if (newColor >= 18)
+            //             newColor = 0;
     
-                    i++;
-                    if (i >= 18)
-                        break;
-                }
-            }
+            //         i++;
+            //         if (i >= 18)
+            //             break;
+            //     }
+            // }
             if (newColor !== validColor) {
                 this.plugin.room.messageStream.push(
                     new RpcMessage(

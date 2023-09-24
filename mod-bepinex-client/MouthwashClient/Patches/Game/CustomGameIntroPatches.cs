@@ -82,7 +82,7 @@ namespace MouthwashClient.Patches.Game
         }
 
         [HarmonyPatch(typeof(InnerNetClient), nameof(InnerNetClient.HandleMessage))]
-        public static class HandleChatMessageAddDeletePatch
+        public static class CustomIntroMessageHandlePatch
         {
             public static bool Prefix(InnerNetClient __instance,
                 [HarmonyArgument(0)] MessageReader reader, [HarmonyArgument(1)] SendOption sendOption)
