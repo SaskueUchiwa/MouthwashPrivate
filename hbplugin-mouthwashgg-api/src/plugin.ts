@@ -31,7 +31,7 @@ import {
     RoomGameReadyEvent,
     PlayerSendQuickChatEvent,
     RoomAssignRolesEvent,
-    CrewmateRole
+    DisconnectReason
 } from "@skeldjs/hindenburg";
 
 import { MouthwashAuthPlugin } from "hbplugin-mouthwashgg-auth";
@@ -430,7 +430,13 @@ export class MouthwashApiPlugin extends RoomPlugin {
             this.gameOptions.syncFor([ connection ]);
         }
         
-        await this.cameraControllers.spawnCameraFor(ev.player);
+        try {
+            await this.cameraControllers.spawnCameraFor(ev.player);
+        } catch (e: any) {
+            // if there's an error then the player could cheat without a camera object,
+            // so it's better to just let them try again
+            connection.disconnect(DisconnectReason.ServerRequest)
+        }
 
         const asset = await this.assetLoader.resolveAssetReferenceFor(new AssetReference("PggResources/Global", "Assets/Mods/OfficialAssets/KillButton.png"), [ ev.player ]);
 

@@ -1929,6 +1929,9 @@ export class BaseRoom extends Hostable<RoomEvents> {
         setImmediate(() => {
             this.logger.info("Clearing connections for clients to re-join");
             this.connections.clear();
+            for (const [ , player ] of this.players) {
+                player.inScene = false;
+            }
         });
     }
 
