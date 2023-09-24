@@ -9,7 +9,6 @@ namespace MouthwashClient.Net
         void Start()
         {
             Role = RoleTypes.Crewmate;
-            TeamType = RoleTeamTypes.Crewmate;
         }
 
         public override bool IsDead => Player.Data.IsDead;

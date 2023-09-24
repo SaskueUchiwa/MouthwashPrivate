@@ -31,11 +31,23 @@ namespace MouthwashClient.Patches.Game
                         }
                         else
                         {
-                            hiddenItems.AddItem(hudItem);
+                            hiddenItems.Add(hudItem);
                         }
                         return false;
                 }
                 return true;
+            }
+        }
+        
+        [HarmonyPatch(typeof(InnerNetClient), nameof(InnerNetClient.SendSceneChange))]
+        public static class ResetGameOptionsPatch
+        {
+            public static void Postfix(InnerNetClient __instance, [HarmonyArgument(0)] string sceneName)
+            {
+                if (sceneName == "OnlineGame")
+                {
+                    hiddenItems.Clear();
+                }
             }
         }
 

@@ -571,6 +571,18 @@ namespace MouthwashClient.Patches.Lobby
                 return true;
             }
         }
+        
+        [HarmonyPatch(typeof(InnerNetClient), nameof(InnerNetClient.SendSceneChange))]
+        public static class ResetGameOptionsPatch
+        {
+            public static void Postfix(InnerNetClient __instance, [HarmonyArgument(0)] string sceneName)
+            {
+                if (sceneName == "OnlineGame")
+                {
+                    ExistingGameOptions.Clear();
+                }
+            }
+        }
 
         public static void SendUpdateOption(MouthwashGameOption gameOption)
         {

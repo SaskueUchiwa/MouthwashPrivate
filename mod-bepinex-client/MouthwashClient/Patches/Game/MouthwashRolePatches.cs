@@ -21,6 +21,7 @@ namespace MouthwashClient.Patches.Game
             {
                 if (MouthwashBasicRole == null)
                 {
+                    PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage($"Creating basic role 1..");
                     GameObject roleContainerObject = new GameObject();
                     roleContainerObject.name = "Basic Mouthwash Role";
                     MouthwashBasicRole = roleContainerObject.AddComponent<MouthwashRole>();
@@ -64,6 +65,7 @@ namespace MouthwashClient.Patches.Game
 
                         if (MouthwashBasicRole == null)
                         {
+                            PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage($"Creating basic role 2..");
                             GameObject roleContainerObject = new GameObject();
                             roleContainerObject.name = "Basic Mouthwash Role";
                             MouthwashBasicRole = roleContainerObject.AddComponent<MouthwashRole>();
@@ -71,9 +73,9 @@ namespace MouthwashClient.Patches.Game
                         if (MouthwashBasicRole != null)
                         {
                             MouthwashBasicRole.TeamType = (RoleTeamTypes)reader.ReadByte();
+                            mouthwashRole.TeamType = MouthwashBasicRole.TeamType;
                         }
-                        mouthwashRole.TeamType = MouthwashBasicRole.TeamType;
-                        PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage($"Your team type: {mouthwashRole.TeamType} {!DestroyableSingleton<ExileController>.InstanceExists} {Object.FindObjectOfType<MapBehaviour>() == null} {MeetingHud.Instance == null}");
+                        PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage($"Your team type: {mouthwashRole.TeamType}");
                         
                         /*DestroyableSingleton<HudManager>.Instance.SetHudActive(
                             !DestroyableSingleton<ExileController>.InstanceExists
@@ -82,15 +84,6 @@ namespace MouthwashClient.Patches.Game
                         return false;
                 }
                 return true;
-            }
-        }
-
-        [HarmonyPatch(typeof(HudManager), nameof(HudManager.SetHudActive), typeof(PlayerControl), typeof(RoleBehaviour), typeof(bool))]
-        public static class Debugging
-        {
-            public static void Postfix(HudManager __instance, [HarmonyArgument(2)] bool isActive)
-            {
-                PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage($"Set hud active: {isActive}");
             }
         }
     }
