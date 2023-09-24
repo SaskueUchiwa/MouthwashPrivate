@@ -18,6 +18,5 @@ export class SetRoleTeamMessage extends BaseRootMessage {
 
     Serialize(writer: HazelWriter) {
         writer.uint8(this.roleTeam);
-        console.log("writing role team %s", this.roleTeam);
     }
 }

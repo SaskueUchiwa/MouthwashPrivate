@@ -6,6 +6,7 @@ using Hazel;
 using InnerNet;
 using MouthwashClient.Enums;
 using MouthwashClient.Patches.Lobby;
+using Reactor.Utilities;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -27,14 +28,26 @@ namespace MouthwashClient.Patches.Game
             public string TitleText;
             public string SubtitleText;
             public Color BackgroundColor;
-            public byte[] YourTeam;
+            public WinningPlayerData[] YourTeam;
             public bool DisplayQuit;
             public bool DisplayPlayAgain;
             public WinSound WinSound;
             public uint CustomWinSound;
         }
 
-        public static GameGameOverScreen GameOverInformation;
+        public static GameGameOverScreen GameOverInformation = new GameGameOverScreen
+        {
+	        TitleText = "Error",
+	        SubtitleText = "Failed to load end-game",
+	        BackgroundColor = Color.white,
+	        YourTeam = new WinningPlayerData[]
+	        {
+	        },
+	        DisplayQuit = true,
+	        DisplayPlayAgain = true,
+	        WinSound = WinSound.ImpostorWin,
+	        CustomWinSound = 0
+        };
 
         [HarmonyPatch(typeof(InnerNetClient), nameof(InnerNetClient.HandleMessage))]
         public static class CustomGameOverMessageHandlePatch
@@ -59,12 +72,13 @@ namespace MouthwashClient.Patches.Game
                         bool displayPlayAgain = reader.ReadBoolean();
                         byte winSound = reader.ReadByte();
                         uint customWinSound = reader.ReadPackedUInt32();
+                        PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage($"Got game over screen: '{titleText}' '{subtitleText}', '{backgroundColor}', '{numTeam}'");
                         GameOverInformation = new GameGameOverScreen
                         {
                             TitleText = titleText,
                             SubtitleText = subtitleText,
                             BackgroundColor = backgroundColor,
-                            YourTeam = team,
+                            YourTeam = team.Where(x => GetPlayerControlById(x) != null).Select(x => new WinningPlayerData(GetPlayerControlById(x)!.Data)).ToArray(),
                             DisplayQuit = displayQuit,
                             DisplayPlayAgain = displayPlayAgain,
                             WinSound = (WinSound)winSound,
@@ -105,7 +119,7 @@ namespace MouthwashClient.Patches.Game
 			__instance.BackgroundBar.material.SetColor("_Color", GameOverInformation.BackgroundColor);
 			SoundManager.Instance.PlayNamedSound("Stinger", __instance.CrewStinger, false, SoundManager.Instance.MusicChannel);
 	        int num = Mathf.CeilToInt(7.5f);
-	        List<WinningPlayerData> list = GameOverInformation.YourTeam.Select(x => new WinningPlayerData(GetPlayerControlById(x)?.Data)).ToList();
+	        List<WinningPlayerData> list = GameOverInformation.YourTeam.ToList();
 			for (int i = 0; i < list.Count; i++)
 			{
 				WinningPlayerData winningPlayerData2 = list[i];

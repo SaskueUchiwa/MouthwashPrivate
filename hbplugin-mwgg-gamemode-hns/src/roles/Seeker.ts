@@ -79,7 +79,6 @@ export class Seeker extends Impostor {
         const chatAccess = this.api.gameOptions.gameOptions.get(HnSOptionName.ChatAccess)?.getValue<EnumValue<"Off"|"Hiders Only"|"Everyone">>().selectedOption;
 
         this.api.hudService.setTaskInteraction(this.player, false);
-        console.log("Setting role team to %s", RoleTeamType.Impostor);
         await this.room.broadcast([], [
             new SetRoleTeamMessage(RoleTeamType.Impostor)
         ], [ this.player ]);
