@@ -237,7 +237,7 @@ export class Poisoner extends Impostor {
 
         if (this._poisonTarget !== oldTarget) {
             if (oldTarget) {
-                this.api.animationService.setOutlineFor(oldTarget, Palette.null, [ this.player ]);
+                this.api.animationService.clearOutlineFor(oldTarget, [ this.player ]);
             }
             if (this._poisonTarget) {
                 this.api.animationService.setOutlineFor(this._poisonTarget, poisonerColor, [ this.player ]);

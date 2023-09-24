@@ -118,10 +118,50 @@ export class CosmeticsService {
         if (!clientUser) return;
 
         if (playerControl) {
+            /*
+                When we retrieve the player's color and set it in-game, there's a good chance it's already
+                taken. In this case, we'll find the next available colour. However, we don't want to update
+                the player's "preferred" colour (or rather, the one they have set as part of their cosmetics),
+                so we'll just update the clients' colours and not the server. This shouldn't have any
+                problems in terms of desync between the client/server since colours are a fairly passive
+                part of the game.
+            */
+            let validColor = clientUser.cosmetic_color === -1 ? Color.Red : clientUser.cosmetic_color;
+            let newColor = validColor;
+
+            if (this.plugin.room.gameData) {
+                const players = [...this.plugin.room.gameData.players.values()];
+                let i = 0;
+                while (
+                    players.some(
+                        (player) =>
+                            player.playerId !== playerControl.playerId &&
+                            player.defaultOutfit.color === newColor
+                    )
+                ) {
+                    newColor++;
+                    if (newColor >= 18)
+                        newColor = 0;
+    
+                    i++;
+                    if (i >= 18)
+                        break;
+                }
+            }
+            if (newColor !== validColor) {
+                this.plugin.room.messageStream.push(
+                    new RpcMessage(
+                        playerControl.netId,
+                        new SetColorMessage(newColor)
+                    )
+                );
+            } else {
+                playerControl.setColor(validColor);
+            }
+
             playerControl.setHat(clientUser.cosmetic_hat === "missing" ? Hat.NoHat : clientUser.cosmetic_hat);
             playerControl.setPet(clientUser.cosmetic_pet === "missing" ? Pet.EmptyPet : clientUser.cosmetic_pet);
             playerControl.setSkin(clientUser.cosmetic_skin === "missing" ? Skin.None : clientUser.cosmetic_skin);
-            playerControl.setColor(clientUser.cosmetic_color === -1 ? Color.Red : clientUser.cosmetic_color);
             playerControl.setVisor(clientUser.cosmetic_visor === "missing" ? Visor.EmptyVisor : clientUser.cosmetic_visor);
             playerControl.setNameplate(clientUser.cosmetic_nameplate === "missing" ? Nameplate.NoPlate : clientUser.cosmetic_nameplate);
         }

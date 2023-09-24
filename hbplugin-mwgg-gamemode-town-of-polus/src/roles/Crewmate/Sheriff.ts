@@ -247,7 +247,7 @@ export class Sheriff extends Crewmate {
 
         if (this._target !== oldTarget) {
             if (oldTarget) {
-                this.api.animationService.setOutlineFor(oldTarget, Palette.null, [ this.player ]);
+                this.api.animationService.clearOutlineFor(oldTarget, [ this.player ]);
             }
             if (this._target) {
                 this.api.animationService.setOutlineFor(this._target, sheriffColor, [ this.player ]);

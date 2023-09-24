@@ -1,8 +1,9 @@
 ﻿using HarmonyLib;
 using Hazel;
-using InnerNet;
 using MouthwashClient.Enums;
 using MouthwashClient.Patches.Lobby;
+using Reactor.Utilities.Extensions;
+using UnityEngine;
 
 namespace MouthwashClient.Patches.Game
 {
@@ -15,12 +16,22 @@ namespace MouthwashClient.Patches.Game
             switch (callId)
             {
                 case (byte)MouthwashRpcPacketTag.SetOutline:
-                    __instance.cosmetics.normalBodySprite.BodySprite.material.SetFloat("_Outline", reader.ReadByte());
-                    __instance.cosmetics.normalBodySprite.BodySprite.material.SetColor("_OutlineColor", MouthwashChatMessageAppearance.ReadColor(reader));
+                    byte enabled = reader.ReadByte();
+                    Color color = MouthwashChatMessageAppearance.ReadColor(reader);
+                    __instance.cosmetics.normalBodySprite.BodySprite.SetOutline(enabled == 1 ? color : null);
                     break;
             }
 
             return true;
+        }
+    }
+    
+    [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.ToggleHighlight))]
+    public static class RemovePlayerHighlightOutlinesPatch
+    {
+        public static bool Prefix(PlayerControl __instance)
+        {
+            return false;
         }
     }
 }

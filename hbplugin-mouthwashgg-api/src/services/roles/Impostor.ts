@@ -114,7 +114,7 @@ export class Impostor extends BaseRole {
 
         if (this._killTarget !== oldTarget) {
             if (oldTarget) {
-                this.api.animationService.setOutlineFor(oldTarget, Palette.null, [ this.player ]);
+                this.api.animationService.clearOutlineFor(oldTarget, [ this.player ]);
             }
             if (this._killTarget) {
                 this.api.animationService.setOutlineFor(this._killTarget, Palette.impostorRed, [ this.player ]);
