@@ -117,7 +117,25 @@ namespace MouthwashClient.Patches.Game
 			__instance.WinText.text = GameOverInformation.TitleText;
 			__instance.WinText.color = GameOverInformation.BackgroundColor;
 			__instance.BackgroundBar.material.SetColor("_Color", GameOverInformation.BackgroundColor);
-			SoundManager.Instance.PlayNamedSound("Stinger", __instance.CrewStinger, false, SoundManager.Instance.MusicChannel);
+			switch (GameOverInformation.WinSound)
+			{
+				case WinSound.CustomSound:
+					// TODO
+					break;
+				case WinSound.CrewmateWin:
+					SoundManager.Instance.PlayNamedSound("Stinger", __instance.CrewStinger, false, SoundManager.Instance.MusicChannel);
+					break;
+				case WinSound.ImpostorWin:
+					SoundManager.Instance.PlayNamedSound("Stinger", __instance.ImpostorStinger, false, SoundManager.Instance.MusicChannel);
+					break;
+				case WinSound.Disconnect:
+					SoundManager.Instance.PlayNamedSound("Stinger", __instance.DisconnectStinger, false, SoundManager.Instance.MusicChannel);
+					break;
+				case WinSound.NoSound:
+					break;
+				default:
+					throw new ArgumentOutOfRangeException();
+			}
 	        int num = Mathf.CeilToInt(7.5f);
 	        List<WinningPlayerData> list = GameOverInformation.YourTeam.ToList();
 			for (int i = 0; i < list.Count; i++)
