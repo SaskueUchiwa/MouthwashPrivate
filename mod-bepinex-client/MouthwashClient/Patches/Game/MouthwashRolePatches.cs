@@ -37,7 +37,6 @@ namespace MouthwashClient.Patches.Game
             public static bool Prefix(InnerNetClient __instance,
                 [HarmonyArgument(0)] MessageReader reader, [HarmonyArgument(1)] SendOption sendOption)
             {
-                PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogWarning($"Got message {reader.Tag}");
                 switch (reader.Tag)
                 {
                     case (byte)MouthwashRootPacketTag.SetRoleTeam:
