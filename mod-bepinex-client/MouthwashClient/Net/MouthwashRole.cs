@@ -1,4 +1,5 @@
 ﻿using AmongUs.GameOptions;
+using Il2CppSystem.Text;
 using Reactor.Utilities.Attributes;
 
 namespace MouthwashClient.Net
@@ -12,5 +13,24 @@ namespace MouthwashClient.Net
         }
 
         public override bool IsDead => Player.Data.IsDead;
+
+        public override void AppendTaskHint(StringBuilder taskStringBuilder)
+        {
+            // we don't want to append any hints because they are crappalicious and also the server does
+            // it for us :)
+        }
+        
+        public override bool CanUse(IUsable usable)
+        {
+            if (TeamType == RoleTeamTypes.Impostor)
+            {
+                if (!GameManager.Instance.LogicUsables.CanUse(usable, Player))
+                    return false;
+                Console? console = usable.TryCast<Console>();
+                return console == null || console.AllowImpostor;
+            }
+            
+            return usable.TryCast<Console>() != null;
+        }
     }
 }
