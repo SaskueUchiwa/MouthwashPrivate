@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using AmongUs.GameOptions;
 using HarmonyLib;
 using Hazel;
@@ -25,14 +26,23 @@ namespace MouthwashClient.Patches.Game
                     case (byte)MouthwashRootPacketTag.SetHudVisibility:
                         HudItem hudItem = (HudItem)reader.ReadByte();
                         bool isVisible = reader.ReadBoolean();
-                        if (isVisible)
+                        PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage($"HUD ITEM: {hudItem} = {isVisible}");
+                        lock (hiddenItems)
                         {
-                            hiddenItems.Remove(hudItem);
+                            if (isVisible)
+                            {
+                                hiddenItems.Remove(hudItem);
+                            }
+                            else
+                            {
+                                hiddenItems.Add(hudItem);
+                            }
+
                         }
-                        else
-                        {
-                            hiddenItems.Add(hudItem);
-                        }
+                        // if (DestroyableSingleton<HudManager>.Instance.roomTracker.gameObject.activeSelf)
+                        // {
+                        //    DestroyableSingleton<HudManager>.Instance.SetHudActive(true);
+                        // }
                         return false;
                 }
                 return true;
@@ -68,30 +78,33 @@ namespace MouthwashClient.Patches.Game
                 [HarmonyArgument(2)] bool isActive)
             {
                 // Adapted from: HudManager.cs
-                __instance.AbilityButton.ToggleVisible(isActive && !hiddenItems.Contains(HudItem.UseButton));
-                if (isActive && !hiddenItems.Contains(HudItem.UseButton))
+                lock (hiddenItems)
                 {
-                    __instance.UseButton.Refresh();
-                    __instance.AbilityButton.Refresh(role.Ability);
+                    __instance.AbilityButton.ToggleVisible(isActive && !hiddenItems.Contains(HudItem.UseButton));
+                    if (isActive && !hiddenItems.Contains(HudItem.UseButton))
+                    {
+                        __instance.UseButton.Refresh();
+                        __instance.AbilityButton.Refresh(role.Ability);
+                    }
+                    else
+                    {
+                        __instance.UseButton.ToggleVisible(false);
+                        __instance.PetButton.ToggleVisible(false);
+                    }
+                    bool flag = localPlayer.Data != null && localPlayer.Data.IsDead;
+                    __instance.ReportButton.ToggleVisible(isActive && !hiddenItems.Contains(HudItem.ReportButton) && !flag && GameManager.Instance.CanReportBodies() && ShipStatus.Instance != null);
+                    __instance.KillButton.ToggleVisible(false);
+                    __instance.SabotageButton.ToggleVisible(isActive && !hiddenItems.Contains(HudItem.SabotageButton) && role.IsImpostor);
+                    __instance.AdminButton.ToggleVisible(isActive && !hiddenItems.Contains(HudItem.AdminTable) && role.IsImpostor);
+                    __instance.ImpostorVentButton.ToggleVisible(isActive && !hiddenItems.Contains(HudItem.VentButton) && !flag && role.IsImpostor && GameOptionsManager.Instance.CurrentGameOptions.GameMode != GameModes.HideNSeek);
+                    __instance.TaskPanel.gameObject.SetActive(isActive && !hiddenItems.Contains(HudItem.TaskListPopup));
+                    __instance.roomTracker.gameObject.SetActive(isActive);
+                    if (__instance.joystick != null)
+                    {
+                        __instance.joystick.ToggleVisuals(isActive);
+                    }
+                    __instance.ToggleRightJoystick(isActive);
                 }
-                else
-                {
-                    __instance.UseButton.ToggleVisible(false);
-                    __instance.PetButton.ToggleVisible(false);
-                }
-                bool flag = localPlayer.Data != null && localPlayer.Data.IsDead;
-                __instance.ReportButton.ToggleVisible(isActive && !hiddenItems.Contains(HudItem.ReportButton) && !flag && GameManager.Instance.CanReportBodies() && ShipStatus.Instance != null);
-                __instance.KillButton.ToggleVisible(false);
-                __instance.SabotageButton.ToggleVisible(isActive && !hiddenItems.Contains(HudItem.SabotageButton) && role.IsImpostor);
-                __instance.AdminButton.ToggleVisible(isActive && !hiddenItems.Contains(HudItem.AdminTable) && role.IsImpostor);
-                __instance.ImpostorVentButton.ToggleVisible(isActive && !hiddenItems.Contains(HudItem.VentButton) && !flag && role.IsImpostor && GameOptionsManager.Instance.CurrentGameOptions.GameMode != GameModes.HideNSeek);
-                __instance.TaskPanel.gameObject.SetActive(isActive && !hiddenItems.Contains(HudItem.TaskListPopup));
-                __instance.roomTracker.gameObject.SetActive(isActive);
-                if (__instance.joystick != null)
-                {
-                    __instance.joystick.ToggleVisuals(isActive);
-                }
-                __instance.ToggleRightJoystick(isActive);
                 return false;
             }
         }
@@ -144,6 +157,21 @@ namespace MouthwashClient.Patches.Game
             }
         }
 
+        [HarmonyPatch(typeof(MapConsole), nameof(MapConsole.CanUse))]
+        public static class HideAdminConsolePatch
+        {
+            public static bool Prefix(MapConsole __instance, ref float __result)
+            {
+                if (hiddenItems.Contains(HudItem.AdminTable))
+                {
+                    __result = 0f;
+                    return false;
+                }
+
+                return true;
+            }
+        }
+
         [HarmonyPatch(typeof(HudManager), nameof(HudManager.ToggleUseAndPetButton))]
         public static class HideUseButtonPatch
         {
@@ -153,6 +181,21 @@ namespace MouthwashClient.Patches.Game
                 {
                     __instance.UseButton.ToggleVisible(false);
                     __instance.PetButton.ToggleVisible(false);
+                    return false;
+                }
+
+                return true;
+            }
+        }
+
+        [HarmonyPatch(typeof(Vent), nameof(Vent.CanUse))]
+        public static class VentConsolePatch
+        {
+            public static bool Prefix(MapConsole __instance, ref float __result)
+            {
+                if (hiddenItems.Contains(HudItem.VentButton))
+                {
+                    __result = 0f;
                     return false;
                 }
 
