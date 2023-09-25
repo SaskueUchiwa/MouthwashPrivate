@@ -1,6 +1,5 @@
 ﻿using Hazel;
 using InnerNet;
-using MouthwashClient.Enums;
 using MouthwashClient.Services;
 using Reactor.Utilities;
 using Reactor.Utilities.Attributes;

@@ -37,6 +37,7 @@ export class Button extends EventEmitter<ButtonEvents> {
         this.clickBehaviour = customNetworkTransform.components[2] as ClickBehaviour;
 
         this.clickBehaviour.on("mwgg.clickbehaviour.click", async () => {
+            console.log("got click behaviour click, passing to button");
             await this.emit(new ButtonClickEvent(this));
         });
     }

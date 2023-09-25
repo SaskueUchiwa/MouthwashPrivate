@@ -11,6 +11,7 @@ import {
     Nameplate,
     Pet,
     Platform,
+    RpcMessageTag,
     Skin,
     SpawnFlag,
     SpawnType,
@@ -461,6 +462,7 @@ export class BaseRoom extends Hostable<RoomEvents> {
 
             if (component) {
                 try {
+                    console.log("I also got %s from %s", RpcMessageTag[message.data.messageTag], sender);
                     await component.HandleRpc(message.data);
                 } catch (e) {
                     this.logger.error("Could not process remote procedure call from client %s (net id %s, %s): %s",
@@ -1876,7 +1878,8 @@ export class BaseRoom extends Hostable<RoomEvents> {
                         return new RemovePlayerMessage(
                             this.code,
                             clientId,
-                            DisconnectReason.Error
+                            DisconnectReason.Error,
+                            this.config.serverAsHost ? SpecialClientId.Server : this.hostId
                         );
                     })
                 );

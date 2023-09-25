@@ -7,6 +7,7 @@ using Il2CppSystem;
 using InnerNet;
 using MouthwashClient.Enums;
 using MouthwashClient.Patches.Lobby;
+using Reactor.Utilities;
 using Reactor.Utilities.Attributes;
 using Reactor.Utilities.Extensions;
 using TMPro;

@@ -69,6 +69,7 @@ export class Impostor extends BaseRole {
             if (this._killTarget.transform) {
                 this.player.transform?.snapTo(this._killTarget.transform.position);
             }
+            console.log("got impostor button click");
             this.patchMurderPlayer(this._killTarget, this._killTarget);
             this._killButton.setCurrentTime(this._killButton.maxTimer);
         });

@@ -108,6 +108,8 @@ export class BaseRole {
         if (victimPlayerId === undefined)
             return;
 
+        console.log("got murder player");
+        console.log("----");
         victim.control?.kill("murder");
         await murderer.emit(new PlayerMurderEvent(this.room, murderer, undefined, victim));
         murdererPlayerControl["_rpcMurderPlayer"](victim);

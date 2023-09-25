@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using HarmonyLib;
-using Hazel;
 using InnerNet;
 using MouthwashClient.Enums;
 using MouthwashClient.Net;
@@ -11,8 +8,6 @@ using Reactor.Utilities;
 using Reactor.Utilities.Extensions;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
-using UnityEngine.ResourceManagement.AsyncOperations;
-using Object = UnityEngine.Object;
 
 namespace MouthwashClient.Patches.Behaviours
 {
@@ -20,6 +15,7 @@ namespace MouthwashClient.Patches.Behaviours
     {
         public static InnerNetObject? ButtonPrefab;
         public static InnerNetObject? CameraControllerPrefab;
+        public static InnerNetObject? DeadBodyGenericPrefab;
         
         [HarmonyPatch(typeof(AmongUsClient), nameof(AmongUsClient.Awake))]
         public static class RegisterCustomSpawnTypeOnAwakePatch
@@ -28,9 +24,11 @@ namespace MouthwashClient.Patches.Behaviours
             {
                 ButtonPrefab ??= CreateButtonPrefab();
                 CameraControllerPrefab ??= CreateCameraControllerPrefab();
+                DeadBodyGenericPrefab ??= CreateDeadBodyGenericPrefab();
                 __instance.NonAddressableSpawnableObjects = __instance.NonAddressableSpawnableObjects
                     .AddItem(ButtonPrefab)
-                    .AddItem(CameraControllerPrefab).ToArray();
+                    .AddItem(CameraControllerPrefab)
+                    .AddItem(DeadBodyGenericPrefab).ToArray();
                 IEnumerable<AssetReference> spawnableObjects = __instance.SpawnableObjects.AsEnumerable();
                 for (int i = 0; i < 255 - __instance.SpawnableObjects.Length; i++)
                 {
@@ -75,8 +73,19 @@ namespace MouthwashClient.Patches.Behaviours
             obj.DontDestroy();
             CameraController cameraController = obj.AddComponent<CameraController>();
             cameraController.SpawnId = (uint)MouthwashSpawnType.CameraController;
-
             return cameraController;
+        }
+
+        public static InnerNetObject CreateDeadBodyGenericPrefab()
+        {
+            PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage("Creating dead body generic object..");
+            GameObject obj = new("Dead Body");
+            obj.SetActive(false);
+            obj.DontDestroy();
+            DeadBodyGeneric deadBodyGeneric = obj.AddComponent<DeadBodyGeneric>();
+            deadBodyGeneric.SpawnId = (uint)MouthwashSpawnType.DeadBody;
+            CustomNetworkTransformGeneric cntGeneric = obj.AddComponent<CustomNetworkTransformGeneric>();
+            return deadBodyGeneric;
         }
     }
 }

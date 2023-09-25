@@ -54,7 +54,8 @@ import {
     DataMessage,
     HazelReader,
     MeetingHud,
-    GameState
+    GameState,
+    MessageHandlerAttach
 } from "@skeldjs/hindenburg";
 
 import { BaseRole, Crewmate, Impostor, MouthwashApiPlugin, RoleCtr } from "hbplugin-mouthwashgg-api";
@@ -531,7 +532,7 @@ export class MouthwashAntiCheatPlugin extends RoomPlugin {
         return true;
     }
 
-    @MessageHandler(DataMessage, { override: true })
+    @MessageHandler(DataMessage, { override: true, attachTo: MessageHandlerAttach.Room })
     async onDataMessage(message: DataMessage, context: PacketContext, originalHandlers: MessageHandlerCallback<DataMessage>[]) {
         if (message.netId === this.room.gameData?.netId && this.config.serverAsHost && context.sender?.clientId === this.room.host?.clientId)
             return;
@@ -572,7 +573,7 @@ export class MouthwashAntiCheatPlugin extends RoomPlugin {
         }
     }
 
-    @MessageHandler(RpcMessage, { override: true })
+    @MessageHandler(RpcMessage, { override: true, attachTo: MessageHandlerAttach.Room })
     async onRpcMessage(message: RpcMessage, context: PacketContext, originalHandlers: MessageHandlerCallback<RpcMessage>[]) {
         if (this.room.host && this.room.host.clientId === context.sender?.clientId && !this.room["finishedActingHostTransactionRoutine"] && message.data instanceof SyncSettingsMessage) {
             this.logger.info("Got initial settings, acting host handshake complete");
@@ -616,7 +617,7 @@ export class MouthwashAntiCheatPlugin extends RoomPlugin {
         }
     }
 
-    @MessageHandler(SpawnMessage, { override: true })
+    @MessageHandler(SpawnMessage, { override: true, attachTo: MessageHandlerAttach.Room })
     async onSpawnMessage(message: SpawnMessage, context: PacketContext, originalHandlers: MessageHandlerCallback<SpawnMessage>[]) {
         if (context.sender) {
             const defaultInfraction = await this.createInfraction(context.sender, InfractionName.ForbiddenSpawn,
@@ -632,7 +633,7 @@ export class MouthwashAntiCheatPlugin extends RoomPlugin {
         }
     }
 
-    @MessageHandler(DespawnMessage, { override: true }) 
+    @MessageHandler(DespawnMessage, { override: true, attachTo: MessageHandlerAttach.Room }) 
     async onDespawnMessage(message: DespawnMessage, context: PacketContext, originalHandlers: MessageHandlerCallback<DespawnMessage>[]) {
         if (context.sender) {
             const component = this.room.netobjects.get(message.netId);
@@ -655,7 +656,7 @@ export class MouthwashAntiCheatPlugin extends RoomPlugin {
         }
     }
 
-    @MessageHandler(SceneChangeMessage, { override: true })
+    @MessageHandler(SceneChangeMessage, { override: true, attachTo: MessageHandlerAttach.Room })
     async onSceneChangeMessage(message: SceneChangeMessage, context: PacketContext, originalHandlers: MessageHandlerCallback<SceneChangeMessage>[]) {
         if (context.sender) {
             if (message.clientId !== context.sender.clientId)
@@ -686,7 +687,7 @@ export class MouthwashAntiCheatPlugin extends RoomPlugin {
         }
     }
 
-    @MessageHandler(ReadyMessage, { override: true })
+    @MessageHandler(ReadyMessage, { override: true, attachTo: MessageHandlerAttach.Room })
     async onReadyMessage(message: ReadyMessage, context: PacketContext, originalHandlers: MessageHandlerCallback<ReadyMessage>[]) {
         if (context.sender) {
             if (message.clientId !== context.sender.clientId) {
