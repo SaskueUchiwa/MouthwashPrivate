@@ -11,7 +11,6 @@ import {
     PlayerCheckNameEvent,
     RoomGameStartEvent,
     GameMap,
-    sleep,
     RoomFixedUpdateEvent,
     PlayerDieEvent,
     RoomEndGameIntentEvent,

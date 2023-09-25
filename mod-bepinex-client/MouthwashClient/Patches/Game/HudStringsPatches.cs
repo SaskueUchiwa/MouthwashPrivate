@@ -129,7 +129,7 @@ namespace MouthwashClient.Patches.Game
             {
                 if (HudStrings.TryGetValue(HudLocation.TaskText, out string? taskText))
                 {
-                    __instance.taskText.text = taskText + __instance.taskText.text;
+                    __instance.taskText.text = taskText + "\n" + __instance.taskText.text;
                 }
             }
         }
