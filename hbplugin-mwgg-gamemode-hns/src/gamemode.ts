@@ -145,7 +145,6 @@ export class HideAndSeekGamemodePlugin extends BaseGamemodePlugin {
         this.api.hudService.setHudItemVisibility(HudItem.AdminTable, adminTable);
         this.api.hudService.setHudItemVisibility(HudItem.CallMeetingButton, false);
         this.api.hudService.setHudItemVisibility(HudItem.ReportButton, false);
-        this.api.hudService.setHudItemVisibility(HudItem.VentButton, false);
         for (const [ , player ] of this.room.players) {
             const playerRole = this.api.roleService.getPlayerRole(player);
             if (playerRole instanceof Seeker) {
