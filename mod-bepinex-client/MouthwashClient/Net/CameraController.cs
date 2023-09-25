@@ -20,6 +20,10 @@ namespace MouthwashClient.Net
         {
             if (OwnerId != PlayerControl.LocalPlayer.OwnerId)
                 return;
+            if (!DestroyableSingleton<HudManager>.InstanceExists)
+                return;
+            if (DestroyableSingleton<HudManager>.Instance.PlayerCam == null)
+                return;
 
             DestroyableSingleton<HudManager>.Instance.PlayerCam.Target = this;
         }
@@ -27,6 +31,10 @@ namespace MouthwashClient.Net
         public void OnDestroy()
         {
             if (OwnerId == 0)
+                return;
+            if (!DestroyableSingleton<HudManager>.InstanceExists)
+                return;
+            if (DestroyableSingleton<HudManager>.Instance.PlayerCam == null)
                 return;
             
             DestroyableSingleton<HudManager>.Instance.PlayerCam.Target = PlayerControl.LocalPlayer;
@@ -38,6 +46,9 @@ namespace MouthwashClient.Net
                 return;
             
             if (OwnerId != PlayerControl.LocalPlayer.OwnerId)
+                return;
+            
+            if (PlayerControl.LocalPlayer == null)
                 return;
 
             transform.position = PlayerControl.LocalPlayer.transform.position + new Vector3(offset.x, offset.y, 0f);
