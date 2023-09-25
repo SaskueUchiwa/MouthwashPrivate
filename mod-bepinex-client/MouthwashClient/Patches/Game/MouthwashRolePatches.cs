@@ -73,7 +73,9 @@ namespace MouthwashClient.Patches.Game
                         if (MouthwashBasicRole != null)
                         {
                             MouthwashBasicRole.TeamType = (RoleTeamTypes)reader.ReadByte();
+                            MouthwashBasicRole.CanVent = MouthwashBasicRole.TeamType == RoleTeamTypes.Impostor;
                             mouthwashRole.TeamType = MouthwashBasicRole.TeamType;
+                            mouthwashRole.CanVent = MouthwashBasicRole.CanVent;
                         }
                         PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage($"Your team type: {mouthwashRole.TeamType}");
                         
@@ -84,6 +86,15 @@ namespace MouthwashClient.Patches.Game
                         return false;
                 }
                 return true;
+            }
+        }
+
+        [HarmonyPatch(typeof(RoleManager), nameof(RoleManager.AssignRoleOnDeath))]
+        public static class RemoveGhostRolePatch
+        {
+            public static bool Prefix(RoleManager __instance)
+            {
+                return false;
             }
         }
     }
