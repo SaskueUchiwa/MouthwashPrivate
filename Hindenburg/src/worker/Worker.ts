@@ -1596,38 +1596,24 @@ export class Worker extends EventEmitter<WorkerEvents> {
                             }
                         }
 
-                        /**
-                         * Patches a bug with reactor whereby the nonce sent for the mod declaration is 0,
-                         * this fixes TOU as well.
-                         */
-                        // const isBadReactor = parsedReliable.messageTag === SendOption.Reliable
-                        //     && parsedReliable.nonce === 0
-                        //     && (parsedReliable as ReliablePacket)
-                        //         .children.every(child => {
-                        //             return child instanceof ReactorMessage
-                        //                 && child.children[0].messageTag === ReactorMessageTag.ModDeclaration;
-                        //         });
+                        if (parsedReliable.nonce < cachedConnection.nextExpectedNonce) {
+                            this.logger.warn("%s is behind (got %s, last nonce was %s)",
+                                cachedConnection, parsedReliable.nonce, cachedConnection.nextExpectedNonce - 1);
+                            return;
+                        }
 
-                        // if (!isBadReactor && parsedReliable.nonce < cachedConnection.nextExpectedNonce - 1) {
-                        //     this.logger.warn("%s is behind (got %s, last nonce was %s)",
-                        //         cachedConnection, parsedReliable.nonce, cachedConnection.nextExpectedNonce - 1);
-                        //     return;
-                        // }
+                        if (parsedReliable.nonce !== cachedConnection.nextExpectedNonce && this.config.socket.messageOrdering) {
+                            this.logger.warn("%s holding packet with nonce %s, expected %s",
+                                cachedConnection, parsedReliable.nonce, cachedConnection.nextExpectedNonce);
 
-                        // if (!isBadReactor && parsedReliable.nonce !== cachedConnection.nextExpectedNonce && this.config.socket.messageOrdering) {
-                        //     this.logger.warn("%s holding packet with nonce %s, expected %s",
-                        //         cachedConnection, parsedReliable.nonce, cachedConnection.nextExpectedNonce);
+                            if (!cachedConnection.unorderedMessageMap.has(parsedReliable.nonce)) {
+                                cachedConnection.unorderedMessageMap.set(parsedReliable.nonce, parsedReliable);
+                            }
 
-                        //     if (!cachedConnection.unorderedMessageMap.has(parsedReliable.nonce)) {
-                        //         cachedConnection.unorderedMessageMap.set(parsedReliable.nonce, parsedReliable);
-                        //     }
+                            return;
+                        }
 
-                        //     return;
-                        // }
-
-                        // if (!isBadReactor) {
-                        //     cachedConnection.nextExpectedNonce++;
-                        // }
+                        cachedConnection.nextExpectedNonce = parsedReliable.nonce + 1;
                     } else if (parsedPacket.messageTag !== SendOption.Acknowledge) {
                         if (cachedConnection.unreliableRecordTimestamp + this.config.rateLimit.windowUnreliableMs < date) {
                             cachedConnection.unreliableRecordTimestamp = Date.now();

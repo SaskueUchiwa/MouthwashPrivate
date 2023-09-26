@@ -387,7 +387,9 @@ export class Connection {
                     this.room
                 )
             );
-            await this.room.handleRemoteLeave(this, reason || DisconnectReason.ExitGame);
+            if (this.room) {
+                await this.room.handleRemoteLeave(this, reason || DisconnectReason.ExitGame);
+            }
         }
 
         await this.worker.emit(
