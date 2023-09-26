@@ -4,6 +4,7 @@ using HarmonyLib;
 using Hazel;
 using InnerNet;
 using MouthwashClient.Enums;
+using UnityEngine;
 using IEnumerator = Il2CppSystem.Collections.IEnumerator;
 
 namespace MouthwashClient.Patches.Game
@@ -31,20 +32,27 @@ namespace MouthwashClient.Patches.Game
                         {
                             HudStrings[hudLocation] = text;
                         }
-
+                        
                         if (hudLocation == HudLocation.RoomTracker)
                         {
                             if (text == "__unset")
                             {
-                                IEnumerator enumerator = DestroyableSingleton<HudManager>.Instance.roomTracker.SlideOut();
-                                while (enumerator.MoveNext()) // we are going to skip the slide out so that it disappears immediately
-                                {}
+                                Vector3 tempPos = DestroyableSingleton<HudManager>.Instance.roomTracker.text.transform.localPosition;
+                                Color tempColor = Color.white;
+                                tempPos.y = DestroyableSingleton<HudManager>.Instance.roomTracker.TargetY;
+                                tempColor.a = 1f;
+                                DestroyableSingleton<HudManager>.Instance.roomTracker.text.transform.localPosition = tempPos;
+                                DestroyableSingleton<HudManager>.Instance.roomTracker.text.color = tempColor;
                             }
                             else
                             {
-                                IEnumerator enumerator = DestroyableSingleton<HudManager>.Instance.roomTracker.CoSlideIn(SystemTypes.Admin);
-                                while (enumerator.MoveNext()) // we are going to skip the slide in so that it appears immediately
-                                {}
+                                Vector3 tempPos = DestroyableSingleton<HudManager>.Instance.roomTracker.text.transform.localPosition;
+                                Color tempColor = Color.white;
+                                DestroyableSingleton<HudManager>.Instance.roomTracker.text.text = text;
+                                tempPos.y = DestroyableSingleton<HudManager>.Instance.roomTracker.SourceY;
+                                tempColor.a = 1f;
+                                DestroyableSingleton<HudManager>.Instance.roomTracker.text.transform.localPosition = tempPos;
+                                DestroyableSingleton<HudManager>.Instance.roomTracker.text.color = tempColor;
                             }
                         }
                         else if (hudLocation == HudLocation.TaskText)
@@ -86,8 +94,9 @@ namespace MouthwashClient.Patches.Game
         {
             public static bool Prefix(RoomTracker __instance)
             {
-                if (HudStrings.ContainsKey(HudLocation.RoomTracker))
+                if (HudStrings.TryGetValue(HudLocation.RoomTracker, out string? roomTrackerText))
                 {
+                    __instance.text.text = roomTrackerText;
                     return false;
                 }
 
