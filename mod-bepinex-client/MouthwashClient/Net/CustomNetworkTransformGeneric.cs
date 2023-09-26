@@ -105,7 +105,7 @@ namespace MouthwashClient.Net
             }
             else
             {
-                transform.parent = HudManager.Instance.gameObject.transform;
+                transform.parent = DestroyableSingleton<HudManager>.Instance.gameObject.transform;
                 _aspectPosition.enabled = true;
                 _aspectPosition.DistanceFromEdge = new Vector3(-position.x, -position.y, zPosition);
                 _aspectPosition.AdjustPosition();

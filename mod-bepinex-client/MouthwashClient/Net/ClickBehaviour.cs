@@ -39,7 +39,7 @@ namespace MouthwashClient.Net
         {
             _buttonGraphic = GetComponent<Graphic>();
             
-            KillButton killButton = HudManager.Instance.KillButton;
+            KillButton killButton = DestroyableSingleton<HudManager>.Instance.KillButton;
             _buttonMaterial = Instantiate(killButton.graphic.GetMaterial()).DontDestroy();
             if (_buttonGraphic != null)
             {

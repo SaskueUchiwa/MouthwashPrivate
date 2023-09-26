@@ -195,7 +195,7 @@ namespace MouthwashClient.Patches.Game
             {
                 if (hiddenItems.Contains(HudItem.VentButton))
                 {
-                    __result = 0f;
+                    __result = 0f; 
                     return false;
                 }
 
