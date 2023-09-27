@@ -16,7 +16,6 @@ export class StripeRoute extends BaseRoute {
         switch (event.type) {
             case "payment_intent.succeeded":
                 const paymentIntentSucceeded = event.data.object;
-                this.server.mediatorServer.logger.info("info", paymentIntentSucceeded);
                 break;
             case "checkout.session.completed":
                 const checkoutSessionCompleted = event.data.object as any;

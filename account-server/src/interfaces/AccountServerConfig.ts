@@ -17,4 +17,8 @@ export interface AccountServerConfig {
         secret_key: string;
         signing_secret: string;
     }|false;
+    supabase: {
+        base_api_url: string;
+        service_role_token: string;
+    }|false;
 }

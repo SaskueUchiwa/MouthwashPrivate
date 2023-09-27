@@ -27,6 +27,7 @@ import { BundlesRoute } from "./routes/v2/bundles";
 import { UsersRoute } from "./routes/v2/users";
 import { GamesRoute } from "./routes/v2/games";
 import { StripeRoute } from "./routes/v2/stripe";
+import { UploadRoute } from "./routes/v2/commerce/upload";
 
 export class AccountServer {
     mediatorServer: mediator.MediatorServer<typeof BaseRoute>;
@@ -86,6 +87,7 @@ export class AccountServer {
         this.mediatorServer.registerRoute(UsersRoute);
         this.mediatorServer.registerRoute(GamesRoute);
         this.mediatorServer.registerRoute(StripeRoute);
+        this.mediatorServer.registerRoute(UploadRoute);
 
         this.mediatorServer.listen(this.config.port);
     }

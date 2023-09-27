@@ -50,6 +50,10 @@ INTERNAL_ACCESS_KEY=""
         stripe: process.env.STRIPE_SECRET_KEY ? {
             secret_key: process.env.STRIPE_SECRET_KEY!,
             signing_secret: process.env.STRIPE_SIGNING_SECRET!
+        } : false,
+        supabase: process.env.SUPABASE_BASE_API_URL ? {
+            base_api_url: process.env.SUPABASE_BASE_API_URL!,
+            service_role_token: process.env.SUPABASE_SERVICE_ROLE_TOKEN!
         } : false
     });
     

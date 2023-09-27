@@ -7,6 +7,7 @@ export interface Bundle {
     thumbnail_url: string;
     author_id: string;
     base_resource_id: number;
+    stripe_item_id: string;
     price_usd: number;
     added_at: Date;
     asset_bundle_id: string;
