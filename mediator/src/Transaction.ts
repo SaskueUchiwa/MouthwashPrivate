@@ -1,4 +1,4 @@
-import express from "express";
+import * as express from "express";
 import { HttpStatusCode } from "./enum";
 import { TransactionError } from "./error";
 

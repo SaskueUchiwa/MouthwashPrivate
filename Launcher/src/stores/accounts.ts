@@ -62,3 +62,16 @@ export interface BundleItem {
 export type Deferred<T> = T|typeof loading|typeof unavailable;
 
 export const user = writable<Deferred<UserLogin>>(loading);
+
+export function collectBundles(items: BundleItem[]) {
+    const map: Map<string, BundleItem[]> = new Map;
+    for (const item of items) {
+        const existingBundle = map.get(item.bundle_id);
+        if (existingBundle) {
+            existingBundle.push(item);
+            continue;
+        }
+        map.set(item.bundle_id, [ item ]);
+    }
+    return map;
+}

@@ -2,6 +2,7 @@ import * as mediator from "mouthwash-mediator";
 import * as undici from "undici";
 import * as crypto from "crypto";
 import * as ark from "arktype";
+import * as express from "express";
 import { BaseRoute } from "../../BaseRoute";
 import { ForbiddenError, InvalidBodyError } from "../../../errors";
 import { Bundle, BundleItem, StripeItem } from "../../../controllers";
@@ -26,7 +27,8 @@ const publishCosmeticBundleBodyValidator = ark.scope({
         valuation: "item_valuation",
         tags: "string[]",
         description: "string",
-        items: "item_config[]"
+        items: "item_config[]",
+        feature_tags: "string[]"
     },
     item_config: {
         id: "string",
@@ -64,6 +66,7 @@ export class UploadRoute extends BaseRoute {
     }
 
     @mediator.Endpoint(mediator.HttpMethod.POST, "/v2/commerce/upload")
+    @mediator.Middleware(express.json({ limit: "10mb" }))
     async uploadCosmeticBundle(transaction: mediator.Transaction<{}>) {
         const session = await this.server.sessionsController.validateAuthorization(transaction);
 
@@ -119,6 +122,7 @@ export class UploadRoute extends BaseRoute {
     }
     
     @mediator.Endpoint(mediator.HttpMethod.POST, "/v2/commerce/publish")
+    @mediator.Middleware(express.json())
     async publishCosmeticBundle(transaction: mediator.Transaction<{}>) {
         const session = await this.server.sessionsController.validateAuthorization(transaction);
 
@@ -146,31 +150,53 @@ export class UploadRoute extends BaseRoute {
             const bundleStripeItem = bundleStripeItems[0] as StripeItem;
 
             if (!bundleStripeItem) {
-                // todo: create new stripe product and price
+                const stripeProduct = await this.server.stripe?.products.create({
+                    name: data.name,
+                    description: data.description,
+                    images: [ data.thumbnail_url ]
+                });
+                if (!stripeProduct)
+                    throw new mediator.InternalServerError(new Error("Failed to create product with Stripe API"));
+
+                const stripePrice = await this.server.stripe?.prices.create({
+                    product: stripeProduct.id,
+                    currency: "USD",
+                    unit_amount: data.price_usd
+                });
+                if (!stripePrice)
+                    throw new mediator.InternalServerError(new Error("Failed to create product price with Stripe API"));
+
                 const { rows: createdStripeItems } = await this.server.postgresClient.query(`
-                    INSERT INTO stripe_item(id, stripe_price_id)
-                    VALUES ($1, $2)
+                    INSERT INTO stripe_item(id, stripe_price_id, stripe_product_id)
+                    VALUES ($1, $2, $3)
                     RETURNING *
-                `, [ crypto.randomUUID(), "" /* stripe_price_id */ ]);
+                `, [ crypto.randomUUID(), stripePrice.id, stripeProduct.id ]);
+
                 const createdStripeItem = createdStripeItems[0] as StripeItem|undefined;
                 if (!createdStripeItem)
-                    throw new mediator.InternalServerError(new Error("Failed to create Stripe price"));
+                    throw new mediator.InternalServerError(new Error("Failed to create Stripe item"));
 
                 existingBundle.stripe_item_id = createdStripeItem.id;
             } else if (existingBundle.price_usd !== data.price_usd) {
-                // todo: create stripe price for existing item
+                const stripePrice = await this.server.stripe?.prices.create({
+                    product: bundleStripeItem.stripe_product_id,
+                    currency: "USD",
+                    unit_amount: data.price_usd
+                });
+                if (!stripePrice)
+                    throw new mediator.InternalServerError(new Error("Failed to create product price with Stripe API"));
                 await this.server.postgresClient.query(`
                     UPDATE stripe_item
                     SET stripe_price_id = $2
                     WHERE id = $1
-                `, [ bundleStripeItem.id, "" /* stripe_price_id */ ])
-            } // else, the price is the same and doesn't need updating
+                `, [ bundleStripeItem.id, stripePrice.id ])
+            }
 
             await this.server.postgresClient.query(`
                 UPDATE bundle
-                SET name = $2, thumbnail_url = $3, author_id = $4, base_resource_id = $5, price_usd = $6, asset_bundle_id = $7, stripe_item_id = $8, valuation = $9, tags = $10, description = $11
+                SET name = $2, thumbnail_url = $3, author_id = $4, base_resource_id = $5, price_usd = $6, asset_bundle_id = $7, stripe_item_id = $8, valuation = $9, tags = $10, description = $11, feature_tags = $12
                 WHERE id = $1
-            `, [ existingBundle.id, data.name, data.thumbnail_url, data.author_id, data.base_resource_id, data.price_usd, data.file_uuid, existingBundle.stripe_item_id, data.valuation, data.tags.join(" "), data.description ]);
+            `, [ existingBundle.id, data.name, data.thumbnail_url, data.author_id, data.base_resource_id, data.price_usd, data.file_uuid, existingBundle.stripe_item_id, data.valuation, data.tags.join(" "), data.description, data.feature_tags.join(",") ]);
         
             const { rows: existingBundleItems } = await this.server.postgresClient.query(`
                 SELECT *
@@ -215,10 +241,10 @@ export class UploadRoute extends BaseRoute {
             if (!createdStripeItem) throw new mediator.InternalServerError(new Error("Failed to create Stripe price"));
 
             const { rows: createdBundles } = await this.server.postgresClient.query(`
-                INSERT INTO bundle(id, name, thumbnail_url, author_id, base_resource_id, price_usd, added_at, asset_bundle_id, stripe_item_id, valuation, tags, description)
-                VALUES ($1, $2, $3, $4, $5, $6, NOW(), $7, $8, $9, $10, $11)
+                INSERT INTO bundle(id, name, thumbnail_url, author_id, base_resource_id, price_usd, added_at, asset_bundle_id, stripe_item_id, valuation, tags, description, feature_tags)
+                VALUES ($1, $2, $3, $4, $5, $6, NOW(), $7, $8, $9, $10, $11, $12)
                 RETURNING *
-            `, [ data.id, data.name, data.thumbnail_url, data.author_id, data.base_resource_id, data.price_usd, data.file_uuid, createdStripeItem.id, data.valuation, data.tags.join(" "), data.description ]);
+            `, [ data.id, data.name, data.thumbnail_url, data.author_id, data.base_resource_id, data.price_usd, data.file_uuid, createdStripeItem.id, data.valuation, data.tags.join(" "), data.description, data.feature_tags.join(",") ]);
             const createdBundle = createdBundles[0] as Bundle|undefined;
             if (!createdBundle) throw new mediator.InternalServerError(new Error("Failed to create bundle"));
             

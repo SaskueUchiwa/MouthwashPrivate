@@ -15,6 +15,7 @@ export interface Checkout {
 export interface StripeItem {
     id: string;
     stripe_price_id: string;
+    stripe_product_id: string;
 }
 
 export class CheckoutController {

@@ -112,16 +112,16 @@ export class CosmeticsController {
         return availableBundles[0] as Bundle|undefined;
     }
 
-    async getAllAvailableBundles(textSearch: string, valuations: string[]): Promise<(Bundle|{ thumbnail_url: string; bundle_name: string; added_at: Date; bundle_price_usd: number; })[]> {
+    async getAllAvailableBundles(textSearch: string, valuations: string[], featureTag: string): Promise<(Bundle|{ thumbnail_url: string; bundle_name: string; added_at: Date; bundle_price_usd: number; })[]> {
         if (textSearch.length > 0) {
             const { rows: availableBundles } = await this.server.postgresClient.query(`
                 SELECT bundle_item.*, bundle.thumbnail_url, bundle.name AS bundle_name, bundle.added_at, bundle.price_usd AS bundle_price_usd,
                     ts_rank(to_tsvector(bundle.name || ' ' || bundle.description || ' ' || bundle.tags), websearch_to_tsquery($1)) as rank
                 FROM bundle_item
                 LEFT JOIN bundle ON bundle.id = bundle_item.bundle_id
-                WHERE bundle.valuation = ANY ($2) AND (to_tsvector(bundle.name || ' ' || bundle.description || ' ' || bundle.tags) @@ websearch_to_tsquery($1))
+                WHERE bundle.valuation = ANY ($2) AND (to_tsvector(bundle.name || ' ' || bundle.description || ' ' || bundle.tags) @@ websearch_to_tsquery($1)) AND bundle.feature_tags LIKE ('%' || $3 || '%')
                 ORDER BY rank DESC;
-            `, [ textSearch, valuations ]);
+            `, [ textSearch, valuations, featureTag ]);
 
             return availableBundles;
         } else {
@@ -129,8 +129,8 @@ export class CosmeticsController {
                 SELECT bundle_item.*, bundle.thumbnail_url, bundle.name AS bundle_name, bundle.added_at, bundle.price_usd AS bundle_price_usd
                 FROM bundle_item
                 LEFT JOIN bundle ON bundle.id = bundle_item.bundle_id
-                WHERE bundle.valuation = ANY ($1)
-            `, [ valuations ]);
+                WHERE bundle.valuation = ANY ($1) AND bundle.feature_tags LIKE ('%' || $2 || '%')
+            `, [ valuations, featureTag ]);
 
             return availableBundles;
         }

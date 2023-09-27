@@ -1,17 +1,16 @@
 <script lang="ts">
     import * as shell from "@tauri-apps/api/shell";
     import { type BundleItem, loading, unavailable, user, accountUrl } from "../../stores/accounts";
+    import FeaturedBundleThumbnail from "./FeaturedBundleThumbnail.svelte";
 
     export let bundleItems: BundleItem[];
     export let ownedItems: BundleItem[]|undefined;
-
     $: bundleInfo = bundleItems[0];
     
     const boughtAtFormat = new Intl.DateTimeFormat("en-US");
 
     $: doesAlreadyOwn = ownedItems && bundleItems.every(item => ownedItems.find(x => x.id === item.id));
 
-    let error = "";
     let loadingBuy = false;
     async function getPaymentUrl() {
         if ($user === loading || $user === unavailable)
@@ -27,7 +26,6 @@
         loadingBuy = false;
 
         if (!userCosmeticsRes.ok) {
-            error = "Could not create bundle checkout.";
             return;
         }
 
@@ -37,10 +35,10 @@
 </script>
 
 <div class="flex items-center gap-2 filter" class:grayscale={doesAlreadyOwn}>
-    <img src={bundleInfo.thumbnail_url} alt={bundleInfo.bundle_name} width={96} class="rounded-lg"/>
+    <FeaturedBundleThumbnail {bundleItems} {ownedItems} size={96} showDetails={false}/>
     <div class="flex flex-col gap-2">
         <div class="flex flex-col">
-            <span>{bundleInfo.bundle_name} Bundle</span>
+            <span>{bundleInfo.bundle_name}</span>
             <span class="text-[#806593] italic text-xs">
                 Released on {boughtAtFormat.format(new Date(bundleInfo.added_at))}, {bundleItems.length} item{bundleItems.length === 1 ? "" : "s"}
             </span>

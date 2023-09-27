@@ -1,4 +1,4 @@
-import express from "express";
+import * as express from "express";
 import * as kleur from "kleur";
 import { DeclaredEndpointInformation, getAllEndpoints } from "./hooks";
 import { Transaction } from "./Transaction";
