@@ -158,7 +158,7 @@ namespace MouthwashClient.Patches.Lobby
         }
     }
     
-    public class MouthwashChatMessagePatches
+    public static class MouthwashChatMessagePatches
     {
         public static Dictionary<string, ChatBubble?> ExistingChatMessages = new();
 
@@ -169,17 +169,6 @@ namespace MouthwashClient.Patches.Lobby
             {
                 return false;
             }
-        }
-
-        public static ChatBubble? GetPooledBubble()
-        {
-            ObjectPoolBehavior poolBehavior = DestroyableSingleton<HudManager>.Instance.Chat.chatBubblePool;
-            if (poolBehavior.NotInUse == 0)
-            {
-                poolBehavior.ReclaimOldest();
-            }
-
-            return poolBehavior.Get<ChatBubble>();
         }
         
         public static T? GetMockAddressableCosmetic<T>(AddressableAsset<T>? addressableAsset, string cosmeticId) where T : ScriptableObject
@@ -373,19 +362,60 @@ namespace MouthwashClient.Patches.Lobby
             }
         }
 
+        public static void CreateOneInactive(ObjectPoolBehavior poolBehavior, ChatBubble prefab)
+        {
+            ChatBubble poolableBehavior = UnityEngine.Object.Instantiate(prefab, poolBehavior.transform, true);
+            poolableBehavior.gameObject.SetActive(false);
+            poolableBehavior.OwnerPool = poolBehavior;
+            poolBehavior.inactiveChildren.Add(poolableBehavior);
+        }
+
+        public static void InitPool(ObjectPoolBehavior poolBehavior, ChatBubble prefab)
+        {
+            poolBehavior.AutoInit = false;
+            for (int i = 0; i < poolBehavior.poolSize; i++)
+            {
+                CreateOneInactive(poolBehavior, prefab);
+            }
+        }
+
+        public static void ReclaimOldest(ObjectPoolBehavior poolBehavior)
+        {
+            if (poolBehavior.activeChildren.Count > 0)
+            {
+                poolBehavior.Reclaim(poolBehavior.activeChildren.ToArray()[0]);
+                return;
+            }
+            InitPool(poolBehavior, poolBehavior.Prefab.TryCast<ChatBubble>());
+        }
+        
+        public static ChatBubble? GetPooledBubble()
+        {
+            ObjectPoolBehavior poolBehavior = DestroyableSingleton<HudManager>.Instance.Chat.chatBubblePool;
+            if (poolBehavior.NotInUse == 0)
+            {
+                ReclaimOldest(poolBehavior);
+            }
+
+            return poolBehavior.Get<ChatBubble>();
+        }
+
         public static void AddChatMessage(MouthwashChatMessage chatMessage)
         {
-            ChatBubble? bubble = GetPooledBubble();
-            UpdateChatMessage(bubble, chatMessage);
-            ChatController chat = DestroyableSingleton<HudManager>.Instance.Chat;
-            if (!chat.IsOpenOrOpening && chat.notificationRoutine == null)
+            if (DestroyableSingleton<HudManager>.Instance)
             {
-                chat.notificationRoutine = chat.StartCoroutine(chat.BounceDot());
-            }
-            if (chatMessage.Alignment == MouthwashChatMessageAlignment.Left)
-            {
-                // TODO: Pitch
-                SoundManager.Instance.PlaySound(chat.messageSound, false, 1f, null).pitch = 0.5f + (float)PlayerControl.LocalPlayer.PlayerId / 15f;
+                ChatController chat = DestroyableSingleton<HudManager>.Instance.Chat;
+                ChatBubble? bubble = GetPooledBubble();
+                UpdateChatMessage(bubble, chatMessage);
+                if (!chat.IsOpenOrOpening && chat.notificationRoutine == null)
+                {
+                    chat.notificationRoutine = chat.StartCoroutine(chat.BounceDot());
+                }
+                if (chatMessage.Alignment == MouthwashChatMessageAlignment.Left)
+                {
+                    // TODO: Pitch
+                    SoundManager.Instance.PlaySound(chat.messageSound, false, 1f, null).pitch = 0.5f + (float)PlayerControl.LocalPlayer.PlayerId / 15f;
+                }
             }
         }
 
