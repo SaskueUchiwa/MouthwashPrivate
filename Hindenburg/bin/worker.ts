@@ -196,7 +196,7 @@ async function fetchExternalIp(logger: Logger) {
 
     const ipSpinner = new Spinner("Fetching ip address.. %s").start();
     try {
-        cachedIp = (await makeHttpRequest("https://api.ipify.org")).toString("utf8");
+        cachedIp = (await makeHttpRequest("https://icanhazip.com")).toString("utf8");
         cachedIp = cachedIp.toString().trim();
         ipSpinner.success();
     } catch (e) {
