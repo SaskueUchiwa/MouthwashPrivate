@@ -43,6 +43,7 @@
         FEATURED: "Featured",
         NEW_RELEASE: "New Release",
         CLASSIC: "Classic",
+        POPULAR: "Popular",
         PGG_REWRITTEN: "PGG: Rewritten",
         AMONG_US: "Among Us",
         SEASONAL: "Seasonal",

@@ -76,11 +76,11 @@
                 </button>
                 <div class="flex items-center justify-center w-full gap-2">
                     <div class="flex-1 bg-[#2E0F44] h-0.25"></div>
-                    <span class="text-xs text-[#2E0F44]">OR</span>
+                    <span class="font-semibold text-xs text-[#2E0F44]">OR CHOOSE</span>
                     <div class="flex-1 bg-[#2E0F44] h-0.25"></div>
                 </div>
             </div>
-            <div class="flex flex-wrap gap-4">
+            <div class="flex flex-wrap gap-4 w-212">
                 {#each Object.entries(allFeatureTags) as [ featureTagId, featureTagName ]}
                     <button
                         class="flex items-center justify-center rounded-lg px-6 py-2 bg-[#27063e] hover:bg-[#1c072b] hover:text-[#bba1ce] filter border-none font-inherit text-inherit cursor-pointer"

@@ -71,6 +71,6 @@
                     <BuyableCosmeticBundle {bundleItems} {ownedItems}/>
                 {/each}
             </div>
-            {/if}
+        {/if}
     </div>
 </div>
