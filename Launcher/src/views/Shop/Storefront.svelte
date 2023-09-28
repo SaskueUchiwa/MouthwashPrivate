@@ -16,7 +16,7 @@
     let featuredCosmetics = writable<BundleItem[]|typeof loading|typeof unavailable>(loading);
     let featuredBundles = writable<Map<string, BundleItem[]>|typeof loading|typeof unavailable>(loading);
     $: featuredBundles.set($featuredCosmetics === unavailable || $featuredCosmetics === loading ? $featuredCosmetics : collectBundles($featuredCosmetics));
-    async function getFeaturedCosmetics() {
+    export async function getFeaturedCosmetics() {
         featuredCosmetics.set(loading);
         const featuredCosmeticsRes = await fetch($accountUrl + "/api/v2/bundles?feature_tag=FEATURED");
 

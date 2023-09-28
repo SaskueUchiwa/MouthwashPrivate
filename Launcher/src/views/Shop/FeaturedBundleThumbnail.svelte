@@ -11,7 +11,7 @@
     $: doesAlreadyOwn = ownedItems && bundleItems.every(item => ownedItems.find(x => x.id === item.id));
 </script>
 
-<button class="relative filter hover:contrast-120 group transition duration-500 rounded-md overflow-hidden" on:click>
+<button class="relative filter hover:contrast-120 group transition duration-500 rounded-md overflow-hidden" class:pointer-events-none={!showDetails} on:click>
     <div class="filter transition duration-500 transform group-hover:scale-110" class:grayscale={doesAlreadyOwn}>
         <img src={bundleInfo.thumbnail_url} width={size} height={size} alt={bundleInfo.bundle_name}/>
     </div>

@@ -58,6 +58,7 @@ export interface BundleItem {
     bundle_price_usd: number;
     valuation: string;
     bundle_feature_tags: string;
+    bundle_description: string;
 }
 
 export type Deferred<T> = T|typeof loading|typeof unavailable;

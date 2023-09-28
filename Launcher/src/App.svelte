@@ -22,6 +22,8 @@
 
     let selectedTab = "Account";
 
+    let accountTab: AccountView|undefined = undefined;
+
     const requiredFiles = [ "Among Us_Data", "Among Us_Data/il2cpp_data", "BepInEx", "BepInEx/core", "BepInEx/plugins/Polus.dll", "BepInEx/plugins/PolusggSlim.dll",
         "mono", "mono/Managed", "mono/MonoBleedingEdge", "Among Us.exe", "baselib.dll", "doorstop_config.ini", "GameAssembly.dll", "UnityPlayer.dll", "winhttp.dll" ];
     async function checkInstallationPath(installationPath: string) {
@@ -113,10 +115,10 @@
             </span>
         </div>
         <div class="min-h-0 flex-1 self-stretch">
-            <div class="w-full h-full" class:hidden={selectedTab !== "Account"}><AccountView/></div>
+            <div class="w-full h-full" class:hidden={selectedTab !== "Account"}><AccountView bind:this={accountTab}/></div>
             <div class="w-full h-full" class:hidden={selectedTab !== "Download"}><DownloadView on:switch-view={switchView}/></div>
             <div class="w-full h-full" class:hidden={selectedTab !== "Play"}><PlayView on:switch-view={switchView}/></div>
-            <div class="w-full h-full" class:hidden={selectedTab !== "Shop"}><ShopView/></div>
+            <div class="w-full h-full" class:hidden={selectedTab !== "Shop"}><ShopView on:refresh-cosmetics={() => accountTab?.getUserCosmetics()}/></div>
         </div>
     </div>
 </div>

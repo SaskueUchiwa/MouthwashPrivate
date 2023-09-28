@@ -11,6 +11,11 @@
     
     let currentPage: ""|"games" = "";
 
+    let userCosmetics: UserCosmetics|undefined = undefined;
+    export async function getUserCosmetics() {
+        await userCosmetics?.getUserCosmetics();
+    }
+
     async function checkLogin(userLogin: UserLogin) {
         const checkLoginResponse = await fetch(get(accountUrl) + "/api/v2/auth/check", {
             method: "POST",
@@ -121,7 +126,7 @@
                     <SignUpSection/>
                 {:else}
                     {#if currentPage === ""}
-                        <UserCosmetics user={$user}/>
+                        <UserCosmetics user={$user} bind:this={userCosmetics}/>
                     {:else if currentPage === "games"}
                         <UserGames user={$user}/>
                     {/if}

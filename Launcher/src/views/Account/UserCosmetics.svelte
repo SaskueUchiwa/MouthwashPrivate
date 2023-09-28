@@ -26,7 +26,7 @@
 
     $: bundles.set($cosmetics === unavailable || $cosmetics === loading ? $cosmetics : collectBundles($cosmetics));
 
-    async function getUserCosmetics() {
+    export async function getUserCosmetics() {
         cosmetics.set(loading);
         const userCosmeticsRes = await fetch($accountUrl + "/api/v2/accounts/owned_bundles", {
             headers: {

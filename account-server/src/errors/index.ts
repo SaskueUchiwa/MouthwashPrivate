@@ -1,5 +1,7 @@
 export * from "./BundleAlreadyOwned";
 export * from "./BundleNotFound";
+export * from "./CheckoutSessionAlreadyFinished";
+export * from "./CheckoutSessionNotFound";
 export * from "./DisplayNameAlreadyInUse";
 export * from "./EmailAlreadyInUse";
 export * from "./FailedToAwardBundles";
@@ -7,6 +9,7 @@ export * from "./Forbidden";
 export * from "./GameNotFound";
 export * from "./InvalidBody";
 export * from "./MissingHeader";
+export * from "./PaymentNotFinalised";
 export * from "./TooManyVerificationEmails";
 export * from "./Unauthorized";
 export * from "./UserNotFound";

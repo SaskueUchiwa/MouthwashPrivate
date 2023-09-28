@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { writable, type Writable } from "svelte/store";
+    import { writable } from "svelte/store";
     import BundleFilterBar from "./BundleFilterBar.svelte";
     import { loading, type BundleItem, unavailable, accountUrl, collectBundles } from "../../stores/accounts";
     import BuyableCosmeticBundle from "./BuyableCosmeticBundle.svelte";
@@ -20,7 +20,7 @@
     
     $: availableBundles.set($availableCosmetics === unavailable || $availableCosmetics === loading ? $availableCosmetics : collectBundles($availableCosmetics));
 
-    async function getAvailableCosmetics() {
+    export async function getAvailableCosmetics() {
         availableCosmetics.set(loading);
         const userCosmeticsRes = await fetch($accountUrl + "/api/v2/bundles?"
             + (searchTerm.length > 0 ? "text_search=" + searchTerm : "")
@@ -58,7 +58,7 @@
         {/if}
     </span>
     <BundleFilterBar {availableBundles} {getAvailableCosmetics} bind:selectedValuationIdxs bind:searchTerm/>
-    <div class="overflow-y-auto min-h-0 flex-1">
+    <div class="overflow-y-auto min-h-0 px-4 flex-1">
         {#if $availableBundles === loading}
             <div class="flex-1 flex items-center justify-center text-[#806593]">
                 <Loader size={32}/>
@@ -68,7 +68,7 @@
         {:else}
             <div class="grid grid-cols-2 grid-rows-auto gap-4">
                 {#each $availableBundles as [, bundleItems ]}
-                    <BuyableCosmeticBundle {bundleItems} {ownedItems}/>
+                    <BuyableCosmeticBundle {bundleItems} {ownedItems} on:open-purchase-form/>
                 {/each}
             </div>
         {/if}

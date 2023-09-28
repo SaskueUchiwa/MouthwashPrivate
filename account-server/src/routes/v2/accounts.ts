@@ -10,7 +10,10 @@ import {
     InvalidBodyError,
     TooManyVerificationEmailsError,
     UserNotFoundError,
-    DisplayNameAlreadyInUse
+    DisplayNameAlreadyInUse,
+    CheckoutSessionNotFound,
+    PaymentNotFinalised,
+    CheckoutSessionAlreadyFinished
 } from "../../errors";
 
 import { BaseRoute } from "../BaseRoute";
@@ -23,6 +26,14 @@ export const createUserRequestValidator = ark.type({
 
 export const resendVerificationEmailRequestValidator = ark.type({
     email: "email"
+});
+
+export const checkoutBundleRequestValidator = ark.type({
+    bundle_id: "uuid"
+});
+
+export const completeCheckoutRequestValidation = ark.type({
+    checkout_session_id: "uuid"
 });
 
 export class AccountsRoute extends BaseRoute {
@@ -89,44 +100,94 @@ export class AccountsRoute extends BaseRoute {
     }
     
     @mediator.Endpoint(mediator.HttpMethod.POST, "/v2/accounts/checkout_bundle")
+    @mediator.Middleware(express.json())
     async createBundleCheckoutSession(transaction: mediator.Transaction<{}>) {
         if (!this.server.stripe) {
             throw new mediator.InternalServerError(new Error("Stripe not enabled on server."));
         }
+        
+        const { data, problems } = checkoutBundleRequestValidator(transaction.getBody());
+        if (data === undefined) throw new InvalidBodyError(problems);
 
-        const { bundle_id } = transaction.getQueryParams();
-        if (typeof bundle_id !== "string")
-            throw new BundleNotFoundError("");
+        const bundle = await this.server.cosmeticsController.getAvailableBundleById(data.bundle_id);
+        if (bundle === undefined)
+            throw new BundleNotFoundError(data.bundle_id);
 
-        const stripeItem = await this.server.checkoutController.getBundleStripeItem(bundle_id);
+        const stripeItem = await this.server.checkoutController.getBundleStripeItem(data.bundle_id);
         if (stripeItem === undefined)
-            throw new BundleNotFoundError(bundle_id);
+            throw new BundleNotFoundError(data.bundle_id);
 
         const session = await this.server.sessionsController.validateAuthorization(transaction);
-        const ownedItem = await this.server.cosmeticsController.doesUserOwnBundle(session.user_id, bundle_id);
+        const ownedItem = await this.server.cosmeticsController.doesUserOwnBundle(session.user_id, data.bundle_id);
         
         if (ownedItem)
-            throw new BundleAlreadyOwnedError(bundle_id);
+            throw new BundleAlreadyOwnedError(data.bundle_id);
+        
+        const paymentIntent = await this.server.stripe.paymentIntents.create({
+            amount: bundle.price_usd,
+            currency: "USD"
+        });
 
         const mouthwashCheckoutSession = await this.server.checkoutController.createCheckout(
             session.user_id,
             stripeItem.stripe_price_id,
-            bundle_id
+            data.bundle_id,
+            paymentIntent.id
         );
 
         if (!mouthwashCheckoutSession)
             throw new mediator.InternalServerError(new Error("Failed to create checkout session."));
 
-        const stripeCheckoutSession = await this.server.stripe.checkout.sessions.create({
-            success_url: "https://accounts.mouthwash.midlight.studio/checkout_success",
-            cancel_url: "https://accounts.mouthwash.midlight.studio/checkout_cancel",
-            line_items: [
-                { price: stripeItem.stripe_price_id, quantity: 1 }
-            ],
-            mode: "payment",
-            client_reference_id: mouthwashCheckoutSession.id
-        });
+        transaction.respondJson({ checkout_session_id: mouthwashCheckoutSession.id, client_secret: paymentIntent.client_secret });
+    }
+    
+    @mediator.Endpoint(mediator.HttpMethod.POST, "/v2/accounts/checkout_bundle/complete")
+    @mediator.Middleware(express.json())
+    async completeBundleCheckoutSession(transaction: mediator.Transaction<{}>) {
+        if (!this.server.stripe) {
+            throw new mediator.InternalServerError(new Error("Stripe not enabled on server."));
+        }
 
-        transaction.respondJson({ proceed_checkout_url: stripeCheckoutSession.url });
+        const { data, problems } = completeCheckoutRequestValidation(transaction.getBody());
+        if (data === undefined) throw new InvalidBodyError(problems);
+
+        const checkoutSession = await this.server.checkoutController.getCheckoutById(data.checkout_session_id);
+        if (!checkoutSession)
+            throw new CheckoutSessionNotFound(data.checkout_session_id);
+
+        if (checkoutSession.completed_at !== null || checkoutSession.canceled_at !== null)
+            throw new CheckoutSessionAlreadyFinished(data.checkout_session_id);
+
+        const paymentIntent = await this.server.stripe.paymentIntents.retrieve(checkoutSession.stripe_payment_intent_id);
+        if (paymentIntent.status !== "succeeded")
+            throw new PaymentNotFinalised;
+
+        const ownership = await this.server.cosmeticsController.addOwnedBundle(checkoutSession.user_id, checkoutSession.bundle_id);
+        if (!ownership)
+            throw new mediator.InternalServerError(new Error("Could not grant bundles"));
+
+        await this.server.checkoutController.setCheckoutCompleted(data.checkout_session_id);
+        transaction.respondJson({});
+    }
+    
+    @mediator.Endpoint(mediator.HttpMethod.POST, "/v2/accounts/checkout_bundle/cancel")
+    @mediator.Middleware(express.json())
+    async cancelBundleCheckoutSession(transaction: mediator.Transaction<{}>) {
+        if (!this.server.stripe) {
+            throw new mediator.InternalServerError(new Error("Stripe not enabled on server."));
+        }
+
+        const { data, problems } = completeCheckoutRequestValidation(transaction.getBody());
+        if (data === undefined) throw new InvalidBodyError(problems);
+
+        const checkoutSession = await this.server.checkoutController.getCheckoutById(data.checkout_session_id);
+        if (!checkoutSession)
+            throw new CheckoutSessionNotFound(data.checkout_session_id);
+        
+        if (checkoutSession.completed_at !== null || checkoutSession.canceled_at !== null)
+            throw new CheckoutSessionAlreadyFinished(data.checkout_session_id);
+
+        await this.server.checkoutController.setCheckoutCancelled(data.checkout_session_id);
+        transaction.respondJson({});
     }
 }
