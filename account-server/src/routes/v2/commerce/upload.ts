@@ -3,16 +3,39 @@ import * as undici from "undici";
 import * as crypto from "crypto";
 import * as ark from "arktype";
 import * as express from "express";
+import JSZip from "jszip";
 import { BaseRoute } from "../../BaseRoute";
 import { ForbiddenError, InvalidBodyError } from "../../../errors";
 import { Bundle, BundleItem, StripeItem } from "../../../controllers";
 
-const uploadCosmeticBundleBodyValidator = ark.type({
-    file_uuid: "string",
-    bundle_data_base_64: "string",
-    cosmetic_asset_paths: "string[]",
-    base_resource_id: "integer"
-});
+const uploadCosmeticBundleBodyValidator = ark.scope({
+    hat_asset_data_info: {
+        type: "\"HAT\"",
+        main: "string|null",
+        back: "string|null",
+        left_main: "string|null",
+        left_back: "string|null",
+        climb: "string|null",
+        floor: "string|null",
+        left_climb: "string|null",
+        left_floor: "string|null",
+        thumb: "string|null",
+        product_id: "string",
+        chip_offset: {
+            x: "number",
+            y: "number"
+        }
+    },
+    asset_data_info: ["hat_asset_data_info", "&", {
+        asset_bundle_path: "string"
+    }],
+    bundle_data_info: {
+        file_uuid: "string",
+        bundle_data_base_64: "string",
+        bundle_assets_listing: "asset_data_info[]", 
+        base_resource_id: "integer"
+    }
+}).compile();
 
 const publishCosmeticBundleBodyValidator = ark.scope({
     item_valuation: "'GHOST'|'CREWMATE'|'IMPOSTOR'|'POLUS'",
@@ -50,7 +73,7 @@ export class UploadRoute extends BaseRoute {
             method: "DELETE",
             headers: {
                 authorization: "Bearer " + this.server.config.supabase.service_role_token,
-                cacheControl: "3600"
+                "cache-control": "3600"
             }
         });
 
@@ -59,7 +82,7 @@ export class UploadRoute extends BaseRoute {
             body: contents,
             headers: {
                 authorization: "Bearer " + this.server.config.supabase.service_role_token,
-                cacheControl: "3600",
+                "cache-control": "3600",
                 "content-type": fileType
             }
         });
@@ -76,24 +99,60 @@ export class UploadRoute extends BaseRoute {
         if (!this.server.config.supabase)
             throw new mediator.InternalServerError(new Error("Supabase storage bucket not setup on server, set SUPABASE_BASE_API_URL"));
 
-        const { data, problems } = uploadCosmeticBundleBodyValidator(transaction.getBody());
+        const { data, problems } = uploadCosmeticBundleBodyValidator.bundle_data_info(transaction.getBody());
         if (data === undefined) throw new InvalidBodyError(problems);
         const bundleData = Buffer.from(data.bundle_data_base_64, "base64");
 
         const hash = crypto.createHash("sha256").update(bundleData).digest("hex").toUpperCase();
 
-        const bundleMeta = {
+        const bundleMeta: any = {
             assetBundleId: data.base_resource_id,
             hash,
-            assets: data.cosmetic_asset_paths.map((item: any) => {
-                return {
-                    type: 0, /* asset, not assembly */
-                    path: item,
-                    details: null
-                }
-            })
+            assets: []
         };
 
+        const bundleAssetsZip = new JSZip();
+        const assetMetadata = [];
+        for (let i = 0; i < data.bundle_assets_listing.length; i++) {
+            const bundleAsset = data.bundle_assets_listing[i];
+
+            bundleMeta.assets.push({
+                type: 0,
+                path: bundleAsset.asset_bundle_path,
+                details: null
+            });
+
+            if (bundleAsset.type === "HAT") {
+                if (bundleAsset.main) bundleAssetsZip.file(`${i}/main.png`, Buffer.from(bundleAsset.main, "base64"));
+                if (bundleAsset.back) bundleAssetsZip.file(`${i}/back.png`, Buffer.from(bundleAsset.back, "base64"));
+                if (bundleAsset.left_main) bundleAssetsZip.file(`${i}/left_main.png`, Buffer.from(bundleAsset.left_main, "base64"));
+                if (bundleAsset.left_back) bundleAssetsZip.file(`${i}/left_back.png`, Buffer.from(bundleAsset.left_back, "base64"));
+                if (bundleAsset.climb) bundleAssetsZip.file(`${i}/climb.png`, Buffer.from(bundleAsset.climb, "base64"));
+                if (bundleAsset.floor) bundleAssetsZip.file(`${i}/floor.png`, Buffer.from(bundleAsset.floor, "base64"));
+                if (bundleAsset.left_climb) bundleAssetsZip.file(`${i}/left_climb.png`, Buffer.from(bundleAsset.left_climb, "base64"));
+                if (bundleAsset.left_floor) bundleAssetsZip.file(`${i}/left_floor.png`, Buffer.from(bundleAsset.left_floor, "base64"));
+                if (bundleAsset.thumb) bundleAssetsZip.file(`${i}/thumb.png`, Buffer.from(bundleAsset.thumb, "base64"));
+                
+                assetMetadata.push({
+                    chip_offset: bundleAsset.chip_offset,
+                    main: bundleAsset.main ? "main.png" : undefined,
+                    back: bundleAsset.back ? "back.png" : undefined,
+                    left_main: bundleAsset.left_main ? "left_main.png" : undefined,
+                    left_back: bundleAsset.left_back ? "left_back.png" : undefined,
+                    climb: bundleAsset.climb ? "climb.png" : undefined,
+                    floor: bundleAsset.floor ? "floor.png" : undefined,
+                    left_climb: bundleAsset.left_climb ? "left_climb.png" : undefined,
+                    left_floor: bundleAsset.left_floor ? "left_floor.png" : undefined,
+                    thumb: bundleAsset.thumb ? "thumb.png" : undefined
+                });
+            }
+        }
+        bundleAssetsZip.file("metadata.json", JSON.stringify({ assets: assetMetadata }));
+
+        const spritesArchiveData = await bundleAssetsZip.generateAsync({ type: "nodebuffer" });
+        const spritesArchiveHash = crypto.createHash("sha256").update(spritesArchiveData).digest("hex").toUpperCase();
+
+        await this.uploadFileToBucket("MouthwashAssets/" + data.file_uuid + "-assets.zip", spritesArchiveData, "application/octet-stream");
         await this.uploadFileToBucket("MouthwashAssets/" + data.file_uuid, bundleData, "application/octet-stream");
         await this.uploadFileToBucket("MouthwashAssets/" + data.file_uuid + ".sha256", Buffer.from(hash), "text/plain");
         await this.uploadFileToBucket("MouthwashAssets/" + data.file_uuid + ".json", Buffer.from(JSON.stringify(bundleMeta), "utf8"), "application/json");
@@ -108,14 +167,15 @@ export class UploadRoute extends BaseRoute {
         if (existingBundle) {
             await this.server.postgresClient.query(`
                 UPDATE asset_bundle
-                SET hash = $2
+                SET hash = $2, preview_contents_hash = $3
                 WHERE id = $1
-            `, [ data.file_uuid, hash ]);
+            `, [ data.file_uuid, hash, spritesArchiveHash ]);
         } else {
+            const fileUrl = this.server.config.supabase.base_api_url + "/storage/v1/object/public/MouthwashAssets/" + data.file_uuid;
             await this.server.postgresClient.query(`
-                INSERT INTO asset_bundle(id, url, hash)
-                VALUES ($1, $2, $3)
-            `, [ data.file_uuid, this.server.config.supabase.base_api_url + "/storage/v1/object/public/MouthwashAssets/" + data.file_uuid, hash ]);
+                INSERT INTO asset_bundle(id, url, hash, preview_contents_url, preview_contents_hash)
+                VALUES ($1, $2, $3, $4, $5)
+            `, [ data.file_uuid, fileUrl, hash, fileUrl + "-assets.zip", spritesArchiveHash ]);
         }
 
         transaction.respondJson({});
