@@ -33,7 +33,7 @@
         }
     }
 
-    const joinDateFormat = new Intl.DateTimeFormat("en-US");
+    const joinDateFormat = new Intl.DateTimeFormat(undefined, { dateStyle: "medium" });
 </script>
 
 <div class="flex-1 flex flex-col items-center gap-4">

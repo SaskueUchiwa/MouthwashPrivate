@@ -7,13 +7,13 @@
     const dispatchEvent = createEventDispatcher();
 
     import { onMount } from "svelte";
-    import { accountUrl, loading, type BundleItem, type UserLogin } from "../../stores/accounts";
+    import { accountUrl, type Bundle, type UserLogin } from "../../stores/accounts";
     import FeaturedBundleThumbnail from "./FeaturedBundleThumbnail.svelte";
     import Loader from "../../icons/Loader.svelte";
     import Check from "../../icons/Check.svelte";
     import Cross from "../../icons/Cross.svelte";
 
-    export let purchasingBundle: BundleItem;
+    export let purchasingBundle: Bundle & { num_items: number; };
     export let clientSecret: string;
     export let checkoutSessionId: string;
     export let user: UserLogin;
@@ -150,13 +150,13 @@
                 <span class="text-xl">Purchase Bundle</span>
             </div>
             <div class="flex border-b-2 border-dotted border-[#27063e] gap-1 px-2 pb-4">
-                <FeaturedBundleThumbnail bundleItems={[ purchasingBundle ]} showDetails={false} ownedItems={[]} size={96}/>
+                <FeaturedBundleThumbnail bundleInfo={purchasingBundle} showDetails={false} ownedItems={[]} size={96}/>
                 <div class="flex flex-col p-2">
                     <pre class="text-xs">Item: {purchasingBundle.name} (Bundle)</pre>
                     <!--<p class="text-[#806593] italic text-xs">{purchasingBundle.bundle_description}</p>-->
-                    <pre class="text-xs">Subtotal: ${(purchasingBundle.bundle_price_usd / 100).toFixed(2)}</pre>
+                    <pre class="text-xs">Subtotal: ${(purchasingBundle.price_usd / 100).toFixed(2)}</pre>
                     <pre class="text-xs text-[#806593]">Tax: VAT included</pre>
-                    <pre class="text-xs mt-2">Total: ${(purchasingBundle.bundle_price_usd / 100).toFixed(2)}</pre>
+                    <pre class="text-xs mt-2">Total: ${(purchasingBundle.price_usd / 100).toFixed(2)}</pre>
                 </div>
             </div>
             <div class="flex flex-col gap-6">
@@ -181,7 +181,7 @@
                         on:click={submitCardDetails}
                     >
                         <Check size={16}/>
-                        Purchase {purchasingBundle.bundle_name} for ${(purchasingBundle.bundle_price_usd / 100).toFixed(2)}
+                        Purchase {purchasingBundle.name} for ${(purchasingBundle.price_usd / 100).toFixed(2)}
                     </button>
                 </div>
                 {#if error}

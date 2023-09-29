@@ -1,11 +1,10 @@
 <script lang="ts">
-    import { loading, unavailable, type BundleItem } from "../../stores/accounts";
+    import { loading, unavailable, type Bundle } from "../../stores/accounts";
     import Search from "../../icons/Search.svelte";
     import ValuationDropdown from "./ValuationDropdown.svelte";
     import type { Writable } from "svelte/store";
-    import { onMount } from "svelte";
 
-    export let availableBundles: Writable<Map<string, BundleItem[]>|typeof loading|typeof unavailable>;
+    export let availableBundles: Writable<Bundle[]|typeof loading|typeof unavailable>;
     export let selectedValuationIdxs: number[];
     export let searchTerm: string;
     export let getAvailableCosmetics: () => void;
@@ -13,7 +12,7 @@
 
 <div class="flex items-center border-b-1 pb-2 mb-1 border-white/20 gap-2">
     {#if $availableBundles !== unavailable && $availableBundles !== loading}
-        <span class="text-xs">Showing {$availableBundles.size} bundle{$availableBundles.size === 1 ? "" : "s"}</span>
+        <span class="text-xs">Showing {$availableBundles.length} bundle{$availableBundles.length === 1 ? "" : "s"}</span>
     {/if}
     <div class="ml-auto order-2">
         <div class="flex gap-1">

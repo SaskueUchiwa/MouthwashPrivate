@@ -15,7 +15,7 @@
     const map = game.game_settings?.[".Map"]?.options[game.game_settings?.[".Map"]?.selectedIdx];
     const gamemode = game.game_settings?.[".Gamemode"]?.options[game.game_settings?.[".Gamemode"]?.selectedIdx];
     
-    const startedAtFormat = new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeStyle: "short" });
+    const startedAtFormat = new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" });
     
     let players = writable<typeof unavailable|typeof loading|Player[]>(unavailable);
 

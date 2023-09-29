@@ -8,7 +8,7 @@
     export let games: GameLobbyInfo[];
     export let selectedGameId: string;
     
-    const lobbyClosedFormat = new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeStyle: "short" });
+    const lobbyClosedFormat = new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" });
 </script>
 
 <div class="flex flex-col mr-4">

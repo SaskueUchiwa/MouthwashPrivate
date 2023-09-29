@@ -2,17 +2,15 @@
     import { createEventDispatcher } from "svelte";
     const dispatchEvent = createEventDispatcher();
 
-    import * as shell from "@tauri-apps/api/shell";
-    import { type BundleItem, loading, unavailable, user, accountUrl } from "../../stores/accounts";
+    import { loading, unavailable, user, accountUrl, type Bundle } from "../../stores/accounts";
     import FeaturedBundleThumbnail from "./FeaturedBundleThumbnail.svelte";
 
-    export let bundleItems: BundleItem[];
-    export let ownedItems: BundleItem[]|undefined;
-    $: bundleInfo = bundleItems[0];
+    export let bundleInfo: Bundle & { num_items: number; };
+    export let ownedBundles: Bundle[]|undefined;
     
     const boughtAtFormat = new Intl.DateTimeFormat("en-US");
 
-    $: doesAlreadyOwn = ownedItems && bundleItems.every(item => ownedItems.find(x => x.id === item.id));
+    $: doesAlreadyOwn = ownedBundles && !!ownedBundles.find(x => x.id === bundleInfo.id);
 
     let loadingBuy = false;
     async function createPaymentIntent() {
@@ -27,7 +25,7 @@
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                bundle_id: bundleInfo.bundle_id
+                bundle_id: bundleInfo.id
             })
         });
         loadingBuy = false;
@@ -42,12 +40,12 @@
 </script>
 
 <div class="flex items-center gap-2 filter" class:grayscale={doesAlreadyOwn}>
-    <FeaturedBundleThumbnail {bundleItems} {ownedItems} size={96} showDetails={false}/>
+    <FeaturedBundleThumbnail {bundleInfo} ownedItems={ownedBundles} size={96} showDetails={false}/>
     <div class="flex flex-col gap-2">
         <div class="flex flex-col">
-            <span>{bundleInfo.bundle_name}</span>
+            <span>{bundleInfo.name}</span>
             <span class="text-[#806593] italic text-xs">
-                Released on {boughtAtFormat.format(new Date(bundleInfo.added_at))}, {bundleItems.length} item{bundleItems.length === 1 ? "" : "s"}
+                Released on {boughtAtFormat.format(new Date(bundleInfo.added_at))}, {bundleInfo.num_items} item{bundleInfo.num_items === 1 ? "" : "s"}
             </span>
         </div>
         <button
@@ -59,7 +57,7 @@
             {#if doesAlreadyOwn}
                 You already own this bundle.
             {:else if $user !== loading && $user !== unavailable}
-                Purchase for ${(bundleInfo.bundle_price_usd / 100).toFixed(2)}
+                Purchase for ${(bundleInfo.price_usd / 100).toFixed(2)}
             {:else}
                 Login to purchase
             {/if}

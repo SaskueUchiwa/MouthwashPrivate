@@ -43,37 +43,22 @@ export interface Player {
     role_alignment: string|null;
 }
 
-export interface BundleItem {
+export interface Bundle {
     id: string;
-    bundle_id: string;
     name: string;
-    bundle_name: string;
-    among_us_id: number;
-    resource_path: number;
-    type: "HAT"|"PET";
-    resource_id: number;
     thumbnail_url: string;
-    owned_at: string;
-    added_at: string;
-    bundle_price_usd: number;
+    author_id: string;
+    base_resource_id: number;
+    price_usd: number;
+    added_at: Date;
+    asset_bundle_id: string;
+    stripe_item_id: string;
     valuation: string;
-    bundle_feature_tags: string;
-    bundle_description: string;
+    tags: string;
+    description: string;
+    feature_tags: string;
 }
 
 export type Deferred<T> = T|typeof loading|typeof unavailable;
 
 export const user = writable<Deferred<UserLogin>>(loading);
-
-export function collectBundles(items: BundleItem[]) {
-    const map: Map<string, BundleItem[]> = new Map;
-    for (const item of items) {
-        const existingBundle = map.get(item.bundle_id);
-        if (existingBundle) {
-            existingBundle.push(item);
-            continue;
-        }
-        map.set(item.bundle_id, [ item ]);
-    }
-    return map;
-}

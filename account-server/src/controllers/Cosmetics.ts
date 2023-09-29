@@ -7,10 +7,20 @@ export interface Bundle {
     thumbnail_url: string;
     author_id: string;
     base_resource_id: number;
-    stripe_item_id: string;
     price_usd: number;
     added_at: Date;
     asset_bundle_id: string;
+    stripe_item_id: string;
+    valuation: string;
+    tags: string;
+    description: string;
+    feature_tags: string;
+}
+
+export interface BundleWithPreview extends Bundle {
+    preview_contents_url: string;
+    preview_contents_hash: string;
+    num_items: number;
 }
 
 export interface BundleItem {
@@ -59,13 +69,14 @@ export class CosmeticsController {
         return foundBundleItems;
     }
     
-    async getAllCosmeticItemsOwned(userId: string): Promise<(BundleItem & { thumbnail_url: string; bundle_name: string; owned_at: Date; })[]> {
+    async getAllBundlesOwned(userId: string): Promise<(Bundle & { owned_at: Date; num_items: number; })[]> {
         const { rows: foundBundleItems } = await this.server.postgresClient.query(`
-            SELECT bundle_item.*, bundle.thumbnail_url, bundle.name AS bundle_name, user_owned_item.owned_at
-            FROM bundle_item
-            LEFT JOIN bundle ON bundle.id = bundle_item.bundle_id
-            LEFT JOIN user_owned_item ON user_owned_item.item_id = bundle_item.id OR user_owned_item.bundle_id = bundle.id
+            SELECT bundle.*, user_owned_item.owned_at, COUNT(bundle_item.id) AS num_items
+            FROM bundle
+            LEFT JOIN user_owned_item ON user_owned_item.bundle_id = bundle.id
+            JOIN bundle_item ON bundle_item.bundle_id = bundle.id
             WHERE user_owned_item.user_id = $1
+            GROUP BY bundle.id, user_owned_item.owned_at
         `, [ userId ]);
 
         return foundBundleItems;
@@ -112,24 +123,28 @@ export class CosmeticsController {
         return availableBundles[0] as Bundle|undefined;
     }
 
-    async getAllAvailableBundles(textSearch: string, valuations: string[], featureTag: string): Promise<(Bundle|{ thumbnail_url: string; bundle_name: string; added_at: Date; bundle_price_usd: number; bundle_feature_tags: string[]; bundle_description: string; })[]> {
+    async getAllAvailableBundles(textSearch: string, valuations: string[], featureTag: string): Promise<BundleWithPreview[]> {
         if (textSearch.length > 0) {
             const { rows: availableBundles } = await this.server.postgresClient.query(`
-                SELECT bundle_item.*, bundle.thumbnail_url, bundle.name AS bundle_name, bundle.added_at, bundle.price_usd AS bundle_price_usd, bundle.feature_tags AS bundle_feature_tags, bundle.description as bundle_description,
+                SELECT bundle.*, asset_bundle.preview_contents_url, asset_bundle.preview_contents_hash, COUNT(bundle_item.id) AS num_items,
                     ts_rank(to_tsvector(bundle.name || ' ' || bundle.description || ' ' || bundle.tags), websearch_to_tsquery($1)) as rank
-                FROM bundle_item
-                LEFT JOIN bundle ON bundle.id = bundle_item.bundle_id
+                FROM bundle
+                LEFT JOIN asset_bundle ON asset_bundle.id = bundle.asset_bundle_id
+                JOIN bundle_item ON bundle_item.bundle_id = bundle.id
                 WHERE bundle.valuation = ANY ($2) AND (to_tsvector(bundle.name || ' ' || bundle.description || ' ' || bundle.tags) @@ websearch_to_tsquery($1)) AND bundle.feature_tags LIKE ('%' || $3 || '%')
+                GROUP BY bundle.id, asset_bundle.preview_contents_url, asset_bundle.preview_contents_hash
                 ORDER BY rank DESC;
             `, [ textSearch, valuations, featureTag ]);
 
             return availableBundles;
         } else {
             const { rows: availableBundles } = await this.server.postgresClient.query(`
-                SELECT bundle_item.*, bundle.thumbnail_url, bundle.name AS bundle_name, bundle.added_at, bundle.price_usd AS bundle_price_usd, bundle.feature_tags AS bundle_feature_tags, bundle.description as bundle_description
-                FROM bundle_item
-                LEFT JOIN bundle ON bundle.id = bundle_item.bundle_id
+                SELECT bundle.*, asset_bundle.preview_contents_url, asset_bundle.preview_contents_hash, COUNT(bundle_item.id) AS num_items
+                FROM bundle
+                LEFT JOIN asset_bundle ON asset_bundle.id = bundle.asset_bundle_id
+                JOIN bundle_item ON bundle_item.bundle_id = bundle.id
                 WHERE bundle.valuation = ANY ($1) AND bundle.feature_tags LIKE ('%' || $2 || '%')
+                GROUP BY bundle.id, asset_bundle.preview_contents_url, asset_bundle.preview_contents_hash
             `, [ valuations, featureTag ]);
 
             return availableBundles;

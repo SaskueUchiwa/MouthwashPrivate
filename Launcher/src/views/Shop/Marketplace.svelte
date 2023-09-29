@@ -1,12 +1,12 @@
 <script lang="ts">
     import { writable } from "svelte/store";
     import BundleFilterBar from "./BundleFilterBar.svelte";
-    import { loading, type BundleItem, unavailable, accountUrl, collectBundles } from "../../stores/accounts";
+    import { loading, type Bundle, unavailable, accountUrl } from "../../stores/accounts";
     import BuyableCosmeticBundle from "./BuyableCosmeticBundle.svelte";
     import { onMount } from "svelte";
     import Loader from "../../icons/Loader.svelte";
 
-    export let ownedItems: BundleItem[]|undefined;
+    export let ownedBundles: Bundle[]|undefined;
     export let page: String;
     export let selectedValuationIdxs: number[];
     export let searchTerm: string;
@@ -15,25 +15,22 @@
     
     const allValuations = [ "GHOST", "CREWMATE", "IMPOSTOR", "POLUS" ];
 
-    let availableCosmetics = writable<BundleItem[]|typeof loading|typeof unavailable>(loading);
-    let availableBundles = writable<Map<string, BundleItem[]>|typeof loading|typeof unavailable>(loading);
-    
-    $: availableBundles.set($availableCosmetics === unavailable || $availableCosmetics === loading ? $availableCosmetics : collectBundles($availableCosmetics));
+    let availableBundles = writable<(Bundle & { num_items: number; })[]|typeof loading|typeof unavailable>(loading);
 
     export async function getAvailableCosmetics() {
-        availableCosmetics.set(loading);
+        availableBundles.set(loading);
         const userCosmeticsRes = await fetch($accountUrl + "/api/v2/bundles?"
             + (searchTerm.length > 0 ? "text_search=" + searchTerm : "")
             + (selectedValuationIdxs.length > 0 ? "&valuations=" + selectedValuationIdxs.map(i => allValuations[i]).join(",") : "")
             + (featureTag !== undefined ? "&feature_tag=" + featureTag : ""));
 
         if (!userCosmeticsRes.ok) {
-            availableCosmetics.set(unavailable);
+            availableBundles.set(unavailable);
             return;
         }
 
         const json = await userCosmeticsRes.json();
-        availableCosmetics.set(json.data);
+        availableBundles.set(json.data);
     }
 
     onMount(() => {
@@ -67,8 +64,8 @@
             Could not get bundles available to purchase, try again later or contact support.
         {:else}
             <div class="grid grid-cols-2 grid-rows-auto gap-4">
-                {#each $availableBundles as [, bundleItems ]}
-                    <BuyableCosmeticBundle {bundleItems} {ownedItems} on:open-purchase-form/>
+                {#each $availableBundles as bundleInfo}
+                    <BuyableCosmeticBundle {bundleInfo} {ownedBundles} on:open-purchase-form/>
                 {/each}
             </div>
         {/if}

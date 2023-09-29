@@ -1,40 +1,39 @@
 <script lang="ts">
     import { writable, type Writable } from "svelte/store";
-    import { type BundleItem, loading, unavailable, accountUrl, collectBundles } from "../../stores/accounts";
+    import { type Bundle, loading, unavailable, accountUrl } from "../../stores/accounts";
     import FeaturedBundleThumbnail from './FeaturedBundleThumbnail.svelte';
     import ArrowRight from '../../icons/ArrowRight.svelte';
     import Loader from "../../icons/Loader.svelte";
     import { onMount } from "svelte";
 
-    export let ownedCosmetics: Writable<BundleItem[]|typeof loading|typeof unavailable>;
+    export let ownedCosmetics: Writable<Bundle[]|typeof loading|typeof unavailable>;
     export let searchTerm: string;
     export let featureTag: string|undefined;
     export let page: string;
     export let allFeatureTags: Record<string, string>;
 
     let error = "";
-    let featuredCosmetics = writable<BundleItem[]|typeof loading|typeof unavailable>(loading);
-    let featuredBundles = writable<Map<string, BundleItem[]>|typeof loading|typeof unavailable>(loading);
-    $: featuredBundles.set($featuredCosmetics === unavailable || $featuredCosmetics === loading ? $featuredCosmetics : collectBundles($featuredCosmetics));
+    let featuredBundles = writable<(Bundle & { num_items: number; })[]|typeof loading|typeof unavailable>(loading);
+
     export async function getFeaturedCosmetics() {
-        featuredCosmetics.set(loading);
+        featuredBundles.set(loading);
         const featuredCosmeticsRes = await fetch($accountUrl + "/api/v2/bundles?feature_tag=FEATURED");
 
         if (!featuredCosmeticsRes.ok) {
             error = "Could not get available cosmetics.";
-            featuredCosmetics.set(unavailable);
+            featuredBundles.set(unavailable);
             return;
         }
 
         const json = await featuredCosmeticsRes.json();
-        featuredCosmetics.set(json.data);
+        featuredBundles.set(json.data);
     }
 
     onMount(() => {
         getFeaturedCosmetics();
     });
 </script>
-
+    
 <div class="flex flex-col gap-4">
     <div class="flex flex-col gap-1">
         <span class="text-2xl font-semibold">Shop Featured</span>
@@ -48,13 +47,13 @@
             {:else if $featuredBundles === unavailable}
                 <span>Could not load featured bundles, try again later or contact support.</span> 
             {:else}
-                {#each $featuredBundles as [ , bundleItems ]}
+                {#each $featuredBundles as bundleInfo}
                     <FeaturedBundleThumbnail
                         size={164}
                         showDetails={true}
                         ownedItems={Array.isArray($ownedCosmetics) ? $ownedCosmetics : undefined}
-                        {bundleItems}
-                        on:click={() => (featureTag = undefined, searchTerm = bundleItems[0].bundle_name, page = "Marketplace")}/>
+                        {bundleInfo}
+                        on:click={() => (featureTag = undefined, searchTerm = bundleInfo.name, page = "Marketplace")}/>
                 {/each}
             {/if}
         </div>

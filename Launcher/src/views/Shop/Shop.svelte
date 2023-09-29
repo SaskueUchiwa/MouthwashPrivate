@@ -3,13 +3,13 @@
     const dispatchEvent = createEventDispatcher();
 
     import { writable } from "svelte/store";
-    import { type BundleItem, loading, unavailable, accountUrl, user } from "../../stores/accounts";
+    import { type Bundle, loading, unavailable, accountUrl, user } from "../../stores/accounts";
     import Marketplace from "./Marketplace.svelte";
     import PurchaseForm from "./PurchaseForm.svelte";
     import Storefront from "./Storefront.svelte";
 
     let error = "";
-    let ownedCosmetics = writable<BundleItem[]|typeof loading|typeof unavailable>(loading);
+    let ownedBundles = writable<Bundle[]|typeof loading|typeof unavailable>(loading);
 
     let selectedValuationIdxs = [];
     let searchTerm = "";
@@ -19,7 +19,7 @@
         if ($user === loading || $user === unavailable)
             return;
 
-        ownedCosmetics.set(loading);
+        ownedBundles.set(loading);
         const userCosmeticsRes = await fetch($accountUrl + "/api/v2/accounts/owned_bundles", {
             headers: {
                 Authorization: `Bearer ${$user.client_token}`
@@ -28,12 +28,12 @@
 
         if (!userCosmeticsRes.ok) {
             error = "Could not get user cosmetics.";
-            ownedCosmetics.set(unavailable);
+            ownedBundles.set(unavailable);
             return;
         }
 
         const json = await userCosmeticsRes.json();
-        ownedCosmetics.set(json.data);
+        ownedBundles.set(json.data);
     }
 
     $: if ($user !== loading && $user !== unavailable) {
@@ -52,11 +52,11 @@
     };
 
     let page: ""|"Marketplace" = "";
-    let purchasingBundle: BundleItem|undefined = undefined;
+    let purchasingBundle: (Bundle & { num_items: number; })|undefined = undefined;
     let clientSecret: string|undefined = undefined;
     let checkoutSessionId: string|undefined = undefined;
 
-    function openPurchaseForm(ev: CustomEvent<{ bundle: BundleItem; clientSecret: string; checkoutSessionId: string; }>) {
+    function openPurchaseForm(ev: CustomEvent<{ bundle: Bundle & { num_items: number; }; clientSecret: string; checkoutSessionId: string; }>) {
         purchasingBundle = ev.detail.bundle;
         clientSecret = ev.detail.clientSecret;
         checkoutSessionId = ev.detail.checkoutSessionId;
@@ -73,12 +73,12 @@
 <div class="flex gap-4 self-stretch h-full">
     <div class="w-full flex flex-col bg-[#06000a] rounded-xl gap-4 p-4">
         {#if page === ""}
-            <Storefront {ownedCosmetics} {allFeatureTags} bind:searchTerm bind:page bind:featureTag bind:this={storefront}/>
+            <Storefront ownedCosmetics={ownedBundles} {allFeatureTags} bind:searchTerm bind:page bind:featureTag bind:this={storefront}/>
         {:else}
             <Marketplace
                 {featureTag}
                 {allFeatureTags}
-                ownedItems={Array.isArray($ownedCosmetics) ? $ownedCosmetics : undefined}
+                ownedBundles={Array.isArray($ownedBundles) ? $ownedBundles : undefined}
                 bind:page
                 bind:selectedValuationIdxs
                 bind:searchTerm
