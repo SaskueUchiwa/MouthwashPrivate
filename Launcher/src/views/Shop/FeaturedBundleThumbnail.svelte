@@ -2,7 +2,7 @@
     import CheckBadge from "../../icons/CheckBadge.svelte";
     import type { Bundle } from "../../stores/accounts";
 
-    export let bundleInfo: Bundle & { num_items: number; };
+    export let bundleInfo: Bundle;
     export let ownedItems: Bundle[]|undefined;
     export let size: number;
     export let showDetails: boolean;

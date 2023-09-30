@@ -8,9 +8,22 @@
     import Link from "../../icons/Link.svelte";
     import { accountUrl, type UserLogin } from "../../stores/accounts";
     import Swatch from "../../icons/Swatch.svelte";
+    import type { LoadedHatCosmeticImages, SomeLoadedCosmeticImages } from "../../lib/previewTypes";
+    import CharacterOutfitPreview from "../Preview/CharacterOutfitPreview.svelte";
 
     export let user: UserLogin;
     export let page: ""|"games";
+
+    let roseColorImage = new Image;
+    roseColorImage.src = "/Color_Rose.png";
+
+    let hatCosmetic: LoadedHatCosmeticImages|undefined = undefined;
+
+    export function wearItem(cosmeticItem: SomeLoadedCosmeticImages) {
+        if (cosmeticItem.asset.type === "HAT") {
+            hatCosmetic = cosmeticItem;
+        }
+    }
 
     async function logoutAccount() {
         const logoutResponse = await fetch(get(accountUrl) + "/api/v2/auth/logout", {
@@ -38,7 +51,7 @@
 
 <div class="flex-1 flex flex-col items-center gap-4">
     <div class="flex flex-col items-center gap-2">
-        <img alt="red-among-us" width={108} src="/red-au.webp"/>
+        <CharacterOutfitPreview colorImage={roseColorImage} {hatCosmetic}/>
         <span class="text-stroke-black text-white italic text-2xl">{user.display_name}</span>
     </div>
     <span class="text-[#806593] italic">Joined on {joinDateFormat.format(new Date(user.created_at))}</span>

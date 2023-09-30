@@ -134,7 +134,9 @@ export class UploadRoute extends BaseRoute {
                 if (bundleAsset.thumb) bundleAssetsZip.file(`${i}/thumb.png`, Buffer.from(bundleAsset.thumb, "base64"));
                 
                 assetMetadata.push({
+                    type: "HAT",
                     chip_offset: bundleAsset.chip_offset,
+                    product_id: bundleAsset.product_id,
                     main: bundleAsset.main ? "main.png" : undefined,
                     back: bundleAsset.back ? "back.png" : undefined,
                     left_main: bundleAsset.left_main ? "left_main.png" : undefined,
@@ -164,14 +166,14 @@ export class UploadRoute extends BaseRoute {
         `, [ data.file_uuid ]);
         const existingBundle = existingBundles[0];
 
+        const fileUrl = this.server.config.supabase.base_api_url + "/storage/v1/object/public/MouthwashAssets/" + data.file_uuid;
         if (existingBundle) {
             await this.server.postgresClient.query(`
                 UPDATE asset_bundle
-                SET hash = $2, preview_contents_hash = $3
+                SET url = $2, hash = $3, preview_contents_url = $4, preview_contents_hash = $5
                 WHERE id = $1
-            `, [ data.file_uuid, hash, spritesArchiveHash ]);
+            `, [ data.file_uuid, fileUrl, hash, fileUrl + "-assets.zip", spritesArchiveHash ]);
         } else {
-            const fileUrl = this.server.config.supabase.base_api_url + "/storage/v1/object/public/MouthwashAssets/" + data.file_uuid;
             await this.server.postgresClient.query(`
                 INSERT INTO asset_bundle(id, url, hash, preview_contents_url, preview_contents_hash)
                 VALUES ($1, $2, $3, $4, $5)

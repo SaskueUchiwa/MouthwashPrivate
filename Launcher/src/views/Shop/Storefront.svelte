@@ -13,7 +13,7 @@
     export let allFeatureTags: Record<string, string>;
 
     let error = "";
-    let featuredBundles = writable<(Bundle & { num_items: number; })[]|typeof loading|typeof unavailable>(loading);
+    let featuredBundles = writable<Bundle[]|typeof loading|typeof unavailable>(loading);
 
     export async function getFeaturedCosmetics() {
         featuredBundles.set(loading);

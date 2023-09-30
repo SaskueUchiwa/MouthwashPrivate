@@ -13,7 +13,7 @@
     import Check from "../../icons/Check.svelte";
     import Cross from "../../icons/Cross.svelte";
 
-    export let purchasingBundle: Bundle & { num_items: number; };
+    export let purchasingBundle: Bundle;
     export let clientSecret: string;
     export let checkoutSessionId: string;
     export let user: UserLogin;

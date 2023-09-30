@@ -15,7 +15,7 @@
     
     const allValuations = [ "GHOST", "CREWMATE", "IMPOSTOR", "POLUS" ];
 
-    let availableBundles = writable<(Bundle & { num_items: number; })[]|typeof loading|typeof unavailable>(loading);
+    let availableBundles = writable<Bundle[]|typeof loading|typeof unavailable>(loading);
 
     export async function getAvailableCosmetics() {
         availableBundles.set(loading);

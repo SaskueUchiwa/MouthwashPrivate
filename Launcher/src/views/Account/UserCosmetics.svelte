@@ -4,11 +4,14 @@
     import { type UserLogin, accountUrl, loading, unavailable, type Bundle } from "../../stores/accounts";
     import { writable } from "svelte/store";
     import CosmeticBundle from "./CosmeticBundle.svelte";
+    import PreviewItemSelection from "../Preview/PreviewItemSelection.svelte";
 
     export let user: UserLogin;
 
     let error = "";
-    let bundles = writable<(Bundle & { owned_at: string; num_items: number; })[]|typeof loading|typeof unavailable>(loading);
+    let bundles = writable<(Bundle & { owned_at: string; })[]|typeof loading|typeof unavailable>(loading);
+
+    let selectedItemId = "";
 
     export async function getUserCosmetics() {
         bundles.set(loading);
@@ -42,7 +45,12 @@
 {:else}
     <div class="flex flex-col gap-2">
         {#each $bundles as bundleInfo}
-            <CosmeticBundle {bundleInfo}/>
+            <div class="flex flex-col gap-4">
+                <CosmeticBundle {bundleInfo}/>
+                <div class="px-4">
+                    <PreviewItemSelection {bundleInfo} bind:selectedItemId on:wear-item/>
+                </div>
+            </div>
         {/each}
     </div>
 {/if}

@@ -5,7 +5,7 @@
     import { loading, unavailable, user, accountUrl, type Bundle } from "../../stores/accounts";
     import FeaturedBundleThumbnail from "./FeaturedBundleThumbnail.svelte";
 
-    export let bundleInfo: Bundle & { num_items: number; };
+    export let bundleInfo: Bundle;
     export let ownedBundles: Bundle[]|undefined;
     
     const boughtAtFormat = new Intl.DateTimeFormat("en-US");

@@ -52,11 +52,11 @@
     };
 
     let page: ""|"Marketplace" = "";
-    let purchasingBundle: (Bundle & { num_items: number; })|undefined = undefined;
+    let purchasingBundle: Bundle|undefined = undefined;
     let clientSecret: string|undefined = undefined;
     let checkoutSessionId: string|undefined = undefined;
 
-    function openPurchaseForm(ev: CustomEvent<{ bundle: Bundle & { num_items: number; }; clientSecret: string; checkoutSessionId: string; }>) {
+    function openPurchaseForm(ev: CustomEvent<{ bundle: Bundle; clientSecret: string; checkoutSessionId: string; }>) {
         purchasingBundle = ev.detail.bundle;
         clientSecret = ev.detail.clientSecret;
         checkoutSessionId = ev.detail.checkoutSessionId;

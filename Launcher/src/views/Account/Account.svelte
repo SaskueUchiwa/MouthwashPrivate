@@ -8,12 +8,19 @@
     import { get } from "svelte/store";
     import UserGames from "./UserGames.svelte";
     import UserCosmetics from "./UserCosmetics.svelte";
+    import type { SomeLoadedCosmeticImages } from "../../lib/previewTypes";
     
     let currentPage: ""|"games" = "";
 
     let userCosmetics: UserCosmetics|undefined = undefined;
+    let profileSection: Profile|undefined = undefined;
+
     export async function getUserCosmetics() {
         await userCosmetics?.getUserCosmetics();
+    }
+
+    function onWearItem(ev: CustomEvent<SomeLoadedCosmeticImages>) {
+        profileSection?.wearItem(ev.detail);
     }
 
     async function checkLogin(userLogin: UserLogin) {
@@ -101,7 +108,7 @@
                     <span class="text-[#806593] italic">Not logged in.</span>
                 </div>
             {:else if $user}
-                <Profile user={$user} page={currentPage} on:logout={onLogOut} on:set-page={onSetPage}/>
+                <Profile user={$user} page={currentPage} on:logout={onLogOut} on:set-page={onSetPage} bind:this={profileSection}/>
             {/if}
         {/if}
     </div>
@@ -126,7 +133,7 @@
                     <SignUpSection/>
                 {:else}
                     {#if currentPage === ""}
-                        <UserCosmetics user={$user} bind:this={userCosmetics}/>
+                        <UserCosmetics user={$user} bind:this={userCosmetics} on:wear-item={onWearItem}/>
                     {:else if currentPage === "games"}
                         <UserGames user={$user}/>
                     {/if}

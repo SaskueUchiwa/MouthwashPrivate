@@ -57,6 +57,9 @@ export interface Bundle {
     tags: string;
     description: string;
     feature_tags: string;
+    preview_contents_url: string;
+    preview_contents_hash: string;
+    num_items: number;
 }
 
 export type Deferred<T> = T|typeof loading|typeof unavailable;

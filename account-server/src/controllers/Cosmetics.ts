@@ -69,14 +69,15 @@ export class CosmeticsController {
         return foundBundleItems;
     }
     
-    async getAllBundlesOwned(userId: string): Promise<(Bundle & { owned_at: Date; num_items: number; })[]> {
+    async getAllBundlesOwnedByUser(userId: string): Promise<(BundleWithPreview & { owned_at: Date; })[]> {
         const { rows: foundBundleItems } = await this.server.postgresClient.query(`
-            SELECT bundle.*, user_owned_item.owned_at, COUNT(bundle_item.id) AS num_items
+            SELECT bundle.*, user_owned_item.owned_at, asset_bundle.preview_contents_url, asset_bundle.preview_contents_hash, COUNT(bundle_item.id) AS num_items
             FROM bundle
             LEFT JOIN user_owned_item ON user_owned_item.bundle_id = bundle.id
+            LEFT JOIN asset_bundle ON asset_bundle.id = bundle.asset_bundle_id
             JOIN bundle_item ON bundle_item.bundle_id = bundle.id
             WHERE user_owned_item.user_id = $1
-            GROUP BY bundle.id, user_owned_item.owned_at
+            GROUP BY bundle.id, user_owned_item.owned_at, asset_bundle.preview_contents_url, asset_bundle.preview_contents_hash
         `, [ userId ]);
 
         return foundBundleItems;
