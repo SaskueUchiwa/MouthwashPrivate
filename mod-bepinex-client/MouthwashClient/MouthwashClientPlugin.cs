@@ -12,12 +12,14 @@ using UnityEngine;
 
 namespace MouthwashClient
 {
-    [BepInAutoPlugin]
+    [BepInPlugin(Id, "Polus.GG: Rewritten", VersionString)]
     [BepInProcess("Among Us.exe")]
     [BepInDependency(ReactorPlugin.Id)]
     public partial class MouthwashClientPlugin : BasePlugin
     {
         public Harmony Harmony { get; } = new(Id);
+        public const string Id = "gg.polus.rewritten";
+        public const string VersionString = "2.0.0";
 
         public ConfigEntry<string> ConfigName { get; private set; }
 

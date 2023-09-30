@@ -11,7 +11,7 @@ namespace MouthwashClient.Patches.Menu
         {
             if (Reactor.Patches.ReactorVersionShower.Text != null)
             {
-                Reactor.Patches.ReactorVersionShower.Text.text += "\n<color=#8221cc>Polus.gg: Rewritten</color> 2.0.0";
+                Reactor.Patches.ReactorVersionShower.Text.text += $"\n<color=#8221cc>Polus.gg: Rewritten</color> {MouthwashClientPlugin.VersionString}";
                 if (LoginService.IsLoggedIn())
                 {
                     UserInformationWithAuthToken userInformation = LoginService.GetLoginInformation();

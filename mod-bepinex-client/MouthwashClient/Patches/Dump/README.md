@@ -2,7 +2,6 @@ Install [https://github.com/Perfare/AssetStudio](AssetStudio), Open `Among Us_Da
 
 BepInEx config:
 ```
-## rewritten.polus.gg.cfg
 [Dumps]
 Enabled = true
 DestinationPath = ""
