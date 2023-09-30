@@ -9,6 +9,13 @@ import { ForbiddenError, InvalidBodyError } from "../../../errors";
 import { Bundle, BundleItem, StripeItem } from "../../../controllers";
 
 const uploadCosmeticBundleBodyValidator = ark.scope({
+    sprite_file_reference: {
+        file: "string",
+        pivot: {
+            x: "number",
+            y: "number"
+        }
+    },
     hat_asset_data_info: {
         type: "\"HAT\"",
         main: "string|null",
@@ -137,15 +144,15 @@ export class UploadRoute extends BaseRoute {
                     type: "HAT",
                     chip_offset: bundleAsset.chip_offset,
                     product_id: bundleAsset.product_id,
-                    main: bundleAsset.main ? "main.png" : undefined,
-                    back: bundleAsset.back ? "back.png" : undefined,
-                    left_main: bundleAsset.left_main ? "left_main.png" : undefined,
-                    left_back: bundleAsset.left_back ? "left_back.png" : undefined,
-                    climb: bundleAsset.climb ? "climb.png" : undefined,
-                    floor: bundleAsset.floor ? "floor.png" : undefined,
-                    left_climb: bundleAsset.left_climb ? "left_climb.png" : undefined,
-                    left_floor: bundleAsset.left_floor ? "left_floor.png" : undefined,
-                    thumb: bundleAsset.thumb ? "thumb.png" : undefined
+                    main: bundleAsset.main ? { file: "main.png", pivot: { x: 0, y: 0 } } : undefined,
+                    back: bundleAsset.back ? { file: "back.png", pivot: { x: 0, y: 0 } } : undefined,
+                    left_main: bundleAsset.left_main ? { file: "left_main.png", pivot: { x: 0, y: 0 } } : undefined,
+                    left_back: bundleAsset.left_back ? { file: "left_back.png", pivot: { x: 0, y: 0 } } : undefined,
+                    climb: bundleAsset.climb ? { file: "climb.png", pivot: { x: 0, y: 0 } } : undefined,
+                    floor: bundleAsset.floor ? { file: "floor.png", pivot: { x: 0, y: 0 } } : undefined,
+                    left_climb: bundleAsset.left_climb ? { file: "left_climb.png", pivot: { x: 0, y: 0 } } : undefined,
+                    left_floor: bundleAsset.left_floor ? { file: "left_floor.png", pivot: { x: 0, y: 0 } } : undefined,
+                    thumb: bundleAsset.thumb ? { file: "thumb.png", pivot: { x: 0, y: 0 } } : undefined
                 });
             }
         }

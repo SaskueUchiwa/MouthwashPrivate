@@ -3,7 +3,7 @@
     import JSZip from "jszip";
     import type { Bundle } from "../../stores/accounts";
     import { onMount } from "svelte";
-    import type { AssetsListingMetadata, LoadedHatCosmeticImages } from "../../lib/previewTypes";
+    import type { AssetsListingMetadata, LoadedHatCosmeticImages, SpriteFileReference } from "../../lib/previewTypes";
     import PreviewItemThumb from "./PreviewItemThumb.svelte";
 
     export let bundleInfo: Bundle & { preview_contents_url: string; };
@@ -27,10 +27,10 @@
         return btoa(binary);
     }
 
-    async function loadCosmeticSpriteAsImage(zip: JSZip, assetId: number, spriteFileName: string|undefined) {
-        if (spriteFileName === undefined) return undefined;
+    async function loadCosmeticSpriteAsImage(zip: JSZip, assetId: number, spriteFileReference: SpriteFileReference|undefined|null) {
+        if (spriteFileReference === undefined || spriteFileReference === null) return undefined;
 
-        const spriteZipPath = (await path.join(assetId.toString(), spriteFileName)).replace(/\\/g, "/");
+        const spriteZipPath = (await path.join(assetId.toString(), spriteFileReference.file)).replace(/\\/g, "/");
         const spriteFile = zip.file(spriteZipPath);
         if (spriteFile === null) {
             console.log("Could not get file in archive: %s", spriteZipPath);
@@ -41,7 +41,7 @@
 
         const img = new Image;
         img.src = "data:image/png;base64," + spriteFileBase64;
-        return img;
+        return { img, pivot: spriteFileReference.pivot };
     }
 
     let loadedCosmeticImages: LoadedHatCosmeticImages[] = [];

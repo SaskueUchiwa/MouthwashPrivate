@@ -1,7 +1,8 @@
 <script lang="ts">
     import { onMount } from "svelte";
+    import type { LoadedCosmeticImage } from "../../lib/previewTypes";
 
-    export let layers: (HTMLImageElement|undefined)[];
+    export let layers: (LoadedCosmeticImage|undefined)[];
     export let offset: { x: number; y: number; };
 
     let canvasElement: HTMLCanvasElement|undefined = undefined;
@@ -9,7 +10,7 @@
 
     for (const layer of layers) {
         if (layer) {
-            layer.onload = doRedraw;
+            layer.img.onload = doRedraw;
         }
     }
 
@@ -25,8 +26,8 @@
 
         for (const layer of layers) {
             if (layer) {
-                const aspectRatio = layer.width / layer.height;
-                canvasCtx.drawImage(layer, 0, offset.y, canvasElement.width, canvasElement.width / aspectRatio);
+                const aspectRatio = layer.img.width / layer.img.height;
+                canvasCtx.drawImage(layer.img, layer.pivot.x, offset.y + layer.pivot.y, canvasElement.width, canvasElement.width / aspectRatio);
             }
         }
     }

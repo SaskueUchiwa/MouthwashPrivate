@@ -11,11 +11,11 @@
         {#if hatCosmetic}
             {#key hatCosmetic}
                 <ItemCanvas
-                    layers={[ hatCosmetic.back, colorImage, hatCosmetic.main ]} offset={{ x: 0, y: 0 }}/>
+                    layers={[ hatCosmetic.back, { img: colorImage, pivot: { x: 0, y: 0 } }, hatCosmetic.main ]} offset={{ x: 0, y: 0 }}/>
             {/key}
         {:else}
             <ItemCanvas
-                layers={[ colorImage ]} offset={{ x: 0, y: 0 }}/>
+                layers={[ { img: colorImage, pivot: { x: 0, y: 0 } } ]} offset={{ x: 0, y: 0 }}/>
         {/if}
     </div>
 </div>

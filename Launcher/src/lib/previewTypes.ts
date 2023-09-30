@@ -2,23 +2,33 @@ export interface AssetsListingMetadataAsset {
     type: string;
 }
 
+export interface SpriteFileReference {
+    file: string;
+    pivot: { x: number; y: number; };
+}
+
 export interface AssetsListingMetadataAssetHat extends AssetsListingMetadataAsset {
     type: "HAT";
     chip_offset: { x: number; y: number; };
     product_id: string;
-    main?: string;
-    back?: string;
-    left_main?: string;
-    left_back?: string;
-    climb?: string;
-    floor?: string;
-    left_climb?: string;
-    left_floor?: string;
-    thumb?: string;
+    main?: SpriteFileReference|null;
+    back?: SpriteFileReference|null;
+    left_main?: SpriteFileReference|null;
+    left_back?: SpriteFileReference|null;
+    climb?: SpriteFileReference|null;
+    floor?: SpriteFileReference|null;
+    left_climb?: SpriteFileReference|null;
+    left_floor?: SpriteFileReference|null;
+    thumb?: SpriteFileReference|null;
 }
 
 export interface AssetsListingMetadata {
     assets: AssetsListingMetadataAssetHat[];
+}
+
+export interface LoadedCosmeticImage {
+    img: HTMLImageElement;
+    pivot: { x: number; y: number; };
 }
 
 export interface LoadedBaseCosmeticImages {
@@ -27,15 +37,15 @@ export interface LoadedBaseCosmeticImages {
 
 export interface LoadedHatCosmeticImages extends LoadedBaseCosmeticImages {
     asset: AssetsListingMetadataAssetHat;
-    main?: HTMLImageElement;
-    back?: HTMLImageElement;
-    left_main?: HTMLImageElement;
-    left_back?: HTMLImageElement;
-    climb?: HTMLImageElement;
-    floor?: HTMLImageElement;
-    left_climb?: HTMLImageElement;
-    left_floor?: HTMLImageElement;
-    thumb?: HTMLImageElement;
+    main?: LoadedCosmeticImage;
+    back?: LoadedCosmeticImage;
+    left_main?: LoadedCosmeticImage;
+    left_back?: LoadedCosmeticImage;
+    climb?: LoadedCosmeticImage;
+    floor?: LoadedCosmeticImage;
+    left_climb?: LoadedCosmeticImage;
+    left_floor?: LoadedCosmeticImage;
+    thumb?: LoadedCosmeticImage;
 }
 
 export type SomeLoadedCosmeticImages = LoadedHatCosmeticImages;
