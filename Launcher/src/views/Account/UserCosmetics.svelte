@@ -65,12 +65,12 @@
     <div class="flex flex-col gap-2 min-h-0 overflow-auto h-full w-full">
         {#each $bundles as bundleInfo}
             <div class="px-4">
-                <PreviewItemSelection bundleInfo={officialBundle} bind:selectedItemId on:wear-item/>
+                <PreviewItemSelection bundleInfo={officialBundle} isOfficial={true} bind:selectedItemId on:wear-item/>
             </div>
             <div class="flex flex-col gap-4">
                 <CosmeticBundle {bundleInfo}/>
                 <div class="px-4">
-                    <PreviewItemSelection {bundleInfo} bind:selectedItemId on:wear-item/>
+                    <PreviewItemSelection {bundleInfo} isOfficial={false} bind:selectedItemId on:wear-item/>
                 </div>
             </div>
         {/each}

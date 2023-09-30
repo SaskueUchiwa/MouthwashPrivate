@@ -51,7 +51,7 @@
 
 <div class="flex-1 flex flex-col items-center gap-4">
     <div class="flex flex-col items-center gap-2">
-        <CharacterOutfitPreview colorImage={roseColorImage} {hatCosmetic}/>
+        <CharacterOutfitPreview colorImage={{ img: roseColorImage, pivot: { x: 0, y: 0 }, scale: 1 }} {hatCosmetic}/>
         <span class="text-stroke-black text-white italic text-2xl">{user.display_name}</span>
     </div>
     <span class="text-[#806593] italic">Joined on {joinDateFormat.format(new Date(user.created_at))}</span>

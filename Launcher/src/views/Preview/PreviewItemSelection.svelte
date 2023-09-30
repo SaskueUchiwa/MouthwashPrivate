@@ -3,11 +3,12 @@
     import JSZip from "jszip";
     import type { Bundle } from "../../stores/accounts";
     import { onMount } from "svelte";
-    import type { AssetsListingMetadata, LoadedHatCosmeticImages, SpriteFileReference } from "../../lib/previewTypes";
+    import type { AssetsListingMetadata, LoadedCosmeticImage, LoadedHatCosmeticImages, SpriteFileReference } from "../../lib/previewTypes";
     import PreviewItemThumb from "./PreviewItemThumb.svelte";
 
     export let bundleInfo: Bundle & { preview_contents_url: string; };
     export let selectedItemId: string;
+    export let isOfficial: boolean;
 
     async function fetchZip() {
         const res = await fetch(bundleInfo.preview_contents_url);
@@ -27,7 +28,7 @@
         return btoa(binary);
     }
 
-    async function loadCosmeticSpriteAsImage(zip: JSZip, assetId: number, spriteFileReference: SpriteFileReference|undefined|null) {
+    async function loadCosmeticSpriteAsImage(zip: JSZip, assetId: number, spriteFileReference: SpriteFileReference|undefined|null): Promise<LoadedCosmeticImage|undefined> {
         if (spriteFileReference === undefined || spriteFileReference === null) return undefined;
 
         const spriteZipPath = (await path.join(assetId.toString(), spriteFileReference.file)).replace(/\\/g, "/");
@@ -41,7 +42,7 @@
 
         const img = new Image;
         img.src = "data:image/png;base64," + spriteFileBase64;
-        return { img, pivot: spriteFileReference.pivot };
+        return { img, pivot: spriteFileReference.pivot, scale: isOfficial ? 1 : 0.5 };
     }
 
     let loadedCosmeticImages: LoadedHatCosmeticImages[] = [];

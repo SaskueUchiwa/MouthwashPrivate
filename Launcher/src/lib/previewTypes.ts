@@ -29,6 +29,7 @@ export interface AssetsListingMetadata {
 export interface LoadedCosmeticImage {
     img: HTMLImageElement;
     pivot: { x: number; y: number; };
+    scale: number;
 }
 
 export interface LoadedBaseCosmeticImages {

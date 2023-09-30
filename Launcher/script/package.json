@@ -1,0 +1,7 @@
+{
+    "name": "launcher-scripts",
+    "private": true,
+    "dependencies": {
+        "sharp": "^0.32.6"
+    }
+}

@@ -23,6 +23,6 @@
     style="aspect-ratio: 1/1"
     on:click={wearItem}>
     <div class="transition duration-250 transform group-hover:scale-115 w-full h-full">
-        <ItemCanvas layers={[ cosmeticImage.thumb ]} offset={{ x: 0, y: -20 }}/>
+        <ItemCanvas layers={[ { ...cosmeticImage.thumb, scale: 3 } ]} offset={{ x: cosmeticImage.asset.chip_offset.x * 100, y: 15 - cosmeticImage.asset.chip_offset.y * 100 }}/>
     </div>
 </button>
