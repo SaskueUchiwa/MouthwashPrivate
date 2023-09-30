@@ -2,6 +2,7 @@
     "name": "launcher-scripts",
     "private": true,
     "dependencies": {
+        "jszip": "^3.10.1",
         "sharp": "^0.32.6"
     }
 }

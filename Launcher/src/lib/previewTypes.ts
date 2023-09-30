@@ -11,6 +11,7 @@ export interface AssetsListingMetadataAssetHat extends AssetsListingMetadataAsse
     type: "HAT";
     chip_offset: { x: number; y: number; };
     product_id: string;
+    in_front: boolean;
     main?: SpriteFileReference|null;
     back?: SpriteFileReference|null;
     left_main?: SpriteFileReference|null;
