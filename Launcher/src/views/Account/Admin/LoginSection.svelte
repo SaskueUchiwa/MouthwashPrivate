@@ -1,8 +1,8 @@
 <script lang="ts">
     import { get } from "svelte/store";
-    import Email from "../../icons/Email.svelte";
-    import Key from "../../icons/Key.svelte";
-    import { accountUrl, user } from "../../stores/accounts";
+    import Email from "../../../icons/Email.svelte";
+    import Key from "../../../icons/Key.svelte";
+    import { accountUrl, user } from "../../../stores/accounts";
     import ErrorNotes from "./ErrorNotes.svelte";
     
     let errorMessages: string[] = [];

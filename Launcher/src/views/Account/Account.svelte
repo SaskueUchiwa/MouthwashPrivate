@@ -2,12 +2,12 @@
     import { onMount } from "svelte";
     import Loader from "../../icons/Loader.svelte";
     import Profile from "./Profile.svelte";
-    import LoginSection from "./LoginSection.svelte";
-    import SignUpSection from "./SignUpSection.svelte";
+    import LoginSection from "./Admin/LoginSection.svelte";
+    import SignUpSection from "./Admin/SignUpSection.svelte";
     import { accountUrl, loading, unavailable, user, type UserLogin } from "../../stores/accounts";
     import { get } from "svelte/store";
-    import UserGames from "./UserGames.svelte";
-    import UserCosmetics from "./UserCosmetics.svelte";
+    import UserGames from "./Lobbies/UserGames.svelte";
+    import UserCosmetics from "./Cosmetics/UserCosmetics.svelte";
     import type { SomeLoadedCosmeticImages } from "../../lib/previewTypes";
     
     let currentPage: ""|"games" = "";
@@ -116,7 +116,7 @@
         {#if $user !== loading && $user !== unavailable}
             <div class="flex items-center bg-[#06000a] rounded-xl p-4 px-6 gap-2">
                 {#if currentPage === ""}
-                    <span class="text-xl font-semibold">Cosmetics</span>
+                    <span class="text-xl font-semibold">Cosmetic Bundles</span>
                 {:else if currentPage === "games"}
                     <span class="text-xl font-semibold">Recent Games</span>
                 {/if}
@@ -133,7 +133,7 @@
                     <SignUpSection/>
                 {:else}
                     {#if currentPage === ""}
-                        <UserCosmetics user={$user} bind:this={userCosmetics} on:wear-item={onWearItem}/>
+                        <UserCosmetics user={$user} bind:this={userCosmetics} on:wear-item={onWearItem} on:switch-view/>
                     {:else if currentPage === "games"}
                         <UserGames user={$user}/>
                     {/if}

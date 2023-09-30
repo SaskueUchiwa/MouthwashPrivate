@@ -115,7 +115,7 @@
             </span>
         </div>
         <div class="min-h-0 flex-1 self-stretch">
-            <div class="w-full h-full" class:hidden={selectedTab !== "Account"}><AccountView bind:this={accountTab}/></div>
+            <div class="w-full h-full" class:hidden={selectedTab !== "Account"}><AccountView bind:this={accountTab} on:switch-view={switchView}/></div>
             <div class="w-full h-full" class:hidden={selectedTab !== "Download"}><DownloadView on:switch-view={switchView}/></div>
             <div class="w-full h-full" class:hidden={selectedTab !== "Play"}><PlayView on:switch-view={switchView}/></div>
             <div class="w-full h-full" class:hidden={selectedTab !== "Shop"}><ShopView on:refresh-cosmetics={() => accountTab?.getUserCosmetics()}/></div>

@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { Player, UserLogin } from "../../stores/accounts";
+    import type { Player, UserLogin } from "../../../stores/accounts";
 
     export let user: UserLogin;
     export let player: Player;

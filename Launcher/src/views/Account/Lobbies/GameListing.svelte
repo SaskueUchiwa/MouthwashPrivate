@@ -1,10 +1,10 @@
 <script lang="ts">
     import { writable } from "svelte/store";
-    import ChevronDown from "../../icons/ChevronDown.svelte";
-    import ChevronUp from "../../icons/ChevronUp.svelte";
-    import { unavailable, type GameLobbyInfo, type Player, loading, accountUrl, type UserLogin } from "../../stores/accounts";
-    import Loader from "../../icons/Loader.svelte";
-    import PlayCircle from "../../icons/PlayCircle.svelte";
+    import ChevronDown from "../../../icons/ChevronDown.svelte";
+    import ChevronUp from "../../../icons/ChevronUp.svelte";
+    import { unavailable, type GameLobbyInfo, type Player, loading, accountUrl, type UserLogin } from "../../../stores/accounts";
+    import Loader from "../../../icons/Loader.svelte";
+    import PlayCircle from "../../../icons/PlayCircle.svelte";
     import PlayerListing from "./PlayerListing.svelte";
     import { onMount } from "svelte";
 

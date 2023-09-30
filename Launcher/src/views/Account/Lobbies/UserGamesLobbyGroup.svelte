@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { GameLobbyInfo, UserLogin } from "../../stores/accounts";
+    import type { GameLobbyInfo, UserLogin } from "../../../stores/accounts";
     import GameListing from "./GameListing.svelte";
 
     export let user: UserLogin;

@@ -5,10 +5,13 @@
     import { onMount } from "svelte";
     import type { AssetsListingMetadata, LoadedCosmeticImage, LoadedHatCosmeticImages, SpriteFileReference } from "../../lib/previewTypes";
     import PreviewItemThumb from "./PreviewItemThumb.svelte";
+    import Loader from "../../icons/Loader.svelte";
 
     export let bundleInfo: Bundle & { preview_contents_url: string; };
     export let selectedItemId: string;
     export let isOfficial: boolean;
+    export let searchTerm: string;
+    export let thumbScale: number;
 
     async function fetchZip() {
         const res = await fetch(bundleInfo.preview_contents_url);
@@ -46,6 +49,7 @@
     }
 
     let loadedCosmeticImages: LoadedHatCosmeticImages[] = [];
+    let loadingCosmetics = true;
     onMount(async () => {
         const zip = new JSZip();
         await zip.loadAsync(await fetchZip());
@@ -72,11 +76,18 @@
             }
         }
         loadedCosmeticImages = loadedCosmeticImages;
+        loadingCosmetics = false;
     });
 </script>
 
-<div class="grid gap-2 grid-cols-7 grid-rows-auto">
-    {#each loadedCosmeticImages as cosmeticImage}
-        <PreviewItemThumb {cosmeticImage} bind:selectedItemId on:wear-item/>
-    {/each}
-</div>
+{#if loadingCosmetics}
+    <div class="w-full h-full">
+        <Loader size={32}/>
+    </div>
+{:else}
+    <div class="grid gap-2 grid-cols-7 grid-rows-auto">
+        {#each loadedCosmeticImages as cosmeticImage}
+            <PreviewItemThumb {cosmeticImage} {searchTerm} {thumbScale} bind:selectedItemId on:wear-item/>
+        {/each}
+    </div>
+{/if}

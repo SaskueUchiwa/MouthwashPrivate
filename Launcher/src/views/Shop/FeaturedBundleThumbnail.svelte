@@ -11,7 +11,7 @@
 </script>
 
 <button class="relative filter hover:contrast-120 group transition duration-500 rounded-md overflow-hidden" class:pointer-events-none={!showDetails} on:click>
-    <div class="filter transition duration-500 transform group-hover:scale-110" class:grayscale={doesAlreadyOwn}>
+    <div class="filter transition duration-500 transform group-hover:scale-110" style="width: {size}px; height: {size}px;" class:grayscale={doesAlreadyOwn}>
         <img src={bundleInfo.thumbnail_url} width={size} height={size} alt={bundleInfo.name}/>
     </div>
     {#if showDetails}

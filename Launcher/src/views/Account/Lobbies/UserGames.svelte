@@ -1,9 +1,9 @@
 <script lang="ts">
     import { writable } from "svelte/store";
-    import { type GameLobbyInfo, type UserLogin, loading, unavailable, accountUrl } from "../../stores/accounts";
-    import Loader from "../../icons/Loader.svelte";
+    import { type GameLobbyInfo, type UserLogin, loading, unavailable, accountUrl } from "../../../stores/accounts";
+    import Loader from "../../../icons/Loader.svelte";
     import { onMount } from "svelte";
-    import ArrowPath from "../../icons/ArrowPath.svelte";
+    import ArrowPath from "../../../icons/ArrowPath.svelte";
     import UserGamesLobbyGroup from "./UserGamesLobbyGroup.svelte";
 
     export let user: UserLogin;
