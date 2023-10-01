@@ -7,7 +7,6 @@
     export let isOfficial: boolean;
     export let bundle: Bundle & { owned_at: string; };
     export let selectedItemId: string;
-    export let showDescription = false;
 
     let previewItemSelection: PreviewItemSelection|undefined;
     export function selectItem(idx: number) {

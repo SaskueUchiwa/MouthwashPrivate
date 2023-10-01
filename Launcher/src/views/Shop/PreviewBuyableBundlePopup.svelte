@@ -46,7 +46,6 @@
                     <BundlePreviewList
                         bundle={{ ...bundle, owned_at: null }}
                         isOfficial={false}
-                        showDescription={true}
                         bind:selectedItemId
                         on:wear-item={ev => wearItem(ev.detail)}
                         on:cosmetics-ready={() => bundlePreviewList?.selectItem(0)}
