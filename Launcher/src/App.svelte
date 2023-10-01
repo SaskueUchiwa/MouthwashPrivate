@@ -121,7 +121,7 @@
 <div class="min-h-0 w-full flex flex-col items-center p-y-32">
     <div class="min-h-0 h-full flex flex-col gap-16 items-center self-center">
         <div class="flex flex-col gap-4 items-center" bind:this={basisElement}>
-            <div><span class="font-bold text-6xl">Polus.gg</span>&nbsp;&nbsp;<span class="italic text-6xl">Rewritten</span></div>
+            <div><span class="font-bold text-text-100 text-6xl">Polus.gg</span>&nbsp;&nbsp;<span class="italic text-text-100 text-6xl">Rewritten</span></div>
             <span class="w-128 xl:w-248 text-xl">
                 A revival of the original Polus.GG mod for Among Us - a private server and client mod with
                 brand new gamemodes, cosmetics and roles, unleashing thousands of new ways to play.
@@ -157,7 +157,7 @@
         width: 100vw;
         height: 100vh;
         font-family: "Josefin Sans", sans-serif;
-        color: #eed7ff;
+        color: #e4c8f9;
     }
 
     :global(#app) {

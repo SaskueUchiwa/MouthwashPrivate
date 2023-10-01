@@ -126,11 +126,11 @@
 </script>
 
 <div class="flex gap-4 self-stretch h-full">
-    <div class="w-full flex flex-col bg-[#06000a] rounded-xl gap-4">
-        <div class="flex-[3_0_0] w-full bg-[#27063e] rounded-t-xl" style="background-image: url('https://placekitten.com/1080/439')"></div>
+    <div class="w-full flex flex-col bg-base-200 rounded-xl gap-4">
+        <div class="flex-[3_0_0] w-full bg-card-200 rounded-t-xl" style="background-image: url('https://placekitten.com/1080/439')"></div>
         <div class="flex-1 flex flex-col items-center justify-center">
             <div class="flex border-2 border-transparent rounded-lg">
-                <button class="flex items-center justify-center rounded-l-lg bg-[#27063e] px-6 py-4 hover:bg-[#1C072B] hover:text-[#bba1ce] filter border-none font-inherit text-inherit cursor-pointer"
+                <button class="flex items-center justify-center rounded-l-lg bg-card-200 px-6 py-4 hover:bg-card-300 hover:text-text-300 filter border-none font-inherit text-inherit cursor-pointer"
                     class:grayscale={downloadStage !== null || downloadSetupOpen}
                     class:pointer-events-none={downloadStage !== null || downloadSetupOpen}
                     on:click={beginDownload}
@@ -141,30 +141,30 @@
                             <div class="flex flex-col items-start">
                                 <span class="text-xl leading-5">Download</span>
                                 {#if $gameRemoteVersionState === loading}
-                                    <span class="text-[#806593] text-xs leading-3 italic">Loading version..</span>
+                                    <span class="text-text-300 text-xs leading-3 italic">Loading version..</span>
                                 {:else if $gameRemoteVersionState === unavailable}
-                                    <span class="text-[#806593] text-xs leading-3 italic">Could not get version</span>
+                                    <span class="text-text-300 text-xs leading-3 italic">Could not get version</span>
                                 {:else if $gameRemoteVersionState instanceof Error}
-                                    <span class="text-[#806593] text-xs leading-3 italic">Error fetching version</span>
+                                    <span class="text-text-300 text-xs leading-3 italic">Error fetching version</span>
                                 {:else}
-                                    <span class="text-[#806593] text-xs leading-3 italic">{$gameRemoteVersionState.version} {Math.ceil($gameRemoteVersionState.release_download_bytes / 1024 / 1024)}MB</span>
+                                    <span class="text-text-300 text-xs leading-3 italic">{$gameRemoteVersionState.version} {Math.ceil($gameRemoteVersionState.release_download_bytes / 1024 / 1024)}MB</span>
                                 {/if}
                             </div>
                         {:else}
                             <div class="flex flex-col items-start">
                                 <span class="text-xl leading-5">{downloadStage}</span>
                                 {#if downloadState === undefined}
-                                    <span class="text-[#806593] text-xs leading-3 italic">Loading..</span>
+                                    <span class="text-text-300 text-xs leading-3 italic">Loading..</span>
                                 {:else if downloadState === null}
-                                    <span class="text-[#806593] text-xs leading-3 italic">Downloading..</span>
+                                    <span class="text-text-300 text-xs leading-3 italic">Downloading..</span>
                                 {:else}
-                                    <span class="text-[#806593] text-xs leading-3 italic">{(downloadState * 100).toFixed(2)}%</span>
+                                    <span class="text-text-300 text-xs leading-3 italic">{(downloadState * 100).toFixed(2)}%</span>
                                 {/if}
                             </div>
                         {/if}
                     </div>
                 </button>
-                <button class="flex items-center justify-center rounded-r-lg bg-[#27063e] p-4 hover:bg-[#1C072B] hover:text-[#bba1ce] filter border-none font-inherit text-inherit cursor-pointer"
+                <button class="flex items-center justify-center rounded-r-lg bg-card-200 p-4 hover:bg-card-300 hover:text-text-300 filter border-none font-inherit text-inherit cursor-pointer"
                     class:grayscale={settingsOpen || downloadStage !== null}
                     class:pointer-events-none={settingsOpen || downloadStage !== null}
                     on:click={() => downloadSettings.open()}

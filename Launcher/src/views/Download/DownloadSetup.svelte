@@ -52,14 +52,14 @@
     }
 </script>
 
-<div class="left-0 top-0 w-full h-full items-center justify-center bg-[#000000b5]" class:flex={isVisible} class:hidden={!isVisible} class:fixed={isVisible}>
-    <div class="bg-[#1a0428] w-1/4 h-1/2 rounded-xl shadow-lg px-6 p-4">
+<div class="left-0 top-0 w-full h-full items-center justify-center bg-[#000000b5] z-10" class:flex={isVisible} class:hidden={!isVisible} class:fixed={isVisible}>
+    <div class="bg-surface-200 w-1/4 h-1/2 rounded-xl shadow-lg px-6 p-4">
         <div class="flex flex-col h-full gap-2">
             <div class="flex items-center gap-2">
                 <Adjustments size={20}/>
                 <span class="text-lg">Download Setup</span>
             </div>
-            <p class="text-[#806593] italic text-xs">
+            <p class="text-text-300 italic text-xs">
                 To download PGG: Rewritten, the launcher will use the Steam or Epic Games servers to download
                 an older version of Among Us (2021.6.30s).
             </p>
@@ -70,19 +70,19 @@
             {:else if selectedPlatformIdx === 1}
                 <EpicGamesDownloadSetup bind:this={epicGamesDownloadSetup}/>
             {:else if selectedPlatformIdx === 2}
-                <p class="text-[#806593] italic text-xs">
+                <p class="text-text-300 italic text-xs">
                     Local game installations are not currently supported, check back later!
                 </p>
             {:else}
-                <p class="text-[#806593] italic text-xs">
+                <p class="text-text-300 italic text-xs">
                     Select which platform you have purchased Among Us.
                 </p>
             {/if}
             <div class="mt-auto self-end flex gap-2">
-                <button class="rounded-lg border-2 bg-transparent border-[#27063e] px-4 py-1 hover:text-[#bba1ce] filter border-none font-inherit text-inherit cursor-pointer" on:click={hide}>
+                <button class="rounded-lg border-2 bg-transparent border-card-200 px-4 py-1 hover:text-text-300 filter border-none font-inherit text-inherit cursor-pointer" on:click={hide}>
                     Cancel
                 </button>
-                <button class="rounded-lg bg-[#27063e] px-4 py-1 hover:bg-[#1C072B] hover:text-[#bba1ce] filter border-none font-inherit text-inherit cursor-pointer"
+                <button class="rounded-lg bg-card-200 px-4 py-1 hover:bg-card-300 hover:text-text-300 filter border-none font-inherit text-inherit cursor-pointer"
                     class:grayscale={selectedPlatformIdx === -1}
                     class:pointer-events-none={selectedPlatformIdx === -1}
                     on:click={submit}

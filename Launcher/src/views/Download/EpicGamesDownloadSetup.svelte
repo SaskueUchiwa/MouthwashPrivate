@@ -17,7 +17,7 @@
     }
 </script>
 
-<p class="text-[#806593] italic text-xs">
+<p class="text-text-300 italic text-xs">
     You'll be asked to login through the Epic Games website to verify your identity.
     <br><br>
     If you want, you can let PGG: Rewritten use your local launcher login to download the game.
@@ -26,7 +26,7 @@
 </p>
 <div class="flex items-center gap-4">
     <label for="use-local-login">Use Launcher Login?</label>
-    <button class="flex items-center justify-center rounded-lg bg-[#27063e] p-1 hover:bg-[#1C072B] hover:text-[#bba1ce] filter border-none cursor-pointer" on:click={toggle}>
+    <button class="flex items-center justify-center rounded-lg bg-card-200 p-1 hover:bg-card-300 hover:text-text-300 filter border-none cursor-pointer" on:click={toggle}>
         <div class="opacity-0 transition-opacity duration-75" class:opacity-100={useLauncherLogin}>
             <Check size={20}/>
         </div>

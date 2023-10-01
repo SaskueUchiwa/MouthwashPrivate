@@ -45,8 +45,8 @@
 
 <div class="relative w-70">
     <button
-        class="rounded-lg w-full h-full bg-[#27063e] px-4 py-1 hover:bg-[#1C072B] hover:text-[#bba1ce] filter flex items-center justify-center font-inherit text-inherit gap-1 cursor-pointer"
-        class:bg-[#1C072B]={isOpen}
+        class="rounded-lg w-full h-full bg-card-200 px-4 py-1 hover:bg-card-300 hover:text-text-300 filter flex items-center justify-center font-inherit text-inherit gap-1 cursor-pointer"
+        class:bg-card-300={isOpen}
         class:text-xs={small}
         class:rounded-b-none={isOpen}
         on:click={openDropdown}
@@ -72,8 +72,8 @@
     >
         {#each items as item, i}
             <button
-                class="w-full border-[#1a0428] bg-[#27063e] px-4 py-1 hover:bg-[#1C072B] hover:text-[#bba1ce] filter border-none font-inherit text-inherit cursor-pointer"
-                class:bg-[#1c072b]={selectedIdxs.includes(i)}
+                class="w-full border-card-200 bg-card-200 px-4 py-1 hover:bg-card-300 hover:text-text-300 filter border-none font-inherit text-inherit cursor-pointer"
+                class:bg-card-300={selectedIdxs.includes(i)}
                 on:click={() => selectedIdxs.includes(i) ? unselectItem(i) : selectItem(i)}
                 class:border-t-1={i !== 0}
                 class:border-t-2={i === 0}

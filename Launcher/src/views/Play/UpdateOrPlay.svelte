@@ -108,7 +108,7 @@
 
 {#if updateRequired === loading || updateRequired === unavailable || downloadState !== null}
     <button
-        class="flex items-center justify-center rounded-l-lg px-6 py-4 bg-[#27063e] hover:bg-[#1c072b] hover:text-[#bba1ce] filter border-none font-inherit text-inherit cursor-pointer"
+        class="flex items-center justify-center rounded-l-lg px-6 py-4 bg-card-200 hover:bg-[#1c072b] hover:text-text-300 filter border-none font-inherit text-inherit cursor-pointer"
         class:grayscale={downloadStage !== null || (updateRequired === unavailable && notLoggedIn) || updateRequired === loading || $amongUsProcess !== unavailable}
         class:pointer-events-none={downloadStage !== null || (updateRequired === unavailable && notLoggedIn) || updateRequired === loading || $amongUsProcess !== unavailable}
         on:click={launchGame}
@@ -119,31 +119,31 @@
                 <div class="flex flex-col items-start">
                     <span class="text-xl leading-5">{downloadStage}</span>
                     {#if downloadState === undefined}
-                        <span class="text-[#806593] text-xs leading-3 italic">Loading..</span>
+                        <span class="text-text-300 text-xs leading-3 italic">Loading..</span>
                     {:else if downloadState === null}
-                        <span class="text-[#806593] text-xs leading-3 italic">Downloading..</span>
+                        <span class="text-text-300 text-xs leading-3 italic">Downloading..</span>
                     {:else}
-                        <span class="text-[#806593] text-xs leading-3 italic">{(downloadState * 100).toFixed(2)}%</span>
+                        <span class="text-text-300 text-xs leading-3 italic">{(downloadState * 100).toFixed(2)}%</span>
                     {/if}
                 </div>
             {:else if updateRequired === loading}
                 <Loader size={20}/>
                 <div class="flex flex-col items-start">
                     <span class="text-xl leading-5">Loading</span>
-                    <span class="text-[#806593] text-xs leading-3 italic">Fetching version..</span>
+                    <span class="text-text-300 text-xs leading-3 italic">Fetching version..</span>
                 </div>
             {:else if updateRequired === unavailable}
                 <LaunchSmall size={20}/>
                 <div class="flex flex-col items-start">
                     <span class="text-xl leading-5">Launch</span>
-                    <span class="text-[#806593] text-xs leading-3 italic">{$gameInstalledVersionState.toString()}</span>
+                    <span class="text-text-300 text-xs leading-3 italic">{$gameInstalledVersionState.toString()}</span>
                 </div>
             {/if}
         </div>
     </button>
 {:else}
     <button
-        class="flex items-center justify-center rounded-l-lg px-6 py-4 text-white bg-[#5e86ad] hover:bg-[#3e5d7b] hover:text-[#cdcdcd] filter border-none font-inherit cursor-pointer"
+        class="flex items-center justify-center rounded-l-lg px-6 py-4 text-white bg-accent2 hover:bg-accent2/70 hover:text-text-300 filter border-none font-inherit cursor-pointer"
         on:click={beginUpdate}
     >
         <div class="flex items-center gap-2">
@@ -151,13 +151,13 @@
             <div class="flex flex-col text-white items-start">
                 <span class="text-xl leading-5">Update</span>
                 {#if $gameRemoteVersionState === loading}
-                    <span class="text-white text-xs leading-3 italic">Fetching version..</span>
+                    <span class="text-text-200 text-xs leading-3 italic">Fetching version..</span>
                 {:else if $gameRemoteVersionState === unavailable}
-                    <span class="text-white text-xs leading-3 italic">Could not get version</span>
+                    <span class="text-text-200 text-xs leading-3 italic">Could not get version</span>
                 {:else if $gameRemoteVersionState instanceof Error}
-                    <span class="text-white text-xs leading-3 italic">Error fetching version</span>
+                    <span class="text-text-200 text-xs leading-3 italic">Error fetching version</span>
                 {:else}
-                    <span class="text-white text-xs leading-3 italic">{$gameRemoteVersionState.version} {Math.ceil($gameRemoteVersionState.release_download_bytes / 1024 / 1024)}MB</span>
+                    <span class="text-text-200 text-xs leading-3 italic">{$gameRemoteVersionState.version} {Math.ceil($gameRemoteVersionState.release_download_bytes / 1024 / 1024)}MB</span>
                 {/if}
             </div>
         </div>

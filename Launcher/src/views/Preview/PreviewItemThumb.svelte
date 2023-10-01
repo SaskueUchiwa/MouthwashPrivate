@@ -23,10 +23,10 @@
     class="border-2 rounded-lg group overflow-hidden"
     class:pointer-events-none={selectedItemId === null}
     class:hidden={searchTerm !== "" && !cosmeticImage.asset.product_id.replace(/\W/g, "").toLowerCase().includes(searchTerm.replace(/\W/g, "").toLowerCase())}
-    class:border-[#521180]={selectedItemId === null || selectedItemId !== cosmeticImage.asset.product_id}
-    class:bg-[#160124]={selectedItemId === null || selectedItemId !== cosmeticImage.asset.product_id}
-    class:border-[#eed7ff]={selectedItemId !== null && selectedItemId === cosmeticImage.asset.product_id}
-    class:bg-[#24033b]={selectedItemId !== null && selectedItemId === cosmeticImage.asset.product_id}
+    class:border-card-200={selectedItemId === null || selectedItemId !== cosmeticImage.asset.product_id}
+    class:bg-surface-200={selectedItemId === null || selectedItemId !== cosmeticImage.asset.product_id}
+    class:border-text-300={selectedItemId !== null && selectedItemId === cosmeticImage.asset.product_id}
+    class:bg-surface-100={selectedItemId !== null && selectedItemId === cosmeticImage.asset.product_id}
     style="aspect-ratio: 1/1; width: {size}px; height: {size}px;"
     on:click={wearItem}
     title={cosmeticImage.asset.product_id}>

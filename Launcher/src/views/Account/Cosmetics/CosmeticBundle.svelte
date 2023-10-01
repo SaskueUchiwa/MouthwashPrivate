@@ -9,11 +9,11 @@
     export let bundleInfo: Bundle;
 </script>
 
-<button class="flex items-center gap-3 bg-[#0c0213] rounded-lg" on:click={() => dispatchEvent("select-bundle")}>
+<button class="flex items-center gap-3 bg-surface-200 rounded-lg" on:click={() => dispatchEvent("select-bundle")}>
     <FeaturedBundleThumbnail ownedItems={[]} {bundleInfo} size={84} showDetails={false}/>
     <div class="flex flex-col items-start">
         <span class="text-xl">{bundleInfo.name} Bundle</span>
-        <span class="text-[#806593] italic text-sm">
+        <span class="text-text-300 italic text-sm">
             {bundleInfo.num_items} item{bundleInfo.num_items === 1 ? "" : "s"}
         </span>
     </div>

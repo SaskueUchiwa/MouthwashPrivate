@@ -40,7 +40,7 @@
 
 <div class="flex flex-col gap-4 min-h-0">
     <div class="flex gap-2">
-        <button class="text-xs rounded-lg bg-[#27063e] px-4 py-1 hover:bg-[#1C072B] hover:text-[#bba1ce] filter border-none font-inherit cursor-pointer"
+        <button class="text-xs rounded-lg bg-card-200 px-4 py-1 hover:bg-card-300 hover:text-text-300 filter border-none font-inherit cursor-pointer"
             on:click={() => page = ""}
         >
             Back to Shop
@@ -57,7 +57,7 @@
     <BundleFilterBar {availableBundles} {getAvailableCosmetics} bind:selectedValuationIdxs bind:searchTerm/>
     <div class="overflow-y-auto min-h-0 px-4 flex-1">
         {#if $availableBundles === loading}
-            <div class="flex-1 flex items-center justify-center text-[#806593]">
+            <div class="flex-1 flex items-center justify-center text-text-300">
                 <Loader size={32}/>
             </div>
         {:else if $availableBundles === unavailable}

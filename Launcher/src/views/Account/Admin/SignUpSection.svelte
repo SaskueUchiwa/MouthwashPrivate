@@ -137,27 +137,27 @@
     <div class="flex flex-col gap-2 items-start">
         <div class="flex flex-col gap-1 items-end">
             <div class="flex border-2 border-transparent rounded-lg" class:border-red-500={erroredInputs.has("display-name")}>
-                <div class="p-2 bg-[#27063e] rounded-l-lg"><Tag size={20}/></div>
-                <input class="text-md border-none font-inherit text-inherit outline-none rounded-r-lg bg-[#27063e] w-64" placeholder="Display Name" bind:value={displayName}>
+                <div class="p-2 bg-card-200 rounded-l-lg"><Tag size={20}/></div>
+                <input class="text-md border-none font-inherit text-inherit outline-none rounded-r-lg bg-card-200 w-64" placeholder="Display Name" bind:value={displayName}>
             </div>
             <div class="flex border-2 border-transparent rounded-lg" class:border-red-500={erroredInputs.has("email")}>
-                <div class="p-2 bg-[#27063e] rounded-l-lg"><Email size={20}/></div>
-                <input class="text-md border-none font-inherit text-inherit outline-none rounded-r-lg bg-[#27063e] w-64" placeholder="Email" bind:value={email}>
+                <div class="p-2 bg-card-200 rounded-l-lg"><Email size={20}/></div>
+                <input class="text-md border-none font-inherit text-inherit outline-none rounded-r-lg bg-card-200 w-64" placeholder="Email" bind:value={email}>
             </div>
             <div class="flex border-2 border-transparent rounded-lg" class:border-red-500={erroredInputs.has("confirm-email")}>
-                <div class="p-2 bg-[#27063e] rounded-l-lg"><Email size={20}/></div>
-                <input class="text-md border-none font-inherit text-inherit outline-none rounded-r-lg bg-[#27063e] w-64" placeholder="Confirm Email" bind:value={confirmEmail}>
+                <div class="p-2 bg-card-200 rounded-l-lg"><Email size={20}/></div>
+                <input class="text-md border-none font-inherit text-inherit outline-none rounded-r-lg bg-card-200 w-64" placeholder="Confirm Email" bind:value={confirmEmail}>
             </div>
             <div class="flex border-2 border-transparent rounded-lg" class:border-red-500={erroredInputs.has("password")}>
-                <div class="p-2 bg-[#27063e] rounded-l-lg"><Key size={20}/></div>
-                <input class="text-md border-none font-inherit text-inherit outline-none rounded-r-lg bg-[#27063e] w-64" placeholder="Password" type="password" bind:value={password}>
+                <div class="p-2 bg-card-200 rounded-l-lg"><Key size={20}/></div>
+                <input class="text-md border-none font-inherit text-inherit outline-none rounded-r-lg bg-card-200 w-64" placeholder="Password" type="password" bind:value={password}>
             </div>
             <div class="flex border-2 border-transparent rounded-lg" class:border-red-500={erroredInputs.has("confirm-password")}>
-                <div class="p-2 bg-[#27063e] rounded-l-lg"><Key size={20}/></div>
-                <input class="text-md border-none font-inherit text-inherit outline-none rounded-r-lg bg-[#27063e] w-64" placeholder="Confirm Password" type="password" bind:value={confirmPassword}>
+                <div class="p-2 bg-card-200 rounded-l-lg"><Key size={20}/></div>
+                <input class="text-md border-none font-inherit text-inherit outline-none rounded-r-lg bg-card-200 w-64" placeholder="Confirm Password" type="password" bind:value={confirmPassword}>
             </div>
             <button
-                class="rounded-lg bg-[#27063e] px-4 py-1 hover:bg-[#1C072B] hover:text-[#bba1ce] filter border-none font-inherit text-inherit cursor-pointer"
+                class="rounded-lg bg-card-200 px-4 py-1 hover:bg-card-300 hover:text-text-300 filter border-none font-inherit text-inherit cursor-pointer"
                 class:grayscale={loadingSignup}
                 class:pointer-events-none={loadingSignup}
                 on:click={signUpAccount}
@@ -168,7 +168,7 @@
     </div>
     <div class="w-0.25 self-stretch bg-white/25"></div>
     <div class="flex flex-col gap-2 text-xs italic">
-        <ul class="text-[#806593] max-w-84 px-4 list-disc">
+        <ul class="text-text-300 max-w-84 px-4 list-disc">
             <li class="my-0.5">Create a new PGG: Rewritten account</li>
             <li class="my-0.5">Keep track your bought cosmetic bundles and game statistics</li>
             <li class="my-0.5">You'll need an account to start playing</li>

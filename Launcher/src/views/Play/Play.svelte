@@ -45,12 +45,12 @@
 </script>
 
 <div class="flex gap-4 self-stretch h-full">
-    <div class="w-full flex flex-col bg-[#06000a] rounded-xl gap-4">
-        <div class="flex-[3_0_0] w-full bg-[#27063e] rounded-t-xl" style="background-image: url('https://placekitten.com/1080/439')"></div>
+    <div class="w-full flex flex-col bg-base-200 rounded-xl gap-4">
+        <div class="flex-[3_0_0] w-full bg-card-200 rounded-t-xl" style="background-image: url('https://placekitten.com/1080/439')"></div>
         <div class="flex-1 flex flex-col items-center justify-center">
             <div class="flex border-2 border-transparent rounded-lg">
                 <UpdateOrPlay on:launch-game={launchGame}/>
-                <button class="flex items-center justify-center rounded-r-lg bg-[#27063e] p-4 hover:bg-[#1C072B] hover:text-[#bba1ce] filter border-none font-inherit text-inherit cursor-pointer"
+                <button class="flex items-center justify-center rounded-r-lg bg-card-200 p-4 hover:bg-card-300 hover:text-text-300 filter border-none font-inherit text-inherit cursor-pointer"
                     class:grayscale={settingsOpen}
                     class:pointer-events-none={settingsOpen}
                     on:click={() => playSettings.open()}

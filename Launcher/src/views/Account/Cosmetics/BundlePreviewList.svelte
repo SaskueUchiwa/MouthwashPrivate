@@ -23,7 +23,7 @@
         <FeaturedBundleThumbnail ownedItems={[]} bundleInfo={bundle} size={84} showDetails={false}/>
         <div class="flex flex-col items-start">
             <span class="text-xl">{bundle.name} Bundle</span>
-            <span class="text-[#806593] italic text-sm">
+            <span class="text-text-300 italic text-sm">
                 {#if bundle.owned_at === null}
                     {bundle.num_items} item{bundle.num_items === 1 ? "" : "s"}
                 {:else}
@@ -33,9 +33,9 @@
         </div>
     </div>
     <div class="ml-auto flex border-transparent rounded-lg">
-        <div class="p-2 bg-[#27063e] rounded-l-lg"><Search size={14}/></div>
+        <div class="p-2 bg-card-200 rounded-l-lg"><Search size={14}/></div>
         <input
-            class="border-none font-inherit text-inherit text-xs outline-none rounded-r-lg bg-[#27063e] w-64"
+            class="border-none font-inherit text-inherit text-xs outline-none rounded-r-lg bg-card-200 w-64"
             placeholder="Search"
             bind:value={bundleSearchTerm}>
     </div>

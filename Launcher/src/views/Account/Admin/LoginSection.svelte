@@ -159,14 +159,14 @@
     <div class="flex flex-col gap-2 items-start">
         <div class="flex flex-col gap-1 items-end">
             <div class="flex border-2 border-transparent rounded-lg" class:border-red-500={erroredInputs.has("email")}>
-                <div class="p-2 bg-[#27063e] rounded-l-lg"><Email size={20}/></div>
-                <input class="border-none font-inherit text-inherit text-md outline-none rounded-r-lg bg-[#27063e] w-64" placeholder="Email" bind:value={email}>
+                <div class="p-2 bg-card-200 rounded-l-lg"><Email size={20}/></div>
+                <input class="border-none font-inherit text-inherit text-md outline-none rounded-r-lg bg-card-200 w-64" placeholder="Email" bind:value={email}>
             </div>
             <div class="flex border-2 border-transparent rounded-lg" class:border-red-500={erroredInputs.has("password")}>
-                <div class="p-2 bg-[#27063e] rounded-l-lg"><Key size={20}/></div>
-                <input class="border-none font-inherit text-inherit text-md outline-none rounded-r-lg bg-[#27063e] w-64" placeholder="Password" type="password" bind:value={password}>
+                <div class="p-2 bg-card-200 rounded-l-lg"><Key size={20}/></div>
+                <input class="border-none font-inherit text-inherit text-md outline-none rounded-r-lg bg-card-200 w-64" placeholder="Password" type="password" bind:value={password}>
             </div>
-            <button class="rounded-lg bg-[#27063e] px-4 py-1 hover:bg-[#1C072B] hover:text-[#bba1ce] filter border-none font-inherit text-inherit text-inherit cursor-pointer"
+            <button class="rounded-lg bg-card-200 px-4 py-1 hover:bg-card-300 hover:text-text-300 filter border-none font-inherit text-inherit text-inherit cursor-pointer"
                 class:grayscale={loadingLogin}
                 class:pointer-events-none={loadingLogin}
                 on:click={logInToAccount}
@@ -177,14 +177,14 @@
     </div>
     <div class="w-0.25 self-stretch bg-white/25"></div>
     <div class="flex flex-col gap-0.5 text-xs italic">
-        <ul class="text-[#806593] max-w-84 px-4 list-disc">
+        <ul class="text-text-300 max-w-84 px-4 list-disc">
             <li class="my-0.5">Log-in to an existing PGG: Rewritten account</li>
             <li class="my-0.5">If you don't have an account, use the form below</li>
             <li class="my-0.5">You'll need to log-in before you can play</li>
         </ul>
         <ErrorNotes successMessages={[]} {errorMessages}/>
         {#if unverifiedEmail}
-            <button class="rounded-lg bg-[#27063e] px-4 py-1 hover:bg-[#1C072B] hover:text-[#bba1ce] filter border-none font-inherit text-inherit cursor-pointer"
+            <button class="rounded-lg bg-card-200 px-4 py-1 hover:bg-card-300 hover:text-text-300 filter border-none font-inherit text-inherit cursor-pointer"
                 class:grayscale={loadingVerification}
                 class:pointer-events-none={loadingVerification}
                 on:click={resendVerification}

@@ -78,7 +78,7 @@
 </script>
 
 <div class="flex gap-4 self-stretch h-full">
-    <div class="w-full flex flex-col bg-[#06000a] rounded-xl gap-4 p-4">
+    <div class="w-full flex flex-col bg-base-200 rounded-xl gap-4 p-4">
         {#if page === ""}
             <Storefront ownedCosmetics={ownedBundles} {allFeatureTags} bind:searchTerm bind:page bind:featureTag bind:this={storefront}/>
         {:else}

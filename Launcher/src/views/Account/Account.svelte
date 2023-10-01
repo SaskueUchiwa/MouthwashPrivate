@@ -96,16 +96,16 @@
 </script>
 
 <div class="min-h-0 flex gap-4 self-stretch h-full">
-    <div class="flex-1 flex flex-col bg-[#06000a] rounded-xl p-4 px-6 gap-4">
+    <div class="flex-1 flex flex-col bg-base-200 rounded-xl p-4 px-6 gap-4">
         {#if $user === loading}
-            <div class="flex-1 flex items-center justify-center text-[#806593]">
+            <div class="flex-1 flex items-center justify-center text-text-300">
                 <Loader size={32}/>
             </div>
         {:else}
             <span class="text-xl font-semibold">Profile</span>
             {#if $user === unavailable}
                 <div class="flex-1 flex items-center justify-center">
-                    <span class="text-[#806593] italic">Not logged in.</span>
+                    <span class="text-text-300 italic">Not logged in.</span>
                 </div>
             {:else if $user}
                 <Profile user={$user} page={currentPage} on:logout={onLogOut} on:set-page={onSetPage} bind:this={profileSection}/>
@@ -114,7 +114,7 @@
     </div>
     <div class="min-h-0 flex-[3_0_0] flex flex-col gap-4">
         {#if $user !== loading && $user !== unavailable}
-            <div class="flex items-center bg-[#06000a] rounded-xl p-4 px-6 gap-2">
+            <div class="flex items-center bg-base-200 rounded-xl p-4 px-6 gap-2">
                 {#if currentPage === ""}
                     <span class="text-xl font-semibold">Cosmetic Bundles</span>
                 {:else if currentPage === "games"}
@@ -122,9 +122,9 @@
                 {/if}
             </div>
         {/if}
-        <div class="min-h-0 flex-1 flex flex-col bg-[#06000a] rounded-xl p-4 px-6 gap-2">
+        <div class="min-h-0 flex-1 flex flex-col bg-base-200 rounded-xl p-4 px-6 gap-2">
             {#if $user === loading}
-                <div class="flex-1 flex items-center justify-center text-[#806593]">
+                <div class="flex-1 flex items-center justify-center text-text-300">
                     <Loader size={32}/>
                 </div>
             {:else}

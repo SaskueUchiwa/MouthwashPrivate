@@ -10,7 +10,7 @@
 </script>
 
 <button
-    class="bg-[#27063e] rounded-r-2xl col-start-1 col-span-2 transition-opacity hover:opacity-100 border-none cursor-pointer filter"
+    class="bg-card-200 rounded-r-2xl col-start-1 col-span-2 transition-opacity hover:opacity-100 border-none cursor-pointer filter"
     class:grayscale={disabled}
     class:pointer-events-none={disabled}
     class:opacity-50={selectedTab !== name}

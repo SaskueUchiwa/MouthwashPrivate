@@ -144,18 +144,18 @@
 </svelte:head>
 
 <div class="fixed left-0 top-0 w-full h-full flex items-center justify-center bg-[#000000b5] z-10">
-    <div class="bg-[#1a0428] w-1/4 rounded-xl shadow-lg px-6 p-4">
+    <div class="bg-surface-200 w-1/4 rounded-xl shadow-lg px-6 p-4">
         <div class="flex flex-col h-full gap-4">
             <div class="flex flex-col gap-2">
                 <span class="text-xl">Purchase Bundle</span>
             </div>
-            <div class="flex border-b-2 border-dotted border-[#27063e] gap-1 px-2 pb-4">
+            <div class="flex border-b-2 border-dotted border-card-200 gap-1 px-2 pb-4">
                 <FeaturedBundleThumbnail bundleInfo={purchasingBundle} showDetails={false} ownedItems={[]} size={96}/>
                 <div class="flex flex-col p-2">
                     <pre class="text-xs">Item: {purchasingBundle.name} (Bundle)</pre>
-                    <!--<p class="text-[#806593] italic text-xs">{purchasingBundle.bundle_description}</p>-->
+                    <!--<p class="text-text-300 italic text-xs">{purchasingBundle.bundle_description}</p>-->
                     <pre class="text-xs">Subtotal: ${(purchasingBundle.price_usd / 100).toFixed(2)}</pre>
-                    <pre class="text-xs text-[#806593]">Tax: VAT included</pre>
+                    <pre class="text-xs text-text-300">Tax: VAT included</pre>
                     <pre class="text-xs mt-2">Total: ${(purchasingBundle.price_usd / 100).toFixed(2)}</pre>
                 </div>
             </div>
@@ -167,7 +167,7 @@
                     </div>
                 </div>
                 <div class="flex self-end gap-2">
-                    <button class="rounded-lg bg-[#27063e] px-4 py-1 hover:bg-[#1C072B] hover:text-[#bba1ce] filter border-none font-inherit text-inherit text-inherit cursor-pointer flex items-center gap-2"
+                    <button class="rounded-lg bg-card-200 px-4 py-1 hover:bg-card-300 hover:text-text-300 filter border-none font-inherit text-inherit text-inherit cursor-pointer flex items-center gap-2"
                         class:grayscale={loadingPurchase || loadingCancel}
                         class:pointer-events-none={loadingPurchase || loadingCancel}
                         on:click={cancelCheckout}
@@ -175,7 +175,7 @@
                         <Cross size={16}/>
                         Cancel
                     </button>
-                    <button class="rounded-lg bg-[#27063e] px-4 py-1 hover:bg-[#1C072B] hover:text-[#bba1ce] filter border-none font-inherit text-inherit text-inherit cursor-pointer flex items-center gap-2"
+                    <button class="rounded-lg bg-card-200 px-4 py-1 hover:bg-card-300 hover:text-text-300 filter border-none font-inherit text-inherit text-inherit cursor-pointer flex items-center gap-2"
                         class:grayscale={loadingPurchase || loadingCancel || !readyToPurchase}
                         class:pointer-events-none={loadingPurchase || loadingCancel || !readyToPurchase}
                         on:click={submitCardDetails}

@@ -49,8 +49,8 @@
     <div class="flex gap-1 flex-1 items-center">
         <div class="flex-1 flex flex-col">
             <span>{bundleInfo.name} Bundle</span>
-            <span class="text-[#806593] italic text-xs">Released on {boughtAtFormat.format(new Date(bundleInfo.added_at))}</span>
-            <span class="text-[#806593] italic text-xs">{bundleInfo.num_items} item{bundleInfo.num_items === 1 ? "" : "s"}</span>
+            <span class="text-text-300 italic text-xs">Released on {boughtAtFormat.format(new Date(bundleInfo.added_at))}</span>
+            <span class="text-text-300 italic text-xs">{bundleInfo.num_items} item{bundleInfo.num_items === 1 ? "" : "s"}</span>
         </div>
         <div class="flex-[2_0_0] flex flex-col">
             <span>Items</span>
@@ -58,7 +58,7 @@
         </div>
         <div class="ml-auto flex-1 flex flex-col gap-1">
             <button
-                class="rounded-lg text-xs bg-[#9e3778] text-[#b0d4a7] px-4 py-1 hover:bg-[#2c6e1b] hover:text-[#94b88c] filter border-none font-inherit text-inherit text-inherit cursor-pointer"
+                class="rounded-lg text-xs bg-accent2 text-text-200 px-4 py-1 hover:bg-accent2/70 hover:text-text-300 filter border-none font-inherit text-inherit text-inherit cursor-pointer"
                 class:grayscale={loadingBuy || $user === loading || $user === unavailable || doesAlreadyOwn}
                 class:pointer-events-none={loadingBuy || $user === loading || $user === unavailable || doesAlreadyOwn}
                 on:click={createPaymentIntent}
@@ -72,7 +72,7 @@
                 {/if}
             </button>
             <button
-                class="rounded-lg text-xs bg-[#41379e] text-[#b0d4a7] px-4 py-1 hover:bg-[#2538cc] hover:text-[#94b88c] filter border-none font-inherit text-inherit text-inherit cursor-pointer"
+                class="rounded-lg text-xs border-2 border-accent2/80 text-text-200 px-4 py-1 transition-colors duration-100 hover:border-accent2/40 hover:text-text-300 filter font-inherit text-inherit text-inherit cursor-pointer"
                 on:click={previewBundle}
             >
                 Preview

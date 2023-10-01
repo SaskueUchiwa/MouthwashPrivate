@@ -63,19 +63,19 @@
     });
 </script>
 
-<button class="flex flex-col items-stretch gap-2 bg-[#0c0213] px-4 py-2 rounded-lg cursor-pointer" on:click={selectOrDeselect}>
+<button class="flex flex-col items-stretch gap-2 bg-surface-200 px-4 py-2 rounded-lg cursor-pointer" on:click={selectOrDeselect}>
     <div class="flex items-center gap-4">
         <div class="flex flex-col items-start">
             <div class="flex items-center gap-2">
                 <span>{map || "The Skeld"}</span>
-                <span class="text-xs px-2 py-0.5 rounded-xl bg-[#27063e]">{gamemode || "Hide N' Seek"}</span>
+                <span class="text-xs px-2 py-0.5 rounded-xl bg-accent2">{gamemode || "Hide N' Seek"}</span>
                 {#if game.total_players !== undefined}
-                    <span class="text-xs px-2 py-0.5 rounded-xl bg-slate-900">{game.total_players} Player{game.total_players === 1 ? "" : "s"}</span>
+                    <span class="text-xs px-2 py-0.5 rounded-xl bg-card-100">{game.total_players} Player{game.total_players === 1 ? "" : "s"}</span>
                 {/if}
             </div>
             {#if game.ended_at !== null}
                 {@const durationMinutes = Math.ceil((new Date(game.ended_at).getTime() - new Date(game.started_at).getTime()) / 1000 / 60)}
-                <span class="text-xs text-[#806593] italic">
+                <span class="text-xs text-text-300 italic">
                     Played on {startedAtFormat.format(new Date(game.started_at))} for {durationMinutes} minute{durationMinutes === 1 ? "" : "s"}
                 </span>
             {:else}
@@ -99,7 +99,7 @@
                     </div>
                 {/if}
             {/if}
-            <div class="bg-[#27063e] rounded-full">
+            <div class="bg-card-200 rounded-full">
                 {#if selectedGameId === game.id}
                     <ChevronUp size={16}/>
                 {:else}

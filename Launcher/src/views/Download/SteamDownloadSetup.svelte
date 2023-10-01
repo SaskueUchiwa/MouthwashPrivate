@@ -106,30 +106,30 @@
     }
 </script>
 
-<p class="text-[#806593] italic text-xs">
+<p class="text-text-300 italic text-xs">
     You can either locate Steam on your computer (the launcher might be able to find it for you), or
     you can login with Steam using your username and password.
     <br><br>
     While the process is completely secure, if you don't trust the launcher with your details
     then you should use the first option.
 </p>
-<div class="flex flex-col bg-[#1F052F] rounded-lg">
+<div class="flex flex-col bg-surface-100 rounded-lg">
     <div class="flex">
         <button
             class="flex-1 p-2 border-transparent border-b-2 border-none font-inherit text-inherit cursor-pointer"
-            class:bg-[#1a0428]={selectedTab !== 0}
+            class:bg-surface-200={selectedTab !== 0}
             class:bg-transparent={selectedTab === 0}
-            class:border-[#0c021375]={selectedTab !== 0}
+            class:border-surface-200={selectedTab !== 0}
             on:click={() => selectTab(0)}
         >
             <span class="text-sm">Steam Installation</span>
         </button>
-        <div class="w-0.5 h-full bg-[#0c021375] rounded-t-lg"></div>
+        <div class="w-0.5 h-full bg-surface-200 rounded-t-lg"></div>
         <button
             class="flex-1 p-2 border-transparent border-b-2 border-none font-inherit text-inherit cursor-pointer"
-            class:bg-[#1a0428]={selectedTab !== 1}
+            class:bg-surface-200={selectedTab !== 1}
             class:bg-transparent={selectedTab === 1}
-            class:border-[#0c021375]={selectedTab !== 1}
+            class:border-surface-200={selectedTab !== 1}
             on:click={() => selectTab(1)}
         >
             <span class="text-sm">Login with Steam</span>
@@ -138,13 +138,13 @@
     <div class="flex flex-col gap-2 p-4">
         {#if selectedTab === 0}
             <div class="flex rounded-lg">
-                <div class="p-2 rounded-l-lg"><Folder size={14}/></div>
-                <input class="outline-none flex-1 rounded-r-lg bg-[#1f052f] w-64 text-xs border-none font-inherit text-inherit" placeholder="Location" readonly value={selectedSteamInstallationPath}>
-                <button class="rounded-lg bg-[#27063e] px-4 py-1 hover:bg-[#1C072B] hover:text-[#bba1ce] filter border-none font-inherit text-inherit cursor-pointer" on:click={findSteam}>
+                <div class="p-2 rounded-l-lg bg-surface-100"><Folder size={14}/></div>
+                <input class="outline-none flex-1 rounded-r-lg bg-surface-100 w-64 text-xs border-none font-inherit text-inherit" placeholder="Location" readonly value={selectedSteamInstallationPath}>
+                <button class="rounded-lg bg-card-200 px-4 py-1 hover:bg-card-300 hover:text-text-300 filter border-none font-inherit text-inherit cursor-pointer" on:click={findSteam}>
                     <ArrowPath size={14}/>
                 </button>
             </div>
-            <button class="rounded-lg bg-[#27063e] px-4 py-1 hover:bg-[#1C072B] hover:text-[#bba1ce] filter border-none font-inherit text-inherit cursor-pointer"
+            <button class="rounded-lg bg-card-200 px-4 py-1 hover:bg-card-300 hover:text-text-300 filter border-none font-inherit text-inherit cursor-pointer"
                 class:grayscale={hasFolderDialogueOpen}
                 class:pointer-events-none={hasFolderDialogueOpen}
                 on:click={locateSteamFolder}
@@ -156,12 +156,12 @@
             {/if}
         {:else if selectedTab === 1}
             <div class="flex rounded-lg">
-                <div class="p-2 bg-[#27063e] rounded-l-lg"><Tag size={20}/></div>
-                <input class="text-md outline-none rounded-r-lg bg-[#27063e] w-64 border-none font-inherit text-inherit" placeholder="Username" bind:value={username}>
+                <div class="p-2 bg-card-200 rounded-l-lg"><Tag size={20}/></div>
+                <input class="text-md outline-none rounded-r-lg bg-card-200 w-64 border-none font-inherit text-inherit" placeholder="Username" bind:value={username}>
             </div>
             <div class="flex rounded-lg">
-                <div class="p-2 bg-[#27063e] rounded-l-lg"><Key size={20}/></div>
-                <input class="text-md outline-none rounded-r-lg bg-[#27063e] w-64 border-none font-inherit text-inherit" placeholder="Password" type="password" bind:value={password}>
+                <div class="p-2 bg-card-200 rounded-l-lg"><Key size={20}/></div>
+                <input class="text-md outline-none rounded-r-lg bg-card-200 w-64 border-none font-inherit text-inherit" placeholder="Password" type="password" bind:value={password}>
             </div>
         {/if}
     </div>

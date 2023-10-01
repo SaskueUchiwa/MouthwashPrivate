@@ -93,7 +93,7 @@
         <span class="text-xs">Showing {$games.length}{hasFoundAll ? "" : "+"} game{$games.length === 1 ? "" : "s"}</span>
     {/if}
     <button
-        class="rounded-3xl ml-auto order-2 bg-[#26093a] text-[#eed7ff] px-4 py-1 flex text-xs items-center justify-center gap-1 transition-colors filter hover:bg-[#1C072B] hover:text-[#bba1ce]"
+        class="rounded-3xl ml-auto order-2 bg-[#26093a] text-[#eed7ff] px-4 py-1 flex text-xs items-center justify-center gap-1 transition-colors filter hover:bg-card-300 hover:text-text-300"
         class:pointer-events-none={$games === loading}
         class:grayscale={$games === loading}
         on:click={getInitialGames}
@@ -119,7 +119,7 @@
                 <UserGamesLobbyGroup {user} {...gameGroup} bind:selectedGameId/>
             {/each}
             <button
-                class="text-[#eed7ff] px-4 py-1 flex text-xs items-center justify-center gap-1 transition-colors filter hover:text-[#bba1ce]"
+                class="text-text-200 px-4 py-1 flex text-xs items-center justify-center gap-1 transition-colors filter hover:text-text-300"
                 class:pointer-events-none={loadingMoreGames || hasFoundAll}
                 class:grayscale={loadingMoreGames || hasFoundAll}
                 on:click={loadNextPage}

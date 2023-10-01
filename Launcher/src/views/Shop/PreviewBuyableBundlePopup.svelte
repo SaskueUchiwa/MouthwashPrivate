@@ -23,10 +23,10 @@
 
 <button class="fixed left-0 top-0 w-full h-full flex gap-4 items-center justify-center bg-[#000000b5] z-10 cursor-pointer" on:click={ev => dispatchEvent("close")}>
     <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions -->
-    <div class="bg-[#1a0428] rounded-xl shadow-lg min-h-1/2 px-6 p-4 flex cursor-default" on:click={ev => ev.stopPropagation()}>
+    <div class="bg-surface-200 rounded-xl shadow-lg min-h-1/2 px-6 p-4 flex cursor-default" on:click={ev => ev.stopPropagation()}>
         <div class="flex flex-col items-start flex-1 gap-2">
             <span class="text-xl">Preview Character</span>
-            <p class="text-[#806593] italic text-sm text-left">
+            <p class="text-text-300 italic text-sm text-left">
                 Cosmetics in the {bundle.name} bundle are on the right,<br>
                 you can click them to see how they'd look on your<br>character before you buy.
             </p>
@@ -38,7 +38,7 @@
         </div>
     </div>
     <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions -->
-    <div class="bg-[#1a0428] rounded-xl shadow-lg min-h-1/2 min-w-1/3 px-6 p-4 flex cursor-default" on:click={ev => ev.stopPropagation()}>
+    <div class="bg-surface-200 rounded-xl shadow-lg min-h-1/2 min-w-1/3 px-6 p-4 flex cursor-default" on:click={ev => ev.stopPropagation()}>
         <div class="flex flex-col items-start flex-1 gap-4">
             <span class="text-xl">Preview Bundle</span>
             <div class="flex flex-1 w-full">

@@ -51,10 +51,10 @@
         <CharacterOutfitPreview bind:hatCosmetic colorName={"Rose"}/>
         <span class="text-stroke-black text-white italic text-2xl">{user.display_name}</span>
     </div>
-    <span class="text-[#806593] italic">Joined on {joinDateFormat.format(new Date(user.created_at))}</span>
+    <span class="text-text-300 italic">Joined on {joinDateFormat.format(new Date(user.created_at))}</span>
     <div class="flex-1 flex flex-col items-stretch w-full gap-2">
         <button
-            class="rounded-3xl bg-[#26093a] text-[#eed7ff] py-1 flex items-center justify-center gap-2 transition-colors filter hover:bg-[#1C072B] hover:text-[#bba1ce]"
+            class="rounded-3xl bg-card-300 text-text-200 py-1 flex items-center justify-center gap-2 transition-colors duration-100 filter hover:bg-card-300 hover:text-text-300"
             class:pointer-events-none={page === ""}
             class:grayscale={page === ""}
             on:click={() => dispatchEvent("set-page", "")}
@@ -63,7 +63,7 @@
             <Swatch size={16}/>
         </button>
         <button
-            class="rounded-3xl bg-[#26093a] text-[#eed7ff] py-1 flex items-center justify-center gap-2 transition-colors filter hover:bg-[#1C072B] hover:text-[#bba1ce]"
+            class="rounded-3xl bg-card-300 text-text-200 py-1 flex items-center justify-center gap-2 transition-colors duration-100 filter hover:bg-card-300 hover:text-text-300"
             class:pointer-events-none={page === "games"}
             class:grayscale={page === "games"}
             on:click={() => dispatchEvent("set-page", "games")}
@@ -72,7 +72,7 @@
             <ArrowRight size={16}/>
         </button>
         <div class="mt-auto order-2 flex flex-col items-stretch w-full gap-2">
-            <button class="rounded-3xl border-[#26093a] text-[#eed7ff] py-1 flex items-center justify-center gap-2 transition-colors hover:text-[#bba1ce]">
+            <button class="rounded-3xl border-2 border-surface-100 text-text-300 py-1 flex items-center justify-center gap-2 transition-colors duration-100 hover:border-card-300 hover:text-text-200">
                 <span class="italic">Copy Link to Profile</span>
                 <Link size={16}/>
             </button>

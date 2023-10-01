@@ -21,7 +21,7 @@
             </div>
         {/if}-->
         {#if doesAlreadyOwn}
-            <div class="absolute left-0 bottom-0 w-full h-8 flex items-center justify-center bg-emerald-600/90 text-white">
+            <div class="absolute left-0 bottom-0 w-full h-8 flex items-center justify-center bg-accent/95 text-white">
                 <div class="flex gap-1">
                     <CheckBadge size={16}/>
                     <span class="text-sm">Purchased</span>
