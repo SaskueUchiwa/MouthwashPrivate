@@ -25,9 +25,11 @@
         <FeaturedBundleThumbnail ownedItems={[]} bundleInfo={bundle} size={84} showDetails={false}/>
         <div class="flex-1 flex flex-col items-start gap-1">
             <span class="text-1xl">{bundle.name} Bundle</span>
-            <p class="text-text-300 italic text-sm text-left max-w-4/5">
-                &OpenCurlyDoubleQuote;{bundle.description}&CloseCurlyDoubleQuote;
-            </p>
+            {#if bundle.description.length > 0}
+                <p class="text-text-300 italic text-sm text-left max-w-4/5">
+                    &OpenCurlyDoubleQuote;{bundle.description}&CloseCurlyDoubleQuote;
+                </p>
+            {/if}
         </div>
     </div>
     <div class="flex items-center">
