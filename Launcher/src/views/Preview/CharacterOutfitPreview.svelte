@@ -13,7 +13,7 @@
 </script>
 
 <div class="w-40 h-45 relative">
-    <div class="absolute w-80 h-120 -bottom-1/2 -left-1/2">
+    <div class="absolute w-80 h-120 -bottom-3/5 -left-1/2">
         {#if hatCosmetic}
             {#key hatCosmetic}
                 {#if hatCosmetic.asset.in_front}
