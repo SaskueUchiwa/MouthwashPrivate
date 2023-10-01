@@ -1,11 +1,10 @@
 <script lang="ts">
     import { loading, unavailable, type Bundle } from "../../stores/accounts";
     import Search from "../../icons/Search.svelte";
-    import ValuationDropdown from "./ValuationDropdown.svelte";
     import type { Writable } from "svelte/store";
 
     export let availableBundles: Writable<Bundle[]|typeof loading|typeof unavailable>;
-    export let selectedValuationIdxs: number[];
+    // export let selectedValuationIdxs: number[];
     export let searchTerm: string;
     export let getAvailableCosmetics: () => void;
 </script>
@@ -16,12 +15,12 @@
     {/if}
     <div class="ml-auto order-2">
         <div class="flex gap-1">
-            <ValuationDropdown bind:selectedIdxs={selectedValuationIdxs} items={["Ghost", "Crewmate", "Impostor", "Polus"]} small={true}/>
+            <!--<ValuationDropdown bind:selectedIdxs={selectedValuationIdxs} items={["Ghost", "Crewmate", "Impostor", "Polus"]} small={true}/>-->
             <div class="flex border-transparent rounded-lg">
                 <div class="p-2 bg-card-200 rounded-l-lg"><Search size={14}/></div>
                 <input
                     class="border-none font-inherit text-inherit text-xs outline-none rounded-r-lg bg-card-200 w-64"
-                    placeholder="Search"
+                    placeholder="Search name, description, items, etc."
                     on:keypress={ev => ev.key === "Enter" && getAvailableCosmetics()}
                     bind:value={searchTerm}>
             </div>

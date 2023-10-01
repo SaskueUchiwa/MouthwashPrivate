@@ -36,7 +36,7 @@
         localStorage.removeItem("installation-version");
         close();
 
-        dispatchEvent("switch-view", "Download");
+        dispatchEvent("switch-view", { view: "Download" });
     }
 </script>
 

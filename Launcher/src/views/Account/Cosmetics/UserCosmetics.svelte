@@ -12,14 +12,18 @@
     export let user: UserLogin;
 
     let error = "";
-    let bundles = writable<(Bundle & { owned_at: string; })[]|typeof loading|typeof unavailable>(loading);
+    let ownedBundles = writable<(Bundle & { owned_at: string; })[]|typeof loading|typeof unavailable>(loading);
 
     let selectedItemId = "";
-    let selectedBundle: (Bundle & { owned_at: string; })|undefined = undefined;
+    let selectedBundleId: string|undefined = undefined;
     let bundleSearchTerm = "";
 
+    export async function openBundle(bundleId: string) {
+        selectedBundleId = bundleId;
+    }
+
     export async function getUserCosmetics() {
-        bundles.set(loading);
+        ownedBundles.set(loading);
         const userCosmeticsRes = await fetch($accountUrl + "/api/v2/accounts/owned_bundles", {
             headers: {
                 Authorization: `Bearer ${user.client_token}`
@@ -28,21 +32,21 @@
 
         if (!userCosmeticsRes.ok) {
             error = "Could not get user cosmetics.";
-            bundles.set(unavailable);
+            ownedBundles.set(unavailable);
             return;
         }
 
         const json = await userCosmeticsRes.json();
-        bundles.set(json.data);
+        ownedBundles.set(json.data);
     }
 
     function selectBundle(bundle: Bundle & { owned_at: string; }) {
-        selectedBundle = bundle;
+        selectedBundleId = bundle.id;
         bundleSearchTerm = "";
     }
 
     const officialBundle: Bundle & { preview_contents_url: string; owned_at: string|null; } = {
-        id: "",
+        id: "00000000-0000-0000-0000-000000000000",
         name: "Official",
         thumbnail_url: "/amongus-thumbnail.png",
         author_id: "",
@@ -62,7 +66,7 @@
     };
 
     function goToShop() {
-        dispatchEvent("switch-view", "Shop");
+        dispatchEvent("switch-view", { view: "Shop" });
     }
 
     onMount(() => {
@@ -70,29 +74,34 @@
     });
 </script>
 
-{#if $bundles === loading}
+{#if $ownedBundles === loading}
     <div class="flex-1 flex items-center justify-center text-text-300">
         <Loader size={32}/>
     </div>
 {:else}
-    {#if selectedBundle}
+    {#if selectedBundleId !== undefined}
         <div class="flex min-w-0 flex-col gap-4 min-h-0">
             <div class="flex gap-2">
                 <button class="text-xs rounded-lg bg-card-200 px-4 py-1 hover:bg-card-300 hover:text-text-300 filter border-none font-inherit cursor-pointer"
-                    on:click={() => selectedBundle = undefined}
+                    on:click={() => selectedBundleId = undefined}
                 >
                     Back to Cosmetics
                 </button>
             </div>
-            <BundlePreviewList bundle={selectedBundle} isOfficial={selectedBundle === officialBundle} bind:selectedItemId on:wear-item/>
+            {#if Array.isArray($ownedBundles)}
+                {@const bundle = selectedBundleId === officialBundle.id ? officialBundle : $ownedBundles.find(x => x.id === selectedBundleId)}
+                {#if bundle}
+                    <BundlePreviewList {bundle} isOfficial={selectedBundleId === officialBundle.id} bind:selectedItemId on:wear-item/>
+                {/if}
+            {/if}
         </div>
     {/if}
-    <div class="flex flex-col gap-2 min-h-0 overflow-auto w-full" class:hidden={selectedBundle !== undefined}>
+    <div class="flex flex-col gap-2 min-h-0 overflow-auto w-full" class:hidden={selectedBundleId !== undefined}>
         <div class="flex flex-col gap-4">
             <CosmeticBundle bundleInfo={officialBundle} on:select-bundle={() => selectBundle(officialBundle)} on:wear-item/>
         </div>
-        {#if Array.isArray($bundles)}
-            {#if $bundles.length === 0}
+        {#if Array.isArray($ownedBundles)}
+            {#if $ownedBundles.length === 0}
                 <div class="mt-12 self-center flex flex-col items-center justify-center gap-2">
                     <span>You don't have any bundles purchased.<br>Head to the shop to show off your style.</span>
                     <button class="rounded-lg bg-card-200 px-4 py-1 hover:bg-card-300 hover:text-text-300 filter border-none font-inherit text-inherit text-inherit cursor-pointer flex items-center gap-2"
@@ -103,7 +112,7 @@
                     </button>
                 </div>
             {:else}
-                {#each $bundles as bundleInfo}
+                {#each $ownedBundles as bundleInfo}
                     <div class="flex flex-col gap-4">
                         <CosmeticBundle {bundleInfo} on:select-bundle={() => selectBundle(bundleInfo)} on:wear-item/>
                     </div>

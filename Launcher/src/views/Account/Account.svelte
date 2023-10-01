@@ -19,6 +19,11 @@
         await userCosmetics?.getUserCosmetics();
     }
 
+    export async function openBundle(bundleId: string) {
+        currentPage = "";
+        await userCosmetics?.openBundle(bundleId);
+    }
+
     function onWearItem(ev: CustomEvent<SomeLoadedCosmeticImages>) {
         profileSection?.wearItem(ev.detail);
     }

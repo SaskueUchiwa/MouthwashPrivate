@@ -62,10 +62,6 @@
         loadCardElements();
     });
 
-    async function checkCheckoutState() {
-
-    }
-
     let error = "";
     let loadingPurchase = false;
     async function submitCardDetails() {
@@ -100,15 +96,18 @@
             loadingPurchase = false;
 
             if (!bundleCheckoutComplete.ok) {
+                error = "There was an error purchasing the bundle. If you have been charged, contact support to receive your purchased bundles.";
                 loadingPurchase = false;
                 return;
             }
 
-            const json = await bundleCheckoutComplete.json();
+            dispatchEvent("open-bundle", purchasingBundle.id);
+            dispatchEvent("switch-view", { view: "Account" });
             dispatchEvent("refresh");
             dispatchEvent("close");
         } else {
             loadingPurchase = false;
+            dispatchEvent("close"); 
         }
     }
 
@@ -131,7 +130,6 @@
             return;
         }
 
-        const json = await bundleCheckoutCancel.json();
         dispatchEvent("refresh");
         dispatchEvent("close");
     }

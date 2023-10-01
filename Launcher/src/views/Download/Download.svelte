@@ -62,7 +62,7 @@
             gameInstalledVersionState.set(remoteVersion.version);
             localStorage.setItem("installation-version", remoteVersion.version);
 
-            dispatchEvent("switch-view", "Play");
+            dispatchEvent("switch-view", { view: "Play" });
         });
 
         const success = await invoke("download_file_and_extract", {

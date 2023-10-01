@@ -54,7 +54,8 @@
             (All Bundles)
         {/if}
     </span>
-    <BundleFilterBar {availableBundles} {getAvailableCosmetics} bind:selectedValuationIdxs bind:searchTerm/>
+    <!-- <BundleFilterBar {availableBundles} {getAvailableCosmetics} bind:selectedValuationIdxs bind:searchTerm/> -->
+    <BundleFilterBar {availableBundles} {getAvailableCosmetics} bind:searchTerm/>
     <div class="overflow-y-auto min-h-0 px-4 flex-1">
         {#if $availableBundles === loading}
             <div class="flex-1 flex items-center justify-center text-text-300">

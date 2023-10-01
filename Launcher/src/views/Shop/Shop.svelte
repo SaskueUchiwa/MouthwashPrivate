@@ -69,8 +69,6 @@
         previewingBundle = ev.detail.bundle;
     }
 
-    let storefront: Storefront|undefined = undefined;
-    let marketplace: Marketplace|undefined = undefined;
     function refreshBundles() {
         getUserCosmetics();
         dispatchEvent("refresh-cosmetics");
@@ -80,7 +78,7 @@
 <div class="flex gap-4 self-stretch h-full">
     <div class="w-full flex flex-col bg-base-200 rounded-xl gap-4 p-4">
         {#if page === ""}
-            <Storefront ownedCosmetics={ownedBundles} {allFeatureTags} bind:searchTerm bind:page bind:featureTag bind:this={storefront}/>
+            <Storefront ownedCosmetics={ownedBundles} {allFeatureTags} bind:searchTerm bind:page bind:featureTag/>
         {:else}
             <Marketplace
                 {featureTag}
@@ -90,8 +88,7 @@
                 bind:selectedValuationIdxs
                 bind:searchTerm
                 on:open-purchase-form={onOpenPurchaseForm}
-                on:preview-bundle={onPreviewBundle}
-                bind:this={marketplace}/>
+                on:preview-bundle={onPreviewBundle}/>
         {/if}
     </div>
 </div>
@@ -103,6 +100,8 @@
         user={$user}
         on:close={() => (clientSecret = undefined, purchasingBundle = undefined, checkoutSessionId = undefined)}
         on:refresh={refreshBundles}
+        on:open-bundle
+        on:switch-view
         />
 {/if}
 {#if previewingBundle !== undefined}
