@@ -4,6 +4,7 @@
 
     import { loading, unavailable, user, accountUrl, type Bundle } from "../../stores/accounts";
     import FeaturedBundleThumbnail from "./FeaturedBundleThumbnail.svelte";
+    import PreviewItemSelection from "../Preview/PreviewItemSelection.svelte";
 
     export let bundleInfo: Bundle;
     export let ownedBundles: Bundle[]|undefined;
@@ -45,16 +46,19 @@
 
 <div class="flex items-center gap-2 filter" class:grayscale={doesAlreadyOwn}>
     <FeaturedBundleThumbnail {bundleInfo} ownedItems={ownedBundles} size={96} showDetails={false}/>
-    <div class="flex flex-col gap-1">
-        <div class="flex flex-col">
-            <span>{bundleInfo.name}</span>
-            <span class="text-[#806593] italic text-xs">
-                Released on {boughtAtFormat.format(new Date(bundleInfo.added_at))}, {bundleInfo.num_items} item{bundleInfo.num_items === 1 ? "" : "s"}
-            </span>
+    <div class="flex gap-1 flex-1 items-center">
+        <div class="flex-1 flex flex-col">
+            <span>{bundleInfo.name} Bundle</span>
+            <span class="text-[#806593] italic text-xs">Released on {boughtAtFormat.format(new Date(bundleInfo.added_at))}</span>
+            <span class="text-[#806593] italic text-xs">{bundleInfo.num_items} item{bundleInfo.num_items === 1 ? "" : "s"}</span>
         </div>
-        <div class="flex flex-col gap-1">
+        <div class="flex-[2_0_0] flex flex-col">
+            <span>Items</span>
+            <PreviewItemSelection {bundleInfo} isOfficial={false} selectedItemId={null} searchTerm={""} thumbScale={1} showMax={4} itemSize={58}/>
+        </div>
+        <div class="ml-auto flex-1 flex flex-col gap-1">
             <button
-                class="rounded-lg text-xs bg-[#378025] text-[#b0d4a7] px-4 py-1 hover:bg-[#2c6e1b] hover:text-[#94b88c] filter border-none font-inherit text-inherit text-inherit cursor-pointer"
+                class="rounded-lg text-xs bg-[#9e3778] text-[#b0d4a7] px-4 py-1 hover:bg-[#2c6e1b] hover:text-[#94b88c] filter border-none font-inherit text-inherit text-inherit cursor-pointer"
                 class:grayscale={loadingBuy || $user === loading || $user === unavailable || doesAlreadyOwn}
                 class:pointer-events-none={loadingBuy || $user === loading || $user === unavailable || doesAlreadyOwn}
                 on:click={createPaymentIntent}
@@ -68,7 +72,7 @@
                 {/if}
             </button>
             <button
-                class="rounded-lg text-xs bg-[#3449eb] text-[#b0d4a7] px-4 py-1 hover:bg-[#2538cc] hover:text-[#94b88c] filter border-none font-inherit text-inherit text-inherit cursor-pointer"
+                class="rounded-lg text-xs bg-[#41379e] text-[#b0d4a7] px-4 py-1 hover:bg-[#2538cc] hover:text-[#94b88c] filter border-none font-inherit text-inherit text-inherit cursor-pointer"
                 on:click={previewBundle}
             >
                 Preview

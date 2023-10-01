@@ -79,7 +79,7 @@
     </div>
 {:else}
     {#if selectedBundle}
-        <div class="flex flex-col gap-4 min-h-0">
+        <div class="flex min-w-0 flex-col gap-4 min-h-0">
             <div class="flex gap-2">
                 <button class="text-xs rounded-lg bg-[#27063e] px-4 py-1 hover:bg-[#1C072B] hover:text-[#bba1ce] filter border-none font-inherit cursor-pointer"
                     on:click={() => selectedBundle = undefined}

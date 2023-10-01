@@ -9,12 +9,15 @@
     import type { AssetsListingMetadata, LoadedCosmeticImage, LoadedHatCosmeticImages, SpriteFileReference } from "../../lib/previewTypes";
     import PreviewItemThumb from "./PreviewItemThumb.svelte";
     import Loader from "../../icons/Loader.svelte";
+    import Plus from "../../icons/Plus.svelte";
 
     export let bundleInfo: Bundle & { preview_contents_url: string; };
-    export let selectedItemId: string;
+    export let selectedItemId: string|null;
     export let isOfficial: boolean;
     export let searchTerm: string;
     export let thumbScale: number;
+    export let showMax: number|null = null;
+    export let itemSize = 76;
     
     export function selectItem(idx: number) {
         if (idx >= loadedCosmeticImages.length)
@@ -61,6 +64,7 @@
 
     let loadedCosmeticImages: LoadedHatCosmeticImages[] = [];
     let loadingCosmetics = true;
+    let hasMore = false;
     onMount(async () => {
         const zip = new JSZip();
         await zip.loadAsync(await fetchZip());
@@ -69,7 +73,8 @@
         const metadataFileText = await metadataFile.async("text");
         const metadata = JSON.parse(metadataFileText) as AssetsListingMetadata;
 
-        for (let i = 0; i < metadata.assets.length; i++) {
+        let i = 0;
+        for (; i < (showMax !== null ? Math.min(showMax, metadata.assets.length) : metadata.assets.length); i++) {
             const asset = metadata.assets[i];
             if (asset.type === "HAT") {
                 loadedCosmeticImages.push({
@@ -86,6 +91,7 @@
                 });
             }
         }
+        hasMore = i != metadata.assets.length;
         loadedCosmeticImages = loadedCosmeticImages;
         loadingCosmetics = false;
         dispatchEvent("cosmetics-ready");
@@ -97,9 +103,14 @@
         <Loader size={32}/>
     </div>
 {:else}
-    <div class="grid gap-2 grid-cols-7 grid-rows-auto">
+    <div class="flex gap-2 flex-wrap items-center">
         {#each loadedCosmeticImages as cosmeticImage}
-            <PreviewItemThumb {cosmeticImage} {searchTerm} {thumbScale} bind:selectedItemId on:wear-item/>
+            <PreviewItemThumb {cosmeticImage} {searchTerm} {thumbScale} size={itemSize} bind:selectedItemId on:wear-item/>
         {/each}
+        {#if hasMore}
+            <div style="width: {itemSize}px; height: {itemSize}px;" class="flex items-center justify-center text-[#160124] border-2 border-[#160124] rounded-lg">
+                <Plus size={24}/>
+            </div>
+        {/if}
     </div>
 {/if}

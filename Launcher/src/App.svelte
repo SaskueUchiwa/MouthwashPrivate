@@ -103,18 +103,31 @@
     onMount(async () => {
         await Promise.all([ getInstallationPath(), getRemoteLatestVersion(), getLocalVersion() ]);
     });
+
+    let basisElement: HTMLDivElement|undefined;
+    let contentElement: HTMLDivElement|undefined;
+
+    function onFrame() {
+        if (basisElement && contentElement) {
+            const bounds = basisElement.getBoundingClientRect();
+            contentElement.style.width = bounds.width + "px";
+        }
+        requestAnimationFrame(onFrame);
+    }
+
+    requestAnimationFrame(onFrame);
 </script>
 
 <div class="min-h-0 w-full flex flex-col items-center p-y-32">
     <div class="min-h-0 h-full flex flex-col gap-16 items-center self-center">
-        <div class="flex flex-col gap-4 items-center">
+        <div class="flex flex-col gap-4 items-center" bind:this={basisElement}>
             <div><span class="font-bold text-6xl">Polus.gg</span>&nbsp;&nbsp;<span class="italic text-6xl">Rewritten</span></div>
             <span class="w-128 xl:w-248 text-xl">
                 A revival of the original Polus.GG mod for Among Us - a private server and client mod with
                 brand new gamemodes, cosmetics and roles, unleashing thousands of new ways to play.
             </span>
         </div>
-        <div class="min-h-0 flex-1 self-stretch">
+        <div class="min-h-0 flex-1 self-stretch" bind:this={contentElement}>
             <div class="w-full h-full" class:hidden={selectedTab !== "Account"}><AccountView bind:this={accountTab} on:switch-view={switchView}/></div>
             <div class="w-full h-full" class:hidden={selectedTab !== "Download"}><DownloadView on:switch-view={switchView}/></div>
             <div class="w-full h-full" class:hidden={selectedTab !== "Play"}><PlayView on:switch-view={switchView}/></div>

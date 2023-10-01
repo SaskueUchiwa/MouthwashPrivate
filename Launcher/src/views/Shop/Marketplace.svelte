@@ -63,7 +63,7 @@
         {:else if $availableBundles === unavailable}
             Could not get bundles available to purchase, try again later or contact support.
         {:else}
-            <div class="grid grid-cols-2 grid-rows-auto gap-4">
+            <div class="flex flex-col gap-4">
                 {#each $availableBundles as bundleInfo}
                     <BuyableCosmeticBundle {bundleInfo} {ownedBundles} on:open-purchase-form on:preview-bundle/>
                 {/each}

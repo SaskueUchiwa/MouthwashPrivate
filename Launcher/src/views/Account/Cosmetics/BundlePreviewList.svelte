@@ -40,7 +40,7 @@
             bind:value={bundleSearchTerm}>
     </div>
 </div>
-<div class="overflow-y-auto min-h-0 px-4 flex-1">
+<div class="overflow-y-auto overflow-x-auto min-w-0 min-h-0 px-4 flex-1">
     <PreviewItemSelection
         bundleInfo={bundle}
         searchTerm={bundleSearchTerm}
