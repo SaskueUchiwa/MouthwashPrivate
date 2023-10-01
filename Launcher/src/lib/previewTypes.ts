@@ -10,6 +10,7 @@ export interface SpriteFileReference {
 export interface AssetsListingMetadataAssetHat extends AssetsListingMetadataAsset {
     type: "HAT";
     chip_offset: { x: number; y: number; };
+    player_material: boolean;
     product_id: string;
     in_front: boolean;
     main?: SpriteFileReference|null;
@@ -29,6 +30,7 @@ export interface AssetsListingMetadata {
 
 export interface LoadedCosmeticImage {
     img: HTMLImageElement;
+    material: "default"|"player";
     pivot: { x: number; y: number; };
     scale: number;
 }

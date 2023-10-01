@@ -1,4 +1,5 @@
 <script lang="ts">
+    import * as amongus from "@skeldjs/constant";
     import { createEventDispatcher } from "svelte";
     const dispatchEvent = createEventDispatcher();
 
@@ -106,5 +107,5 @@
 {/if}
 {#if previewingBundle !== undefined}
     <PreviewBuyableBundlePopup
-        bundle={previewingBundle} on:close={() => previewingBundle = undefined}/>
+        bundle={previewingBundle} on:close={() => previewingBundle = undefined} playerColor={$user === loading || $user === unavailable ? amongus.Color.Red : $user.cosmetic_color}/>
 {/if}

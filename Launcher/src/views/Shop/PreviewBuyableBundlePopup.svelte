@@ -1,4 +1,5 @@
 <script lang="ts">
+    import * as amongus from "@skeldjs/constant";
     import { createEventDispatcher } from "svelte";
     const dispatchEvent = createEventDispatcher();
 
@@ -8,6 +9,7 @@
     import CharacterOutfitPreview from "../Preview/CharacterOutfitPreview.svelte";
 
     export let bundle: Bundle|undefined;
+    export let playerColor: amongus.Color;
 
     let selectedItemId = "";
     let hatCosmetic: LoadedHatCosmeticImages|undefined = undefined;
@@ -32,7 +34,7 @@
             </p>-->
             <div class="flex flex-1 w-full">
                 <div class="flex-1 w-full h-full flex justify-center items-center px-8">
-                    <CharacterOutfitPreview colorName={"Rose"} {hatCosmetic}/>
+                    <CharacterOutfitPreview {playerColor} {hatCosmetic}/>
                 </div>
             </div>
         </div>
@@ -44,6 +46,7 @@
             <div class="flex flex-1 w-full">
                 <div class="flex-[3_0_0] flex flex-col gap-4 min-h-0">
                     <BundlePreviewList
+                        {playerColor}
                         bundle={{ ...bundle, owned_at: null }}
                         isOfficial={false}
                         bind:selectedItemId

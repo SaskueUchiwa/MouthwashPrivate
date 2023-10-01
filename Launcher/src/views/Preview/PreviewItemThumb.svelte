@@ -1,4 +1,5 @@
 <script lang="ts">
+    import * as amongus from "@skeldjs/constant";
     import { createEventDispatcher } from "svelte";
     const dispatchEvent = createEventDispatcher();
 
@@ -10,6 +11,7 @@
     export let selectedItemId: string|null;
     export let thumbScale: number;
     export let size = 76;
+    export let playerColor: amongus.Color;
 
     function wearItem() {
         if (selectedItemId === null)
@@ -31,6 +33,10 @@
     on:click={wearItem}
     title={cosmeticImage.asset.product_id}>
     <div class="transition duration-250 transform group-hover:scale-115 w-full h-full">
-        <ItemCanvas layers={[ { ...cosmeticImage.thumb, scale: thumbScale } ]} offset={{ x: cosmeticImage.asset.chip_offset.x * 100, y: 15 - cosmeticImage.asset.chip_offset.y * 100 }}/>
+        <ItemCanvas
+            layers={[ { ...cosmeticImage.thumb, scale: thumbScale } ]}
+            offset={{ x: cosmeticImage.asset.chip_offset.x * 100, y: 15 - cosmeticImage.asset.chip_offset.y * 100 }}
+            {playerColor}
+            />
     </div>
 </button>

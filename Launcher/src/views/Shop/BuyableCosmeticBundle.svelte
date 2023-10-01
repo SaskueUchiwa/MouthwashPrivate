@@ -2,13 +2,14 @@
     import { createEventDispatcher } from "svelte";
     const dispatchEvent = createEventDispatcher();
 
+    import * as amongus from "@skeldjs/constant";
     import { loading, unavailable, user, accountUrl, type Bundle } from "../../stores/accounts";
     import FeaturedBundleThumbnail from "./FeaturedBundleThumbnail.svelte";
     import PreviewItemSelection from "../Preview/PreviewItemSelection.svelte";
 
     export let bundleInfo: Bundle;
     export let ownedBundles: Bundle[]|undefined;
-    
+    export let playerColor: amongus.Color;
     const boughtAtFormat = new Intl.DateTimeFormat("en-US");
 
     $: doesAlreadyOwn = ownedBundles && !!ownedBundles.find(x => x.id === bundleInfo.id);
@@ -54,7 +55,15 @@
         </div>
         <div class="flex-[2_0_0] flex flex-col">
             <span>Items</span>
-            <PreviewItemSelection {bundleInfo} isOfficial={false} selectedItemId={null} searchTerm={""} thumbScale={1} showMax={4} itemSize={58}/>
+            <PreviewItemSelection
+                {bundleInfo}
+                {playerColor}
+                isOfficial={false}
+                selectedItemId={null}
+                searchTerm={""}
+                thumbScale={1}
+                showMax={4}
+                itemSize={58}/>
         </div>
         <div class="ml-auto flex-1 flex flex-col gap-1">
             <button

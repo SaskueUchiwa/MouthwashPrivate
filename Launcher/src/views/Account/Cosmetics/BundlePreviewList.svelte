@@ -1,4 +1,5 @@
 <script lang="ts">
+    import * as amongus from "@skeldjs/constant";
     import FeaturedBundleThumbnail from "../../Shop/FeaturedBundleThumbnail.svelte";
     import PreviewItemSelection from "../../Preview/PreviewItemSelection.svelte";
     import type { Bundle } from "../../../stores/accounts";
@@ -7,6 +8,7 @@
     export let isOfficial: boolean;
     export let bundle: Bundle & { owned_at: string; };
     export let selectedItemId: string;
+    export let playerColor: amongus.Color;
 
     let previewItemSelection: PreviewItemSelection|undefined;
     export function selectItem(idx: number) {
@@ -47,6 +49,7 @@
 </div>
 <div class="overflow-y-auto overflow-x-auto min-w-0 min-h-0 px-4 flex-1">
     <PreviewItemSelection
+        {playerColor}
         bundleInfo={bundle}
         searchTerm={bundleSearchTerm}
         isOfficial={isOfficial}

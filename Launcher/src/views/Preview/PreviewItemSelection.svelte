@@ -1,4 +1,5 @@
 <script lang="ts">
+    import * as amongus from "@skeldjs/constant";
     import { createEventDispatcher } from "svelte";
     const dispatchEvent = createEventDispatcher();
 
@@ -18,6 +19,7 @@
     export let thumbScale: number;
     export let showMax: number|null = null;
     export let itemSize = 76;
+    export let playerColor: amongus.Color;
     
     export function selectItem(idx: number) {
         if (idx >= loadedCosmeticImages.length)
@@ -45,7 +47,7 @@
         return btoa(binary);
     }
 
-    async function loadCosmeticSpriteAsImage(zip: JSZip, assetId: number, spriteFileReference: SpriteFileReference|undefined|null): Promise<LoadedCosmeticImage|undefined> {
+    async function loadCosmeticSpriteAsImage(zip: JSZip, assetId: number, material: "default"|"player", spriteFileReference: SpriteFileReference|undefined|null): Promise<LoadedCosmeticImage|undefined> {
         if (spriteFileReference === undefined || spriteFileReference === null) return undefined;
 
         const spriteZipPath = (await path.join(assetId.toString(), spriteFileReference.file)).replace(/\\/g, "/");
@@ -59,7 +61,7 @@
 
         const img = new Image;
         img.src = "data:image/png;base64," + spriteFileBase64;
-        return { img, pivot: spriteFileReference.pivot, scale: isOfficial ? 1 : 0.5 };
+        return { img, material, pivot: spriteFileReference.pivot, scale: isOfficial ? 1 : 0.5 };
     }
 
     let loadedCosmeticImages: LoadedHatCosmeticImages[] = [];
@@ -77,17 +79,18 @@
         for (; i < (showMax !== null ? Math.min(showMax, metadata.assets.length) : metadata.assets.length); i++) {
             const asset = metadata.assets[i];
             if (asset.type === "HAT") {
+                const material = asset.player_material ? "player" : "default";
                 loadedCosmeticImages.push({
                     asset,
-                    main: await loadCosmeticSpriteAsImage(zip, i, asset.main),
-                    back: await loadCosmeticSpriteAsImage(zip, i, asset.back),
-                    left_main: await loadCosmeticSpriteAsImage(zip, i, asset.left_main),
-                    left_back: await loadCosmeticSpriteAsImage(zip, i, asset.left_back),
-                    climb: await loadCosmeticSpriteAsImage(zip, i, asset.climb),
-                    floor: await loadCosmeticSpriteAsImage(zip, i, asset.floor),
-                    left_climb: await loadCosmeticSpriteAsImage(zip, i, asset.left_climb),
-                    left_floor: await loadCosmeticSpriteAsImage(zip, i, asset.left_floor),
-                    thumb: await loadCosmeticSpriteAsImage(zip, i, asset.thumb)
+                    main: await loadCosmeticSpriteAsImage(zip, i, material, asset.main),
+                    back: await loadCosmeticSpriteAsImage(zip, i, material, asset.back),
+                    left_main: await loadCosmeticSpriteAsImage(zip, i, material, asset.left_main),
+                    left_back: await loadCosmeticSpriteAsImage(zip, i, material, asset.left_back),
+                    climb: await loadCosmeticSpriteAsImage(zip, i, material, asset.climb),
+                    floor: await loadCosmeticSpriteAsImage(zip, i, material, asset.floor),
+                    left_climb: await loadCosmeticSpriteAsImage(zip, i, material, asset.left_climb),
+                    left_floor: await loadCosmeticSpriteAsImage(zip, i, material, asset.left_floor),
+                    thumb: await loadCosmeticSpriteAsImage(zip, i, material, asset.thumb)
                 });
             }
         }
@@ -105,7 +108,7 @@
 {:else}
     <div class="flex gap-2 flex-wrap items-center">
         {#each loadedCosmeticImages as cosmeticImage}
-            <PreviewItemThumb {cosmeticImage} {searchTerm} {thumbScale} size={itemSize} bind:selectedItemId on:wear-item/>
+            <PreviewItemThumb {cosmeticImage} {searchTerm} {thumbScale} size={itemSize} {playerColor} bind:selectedItemId on:wear-item/>
         {/each}
         {#if hasMore}
             <div style="width: {itemSize}px; height: {itemSize}px;" class="flex items-center justify-center text-[#160124] border-2 border-[#160124] rounded-lg">

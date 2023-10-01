@@ -11,6 +11,8 @@
     "tauri": "tauri"
   },
   "dependencies": {
+    "@skeldjs/constant": "^2.15.49",
+    "@skeldjs/data": "^2.15.49",
     "@tauri-apps/api": "^1.4.0",
     "emittery": "^1.0.1",
     "jszip": "^3.10.1",

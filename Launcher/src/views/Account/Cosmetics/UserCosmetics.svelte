@@ -91,7 +91,7 @@
             {#if Array.isArray($ownedBundles)}
                 {@const bundle = selectedBundleId === officialBundle.id ? officialBundle : $ownedBundles.find(x => x.id === selectedBundleId)}
                 {#if bundle}
-                    <BundlePreviewList {bundle} isOfficial={selectedBundleId === officialBundle.id} bind:selectedItemId on:wear-item/>
+                    <BundlePreviewList {bundle} playerColor={user.cosmetic_color} isOfficial={selectedBundleId === officialBundle.id} bind:selectedItemId on:wear-item/>
                 {/if}
             {/if}
         </div>
