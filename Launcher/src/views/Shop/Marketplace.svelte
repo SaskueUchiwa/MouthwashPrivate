@@ -1,7 +1,8 @@
 <script lang="ts">
+    import * as amongus from "@skeldjs/constant";
     import { writable } from "svelte/store";
     import BundleFilterBar from "./BundleFilterBar.svelte";
-    import { loading, type Bundle, unavailable, accountUrl } from "../../stores/accounts";
+    import { loading, type Bundle, unavailable, accountUrl, user } from "../../stores/accounts";
     import BuyableCosmeticBundle from "./BuyableCosmeticBundle.svelte";
     import { onMount } from "svelte";
     import Loader from "../../icons/Loader.svelte";
@@ -66,7 +67,12 @@
         {:else}
             <div class="flex flex-col gap-4">
                 {#each $availableBundles as bundleInfo}
-                    <BuyableCosmeticBundle {bundleInfo} {ownedBundles} on:open-purchase-form on:preview-bundle/>
+                    <BuyableCosmeticBundle
+                        {bundleInfo}
+                        {ownedBundles}
+                        playerColor={$user === loading || $user === unavailable ? amongus.Color.Red : $user.cosmetic_color}
+                        on:open-purchase-form
+                        on:preview-bundle/>
                 {/each}
             </div>
         {/if}
