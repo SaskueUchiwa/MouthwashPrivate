@@ -41,9 +41,9 @@
             your style and support Polus.gg: Rewritten to keep running.</p>
         <div class="flex gap-4 py-2 px-4">
             {#if $featuredBundles === loading}
-                <div class="flex-1 flex items-center justify-center text-[#806593]">
-                    <Loader size={32}/>
-                </div>
+                {#each new Array(4).fill(0) as _}
+                    <div class="bg-[#30303035] animate-pulse rounded-md" style="width: 164px; height: 164px;"></div>
+                {/each}
             {:else if $featuredBundles === unavailable}
                 <span>Could not load featured bundles, try again later or contact support.</span> 
             {:else}

@@ -143,7 +143,7 @@
     <script src="https://js.stripe.com/v3/" on:load={stripeLoaded}></script>
 </svelte:head>
 
-<div class="fixed left-0 top-0 w-full h-full flex items-center justify-center bg-[#000000b5]">
+<div class="fixed left-0 top-0 w-full h-full flex items-center justify-center bg-[#000000b5] z-10">
     <div class="bg-[#1a0428] w-1/4 rounded-xl shadow-lg px-6 p-4">
         <div class="flex flex-col h-full gap-4">
             <div class="flex flex-col gap-2">

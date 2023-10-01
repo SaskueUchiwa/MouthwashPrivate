@@ -10,6 +10,7 @@
     import Search from "../../../icons/Search.svelte";
     import FeaturedBundleThumbnail from "../../Shop/FeaturedBundleThumbnail.svelte";
     import ArrowRight from "../../../icons/ArrowRight.svelte";
+    import BundlePreviewList from "./BundlePreviewList.svelte";
 
     export let user: UserLogin;
 
@@ -70,8 +71,6 @@
     onMount(() => {
         getUserCosmetics();
     });
-    
-    const boughtAtFormat = new Intl.DateTimeFormat(undefined, { dateStyle: "medium" });
 </script>
 
 {#if $bundles === loading}
@@ -88,37 +87,7 @@
                     Back to Cosmetics
                 </button>
             </div>
-            <div class="flex items-center border-b-1 pb-2 mb-1 border-white/20 gap-2">
-                <div class="flex items-center gap-3">
-                    <FeaturedBundleThumbnail ownedItems={[]} bundleInfo={selectedBundle} size={84} showDetails={false}/>
-                    <div class="flex flex-col items-start">
-                        <span class="text-xl">{selectedBundle.name} Bundle</span>
-                        <span class="text-[#806593] italic text-sm">
-                            {#if selectedBundle.owned_at === null}
-                                {selectedBundle.num_items} item{selectedBundle.num_items === 1 ? "" : "s"}
-                            {:else}
-                                Bought on {boughtAtFormat.format(new Date(selectedBundle.owned_at))}, {selectedBundle.num_items} item{selectedBundle.num_items === 1 ? "" : "s"}
-                            {/if}
-                        </span>
-                    </div>
-                </div>
-                <div class="ml-auto flex border-transparent rounded-lg">
-                    <div class="p-2 bg-[#27063e] rounded-l-lg"><Search size={14}/></div>
-                    <input
-                        class="border-none font-inherit text-inherit text-xs outline-none rounded-r-lg bg-[#27063e] w-64"
-                        placeholder="Search"
-                        bind:value={bundleSearchTerm}>
-                </div>
-            </div>
-            <div class="overflow-y-auto min-h-0 px-4 flex-1">
-                <PreviewItemSelection
-                    bundleInfo={selectedBundle}
-                    searchTerm={bundleSearchTerm}
-                    isOfficial={selectedBundle === officialBundle}
-                    thumbScale={selectedBundle === officialBundle ? 3 : 1}
-                    bind:selectedItemId
-                    on:wear-item/>
-            </div>
+            <BundlePreviewList bundle={selectedBundle} isOfficial={selectedBundle === officialBundle} bind:selectedItemId on:wear-item/>
         </div>
     {/if}
     <div class="flex flex-col gap-2 min-h-0 overflow-auto w-full" class:hidden={selectedBundle !== undefined}>

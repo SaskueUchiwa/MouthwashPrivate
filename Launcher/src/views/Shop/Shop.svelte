@@ -7,6 +7,7 @@
     import Marketplace from "./Marketplace.svelte";
     import PurchaseForm from "./PurchaseForm.svelte";
     import Storefront from "./Storefront.svelte";
+    import PreviewBuyableBundlePopup from "./PreviewBuyableBundlePopup.svelte";
 
     let error = "";
     let ownedBundles = writable<Bundle[]|typeof loading|typeof unavailable>(loading);
@@ -55,11 +56,17 @@
     let purchasingBundle: Bundle|undefined = undefined;
     let clientSecret: string|undefined = undefined;
     let checkoutSessionId: string|undefined = undefined;
+    
+    let previewingBundle: Bundle|undefined = undefined;
 
-    function openPurchaseForm(ev: CustomEvent<{ bundle: Bundle; clientSecret: string; checkoutSessionId: string; }>) {
+    function onOpenPurchaseForm(ev: CustomEvent<{ bundle: Bundle; clientSecret: string; checkoutSessionId: string; }>) {
         purchasingBundle = ev.detail.bundle;
         clientSecret = ev.detail.clientSecret;
         checkoutSessionId = ev.detail.checkoutSessionId;
+    }
+
+    function onPreviewBundle(ev: CustomEvent<{ bundle: Bundle }>) {
+        previewingBundle = ev.detail.bundle;
     }
 
     let storefront: Storefront|undefined = undefined;
@@ -82,7 +89,8 @@
                 bind:page
                 bind:selectedValuationIdxs
                 bind:searchTerm
-                on:open-purchase-form={openPurchaseForm}
+                on:open-purchase-form={onOpenPurchaseForm}
+                on:preview-bundle={onPreviewBundle}
                 bind:this={marketplace}/>
         {/if}
     </div>
@@ -96,4 +104,8 @@
         on:close={() => (clientSecret = undefined, purchasingBundle = undefined, checkoutSessionId = undefined)}
         on:refresh={refreshBundles}
         />
+{/if}
+{#if previewingBundle !== undefined}
+    <PreviewBuyableBundlePopup
+        bundle={previewingBundle} on:close={() => previewingBundle = undefined}/>
 {/if}

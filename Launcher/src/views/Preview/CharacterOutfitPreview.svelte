@@ -1,11 +1,17 @@
 <script lang="ts">
-    import type { LoadedCosmeticImage, LoadedHatCosmeticImages } from "../../lib/previewTypes";
+    import type { LoadedHatCosmeticImages } from "../../lib/previewTypes";
     import ItemCanvas from "./ItemCanvas.svelte";
 
     export let hatCosmetic: LoadedHatCosmeticImages|undefined;
-    export let colorImage: LoadedCosmeticImage;
+    export let colorName: string;
 
-    $: console.log(hatCosmetic);
+    let colorImage: HTMLImageElement|undefined = undefined;
+    $: if (colorName) {
+        colorImage = new Image;
+        colorImage.src = `/Color_${colorName}.png`;
+    }
+
+    $: loadedColorImage = colorImage ? { img: colorImage, pivot: { x: 0, y: 0 }, scale: 1 } : undefined;
 </script>
 
 <div class="w-40 h-45 relative">
@@ -14,15 +20,15 @@
             {#key hatCosmetic}
                 {#if hatCosmetic.asset.in_front}
                     <ItemCanvas
-                        layers={[ hatCosmetic.back, colorImage, hatCosmetic.main ]} offset={{ x: 0, y: 0 }}/>
+                        layers={[ hatCosmetic.back, loadedColorImage, hatCosmetic.main ]} offset={{ x: 0, y: 0 }}/>
                 {:else}
                     <ItemCanvas
-                        layers={[ hatCosmetic.back, hatCosmetic.main, colorImage ]} offset={{ x: 0, y: 0 }}/>
+                        layers={[ hatCosmetic.back, hatCosmetic.main, loadedColorImage ]} offset={{ x: 0, y: 0 }}/>
                 {/if}
             {/key}
         {:else}
             <ItemCanvas
-                layers={[ colorImage ]} offset={{ x: 0, y: 0 }}/>
+                layers={[ loadedColorImage ]} offset={{ x: 0, y: 0 }}/>
         {/if}
     </div>
 </div>

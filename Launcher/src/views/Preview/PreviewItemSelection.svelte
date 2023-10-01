@@ -1,4 +1,7 @@
 <script lang="ts">
+    import { createEventDispatcher } from "svelte";
+    const dispatchEvent = createEventDispatcher();
+
     import * as path from "@tauri-apps/api/path";
     import JSZip from "jszip";
     import type { Bundle } from "../../stores/accounts";
@@ -12,6 +15,14 @@
     export let isOfficial: boolean;
     export let searchTerm: string;
     export let thumbScale: number;
+    
+    export function selectItem(idx: number) {
+        if (idx >= loadedCosmeticImages.length)
+            return;
+        
+        selectedItemId = loadedCosmeticImages[idx].asset.product_id;
+        dispatchEvent("wear-item", loadedCosmeticImages[idx]);
+    }
 
     async function fetchZip() {
         const res = await fetch(bundleInfo.preview_contents_url);
@@ -77,6 +88,7 @@
         }
         loadedCosmeticImages = loadedCosmeticImages;
         loadingCosmetics = false;
+        dispatchEvent("cosmetics-ready");
     });
 </script>
 

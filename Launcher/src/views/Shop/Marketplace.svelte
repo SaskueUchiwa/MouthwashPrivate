@@ -65,7 +65,7 @@
         {:else}
             <div class="grid grid-cols-2 grid-rows-auto gap-4">
                 {#each $availableBundles as bundleInfo}
-                    <BuyableCosmeticBundle {bundleInfo} {ownedBundles} on:open-purchase-form/>
+                    <BuyableCosmeticBundle {bundleInfo} {ownedBundles} on:open-purchase-form on:preview-bundle/>
                 {/each}
             </div>
         {/if}
