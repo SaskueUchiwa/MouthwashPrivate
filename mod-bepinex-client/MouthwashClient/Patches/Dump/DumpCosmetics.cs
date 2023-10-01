@@ -29,6 +29,7 @@ namespace MouthwashClient.Patches.Dump
         public string type;
         public HatAssetInfoVec2 chip_offset;
         public string product_id;
+        public bool player_material;
         public HatAssetFileReference? main;
         public HatAssetFileReference? back;
         public HatAssetFileReference? left_main;
@@ -128,6 +129,7 @@ namespace MouthwashClient.Patches.Dump
             {
                 type = "HAT",
                 product_id = hatData.ProductId,
+                player_material = hatViewData.AltShader && hatViewData.AltShader.name == DestroyableSingleton<HatManager>.Instance.PlayerMaterial.name,
                 chip_offset = new HatAssetInfoVec2{ x = hatData.ChipOffset.x, y = hatData.ChipOffset.y },
                 main = hatViewData.MainImage == null ? null : new HatAssetFileReference{ file = "main.png", pivot = { x = hatViewData.MainImage.pivot.x, y = hatViewData.MainImage.pivot.y } },
                 back = hatViewData.BackImage == null ? null : new HatAssetFileReference{ file = "back.png", pivot = { x = hatViewData.BackImage.pivot.x, y = hatViewData.BackImage.pivot.y } },
