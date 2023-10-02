@@ -144,6 +144,8 @@
     onMount(() => {
         doRedraw();
     });
+
+    $: playerColor, doRedraw();
 </script>
 
 <canvas class="hidden" width={0} height={0} bind:this={materialApplicationCanvasElement}></canvas>

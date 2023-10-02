@@ -1,5 +1,6 @@
 <script lang="ts">
     import { onMount } from "svelte";
+    import * as amongus from "@skeldjs/constant";
     import Loader from "../../icons/Loader.svelte";
     import Profile from "./Profile.svelte";
     import LoginSection from "./Admin/LoginSection.svelte";
@@ -26,6 +27,13 @@
 
     function onWearItem(ev: CustomEvent<SomeLoadedCosmeticImages>) {
         profileSection?.wearItem(ev.detail);
+    }
+
+    function onWearColor(ev: CustomEvent<amongus.Color>) {
+        if ($user === loading || $user === unavailable)
+            return;
+
+        user.set({ ...($user as UserLogin), cosmetic_color: ev.detail });
     }
 
     async function checkLogin(userLogin: UserLogin) {
@@ -121,7 +129,7 @@
         {#if $user !== loading && $user !== unavailable}
             <div class="flex items-center bg-base-200 rounded-xl p-4 px-6 gap-2">
                 {#if currentPage === ""}
-                    <span class="text-xl font-semibold">Cosmetic Bundles</span>
+                    <span class="text-xl font-semibold">Cosmetics</span>
                 {:else if currentPage === "games"}
                     <span class="text-xl font-semibold">Recent Games</span>
                 {/if}
@@ -138,7 +146,12 @@
                     <SignUpSection/>
                 {:else}
                     {#if currentPage === ""}
-                        <UserCosmetics user={$user} bind:this={userCosmetics} on:wear-item={onWearItem} on:switch-view/>
+                        <UserCosmetics
+                            user={$user}
+                            bind:this={userCosmetics}
+                            on:wear-item={onWearItem}
+                            on:wear-color={onWearColor}
+                            on:switch-view/>
                     {:else if currentPage === "games"}
                         <UserGames user={$user}/>
                     {/if}

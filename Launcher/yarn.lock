@@ -275,31 +275,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@skeldjs/constant@npm:2.15.49, @skeldjs/constant@npm:^2.15.49":
-  version: 2.15.49
-  resolution: "@skeldjs/constant@npm:2.15.49"
-  dependencies:
-    "@skeldjs/util": 2.15.49
-  checksum: 81915f6f094e88138c325841a189560ee22d3c09f5e53dca2e7438869069d44ba83d3c3ae2e7dea647bfc9c941558e6a638303db32db1083b7c313c0da3af207
+"@skeldjs/constant@link:../SkeldJS/packages/constant::locator=mouthwash-launcher%40workspace%3A.":
+  version: 0.0.0-use.local
+  resolution: "@skeldjs/constant@link:../SkeldJS/packages/constant::locator=mouthwash-launcher%40workspace%3A."
   languageName: node
-  linkType: hard
+  linkType: soft
 
-"@skeldjs/data@npm:^2.15.49":
-  version: 2.15.49
-  resolution: "@skeldjs/data@npm:2.15.49"
-  dependencies:
-    "@skeldjs/constant": 2.15.49
-    "@skeldjs/util": 2.15.49
-  checksum: f909c79034ebe92fb779b63474424751ab29d7e6534b78e78e64418bb1953d76877ec0386aba02876225f9e059f0241563b549f1ecf2fe61bb338df45923fee2
+"@skeldjs/data@link:../SkeldJS/packages/data::locator=mouthwash-launcher%40workspace%3A.":
+  version: 0.0.0-use.local
+  resolution: "@skeldjs/data@link:../SkeldJS/packages/data::locator=mouthwash-launcher%40workspace%3A."
   languageName: node
-  linkType: hard
-
-"@skeldjs/util@npm:2.15.49":
-  version: 2.15.49
-  resolution: "@skeldjs/util@npm:2.15.49"
-  checksum: 6a65bdd787c48b2c36d05040172dd430fa0387cf5fd4d495c56394985a458819a951e63f4052176014c241627a66316ef2c0fae27db738995e50253bbeb89e64
-  languageName: node
-  linkType: hard
+  linkType: soft
 
 "@sveltejs/vite-plugin-svelte-inspector@npm:^1.0.3":
   version: 1.0.3
@@ -1677,8 +1663,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "mouthwash-launcher@workspace:."
   dependencies:
-    "@skeldjs/constant": ^2.15.49
-    "@skeldjs/data": ^2.15.49
+    "@skeldjs/constant": "link:../SkeldJS/packages/constant"
+    "@skeldjs/data": "link:../SkeldJS/packages/data"
     "@sveltejs/vite-plugin-svelte": ^2.4.2
     "@tauri-apps/api": ^1.4.0
     "@tauri-apps/cli": ^1.4.0
