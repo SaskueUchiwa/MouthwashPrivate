@@ -136,11 +136,11 @@
                 {/if}
             </div>
         {/if}
-        {#if currentPage === ""}
+        {#if currentPage === "" && $user !== loading && $user !== unavailable}
             <div class="min-h-0 flex flex-col bg-base-200 rounded-xl p-4 px-6 gap-2">
                 <span>Color</span>
                 <UserColorPicker
-                    playerColor={$user === loading || $user === unavailable ? null : $user.cosmetic_color}
+                    playerColor={$user.cosmetic_color}
                     on:wear-color={onWearColor}/>
             </div>
         {/if}
