@@ -152,7 +152,9 @@
             {:else}
                 {#if $user === unavailable}
                     <LoginSection/>
-                    <SignUpSection/>
+                    <div class="mt-auto order-2 mb-4">
+                        <SignUpSection/>
+                    </div>
                 {:else}
                     {#if currentPage === ""}
                         <UserCosmetics

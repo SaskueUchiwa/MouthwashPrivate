@@ -1,7 +1,5 @@
 import * as mediator from "mouthwash-mediator";
 import * as pg from "pg";
-import FormData from "form-data";
-import Mailgun from "mailgun.js";
 import stripeApp from "stripe";
 
 import type { IMailgunClient } from "mailgun.js/Interfaces";
@@ -57,11 +55,6 @@ export class AccountServer {
             password: config.postgres.password,
             database: config.postgres.database
         });
-
-        if (config.mailgun) {
-            const mailgunInstance = new Mailgun(FormData);
-            this.mgClient = mailgunInstance.client({ username: "api", key: config.mailgun.api_key, url: "https://api.eu.mailgun.net/" });
-        }
 
         this.accountsController = new AccountsController(this);
         this.checkoutController = new CheckoutController(this);
