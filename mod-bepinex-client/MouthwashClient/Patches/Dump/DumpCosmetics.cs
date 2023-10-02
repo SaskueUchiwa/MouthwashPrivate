@@ -170,7 +170,13 @@ namespace MouthwashClient.Patches.Dump
         {
             yield return skinViewDataAddr.CoLoadAsync();
             SkinViewData skinViewData = skinViewDataAddr.GetAsset();
-            WritePngForSpriteName(skinId, "main.png", skinData.ProductId.ToLower() + ".png");
+            if (skinData.ProductId == "skin_None")
+            {
+            }
+            else
+            {
+                WritePngForSpriteName(skinId, "main.png", skinData.ProductId.ToLower() + ".png");
+            }
             NumAllLoaded++;
             AllAssets.Add(new AssetInfo
             {
@@ -178,8 +184,8 @@ namespace MouthwashClient.Patches.Dump
                 product_id = skinData.ProductId,
                 use_player_color = skinViewData.MatchPlayerColor,
                 chip_offset = new AssetInfoVec2{ x = skinData.ChipOffset.x, y = skinData.ChipOffset.y },
-                main = skinViewData.IdleFrame == null ? null : new AssetFileReference{ file = "main.png", pivot = { x = skinViewData.IdleFrame.pivot.x, y = skinViewData.IdleFrame.pivot.y } },
-                thumb = skinData.SpritePreview == null ? null : new AssetFileReference{ file = "thumb.png", pivot = { x = skinData.SpritePreview.pivot.x, y = skinData.SpritePreview.pivot.y } }
+                main = skinData.ProductId == "skin_None" || skinViewData.IdleFrame == null ? null : new AssetFileReference{ file = "main.png", pivot = { x = skinViewData.IdleFrame.pivot.x, y = skinViewData.IdleFrame.pivot.y } },
+                thumb = skinData.ProductId == "skin_None" || skinData.SpritePreview == null ? null : new AssetFileReference{ file = "thumb.png", pivot = { x = skinData.SpritePreview.pivot.x, y = skinData.SpritePreview.pivot.y } }
             });
         }
 
