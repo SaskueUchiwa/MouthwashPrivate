@@ -82,7 +82,7 @@ export class LifeSuppSystem<RoomType extends Hostable = Hostable> extends System
         }
 
         if (timer === 10000 && this.timer < 10000) {
-            this.emit(
+            this.emitSync(
                 new SystemSabotageEvent(
                     this.room,
                     this,
@@ -91,7 +91,7 @@ export class LifeSuppSystem<RoomType extends Hostable = Hostable> extends System
                 )
             );
         } else if (timer < 10000 && this.timer === 10000) {
-            this.emit(
+            this.emitSync(
                 new SystemRepairEvent(
                     this.room,
                     this,
@@ -158,8 +158,8 @@ export class LifeSuppSystem<RoomType extends Hostable = Hostable> extends System
         await this._clearConsoles(this.room.myPlayer, undefined);
     }
 
-    private async _completeConsole(consoleid: number, player: PlayerData|undefined, rpc: RepairSystemMessage|undefined): Promise<void> {
-        this.completed.add(consoleid);
+    private async _completeConsole(consoleId: number, player: PlayerData|undefined, rpc: RepairSystemMessage|undefined): Promise<void> {
+        this.completed.add(consoleId);
         this.dirty = true;
 
         const ev = await this.emit(
@@ -168,7 +168,7 @@ export class LifeSuppSystem<RoomType extends Hostable = Hostable> extends System
                 this,
                 undefined,
                 player,
-                consoleid
+                consoleId
             )
         );
 
@@ -177,8 +177,8 @@ export class LifeSuppSystem<RoomType extends Hostable = Hostable> extends System
             return;
         }
 
-        if (ev.alteredConsoleId !== consoleid) {
-            this.completed.delete(consoleid);
+        if (ev.alteredConsoleId !== consoleId) {
+            this.completed.delete(consoleId);
             this.completed.add(ev.alteredConsoleId);
         }
 
@@ -191,11 +191,11 @@ export class LifeSuppSystem<RoomType extends Hostable = Hostable> extends System
      * Mark a console as being complete.
      * @param consoleId The ID of the console to mark as complete.
      */
-    async completeConsole(consoleid: number) {
-        if (this.room.hostIsMe) {
-            await this._completeConsole(consoleid, this.room.myPlayer, undefined);
+    async completeConsole(consoleId: number) {
+        if (this.ship.canBeManaged()) {
+            await this._completeConsole(consoleId, this.room.myPlayer, undefined);
         } else {
-            await this._sendRepair(0x40 | consoleid);
+            await this._sendRepair(0x40 | consoleId);
         }
     }
 
@@ -222,7 +222,7 @@ export class LifeSuppSystem<RoomType extends Hostable = Hostable> extends System
     }
 
     async repair() {
-        if (this.room.hostIsMe) {
+        if (this.ship.canBeManaged()) {
             this._repair(this.room.myPlayer, undefined);
         } else {
             await this._sendRepair(0x10);

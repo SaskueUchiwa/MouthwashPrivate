@@ -5,7 +5,7 @@ import { BaseRpcMessage } from "../rpc/BaseRpcMessage";
 import { BaseGameDataMessage } from "./BaseGameDataMessage";
 
 export class UnknownRpc extends BaseRpcMessage {
-    static messageTag = 0 as const;
+    static messageTag = 255 as const;
 
     constructor(
         public readonly messageTag: GameDataMessageTag,
@@ -23,13 +23,13 @@ export class RpcMessage extends BaseGameDataMessage {
     static messageTag = GameDataMessageTag.RPC as const;
     messageTag = GameDataMessageTag.RPC as const;
 
-    readonly netid: number;
+    readonly netId: number;
     readonly data: BaseRpcMessage;
 
-    constructor(netid: number, data: BaseRpcMessage) {
+    constructor(netId: number, data: BaseRpcMessage) {
         super();
 
-        this.netid = netid;
+        this.netId = netId;
         this.data = data;
     }
 
@@ -50,18 +50,17 @@ export class RpcMessage extends BaseGameDataMessage {
         direction: MessageDirection,
         decoder: PacketDecoder
     ) {
-        const netid = reader.upacked();
-        const callid = reader.uint8();
+        const netId = reader.upacked();
+        const callId = reader.uint8();
 
         const mreader = reader.bytes(reader.left);
-        const rpcMessageClass = decoder.types.get(`rpc:${callid}`);
+        const rpcMessageClass = decoder.types.get(`rpc:${callId}`);
 
         if (!rpcMessageClass)
-            return new RpcMessage(netid, new UnknownRpc(callid, mreader.buffer));
+            return new RpcMessage(netId, new UnknownRpc(callId, mreader.buffer));
 
         const rpc = rpcMessageClass.Deserialize(mreader, direction, decoder);
-
-        return new RpcMessage(netid, rpc as BaseRpcMessage);
+        return new RpcMessage(netId, rpc as BaseRpcMessage);
     }
 
     Serialize(
@@ -69,12 +68,13 @@ export class RpcMessage extends BaseGameDataMessage {
         direction: MessageDirection,
         decoder: PacketDecoder
     ) {
-        writer.upacked(this.netid);
+        writer.upacked(this.netId);
+
         writer.uint8(this.data.messageTag);
         writer.write(this.data, direction, decoder);
     }
 
     clone() {
-        return new RpcMessage(this.netid, this.data.clone());
+        return new RpcMessage(this.netId, this.data.clone());
     }
 }

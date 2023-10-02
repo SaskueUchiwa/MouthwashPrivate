@@ -40,7 +40,7 @@ export class TaskModule extends EventTarget {
     
     async onCompleteTask(sender: Connection, completeTaskRpcMessage: CompleteTaskMessage) {
         const defaultInfraction = await this.plugin.createInfraction(sender, InfractionName.ForbiddenRpcCompleteTask,
-            { taskIdx: completeTaskRpcMessage.taskidx }, InfractionSeverity.High);
+            { taskIdx: completeTaskRpcMessage.taskIdx }, InfractionSeverity.High);
         if (defaultInfraction)
             return defaultInfraction;
 
@@ -51,28 +51,27 @@ export class TaskModule extends EventTarget {
 
         if (!this.plugin.room.shipStatus) {
             return await this.plugin.createInfraction(sender, InfractionName.InvalidRpcCompleteTask,
-                { taskIdx: completeTaskRpcMessage.taskidx, inLobby: true }, InfractionSeverity.High);
+                { taskIdx: completeTaskRpcMessage.taskIdx, inLobby: true }, InfractionSeverity.High);
         }
 
         if (this.plugin.room.meetingHud) {
             return await this.plugin.createInfraction(sender, InfractionName.InvalidRpcCompleteTask,
-                { taskIdx: completeTaskRpcMessage.taskidx, inMeeting: true }, InfractionSeverity.High);
+                { taskIdx: completeTaskRpcMessage.taskIdx, inMeeting: true }, InfractionSeverity.High);
         }
 
-        const playerInfo = player.info;
-        const taskInQuestion = playerInfo?.taskStates[completeTaskRpcMessage.taskidx];
-        const taskInQuestionId = playerInfo?.taskIds[completeTaskRpcMessage.taskidx];
-        if (!taskInQuestion || !taskInQuestionId) {
+        const playerInfo = player.playerInfo;
+        const taskInQuestion = playerInfo?.taskStates[completeTaskRpcMessage.taskIdx];
+        if (!taskInQuestion) {
             return await this.plugin.createInfraction(sender, InfractionName.InvalidRpcCompleteTask,
-                { taskIdx: completeTaskRpcMessage.taskidx }, InfractionSeverity.High);
+                { taskIdx: completeTaskRpcMessage.taskIdx }, InfractionSeverity.High);
         }
         if (taskInQuestion.completed) {
             return await this.plugin.createInfraction(sender, InfractionName.InvalidRpcCompleteTask,
-                { taskIdx: completeTaskRpcMessage.taskidx, isCompleted: true }, InfractionSeverity.High);
+                { taskIdx: completeTaskRpcMessage.taskIdx, isCompleted: true }, InfractionSeverity.High);
         }
 
         const mapTasks = this.getTasksOnMap(this.plugin.room.settings.map);
-        const taskInMap = mapTasks[taskInQuestionId];
+        const taskInMap = mapTasks[taskInQuestion.taskType];
         for (const consoleId in taskInMap.consoles) {
             const console = taskInMap.consoles[consoleId];
             if (new Vector2(console.position).dist(playerTransform.position) < console.usableDistance + 0.5) {
@@ -81,6 +80,6 @@ export class TaskModule extends EventTarget {
         }
         
         return await this.plugin.createInfraction(sender, InfractionName.UnableRpcCompleteTask,
-                { taskIdx: completeTaskRpcMessage.taskidx, position: playerTransform.position }, InfractionSeverity.High);
+                { taskIdx: completeTaskRpcMessage.taskIdx, position: playerTransform.position }, InfractionSeverity.High);
     }
 }

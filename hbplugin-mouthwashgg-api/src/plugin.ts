@@ -9,10 +9,8 @@ import {
     PlayerJoinEvent,
     PlayerLeaveEvent,
     PlayerCheckNameEvent,
-    RoomSelectImpostorsEvent,
     RoomGameStartEvent,
     GameMap,
-    sleep,
     RoomFixedUpdateEvent,
     PlayerDieEvent,
     RoomEndGameIntentEvent,
@@ -24,15 +22,15 @@ import {
     PlayersVoteOutEndgameMetadata,
     RoomGameEndEvent,
     ReliablePacket,
-    RpcMessage,
-    SetInfectedMessage,
-    TaskBarUpdate,
+    TaskBarMode,
     PlayerCompleteTaskEvent,
-    FinalTaskState,
     PlayerMurderEvent,
     PlayerStartMeetingEvent,
     PlayerData,
-    RoomGameReadyEvent
+    RoomGameReadyEvent,
+    PlayerSendQuickChatEvent,
+    RoomAssignRolesEvent,
+    DisconnectReason
 } from "@skeldjs/hindenburg";
 
 import { MouthwashAuthPlugin } from "hbplugin-mouthwashgg-auth";
@@ -49,7 +47,8 @@ import {
     OverwriteGameOver,
     WinSound,
     DeadBodyReportEvent,
-    RGBA
+    RGBA,
+    EdgeAlignment
 } from "mouthwash-types";
 
 import {
@@ -72,7 +71,9 @@ import {
     DeadBodyService,
     AssetReference,
     TargettableService,
-    AssetBundleIds
+    AssetBundleIds,
+    ButtonSpawnInfo,
+    Crewmate
 } from "./services";
 
 import {
@@ -90,9 +91,11 @@ import {
     getRegisteredRoles,
     isMouthwashGamemode,
     MouthwashEndGames,
+    MouthwashRole,
     RoleAlignment
 } from "./api";
 import { CosmeticsService } from "./services/cosmeticsService";
+import { BasicMouthwashRole } from "./roles";
 
 const mapNameToNumber = {
     "The Skeld": GameMap.TheSkeld,
@@ -102,9 +105,9 @@ const mapNameToNumber = {
 };
 
 const taskBarUpdateNameToNumber = {
-    "Always": TaskBarUpdate.Always,
-    "Meetings": TaskBarUpdate.Meetings,
-    "Never": TaskBarUpdate.Never
+    "Always": TaskBarMode.Normal,
+    "Meetings": TaskBarMode.MeetingOnly,
+    "Never": TaskBarMode.Invisible
 };
 
 const killDistanceNameToNumber = {
@@ -315,14 +318,21 @@ export class MouthwashApiPlugin extends RoomPlugin {
         const player = connection.getPlayer();
         if (!player) return;
 
-        const playerInfo = player.info;
+        const playerInfo = player.playerInfo;
         if (!playerInfo) return;
 
         const connectionUser = await this.authApi.getConnectionUser(connection);
         if (!connectionUser) return;
 
-        if (connectionUser.cosmetic_hat !== playerInfo.hat || connectionUser.cosmetic_pet !== playerInfo.pet || connectionUser.cosmetic_skin !== playerInfo.skin) {
-            await this.authApi.updateUserCosmetics(connectionUser.id, playerInfo.hat, playerInfo.pet, playerInfo.skin);
+        if (
+            connectionUser.cosmetic_hat !== playerInfo.defaultOutfit.hatId
+            || connectionUser.cosmetic_pet !== playerInfo.defaultOutfit.petId
+            || connectionUser.cosmetic_skin !== playerInfo.defaultOutfit.skinId
+            || connectionUser.cosmetic_color !== playerInfo.defaultOutfit.color
+            || connectionUser.cosmetic_visor !== playerInfo.defaultOutfit.visorId
+            || connectionUser.cosmetic_nameplate !== playerInfo.defaultOutfit.nameplateId
+        ) {
+            await this.authApi.updateUserCosmetics(connectionUser.id, playerInfo.defaultOutfit.hatId, playerInfo.defaultOutfit.petId, playerInfo.defaultOutfit.skinId, playerInfo.defaultOutfit.color, playerInfo.defaultOutfit.visorId, playerInfo.defaultOutfit.nameplateId);
         }
     }
 
@@ -354,7 +364,7 @@ export class MouthwashApiPlugin extends RoomPlugin {
         const connection = ev.room.connections.get(ev.player.clientId);
         if (!connection) return;
 
-        const connectionUser = await this.authApi.getConnectionUser(connection);
+        const connectionUser = await this.authApi.getConnectionUser(connection, true);
         if (!connectionUser) {
             await connection.disconnect("Invalid login");
             return;
@@ -362,8 +372,8 @@ export class MouthwashApiPlugin extends RoomPlugin {
 
         if (!this.roomCreator) this.roomCreator = connection;
         
-        if (ev.player.info) {
-            ev.player.info.name = connectionUser.display_name;
+        if (ev.player.playerInfo) {
+            ev.player.playerInfo.defaultOutfit.name = connectionUser.display_name;
         }
 
         await this.nameService.updateAllNames();
@@ -419,7 +429,18 @@ export class MouthwashApiPlugin extends RoomPlugin {
             this.gameOptions.syncFor([ connection ]);
         }
         
-        await this.cameraControllers.spawnCameraFor(ev.player);
+        try {
+            await this.cameraControllers.spawnCameraFor(ev.player);
+        } catch (e: any) {
+            // if there's an error then the player could cheat without a camera object,
+            // so it's better to just let them try again
+            connection.disconnect(DisconnectReason.ServerRequest)
+        }
+
+        const asset = await this.assetLoader.resolveAssetReferenceFor(new AssetReference("PggResources/Global", "Assets/Mods/OfficialAssets/KillButton.png"), [ ev.player ]);
+
+        if (!asset)
+            return undefined;
         
         const waitingForPlayerIdx = this.room.actingHostWaitingFor.indexOf(ev.player);
         if (waitingForPlayerIdx > -1) {
@@ -518,18 +539,32 @@ export class MouthwashApiPlugin extends RoomPlugin {
         await this.chatService.broadcastMessage(chatMessage);
     }
 
-    @EventListener("room.selectimpostors")
-    async onSelectImpostors(ev: RoomSelectImpostorsEvent<Room>) {
-        ev.cancel();
-        if (this.room.host?.control) {
-            await this.room.broadcast([
-                new RpcMessage(
-                    this.room.host.control.netId,
-                    new SetInfectedMessage([])
-                )
-            ]);
-        }
+    @EventListener("player.quickchat")
+    async onPlayerQuickChat(ev: PlayerSendQuickChatEvent<Room>) {
+        if (ev.message?.canceled)
+            return;
+
+        ev.message?.cancel();
+
+        const recipients = this.chatService.getStandardRecipients(ev.player);
+        const appearance = this.chatService.getStandardAppearance(ev.player, false);
+        const chatMessage = this.chatService.createMessageFor(ev.chatMessage, appearance, ev.player, recipients);
+
+        await this.chatService.broadcastMessage(chatMessage);
     }
+
+    // @EventListener("room.selectimpostors")
+    // async onSelectImpostors(ev: RoomSelectImpostorsEvent<Room>) {
+    //     ev.cancel();
+    //     if (this.room.host?.control) {
+    //         await this.room.broadcast([
+    //             new RpcMessage(
+    //                 this.room.host.control.netId,
+    //                 new SetInfectedMessage([])
+    //             )
+    //         ]);
+    //     }
+    // }
 
     @EventListener("room.gamestart")
     async onGameStart(ev: RoomGameStartEvent) {
@@ -565,12 +600,6 @@ export class MouthwashApiPlugin extends RoomPlugin {
             }
             await Promise.all(promises);
         }
-
-        sleep(500).then(async () => {
-            const roleAssignments = this.roleService.getRoleAssignments(this.gamemode?.getRoleCounts() || []);
-            const ev = await this.room.emit(new GamemodeBeforeRolesAssignedEvent(roleAssignments));
-            await this.roleService.assignAllRoles(ev.alteredRolesAssigned);
-        });
     }
 
     getEndgamePlayers() {
@@ -583,6 +612,13 @@ export class MouthwashApiPlugin extends RoomPlugin {
             }
         }
         return players;
+    }
+
+    @EventListener("room.assignroles") // we assign our own roles!
+    onRoomAssignRoles(ev: RoomAssignRolesEvent<Room>) {
+        for (const [ player ] of ev.roleAssignments) {
+            ev.setAssignment(player, BasicMouthwashRole /* skeldjs/among us crewmate role */);
+        }
     }
 
     @EventListener("room.endgameintent")
@@ -690,7 +726,7 @@ export class MouthwashApiPlugin extends RoomPlugin {
             );
         } else if (ev.intentName === AmongUsEndGames.PlayersVoteOut) {
             const metadata = ev.metadata as PlayersVoteOutEndgameMetadata;
-            if (metadata.exiled.info?.isImpostor) {
+            if (metadata.exiled.playerInfo?.isImpostor) {
                 this.room.registerEndGameIntent(
                     new EndGameIntent(
                         MouthwashEndGames.CrewmateVotedOut,
@@ -834,7 +870,6 @@ export class MouthwashApiPlugin extends RoomPlugin {
             );
         }
         await Promise.all(promises);
-
         await this.room.emit(new GamemodeGameEndEvent(this.room, endGameScreens));
 
         await Promise.all([
@@ -848,6 +883,10 @@ export class MouthwashApiPlugin extends RoomPlugin {
     async onRoomGameReady(ev: RoomGameReadyEvent) {
         const { totalTasks, completeTasks, players } = this.computeTaskCounts();
         await Promise.all(players.map(player => this.hudService.setTaskCounts(player, totalTasks, completeTasks)));
+
+        const roleAssignments = this.roleService.getRoleAssignments(this.gamemode?.getRoleCounts() || []);
+        const ev2 = await this.room.emit(new GamemodeBeforeRolesAssignedEvent(roleAssignments));
+        await this.roleService.assignAllRoles(ev2.alteredRolesAssigned);
     }
 
     computeTaskCounts(): { totalTasks: number; completeTasks: number; players: PlayerData<Room>[] } {
@@ -855,7 +894,7 @@ export class MouthwashApiPlugin extends RoomPlugin {
         let completeTasks = 0;
         const players = [];
         for (const [ , player ] of this.room.players) {
-            const playerInfo = player.info;
+            const playerInfo = player.playerInfo;
             if (playerInfo && !playerInfo.isDisconnected && this.hudService.getPlayerHud(player).allowTaskInteraction) {
                 for (const task of playerInfo.taskStates) {
                     totalTasks++;

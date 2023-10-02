@@ -61,15 +61,6 @@ export function MessageHandler<T extends Deserializable>(pluginClassOrMessageCla
             Reflect.defineMetadata(hindenburgMessageHandlersKey, messageHandlers, actualTarget);
         }
 
-        const isRoomPlugin = PluginLoader.isRoomPlugin(actualTarget.constructor);
-        if (isRoomPlugin) {
-            if (options.attachTo !== undefined && options.attachTo === MessageHandlerAttach.Worker) {
-                throw new Error("Cannot attach message handler to worker on a room plugin");
-            }
-
-            options.attachTo = MessageHandlerAttach.Room;
-        }
-
         messageHandlers.push({
             messageClass: messageClass as T,
             options: {

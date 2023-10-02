@@ -14,7 +14,8 @@ import {
     SpawnType,
     HazelWriter,
     DisconnectPacket,
-    DisconnectReason
+    DisconnectReason,
+    PingPacket
 } from "@skeldjs/hindenburg";
 
 import {
@@ -39,7 +40,6 @@ import {
     MouthwashMeetingHud,
     MouthwashSpawnType,
     OverwriteGameOver,
-    PingPacket,
     ReportDeadBodyMessage,
     SetChatMessageMessage,
     SetChatVisibilityMessage,
@@ -49,6 +49,7 @@ import {
     SetOpacityMessage,
     SetOutlineMessage,
     SetQrContentsMessage,
+    SetRoleTeamMessage,
     SetTaskCountsMessage,
     SoundSource
 } from "mouthwash-types";
@@ -69,7 +70,6 @@ import { MouthwashApiPlugin, ClientFetchResourceResponseEvent } from "hbplugin-m
 @RegisterMessage(FetchResourceMessage)
 @RegisterMessage(ModstampSetStringMessage)
 @RegisterMessage(OverwriteGameOver)
-@RegisterMessage(PingPacket)
 @RegisterMessage(SetChatMessageMessage)
 @RegisterMessage(SetChatVisibilityMessage)
 @RegisterMessage(SetGameOptionMessage)
@@ -83,6 +83,7 @@ import { MouthwashApiPlugin, ClientFetchResourceResponseEvent } from "hbplugin-m
 @RegisterMessage(LoadPetMessage)
 @RegisterMessage(AllowTaskInteractionMessage)
 @RegisterMessage(SetTaskCountsMessage)
+@RegisterMessage(SetRoleTeamMessage)
 @RegisterPrefab(SpawnType.MeetingHud, [ MouthwashMeetingHud ])
 @RegisterPrefab(MouthwashSpawnType.Button, [ CustomNetworkTransformGeneric, Graphic, ClickBehaviour ] as typeof Networkable[])
 @RegisterPrefab(MouthwashSpawnType.DeadBody, [ DeadBody, CustomNetworkTransformGeneric ] as typeof Networkable[])
@@ -115,7 +116,7 @@ export class MouthwashPlugin extends WorkerPlugin {
                     continue;
                 }
 
-                connection.sendPacket(new PingPacket);
+                connection.sendPacket(new PingPacket(connection.getNextNonce()));
                 for (let i = 0; i < connection.sentPackets.length; i++) {
                     const sent = connection.sentPackets[i];
                     if (!sent.acked) {
@@ -142,7 +143,7 @@ export class MouthwashPlugin extends WorkerPlugin {
             return this.worker.handleMessage(listenSocket, message, rinfo);
         }
 
-        if (message[0] === SendOption.Acknowledge) {
+        if (message[0] === SendOption.Acknowledge || message[0] === SendOption.Ping) {
             return this.worker.handleMessage(listenSocket, message, rinfo);
         }
 
@@ -168,7 +169,7 @@ export class MouthwashPlugin extends WorkerPlugin {
 
                 const hmacHash = message.slice(17, 37);
                 const signedMessage = crypto.createHmac("sha1", sessionInfo.client_token).update(message.slice(37)).digest();
-                if (crypto.timingSafeEqual(hmacHash, signedMessage)) {
+                if (hmacHash.length === signedMessage.length && crypto.timingSafeEqual(hmacHash, signedMessage)) {
                     return this.worker.handleMessage(listenSocket, message.slice(37), rinfo);
                 }
             } else {
@@ -176,6 +177,7 @@ export class MouthwashPlugin extends WorkerPlugin {
                     await connection.disconnect("Invalid login, try logging in again through the launcher.");
                 } else {
                     const disconnectPacket = new DisconnectPacket(DisconnectReason.Custom, "Invalid login, try logging in again through the launcher.");
+                    this.logger.info("Disconnected unknown client due to invalid login");
                     const writer = HazelWriter.alloc(64);
                     writer.uint8(SendOption.Disconnect);
                     writer.write(disconnectPacket);

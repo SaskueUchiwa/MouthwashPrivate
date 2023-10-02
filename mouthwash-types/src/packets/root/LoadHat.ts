@@ -11,7 +11,7 @@ export class LoadHatMessage extends BaseRootMessage {
     messageTag = MouthwashRootMessageTag.LoadHat as const;
 
     constructor(
-        public readonly hatId: number,
+        public readonly hatId: string,
         public readonly resourceId: number,
         public readonly isFree: boolean
     ) {
@@ -19,14 +19,14 @@ export class LoadHatMessage extends BaseRootMessage {
     }
 
     static Deserialize(reader: HazelReader) {
-        const hatId = reader.upacked();
+        const hatId = reader.string();
         const resourceId = reader.upacked();
         const isFree = reader.bool();
         return new LoadHatMessage(hatId, resourceId, isFree);
     }
 
     Serialize(writer: HazelWriter) {
-        writer.upacked(this.hatId);
+        writer.string(this.hatId);
         writer.upacked(this.resourceId);
         writer.bool(this.isFree);
     }

@@ -110,7 +110,7 @@ export class Poisoner extends Impostor {
         );
 
         this._poisonButton?.on("mwgg.button.click", ev => {
-            if (!this._poisonButton || this._poisonButton.currentTime > 0 || !this._poisonTarget || this.player.info?.isDead)
+            if (!this._poisonButton || this._poisonButton.currentTime > 0 || !this._poisonTarget || this.player.playerInfo?.isDead)
                 return;
 
             this.api.nameService.addColorFor(this._poisonTarget, poisonerColor, [ this.player ]);
@@ -159,7 +159,7 @@ export class Poisoner extends Impostor {
             return undefined;
         }
 
-        if (this.player.physics && this.player.physics.ventid > -1) {
+        if (this.player.physics && this.player.physics.ventId > -1) {
             return undefined;
         }
 
@@ -178,7 +178,7 @@ export class Poisoner extends Impostor {
         let out = "";
         let i = 0;
         for (const [ player, timeRemaining ] of this.poisonedPlayers) {
-            if (player.info?.isDead) {
+            if (player.playerInfo?.isDead) {
                 this._removePlayer(player);
                 continue;
             }
@@ -237,7 +237,7 @@ export class Poisoner extends Impostor {
 
         if (this._poisonTarget !== oldTarget) {
             if (oldTarget) {
-                this.api.animationService.setOutlineFor(oldTarget, Palette.null, [ this.player ]);
+                this.api.animationService.clearOutlineFor(oldTarget, [ this.player ]);
             }
             if (this._poisonTarget) {
                 this.api.animationService.setOutlineFor(this._poisonTarget, poisonerColor, [ this.player ]);

@@ -1,4 +1,4 @@
-import { Connection, PlayerControl, ReliablePacket, Room, RpcMessage, SetHatMessage, SetPetMessage, SetSkinMessage } from "@skeldjs/hindenburg";
+import { Color, Connection, Hat, Nameplate, Pet, PlayerControl, ReliablePacket, Room, RpcMessage, SetColorMessage, SetHatMessage, SetNameplateMessage, SetPetMessage, SetSkinMessage, Skin, Visor } from "@skeldjs/hindenburg";
 import { LoadHatMessage, LoadPetMessage } from "mouthwash-types";
 
 import { MouthwashApiPlugin } from "../../plugin";
@@ -7,7 +7,7 @@ import { chunkArr } from "../../util/chunkArr";
 
 interface LoadedCosmetic {
     id: string;
-    among_us_id: number;
+    among_us_id: string;
     resource_id: number;
     resource_path: string;
     asset_bundle_url: string;
@@ -41,9 +41,6 @@ export class CosmeticsService {
         const clientUser = await this.plugin.authApi.getConnectionUser(connection);
         if (!clientUser) return;
 
-        const ownedCosmeticIdsSet = new Set(clientUser.owned_cosmetics.map(cosmetic => cosmetic.id));
-
-        const messages: (LoadHatMessage|LoadPetMessage)[] = [];
         const promises = [];
         const recipLoadedCosmetics = this.getLoadedCosmetics(connection);
         for (const [ cosmeticId, loadedCosmetic ] of this.roomLoadedCosmetics) {
@@ -53,11 +50,7 @@ export class CosmeticsService {
             const assetBundle = await AssetBundle.loadFromUrl(loadedCosmetic.asset_bundle_url, false);
             await this.plugin.assetLoader.assertLoaded(connection, assetBundle);
 
-            promises.push(this.plugin.assetLoader.waitForLoaded(connection, assetBundle).then(() => {
-                messages.push(loadedCosmetic.type === "HAT"
-                    ? new LoadHatMessage(loadedCosmetic.among_us_id, loadedCosmetic.resource_id, ownedCosmeticIdsSet.has(loadedCosmetic.id))
-                    : new LoadPetMessage(loadedCosmetic.among_us_id, loadedCosmetic.resource_id, ownedCosmeticIdsSet.has(loadedCosmetic.id)));
-            }).catch(() => {}));
+            promises.push(this.plugin.assetLoader.waitForLoaded(connection, assetBundle).catch(() => {}));
 
             recipLoadedCosmetics.set(loadedCosmetic.id, {
                 id: loadedCosmetic.id,
@@ -69,14 +62,7 @@ export class CosmeticsService {
                 is_owned: false
             });
         }
-
         await Promise.all(promises);
-        const sendPromises = [];
-        const chunkedMessages = chunkArr(messages, 20);
-        for (const chunk of chunkedMessages) {
-            sendPromises.push(connection.sendPacket(new ReliablePacket(connection.getNextNonce(), chunk)));
-        }
-        await Promise.all(sendPromises);
     }
 
     async loadClientCosmeticsToRoom(client: Connection) {
@@ -109,11 +95,7 @@ export class CosmeticsService {
                 const assetBundle = await AssetBundle.loadFromUrl(ownedCosmetic.asset_bundle_url, false);
                 await this.plugin.assetLoader.assertLoaded(connection, assetBundle);
 
-                promises.push(this.plugin.assetLoader.waitForLoaded(connection, assetBundle).then(() => {
-                    messages.push(ownedCosmetic.type === "HAT"
-                        ? new LoadHatMessage(ownedCosmetic.among_us_id, ownedCosmetic.resource_id, client === connection)
-                        : new LoadPetMessage(ownedCosmetic.among_us_id, ownedCosmetic.resource_id, client === connection));
-                }).catch(() => {}));
+                promises.push(this.plugin.assetLoader.waitForLoaded(connection, assetBundle).catch(() => {}));
                         
                 this.roomLoadedCosmetics.set(ownedCosmetic.id, {
                     id: ownedCosmetic.id,
@@ -127,15 +109,6 @@ export class CosmeticsService {
             }
         }
         await Promise.all(promises);
-
-        const sendPromises = [];
-        for (const [ connection, messages ] of connectionMessages) {
-            const chunkedMessages = chunkArr(messages, 20);
-            for (const chunk of chunkedMessages) {
-                sendPromises.push(connection.sendPacket(new ReliablePacket(connection.getNextNonce(), chunk)));
-            }
-        }
-        await Promise.all(sendPromises);
     }
 
     async updatePlayerCosmetics(client: Connection, playerControl: PlayerControl) {
@@ -143,11 +116,54 @@ export class CosmeticsService {
         
         const clientUser = await this.plugin.authApi.getConnectionUser(client);
         if (!clientUser) return;
-        
+
         if (playerControl) {
-            playerControl.setHat(clientUser.cosmetic_hat);
-            playerControl.setPet(clientUser.cosmetic_pet);
-            playerControl.setSkin(clientUser.cosmetic_skin);
+            /*
+                When we retrieve the player's color and set it in-game, there's a good chance it's already
+                taken. In this case, we'll find the next available colour. However, we don't want to update
+                the player's "preferred" colour (or rather, the one they have set as part of their cosmetics),
+                so we'll just update the clients' colours and not the server. This shouldn't have any
+                problems in terms of desync between the client/server since colours are a fairly passive
+                part of the game.
+            */
+            let validColor = clientUser.cosmetic_color === -1 ? Color.Red : clientUser.cosmetic_color;
+            let newColor = validColor;
+
+            // if (this.plugin.room.gameData) {
+            //     const players = [...this.plugin.room.gameData.players.values()];
+            //     let i = 0;
+            //     while (
+            //         players.some(
+            //             (player) =>
+            //                 player.playerId !== playerControl.playerId &&
+            //                 player.defaultOutfit.color === newColor
+            //         )
+            //     ) {
+            //         newColor++;
+            //         if (newColor >= 18)
+            //             newColor = 0;
+    
+            //         i++;
+            //         if (i >= 18)
+            //             break;
+            //     }
+            // }
+            if (newColor !== validColor) {
+                this.plugin.room.messageStream.push(
+                    new RpcMessage(
+                        playerControl.netId,
+                        new SetColorMessage(newColor)
+                    )
+                );
+            } else {
+                playerControl.setColor(validColor);
+            }
+
+            playerControl.setHat(clientUser.cosmetic_hat === "missing" ? Hat.NoHat : clientUser.cosmetic_hat);
+            playerControl.setPet(clientUser.cosmetic_pet === "missing" ? Pet.EmptyPet : clientUser.cosmetic_pet);
+            playerControl.setSkin(clientUser.cosmetic_skin === "missing" ? Skin.None : clientUser.cosmetic_skin);
+            playerControl.setVisor(clientUser.cosmetic_visor === "missing" ? Visor.EmptyVisor : clientUser.cosmetic_visor);
+            playerControl.setNameplate(clientUser.cosmetic_nameplate === "missing" ? Nameplate.NoPlate : clientUser.cosmetic_nameplate);
         }
     }
 
@@ -157,16 +173,19 @@ export class CosmeticsService {
             if (player.clientId === client.clientId)
                 continue;
 
-            const playerInfo = player.info;
+            const playerInfo = player.playerInfo;
             if (!playerInfo) continue;
 
             const playerControl = player.control;
             if (!playerControl) continue;
 
             rpcs.push(
-                new RpcMessage(playerControl.netId, new SetHatMessage(playerInfo.hat)),
-                new RpcMessage(playerControl.netId, new SetPetMessage(playerInfo.pet)),
-                new RpcMessage(playerControl.netId, new SetSkinMessage(playerInfo.skin))
+                new RpcMessage(playerControl.netId, new SetHatMessage(playerInfo.defaultOutfit.hatId)),
+                new RpcMessage(playerControl.netId, new SetPetMessage(playerInfo.defaultOutfit.petId)),
+                new RpcMessage(playerControl.netId, new SetSkinMessage(playerInfo.defaultOutfit.skinId)),
+                new RpcMessage(playerControl.netId, new SetColorMessage(playerInfo.defaultOutfit.color)),
+                new RpcMessage(playerControl.netId, new SetPetMessage(playerInfo.defaultOutfit.visorId)),
+                new RpcMessage(playerControl.netId, new SetNameplateMessage(playerInfo.defaultOutfit.nameplateId))
             );
         }
 

@@ -1,10 +1,7 @@
 import {
     BaseRootMessage,
-    Hat,
     HazelReader,
     HazelWriter,
-    Pet,
-    Skin,
     SendQuickChatMessage
 } from "@skeldjs/hindenburg";
 
@@ -16,9 +13,10 @@ export class ChatPlayerAppearance {
         public readonly playerName: string,
         public readonly isDead: boolean,
         public readonly isVote: boolean,
-        public readonly playerHat: Hat,
-        public readonly playerPet: Pet,
-        public readonly playerSkin: Skin,
+        public readonly playerHat: string,
+        public readonly playerPet: string,
+        public readonly playerSkin: string,
+        public readonly playerVisor: string,
         public readonly backColor: RGBA,
         public readonly frontColor: RGBA,
         public readonly visorColor: RGBA
@@ -28,22 +26,24 @@ export class ChatPlayerAppearance {
         const playerName = reader.string();
         const isDead = reader.bool();
         const isVote = reader.bool();
-        const playerHat = reader.packed();
-        const playerPet = reader.packed();
-        const playerSkin = reader.packed();
+        const playerHat = reader.string();
+        const playerPet = reader.string();
+        const playerSkin = reader.string();
+        const playerVisor = reader.string();
         const backColor = reader.read(RGBA);
         const frontColor = reader.read(RGBA);
         const visorColor = reader.read(RGBA);
-        return new ChatPlayerAppearance(playerName, isDead, isVote, playerHat, playerPet, playerSkin, backColor, frontColor, visorColor)
+        return new ChatPlayerAppearance(playerName, isDead, isVote, playerHat, playerPet, playerSkin, playerVisor, backColor, frontColor, visorColor)
     }
 
     Serialize(writer: HazelWriter) {
         writer.string(this.playerName);
         writer.bool(this.isDead);
         writer.bool(this.isVote);
-        writer.packed(this.playerHat);
-        writer.packed(this.playerPet);
-        writer.packed(this.playerSkin);
+        writer.string(this.playerHat);
+        writer.string(this.playerPet);
+        writer.string(this.playerSkin);
+        writer.string(this.playerVisor);
         writer.write(this.backColor);
         writer.write(this.frontColor);
         writer.write(this.visorColor);

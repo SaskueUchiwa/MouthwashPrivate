@@ -21,12 +21,12 @@ export type ExtractEventTypes<Events extends Eventable[]> = {
 
 export type EventData = Record<string | number | symbol, Eventable>;
 
-type Listener<Event extends Eventable> = (ev: Event) => void | Promise<void>;
+type Listener<Event extends Eventable> = (ev: Event, off: () => void) => void | Promise<void>;
 
 export class EventEmitter<Events extends EventData> {
     private readonly listeners: Map<
         string,
-        Set<Listener<BasicEvent>>
+        Listener<any>[]
     >;
 
     constructor() {
@@ -38,9 +38,15 @@ export class EventEmitter<Events extends EventData> {
     ): Promise<Event> {
         const listeners = this.getListeners<Event>(event.eventName);
 
-        await Promise.all(
-            [...listeners].map(lis => lis(event))
-        );
+        const promises = [];
+        const removeAfterwards: Listener<Event>[] = [];
+        for (let i = 0; i < listeners.length; i++) {
+            promises.push(listeners[i](event, () => removeAfterwards.push(listeners[i])));
+        }
+        await Promise.all(promises);
+        for (let i = 0; i < removeAfterwards.length; i++) {
+            this.off(event.eventName, removeAfterwards[i]);
+        }
 
         return event;
     }
@@ -50,8 +56,28 @@ export class EventEmitter<Events extends EventData> {
     ): Promise<Event> {
         const listeners = this.getListeners<Event>(event.eventName);
 
-        for (const listener of listeners) {
-            await listener(event);
+        const removeAfterwards: Listener<Event>[] = [];
+        for (let i = 0; i < listeners.length; i++) {
+            await listeners[i](event, () => removeAfterwards.push(listeners[i]));
+        }
+        for (let i = 0; i < removeAfterwards.length; i++) {
+            this.off(event.eventName, removeAfterwards[i]);
+        }
+
+        return event;
+    }
+
+    emitSync<Event extends BasicEvent>(
+        event: Event
+    ): Event {
+        const listeners = this.getListeners<Event>(event.eventName);
+
+        const removeAfterwards: Listener<Event>[] = [];
+        for (let i = 0; i < listeners.length; i++) {
+            listeners[i](event, () => removeAfterwards.push(listeners[i]));
+        }
+        for (let i = 0; i < removeAfterwards.length; i++) {
+            this.off(event.eventName, removeAfterwards[i]);
         }
 
         return event;
@@ -64,7 +90,7 @@ export class EventEmitter<Events extends EventData> {
     on<K extends BasicEvent>(event: string, listener: Listener<K>): () => void;
     on(event: string, listener: Listener<any>): () => void {
         const listeners = this.getListeners(event);
-        listeners.add(listener);
+        listeners.push(listener);
 
         return this.off.bind(this, event, listener);
     }
@@ -77,7 +103,7 @@ export class EventEmitter<Events extends EventData> {
     once(event: string, listener: Listener<any>): () => void {
         const removeListener = this.on(event, async (ev) => {
             removeListener();
-            await listener(ev);
+            await listener(ev, () => {});
         });
         return removeListener;
     }
@@ -115,12 +141,15 @@ export class EventEmitter<Events extends EventData> {
     off<K extends BasicEvent>(event: string, listener: Listener<K>): void;
     off(event: string, listener: Listener<any>) {
         const listeners = this.getListeners(event);
-        listeners.delete(listener);
+        const idx = listeners.indexOf(listener);
+        if (idx > -1) {
+            listeners.splice(idx, 1);
+        }
     }
 
-    getListeners<Event extends BasicEvent = BasicEvent>(event: string): Set<Listener<Event>> {
+    getListeners<Event extends BasicEvent = BasicEvent>(event: string): Listener<Event>[] {
         const cachedListeners = this.listeners.get(event);
-        const listeners = cachedListeners || new Set;
+        const listeners = cachedListeners || [];
         if (!cachedListeners) {
             this.listeners.set(event, listeners);
         }
@@ -129,7 +158,7 @@ export class EventEmitter<Events extends EventData> {
 
     removeListeners(event: string) {
         const listeners = this.getListeners(event);
-        listeners.clear();
+        listeners.splice(0);
     }
 
     removeAllListeners() {

@@ -1,11 +1,26 @@
 import { RootMessageTag } from "@skeldjs/constant";
-import { Code2Int, HazelReader, HazelWriter } from "@skeldjs/util";
+import { GameCode, HazelReader, HazelWriter } from "@skeldjs/util";
 
 import { PacketDecoder } from "../../PacketDecoder";
 import { MessageDirection } from "../../PacketDecoder";
 import { BaseGameDataMessage } from "../game";
 
 import { BaseRootMessage } from "./BaseRootMessage";
+
+export class UnknownGameDataMessage extends BaseGameDataMessage {
+    static messageTag = 255 as const;
+
+    constructor(
+        public readonly messageTag: number,
+        public readonly bytes: Buffer
+    ) {
+        super();
+    }
+
+    Serialize(writer: HazelWriter) {
+        writer.bytes(this.bytes);
+    }
+}
 
 export class GameDataMessage extends BaseRootMessage {
     static messageTag = RootMessageTag.GameData as const;
@@ -18,7 +33,7 @@ export class GameDataMessage extends BaseRootMessage {
         super();
 
         if (typeof code === "string") {
-            this.code = Code2Int(code);
+            this.code = GameCode.convertStringToInt(code);
         } else {
             this.code = code;
         }
@@ -32,7 +47,6 @@ export class GameDataMessage extends BaseRootMessage {
         decoder: PacketDecoder
     ) {
         const code = reader.int32();
-
         const children: BaseGameDataMessage[] = [];
 
         while (reader.left) {
@@ -40,7 +54,10 @@ export class GameDataMessage extends BaseRootMessage {
 
             const rootMessageClass = decoder.types.get(`gamedata:${tag}`);
 
-            if (!rootMessageClass) continue;
+            if (!rootMessageClass) {
+                children.push(new UnknownGameDataMessage(tag, mreader.buffer));
+                continue;
+            }
 
             const root = rootMessageClass.Deserialize(
                 mreader,
@@ -61,7 +78,7 @@ export class GameDataMessage extends BaseRootMessage {
         writer.int32(this.code);
 
         for (const message of this.children) {
-            if (!decoder.types.has(`gamedata:${message.messageTag}`))
+            if (!decoder.config.writeUnknownGameData && !decoder.types.has(`gamedata:${message.messageTag}`))
                 continue;
 
             writer.begin(message.messageTag);

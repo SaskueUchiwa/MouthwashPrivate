@@ -19,6 +19,7 @@ export enum MouthwashRootMessageTag {
     ModstampSetString,
     SetChatMessage,
     DeleteChatMessage,
+    SetRoleTeam,
     DisplaySystemAnnouncement = 0xfa,
     UpdateDiscordRichPresence,
     SetQrCodeContents

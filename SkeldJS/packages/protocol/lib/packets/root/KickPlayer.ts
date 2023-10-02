@@ -1,5 +1,5 @@
 import { DisconnectReason, RootMessageTag } from "@skeldjs/constant";
-import { Code2Int, HazelReader, HazelWriter } from "@skeldjs/util";
+import { GameCode, HazelReader, HazelWriter } from "@skeldjs/util";
 
 import { BaseRootMessage } from "./BaseRootMessage";
 
@@ -8,41 +8,41 @@ export class KickPlayerMessage extends BaseRootMessage {
     messageTag = RootMessageTag.KickPlayer as const;
 
     readonly code: number;
-    readonly clientid: number;
+    readonly clientId: number;
     readonly banned: boolean;
     readonly reason: DisconnectReason;
 
     constructor(
         code: string | number,
-        clientid: number,
+        clientId: number,
         banned: boolean,
         reason?: DisconnectReason
     ) {
         super();
 
         if (typeof code === "string") {
-            this.code = Code2Int(code);
+            this.code = GameCode.convertStringToInt(code);
         } else {
             this.code = code;
         }
 
-        this.clientid = clientid;
+        this.clientId = clientId;
         this.banned = banned;
-        this.reason = reason || DisconnectReason.None;
+        this.reason = reason || DisconnectReason.Error;
     }
 
     static Deserialize(reader: HazelReader) {
         const code = reader.int32();
-        const clientid = reader.packed();
+        const clientId = reader.packed();
         const banned = reader.bool();
-        const reason = reader.left ? reader.uint8() : DisconnectReason.None;
+        const reason = reader.left ? reader.uint8() : DisconnectReason.Error;
 
-        return new KickPlayerMessage(code, clientid, banned, reason);
+        return new KickPlayerMessage(code, clientId, banned, reason);
     }
 
     Serialize(writer: HazelWriter) {
         writer.int32(this.code);
-        writer.packed(this.clientid);
+        writer.packed(this.clientId);
         writer.bool(this.banned);
 
         if (typeof this.reason === "number") {
@@ -51,6 +51,6 @@ export class KickPlayerMessage extends BaseRootMessage {
     }
 
     clone() {
-        return new KickPlayerMessage(this.code, this.clientid, this.banned, this.reason);
+        return new KickPlayerMessage(this.code, this.clientId, this.banned, this.reason);
     }
 }

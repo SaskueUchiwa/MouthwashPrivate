@@ -1,11 +1,11 @@
 import {
-    Color,
     GameOverReason,
-    Hat,
-    Pet,
     RpcMessageTag,
-    Skin,
     SpawnType,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    TaskType,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    SpawnFlag
 } from "@skeldjs/constant";
 
 import { BaseRpcMessage, RpcMessage, SetTasksMessage } from "@skeldjs/protocol";
@@ -27,7 +27,12 @@ import {
     GameDataRemovePlayerEvent,
     GameDataSetTasksEvent,
 } from "../events";
-import { AmongUsEndGames, EndGameIntent, FinalTaskState, TasksCompleteEndgameMetadata } from "../endgame";
+
+import {
+    AmongUsEndGames,
+    EndGameIntent,
+    TasksCompleteEndgameMetadata
+} from "../endgame";
 
 export interface GameDataData {
     players: Map<number, PlayerInfo>;
@@ -63,12 +68,12 @@ export class GameData<RoomType extends Hostable = Hostable> extends Networkable<
     constructor(
         room: RoomType,
         spawnType: SpawnType,
-        netid: number,
+        netId: number,
         ownerid: number,
         flags: number,
         data?: HazelReader | GameDataData
     ) {
-        super(room, spawnType, netid, ownerid, flags, data);
+        super(room, spawnType, netId, ownerid, flags, data);
 
         this.players ||= new Map;
     }
@@ -83,12 +88,14 @@ export class GameData<RoomType extends Hostable = Hostable> extends Networkable<
     getComponent<T extends Networkable>(
         component: NetworkableConstructor<T>
     ): T|undefined {
-        if (component === GameData as NetworkableConstructor<any>) {
-            return this.components[0] as unknown as T;
-        }
+        if (this.spawnType === SpawnType.GameData) {
+            if (component === GameData as NetworkableConstructor<any>) {
+                return this.components[0] as unknown as T;
+            }
 
-        if (component === VoteBanSystem as NetworkableConstructor<any>) {
-            return this.components[1] as unknown as T;
+            if (component === VoteBanSystem as NetworkableConstructor<any>) {
+                return this.components[1] as unknown as T;
+            }
         }
 
         return super.getComponent(component);
@@ -113,34 +120,24 @@ export class GameData<RoomType extends Hostable = Hostable> extends Networkable<
     }
 
     Deserialize(reader: HazelReader, spawn: boolean = false) {
-        if (!this.players) this.players = new Map;
+        if (!this.players)
+            this.players = new Map;
 
-        if (spawn) {
-            const num_players = reader.upacked();
+        while (reader.left) {
+            const [ playerId, preader ] = reader.message();
 
-            for (let i = 0; i < num_players; i++) {
-                const playerId = reader.uint8();
-                const player = PlayerInfo.Deserialize(reader, this, playerId);
+            const player = this.players.get(playerId);
+
+            if (player) {
+                player.Deserialize(preader);
+            } else {
+                const player = PlayerInfo.Deserialize(
+                    preader,
+                    this,
+                    playerId
+                );
 
                 this.players.set(player.playerId, player);
-            }
-        } else {
-            while (reader.left) {
-                const [playerId, preader] = reader.message();
-
-                const player = this.players.get(playerId);
-
-                if (player) {
-                    player.Deserialize(preader);
-                } else {
-                    const player = PlayerInfo.Deserialize(
-                        preader,
-                        this,
-                        playerId
-                    );
-
-                    this.players.set(player.playerId, player);
-                }
             }
         }
     }
@@ -148,20 +145,11 @@ export class GameData<RoomType extends Hostable = Hostable> extends Networkable<
     Serialize(writer: HazelWriter, spawn: boolean = false) {
         let flag = false;
 
-        if (spawn) {
-            writer.upacked(this.players.size);
-        }
-
-        for (const [playerid, player] of this.players) {
-            if ((1 << playerid) & this.dirtyBit || spawn) {
-                if (spawn) {
-                    writer.uint8(player.playerId);
-                    writer.write(player);
-                } else {
-                    writer.begin(player.playerId);
-                    writer.write(player);
-                    writer.end();
-                }
+        for (const [ playerId, player ] of this.players) {
+            if (((1 << playerId) & this.dirtyBit) || spawn) {
+                writer.begin(player.playerId);
+                writer.write(player);
+                writer.end();
                 flag = true;
             }
         }
@@ -182,7 +170,7 @@ export class GameData<RoomType extends Hostable = Hostable> extends Networkable<
      * Make the player data dirty and update on the next FixedUpdate.
      * @param resolvable The player to make dirty.
      */
-    update(resolvable: PlayerIDResolvable) {
+    markDirty(resolvable: PlayerIDResolvable) {
         const player = this.resolvePlayerData(resolvable);
 
         if (player) {
@@ -190,103 +178,13 @@ export class GameData<RoomType extends Hostable = Hostable> extends Networkable<
         }
     }
 
-    /**
-     * Change the name of a player (Will not update on clients, use {@link PlayerControl.setName}).
-     * @param resolvable The player to change the name of.
-     * @param name The name to change to.
-     * @example
-     *```typescript
-     * room.gamedata.setName(player, "weakeyes");
-     * ```
-     */
-    setName(resolvable: PlayerIDResolvable, name: string) {
-        const player = this.resolvePlayerData(resolvable);
-
-        if (player) {
-            player.name = name;
-            this.update(player);
-        }
-    }
-
-    /**
-     * Change the colour of a player (Will not update on clients, use {@link PlayerControl.setColor}).
-     * @param resolvable The player to change the colour of.
-     * @param color The colour to change to.
-     * @example
-     *```typescript
-     * room.gamedata.setColor(player, ColorID.Blue);
-     * ```
-     */
-    setColor(resolvable: PlayerIDResolvable, color: Color) {
-        const player = this.resolvePlayerData(resolvable);
-
-        if (player) {
-            player.color = color;
-            this.update(player);
-        }
-    }
-
-    /**
-     * Change the hat of a player.
-     * @param resolvable The player to change the hat of.
-     * @param hat The hat to change to.
-     * @example
-     *```typescript
-     * room.gamedata.setHat(player, HatID.TopHat);
-     * ```
-     */
-    setHat(resolvable: PlayerIDResolvable, hat: Hat) {
-        const player = this.resolvePlayerData(resolvable);
-
-        if (player) {
-            player.hat = hat;
-            this.update(player);
-        }
-    }
-
-    /**
-     * Change the skin of a player.
-     * @param resolvable The player to change the skin of.
-     * @param skin The skin to change to.
-     * @example
-     *```typescript
-     * room.gamedata.setSkin(player, SkinID.Mechanic);
-     * ```
-     */
-    setSkin(resolvable: PlayerIDResolvable, skin: Skin) {
-        const player = this.resolvePlayerData(resolvable);
-
-        if (player) {
-            player.skin = skin;
-            this.update(player);
-        }
-    }
-
-    /**
-     * Change the pet of a player.
-     * @param resolvable The player to change the pet of.
-     * @param skin The pet to change to.
-     * @example
-     *```typescript
-     * room.gamedata.setPet(player, PetID.MiniCrewmate);
-     * ```
-     */
-    setPet(resolvable: PlayerIDResolvable, pet: Pet) {
-        const player = this.resolvePlayerData(resolvable);
-
-        if (player) {
-            player.pet = pet;
-            this.update(player);
-        }
-    }
-
     private async _handleSetTasks(rpc: SetTasksMessage) {
-        const playerData = this.players.get(rpc.playerid);
+        const playerData = this.players.get(rpc.playerId);
 
         if (playerData) {
-            const oldTasks = playerData.taskIds;
-            this._setTasks(playerData, rpc.taskids);
-            const playerTasks = playerData.taskIds;
+            const oldTasks = playerData.taskStates;
+            playerData.setTaskStates(rpc.taskIds.map(taskType => new TaskState(taskType, false)));
+            const playerTasks = playerData.taskStates;
 
             const ev = await this.emit(
                 new GameDataSetTasksEvent(
@@ -298,24 +196,19 @@ export class GameData<RoomType extends Hostable = Hostable> extends Networkable<
                 )
             );
 
-            playerData.taskIds = ev.alteredTasks;
+            playerData.setTaskStates(ev.alteredTasks);
 
             if (ev.alteredTasks !== playerTasks) {
-                this._rpcSetTasks(playerData, playerData.taskIds);
+                this._rpcSetTasks(playerData, playerData.taskStates);
             }
         }
     }
 
-    private _setTasks(player: PlayerInfo, taskIds: number[]) {
-        player.taskIds = taskIds;
-        player.taskStates = taskIds.map((id, i) => new TaskState(i, false));
-    }
-
-    private _rpcSetTasks(player: PlayerInfo, taskIds: number[]) {
-        this.room.stream.push(
+    private _rpcSetTasks(player: PlayerInfo, taskStates: TaskState[]) {
+        this.room.messageStream.push(
             new RpcMessage(
                 this.netId,
-                new SetTasksMessage(player.playerId, taskIds)
+                new SetTasksMessage(player.playerId, taskStates.map(state => state.taskType))
             )
         );
     }
@@ -323,7 +216,7 @@ export class GameData<RoomType extends Hostable = Hostable> extends Networkable<
     /**
      * Set the tasks of a player.
      * @param player The player to set the tasks of.
-     * @param taskIds The tasks to set.
+     * @param taskTypes The task types to give to the player, see {@link TaskType}.
      * @example
      *```typescript
      * room.gamedata.setTasks(player, [
@@ -334,27 +227,27 @@ export class GameData<RoomType extends Hostable = Hostable> extends Networkable<
      * ]);
      * ```
      */
-    async setTasks(player: PlayerIDResolvable, taskIds: number[]) {
+    async setTasks(player: PlayerIDResolvable, taskTypes: number[]) {
         const playerData = this.resolvePlayerData(player);
 
         if (playerData) {
-            const oldTasks = playerData.taskIds;
-            this._setTasks(playerData, taskIds);
+            const oldTasks = playerData.taskStates;
+            playerData.setTaskStates(taskTypes.map(taskType => new TaskState(taskType, false)));
             const ev = await this.emit(
                 new GameDataSetTasksEvent(
                     this.room,
                     this,
                     playerData,
                     oldTasks,
-                    playerData.taskIds
+                    playerData.taskStates
                 )
             );
 
-            this._setTasks(playerData, ev.alteredTasks);
+            playerData.setTaskStates(ev.alteredTasks);
 
-            if (playerData.taskIds !== oldTasks) {
-                this._rpcSetTasks(playerData, playerData.taskIds);
-                this.update(playerData);
+            if (playerData.taskStates !== oldTasks) {
+                this._rpcSetTasks(playerData, playerData.taskStates);
+                this.markDirty(playerData);
             }
         }
     }
@@ -366,7 +259,7 @@ export class GameData<RoomType extends Hostable = Hostable> extends Networkable<
      * @example
      *```typescript
      * // Complete all of a player's tasks.
-     * for (let i = 0; i < player.info.tasks.length; i++) {
+     * for (let i = 0; i < player.playerInfo.tasks.length; i++) {
      *   room.gamedata.completeTask(player, i);
      * }
      * ```
@@ -379,24 +272,21 @@ export class GameData<RoomType extends Hostable = Hostable> extends Networkable<
 
             if (task) {
                 task.completed = true;
+            } else {
+                player.taskStates[taskIdx] = new TaskState(0, true);
             }
 
             let totalTasks = 0;
             let completeTasks = 0;
-            const taskStates: Map<number, FinalTaskState[]> = new Map;
+            const taskStates: Map<number, TaskState[]> = new Map;
             for (const [ , playerInfo ] of this.players) {
                 if (!playerInfo.isDisconnected && !playerInfo.isImpostor) {
-                    const states: FinalTaskState[] = [];
-                    taskStates.set(playerInfo.playerId, states);
-                    for (const task of playerInfo.taskStates) {
+                    taskStates.set(playerInfo.playerId, playerInfo.taskStates);
+                    for (let i = 0; i < playerInfo.taskStates.length; i++) {
                         totalTasks++;
-                        if (task.completed) {
+                        if (playerInfo.taskStates[i].completed) {
                             completeTasks++;
                         }
-                        states.push({
-                            taskId: playerInfo.taskIds[task.taskidx],
-                            completed: task.completed
-                        });
                     }
                 }
             }
@@ -442,7 +332,7 @@ export class GameData<RoomType extends Hostable = Hostable> extends Networkable<
         if (ev.reverted) {
             this.players.delete(playerId);
         } else {
-            this.update(playerId);
+            this.markDirty(playerId);
         }
         return playerInfo;
     }
@@ -472,7 +362,7 @@ export class GameData<RoomType extends Hostable = Hostable> extends Networkable<
 
             if (ev.reverted) {
                 this.players.set(playerInfo.playerId, playerInfo);
-                this.update(playerInfo.playerId);
+                this.markDirty(playerInfo.playerId);
             }
         }
     }

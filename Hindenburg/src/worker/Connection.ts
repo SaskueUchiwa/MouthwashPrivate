@@ -1,13 +1,14 @@
 import dgram from "dgram";
 import chalk from "chalk";
 
-import { DisconnectReason, Platform, QuickChatMode, Language } from "@skeldjs/constant";
+import { DisconnectReason, Language, Platform, QuickChatMode } from "@skeldjs/constant";
 import { DisconnectMessages } from "@skeldjs/data";
 import { VersionInfo } from "@skeldjs/util";
 
 import {
     BaseRootPacket,
     DisconnectPacket,
+    PlatformSpecificData,
     ReliablePacket,
     RemoveGameMessage
 } from "@skeldjs/protocol";
@@ -56,7 +57,9 @@ export const logPlatforms = {
     [Platform.StandaloneItch]: "itch",
     [Platform.IPhone]: "iphone",
     [Platform.Android]: "android",
-    [Platform.Switch]: "switch"
+    [Platform.Switch]: "switch",
+    [Platform.Xbox]: "xbox",
+    [Platform.Playstation]: "playstation"
 };
 
 export const locales = {
@@ -116,6 +119,11 @@ export class Connection {
      * packet.
      */
     clientVersion: VersionInfo;
+
+    /**
+     * The specific platform that this client is playing on.
+     */
+    platform: PlatformSpecificData;
 
     /**
      * This client's level/rank.
@@ -191,6 +199,7 @@ export class Connection {
         this.chatMode = QuickChatMode.FreeChat;
         this.language = Language.English;
         this.clientVersion = new VersionInfo(2021, 11, 9);
+        this.platform = new PlatformSpecificData(Platform.Unknown, "Unknown");
         this.playerLevel = 0;
 
         this.nextExpectedNonce = 0;
@@ -223,6 +232,7 @@ export class Connection {
                 room: this.room ? fmtCode(this.room.code) : undefined,
                 level: "level " + this.playerLevel,
                 version: this.clientVersion.toString(),
+                platform: (logPlatforms as any)[this.platform.platformTag],
                 language: (logLanguages as any)[this.language]
             }
         );
@@ -250,6 +260,13 @@ export class Connection {
      * ```
      */
     getPlayer() {
+        if (!this.worker.config.optimizations.disablePerspectives) {
+            const playerPerspective = this.room?.playerPerspectives.get(this.clientId);
+            if (playerPerspective) {
+                return playerPerspective.players.get(this.clientId);
+            }
+        }
+
         return this.room?.players.get(this.clientId);
     }
 
@@ -293,7 +310,7 @@ export class Connection {
     }
 
     getLocale(i18n: Record<typeof locales[keyof typeof locales], string>) {
-        const myLocale = locales[this.language as keyof typeof locales] || this.worker.config.defaultLanguage;
+        const myLocale = locales[this.language] || this.worker.config.defaultLanguage;
         const myI18n = i18n[myLocale] || i18n[this.worker.config.defaultLanguage];
         if (!myI18n)
             return undefined;
@@ -358,6 +375,7 @@ export class Connection {
         this.username = "";
         this.language = Language.English;
         this.clientVersion = new VersionInfo(2021, 11, 9);
+        this.platform = new PlatformSpecificData(Platform.Unknown, "Unknown");
         this.playerLevel = 0;
 
         this.worker.removeConnection(this);
@@ -369,7 +387,9 @@ export class Connection {
                     this.room
                 )
             );
-            await this.room.handleRemoteLeave(this, reason || DisconnectReason.None);
+            if (this.room) {
+                await this.room.handleRemoteLeave(this, reason || DisconnectReason.ExitGame);
+            }
         }
 
         await this.worker.emit(

@@ -40,13 +40,13 @@ export class DisconnectPacket extends BaseRootPacket {
                 return new DisconnectPacket(reason, "", showReason);
             } else {
                 return new DisconnectPacket(
-                    DisconnectReason.None,
+                    DisconnectReason.Error,
                     "",
                     showReason
                 );
             }
         } else {
-            return new DisconnectPacket(DisconnectReason.None, "", true);
+            return new DisconnectPacket(DisconnectReason.Error, "", true);
         }
     }
 
@@ -55,9 +55,9 @@ export class DisconnectPacket extends BaseRootPacket {
             typeof this.showReason === "boolean" ||
             typeof this.reason === "number"
         ) {
-            writer.bool(this.showReason ?? true);
+            if (this.showReason && typeof this.reason === "number") {
+                writer.bool(true);
 
-            if (typeof this.reason === "number") {
                 writer.begin(0);
                 writer.uint8(this.reason);
 

@@ -1,5 +1,5 @@
-import { QuickChatMode, RootMessageTag } from "@skeldjs/constant";
-import { Code2Int, HazelReader, HazelWriter } from "@skeldjs/util";
+import { RootMessageTag } from "@skeldjs/constant";
+import { GameCode, HazelReader, HazelWriter } from "@skeldjs/util";
 
 import { GameSettings } from "../../misc";
 import { MessageDirection } from "../../PacketDecoder";
@@ -10,24 +10,24 @@ export class HostGameMessage extends BaseRootMessage {
     messageTag = RootMessageTag.HostGame as const;
 
     readonly code!: number;
-    readonly options!: GameSettings;
-    readonly quickchatMode!: QuickChatMode;
+    readonly gameSettings!: GameSettings;
+    readonly filters!: string[];
 
     constructor(code: string | number);
-    constructor(options: GameSettings, quickchat: QuickChatMode);
+    constructor(gameSettings: GameSettings, filters: string[]);
     constructor(
-        options: GameSettings | string | number,
-        quickchat?: QuickChatMode
+        gameSettingsOrCode: GameSettings | string | number,
+        filters?: string[]
     ) {
         super();
 
-        if (typeof options === "string") {
-            this.code = Code2Int(options);
-        } else if (typeof options === "number") {
-            this.code = options;
-        } else if (typeof quickchat === "number") {
-            this.options = options;
-            this.quickchatMode = quickchat;
+        if (typeof gameSettingsOrCode === "string") {
+            this.code = GameCode.convertStringToInt(gameSettingsOrCode);
+        } else if (typeof gameSettingsOrCode === "number") {
+            this.code = gameSettingsOrCode;
+        } else {
+            this.gameSettings = gameSettingsOrCode;
+            this.filters = filters!;
         }
     }
 
@@ -38,9 +38,11 @@ export class HostGameMessage extends BaseRootMessage {
             return new HostGameMessage(code);
         } else {
             const gameOptions = GameSettings.Deserialize(reader);
-            const quickChat = reader.uint8();
+            /*const crossplayFlags = */reader.uint32(); // crossplayFlags not used yet
+            const numFilters = reader.upacked();
+            const filters = reader.list(numFilters, r => r.string());
 
-            return new HostGameMessage(gameOptions, quickChat);
+            return new HostGameMessage(gameOptions, filters);
         }
     }
 
@@ -48,14 +50,18 @@ export class HostGameMessage extends BaseRootMessage {
         if (direction === MessageDirection.Clientbound) {
             writer.int32(this.code);
         } else {
-            writer.write(this.options);
-            writer.uint8(this.quickchatMode);
+            writer.write(this.gameSettings, 7);
+            writer.int32(2 ** 31 - 1);//2 ** 31 - 1); // cross play flags, max int for any crossplay
+            writer.upacked(this.filters.length);
+            for (const filter of this.filters) {
+                writer.string(filter);
+            }
         }
     }
 
     clone() {
-        if (this.options) {
-            return new HostGameMessage(this.options, this.quickchatMode);
+        if (this.gameSettings) {
+            return new HostGameMessage(this.gameSettings, [...this.filters]);
         } else {
             return new HostGameMessage(this.code);
         }

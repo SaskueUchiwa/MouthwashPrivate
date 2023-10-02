@@ -66,7 +66,7 @@ export class BaseRole {
                     column * -1.4,
                     row * -1.4
                 )),
-            alignment: EdgeAlignment.RightBottom,
+            alignment: EdgeAlignment.LeftBottom,
             asset,
             maxTimer: 10,
             currentTime: 10,
@@ -108,6 +108,8 @@ export class BaseRole {
         if (victimPlayerId === undefined)
             return;
 
+        console.log("got murder player");
+        console.log("----");
         victim.control?.kill("murder");
         await murderer.emit(new PlayerMurderEvent(this.room, murderer, undefined, victim));
         murdererPlayerControl["_rpcMurderPlayer"](victim);

@@ -75,9 +75,9 @@ export class DoorsSystem<RoomType extends Hostable = Hostable> extends SystemSta
         for (const door of this.doors) {
             door.Deserialize(reader, false);
             if (door.isOpen) {
-                this._openDoor(door.id, undefined, undefined);
+                this._openDoor(door.doorId, undefined, undefined);
             } else {
-                this._closeDoor(door.id, undefined, undefined);
+                this._closeDoor(door.doorId, undefined, undefined);
             }
         }
     }
@@ -131,7 +131,7 @@ export class DoorsSystem<RoomType extends Hostable = Hostable> extends SystemSta
      * @param doorId The ID of the door to opne.
      */
     async openDoor(doorId: number) {
-        if (this.room.hostIsMe) {
+        if (this.ship.canBeManaged()) {
             await this._openDoor(doorId, this.room.myPlayer, undefined);
         } else {
             await this._sendRepair(doorId);

@@ -1,7 +1,7 @@
 import {
     EventListener,
+    GameCode,
     HindenburgPlugin,
-    Int2Code,
     PlayerData,
     Room,
     RoomCreateEvent,
@@ -113,7 +113,7 @@ export class MouthwashggMetricsPlugin extends WorkerPlugin {
 
         for (const [ , room ] of this.worker.rooms) {
             const lobbyId = this.lobbyIds.get(room);
-            const gameCode = Int2Code(room.code);
+            const gameCode = GameCode.convertIntToString(room.code);
             await this.redisClient.set(`ROOM:${gameCode}`, JSON.stringify({
                 nodeId: this.worker.config.nodeId,
                 gameCode,
@@ -159,7 +159,7 @@ export class MouthwashggMetricsPlugin extends WorkerPlugin {
             INSERT INTO lobby(id, creator_id, created_at, host_server_id, destroyed_at, game_code)
             VALUES($1, $2, NOW(), $3, NULL, $4)
             RETURNING *
-        `, [ lobbyId, connectionUser.id, this.worker.config.nodeId, Int2Code(ev.room.code) ]);
+        `, [ lobbyId, connectionUser.id, this.worker.config.nodeId, GameCode.convertIntToString(ev.room.code) ]);
 
         if (createdLobbies.length > 0) {
             this.lobbyIds.set(ev.room, lobbyId);
@@ -170,7 +170,7 @@ export class MouthwashggMetricsPlugin extends WorkerPlugin {
     }
 
     @EventListener()
-    async onRoomDestroy(ev: RoomDestroyEvent<Room>) {
+    async onRoomDestroy(ev: RoomDestroyEvent) {
         const lobbyId = this.lobbyIds.get(ev.room as Room);
         if (!lobbyId) {
             this.logger.warn("Room %s destroyed, but no lobby id was recorded for it", ev.room);
@@ -243,7 +243,7 @@ export class MouthwashggMetricsPlugin extends WorkerPlugin {
             userIds.push(connectionUser.id);
             const playerName = api.nameService.getPlayerName(player);
             params.push(playerId, gameId, connectionUser.id, null, role?.metadata.roleName || null,
-                player.info?.color || null, playerName || null, role ? RoleAlignment[role.metadata.alignment] : null);
+                player.playerInfo?.defaultOutfit.color || null, playerName || null, role ? RoleAlignment[role.metadata.alignment] : null);
         }
         await this.postgresClient.query(`
             INSERT INTO player(id, game_id, user_id, did_win, role_name, cosmetic_color, cosmetic_name, role_alignment)

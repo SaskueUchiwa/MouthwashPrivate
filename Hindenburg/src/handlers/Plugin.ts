@@ -177,10 +177,10 @@ export abstract class Plugin {
      * Get a plugin
      * @param pluginId
      */
-    getDependencyUnsafe(pluginId: string): Plugin|undefined;
-    getDependencyUnsafe<K extends typeof Plugin>(plugin: K): WorkerPlugin|RoomPlugin|undefined;
+    getDependencyUnsafe(pluginId: string): Plugin;
+    getDependencyUnsafe<K extends typeof Plugin>(plugin: K): WorkerPlugin|RoomPlugin;
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    getDependencyUnsafe(plugin: any): Plugin|undefined {
+    getDependencyUnsafe(plugin: any): Plugin {
         throw new Error("Method not implemented");
     }
 }
@@ -223,21 +223,21 @@ export class RoomPlugin extends Plugin {
         this.logger = new Logger(() => `${chalk.yellow(fmtCode(this.room.code))} ${this.meta.id}`, this.worker.vorpal);
     }
 
-    getDependencyUnsafe(pluginId: string): WorkerPlugin|RoomPlugin|undefined;
-    getDependencyUnsafe(pluginId: string, location: "worker"): WorkerPlugin|undefined;
-    getDependencyUnsafe(pluginId: string, location: "room"): RoomPlugin|undefined;
-    getDependencyUnsafe<K extends SomePluginCtr>(plugin: K): PluginInstanceType<K>|undefined;
-    getDependencyUnsafe(pluginId: SomePluginCtr|string, location?: "worker"|"room"): WorkerPlugin|RoomPlugin|undefined;
-    getDependencyUnsafe(pluginId: SomePluginCtr|string, location?: "worker"|"room"): WorkerPlugin|RoomPlugin|undefined {
+    getDependencyUnsafe(pluginId: string): WorkerPlugin|RoomPlugin;
+    getDependencyUnsafe(pluginId: string, location: "worker"): WorkerPlugin;
+    getDependencyUnsafe(pluginId: string, location: "room"): RoomPlugin;
+    getDependencyUnsafe<K extends SomePluginCtr>(plugin: K): PluginInstanceType<K>
+    getDependencyUnsafe(pluginId: SomePluginCtr|string, location?: "worker"|"room"): WorkerPlugin|RoomPlugin;
+    getDependencyUnsafe(pluginId: SomePluginCtr|string, location?: "worker"|"room"): WorkerPlugin|RoomPlugin {
         if (typeof pluginId !== "string")
             return this.getDependencyUnsafe(pluginId.meta.id);
 
         if (location === "worker") {
-            return this.worker.loadedPlugins.get(pluginId)?.pluginInstance;
+            return this.worker.loadedPlugins.get(pluginId)!.pluginInstance;
         }
 
         if (location === "room") {
-            return this.room.loadedPlugins.get(pluginId)?.pluginInstance;
+            return this.room.loadedPlugins.get(pluginId)!.pluginInstance;
         }
 
         return this.getDependencyUnsafe(pluginId, "room") || this.getDependencyUnsafe(pluginId, "worker");
@@ -290,14 +290,14 @@ export class WorkerPlugin extends Plugin {
     }
 
 
-    getDependencyUnsafe(pluginId: string): WorkerPlugin|undefined;
-    getDependencyUnsafe<K extends typeof WorkerPlugin>(plugin: K): PluginInstanceType<K>|undefined;
-    getDependencyUnsafe(pluginId: typeof WorkerPlugin|string): WorkerPlugin|undefined;
-    getDependencyUnsafe(pluginId: typeof WorkerPlugin|string): WorkerPlugin|undefined {
+    getDependencyUnsafe(pluginId: string): WorkerPlugin;
+    getDependencyUnsafe<K extends typeof WorkerPlugin>(plugin: K): PluginInstanceType<K>;
+    getDependencyUnsafe(pluginId: typeof WorkerPlugin|string): WorkerPlugin;
+    getDependencyUnsafe(pluginId: typeof WorkerPlugin|string): WorkerPlugin {
         if (typeof pluginId !== "string")
             return this.getDependencyUnsafe(pluginId.meta.id);
 
-        return this.worker.loadedPlugins.get(pluginId)?.pluginInstance;
+        return this.worker.loadedPlugins.get(pluginId)!.pluginInstance;
     }
 
     assertDependency(pluginId: string): WorkerPlugin;

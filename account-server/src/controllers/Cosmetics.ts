@@ -27,7 +27,7 @@ export interface BundleItem {
     id: string;
     bundle_id: string;
     name: string;
-    among_us_id: number;
+    among_us_id: string;
     resource_path: number;
     type: "HAT"|"PET";
     resource_id: number;
@@ -53,12 +53,17 @@ export interface UserPerkSettings {
     settings: any;
 }
 
+export interface StripeItem {
+    id: string;
+    stripe_price_id: string;
+}
+
 export class CosmeticsController {
     constructor(public readonly server: AccountServer) {}
     
-    async getAllCosmeticItemAssetsOwnedByUser(userId: string): Promise<(BundleItem & { asset_bundle_url: string; })[]> {
+    async getAllCosmeticItemsOwnedByUser(userId: string): Promise<(BundleItem & { asset_bundle_url: string; asset_bundle_hash: string; asset_bundle_base_resource_id: number; })[]> {
         const { rows: foundBundleItems } = await this.server.postgresClient.query(`
-            SELECT bundle_item.*, asset_bundle.url as asset_bundle_url
+            SELECT bundle_item.*, asset_bundle.url as asset_bundle_url, asset_bundle.hash as asset_bundle_hash, bundle.base_resource_id as asset_bundle_base_resource_id
             FROM bundle_item
             LEFT JOIN bundle ON bundle.id = bundle_item.bundle_id
             LEFT JOIN asset_bundle ON asset_bundle.id = bundle.asset_bundle_id
@@ -103,13 +108,13 @@ export class CosmeticsController {
         return foundPerks.map(perk => ({ id: perk.perk_id, settings: perk.perk_settings })) as UserPerkSettings[];
     }
 
-    async setPlayerCosmetics(userId: string, hatId: number, petId: number, skinId: number) {
+    async setPlayerCosmetics(userId: string, hatId: string, petId: string, skinId: string, colorId: number, visorId: string, nameplateId: string) {
         const rowsUpdated = await this.server.postgresClient.query(`
             UPDATE users
-            SET cosmetic_hat = $1, cosmetic_pet = $2, cosmetic_skin = $3
-            WHERE id = $4
+            SET cosmetic_hat = $2, cosmetic_pet = $3, cosmetic_skin = $4, cosmetic_color = $5, cosmetic_visor = $6, cosmetic_nameplate = $7
+            WHERE id = $1
             RETURNING *
-        `, [ hatId, petId, skinId, userId ]);
+        `, [ userId, hatId, petId, skinId, colorId, visorId, nameplateId ]);
 
         return rowsUpdated.rowCount > 0;
     }

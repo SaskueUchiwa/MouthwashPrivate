@@ -27,12 +27,12 @@
     const requiredFiles = [ "Among Us_Data", "Among Us_Data/il2cpp_data", "BepInEx", "BepInEx/core", "BepInEx/plugins/Polus.dll", "BepInEx/plugins/PolusggSlim.dll",
         "mono", "mono/Managed", "mono/MonoBleedingEdge", "Among Us.exe", "baselib.dll", "doorstop_config.ini", "GameAssembly.dll", "UnityPlayer.dll", "winhttp.dll" ];
     async function checkInstallationPath(installationPath: string) {
-        for (const requiredFile of requiredFiles) {
-            if (!await fs.exists(await path.join(installationPath, requiredFile))) {
-                console.log("Missing file %s in installation", requiredFile);
-                return false;
-            }
-        }
+        // for (const requiredFile of requiredFiles) {
+        //     if (!await fs.exists(await path.join(installationPath, requiredFile))) {
+        //         console.log("Missing file %s in installation", requiredFile);
+        //         return false;
+        //     }
+        // }
 
         return true;
     }

@@ -72,6 +72,22 @@ export class SystemStatus<
         return super.emit(event);
     }
 
+    async emitSerial<Event extends BasicEvent>(event: Event): Promise<Event> {
+        if (this.ship) {
+            this.ship.emitSerial(event as any);
+        }
+
+        return super.emitSerial(event);
+    }
+
+    emitSync<Event extends BasicEvent>(event: Event): Event {
+        if (this.ship) {
+            this.ship.emitSync(event as any);
+        }
+
+        return super.emitSync(event);
+    }
+
     Deserialize(reader: HazelReader, spawn: boolean): void {
         void reader, spawn;
     }
@@ -104,7 +120,7 @@ export class SystemStatus<
         if (!this.room.myPlayer?.control)
             return;
 
-        if (this.room.hostIsMe) {
+        if (this.ship.canBeManaged()) {
             await this.ship.systems.get(SystemType.Sabotage)
                 ?.HandleRepair(this.room.myPlayer, this.systemType, undefined);
         } else {
@@ -117,7 +133,7 @@ export class SystemStatus<
                         this.systemType
                     )
                 )
-            ], true, this.room.hostId, []);
+            ], undefined, [ this.room.hostId ]);
         }
     }
 
@@ -134,6 +150,6 @@ export class SystemStatus<
                     amount
                 )
             )
-        ], true, this.room.hostId, []);
+        ], undefined, [ this.room.hostId ]);
     }
 }

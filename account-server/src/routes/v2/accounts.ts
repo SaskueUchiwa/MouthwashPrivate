@@ -17,9 +17,13 @@ import {
     InvalidPasswordResetCode,
     PasswordResetIntentNotFoundError,
     EmailAlreadyVerifiedError,
+    Unauthorized,
     
 } from "../../errors";
 
+import * as amongus from "@skeldjs/client";
+import { updateCosmeticsRequestValidator } from "./internal/users";
+import { BundleItem } from "../../controllers";
 import { BaseRoute } from "../BaseRoute";
 
 export const createUserRequestValidator = ark.type({
@@ -50,6 +54,13 @@ export const resetPasswordVerifyRequestValidator = ark.type({
     reset_code: "string",
     new_password: "8<=string<=128"
 });
+// typescript only does unidirection for string enums, so we'll reverse them here
+// we use this to check if a cosmetic hat is in the game or not
+const amongUsHatsOfficial: Set<string> = new Set(Object.values(amongus.Hat));
+const amongUsPetsOfficial: Set<string> = new Set(Object.values(amongus.Pet));
+const amongUsSkinsOfficial: Set<string> = new Set(Object.values(amongus.Skin));
+const amongUsVisorsOfficial: Set<string> = new Set(Object.values(amongus.Visor));
+const amongUsNameplatesOfficial: Set<string> = new Set(Object.values(amongus.Nameplate));
 
 export class AccountsRoute extends BaseRoute {
     @mediator.Endpoint(mediator.HttpMethod.POST, "/v2/accounts")
@@ -154,7 +165,7 @@ export class AccountsRoute extends BaseRoute {
     }
 
     @mediator.Endpoint(mediator.HttpMethod.GET, "/v2/accounts/owned_bundles")
-    async getOwnedBundles(transaction: mediator.Transaction<{}>) {
+    async getOwnedItems(transaction: mediator.Transaction<{}>) {
         const session = await this.server.sessionsController.validateAuthorization(transaction);
         const ownedBundles = await this.server.cosmeticsController.getAllBundlesOwnedByUser(session.user_id);
 
@@ -250,6 +261,38 @@ export class AccountsRoute extends BaseRoute {
             throw new CheckoutSessionAlreadyFinished(data.checkout_session_id);
 
         await this.server.checkoutController.setCheckoutCancelled(data.checkout_session_id);
+        transaction.respondJson({ });
+    }
+
+    assertHasItemOfType(ownedItemMap: Map<string, BundleItem>, itemAmongUsId: string, itemType: string) {
+        const bundleItem = ownedItemMap.get(itemAmongUsId);
+        if (bundleItem && bundleItem.type === itemType) return;
+
+        throw new Unauthorized();
+    }
+
+    @mediator.Endpoint(mediator.HttpMethod.PUT, "/v2/accounts/cosmetics")
+    async saveSelectedCosmetics(transaction: mediator.Transaction<{}>) {
+        const session = await this.server.sessionsController.validateAuthorization(transaction);
+        const ownedItems = await this.server.cosmeticsController.getAllCosmeticItemsOwnedByUser(session.user_id);
+        
+        const { data, problems } = updateCosmeticsRequestValidator(transaction.getBody());
+        if (data === undefined) throw new InvalidBodyError(problems);
+
+        const ownedItemMap: Map<string, BundleItem> = new Map;
+        for (const item of ownedItems) {
+            ownedItemMap.set(item.among_us_id, item);
+        }
+
+        if (!amongUsHatsOfficial.has(data.cosmetic_hat) && data.cosmetic_hat !== "missing") this.assertHasItemOfType(ownedItemMap, data.cosmetic_hat, "HAT");
+        if (!amongUsPetsOfficial.has(data.cosmetic_pet) && data.cosmetic_pet !== "missing") this.assertHasItemOfType(ownedItemMap, data.cosmetic_pet, "PET");
+        if (!amongUsSkinsOfficial.has(data.cosmetic_skin) && data.cosmetic_skin !== "missing") this.assertHasItemOfType(ownedItemMap, data.cosmetic_skin, "SKIN");
+        if (!amongUsVisorsOfficial.has(data.cosmetic_visor) && data.cosmetic_visor !== "missing") this.assertHasItemOfType(ownedItemMap, data.cosmetic_visor, "VISOR");
+        if (!amongUsNameplatesOfficial.has(data.cosmetic_nameplate) && data.cosmetic_nameplate !== "missing") this.assertHasItemOfType(ownedItemMap, data.cosmetic_nameplate, "NAMEPLATE");
+    
+        const success = await this.server.cosmeticsController.setPlayerCosmetics(session.user_id, data.cosmetic_hat, data.cosmetic_pet, data.cosmetic_skin, data.cosmetic_color, data.cosmetic_visor, data.cosmetic_nameplate);
+        if (!success) throw new mediator.InternalServerError(new Error(`Failed to set player cosmetics? user_id=${session.user_id}`));
+
         transaction.respondJson({});
     }
 }

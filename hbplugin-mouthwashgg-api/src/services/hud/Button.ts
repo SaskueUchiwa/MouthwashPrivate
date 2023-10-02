@@ -37,6 +37,7 @@ export class Button extends EventEmitter<ButtonEvents> {
         this.clickBehaviour = customNetworkTransform.components[2] as ClickBehaviour;
 
         this.clickBehaviour.on("mwgg.clickbehaviour.click", async () => {
+            console.log("got click behaviour click, passing to button");
             await this.emit(new ButtonClickEvent(this));
         });
     }
@@ -126,7 +127,7 @@ export class Button extends EventEmitter<ButtonEvents> {
                 if (this.player.transform!.position.dist(player.transform.position) > range)
                     return false;
 
-                if (player.info?.isDead)
+                if (player.playerInfo?.isDead)
                     return false;
 
                 if (!this.hudService.plugin.targettableService.isTargettable(player))

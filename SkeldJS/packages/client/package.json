@@ -1,8 +1,7 @@
 {
   "name": "@skeldjs/client",
-  "version": "2.14.35",
+  "version": "2.15.49",
   "main": "./dist/index.js",
-  "types": "./index.ts",
   "publishConfig": {
     "types": "./dist/index.d.ts"
   },
@@ -21,10 +20,12 @@
     "@skeldjs/core": "workspace:*",
     "@skeldjs/data": "workspace:*",
     "@skeldjs/dtls": "workspace:*",
+    "@skeldjs/eos": "workspace:*",
     "@skeldjs/events": "workspace:*",
     "@skeldjs/protocol": "workspace:*",
     "@skeldjs/state": "workspace:*",
-    "@skeldjs/util": "workspace:*"
+    "@skeldjs/util": "workspace:*",
+    "node-fetch": "2"
   },
   "gitHead": "bd1e345157716ff1af70479b45bd23bd977bea32",
   "files": [

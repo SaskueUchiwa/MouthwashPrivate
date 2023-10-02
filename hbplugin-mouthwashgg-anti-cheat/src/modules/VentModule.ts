@@ -76,7 +76,7 @@ export class VentModule extends EventTarget {
         const playerPhysics = player.physics;
         if (!playerPhysics) return undefined;
 
-        return this.getVentById(playerPhysics.ventid);
+        return this.getVentById(playerPhysics.ventId);
     }
 
     protected _getFullVentNetwork(vent: VentDataModel, mapVents: Record<number, VentDataModel>, allVents: Set<VentDataModel>) {
@@ -99,37 +99,37 @@ export class VentModule extends EventTarget {
     }
 
     async onEnterVent(sender: Connection, enterVentMessage: EnterVentMessage) {
-        const enterInfraction = await this.plugin.createInfraction(sender, InfractionName.ForbiddenRpcVent, { ventId: enterVentMessage.ventid }, InfractionSeverity.High);
+        const enterInfraction = await this.plugin.createInfraction(sender, InfractionName.ForbiddenRpcVent, { ventId: enterVentMessage.ventId }, InfractionSeverity.High);
         if (enterInfraction !== undefined) return enterInfraction;
 
         const existingVent = this.getPlayerVent(sender);
         if (existingVent) {
-            return await this.plugin.createInfraction(sender, InfractionName.IllegalRpcVent, { ventId: enterVentMessage.ventid, alreadyInVent: existingVent.id }, InfractionSeverity.Medium);
+            return await this.plugin.createInfraction(sender, InfractionName.IllegalRpcVent, { ventId: enterVentMessage.ventId, alreadyInVent: existingVent.id }, InfractionSeverity.Medium);
         }
 
         const player = sender.getPlayer();
         const playerTransform = player?.transform;
         if (playerTransform) {
-            const vent = this.getVentById(enterVentMessage.ventid);
+            const vent = this.getVentById(enterVentMessage.ventId);
             if (vent && new Vector2(vent.position).dist(playerTransform.position) < 3) {
                 return;
             }
         }
-        return await this.plugin.createInfraction(sender, InfractionName.IllegalRpcVent, { ventId: enterVentMessage.ventid, position: playerTransform?.position }, InfractionSeverity.Medium);
+        return await this.plugin.createInfraction(sender, InfractionName.IllegalRpcVent, { ventId: enterVentMessage.ventId, position: playerTransform?.position }, InfractionSeverity.Medium);
     }
     
     async onExitVent(sender: Connection, exitVentMessage: ExitVentMessage) {
-        const exitInfraction = await this.plugin.createInfraction(sender, InfractionName.ForbiddenRpcVent, { ventId: exitVentMessage.ventid }, InfractionSeverity.High);
+        const exitInfraction = await this.plugin.createInfraction(sender, InfractionName.ForbiddenRpcVent, { ventId: exitVentMessage.ventId }, InfractionSeverity.High);
         if (exitInfraction !== undefined) return exitInfraction;
 
         const mapVents = this.getVentsInMap();
         const playerVent = this.getPlayerVent(sender);
         if (playerVent === undefined || mapVents === undefined) {
-            return await this.plugin.createInfraction(sender, InfractionName.IllegalRpcVent, { ventId: exitVentMessage.ventid }, InfractionSeverity.Medium);
+            return await this.plugin.createInfraction(sender, InfractionName.IllegalRpcVent, { ventId: exitVentMessage.ventId }, InfractionSeverity.Medium);
         }
         const network = this.getFullVentNetwork(playerVent, mapVents); // player exited out of vent not in the network of the vent they entered
         if (!network.has(playerVent)) {
-            return await this.plugin.createInfraction(sender, InfractionName.IllegalRpcVent, { ventId: exitVentMessage.ventid }, InfractionSeverity.Medium);
+            return await this.plugin.createInfraction(sender, InfractionName.IllegalRpcVent, { ventId: exitVentMessage.ventId }, InfractionSeverity.Medium);
         }
     }
 

@@ -13,4 +13,5 @@ export * from "./SetGameOption";
 export * from "./SetHudString";
 export * from "./SetHudVisibility";
 export * from "./SetQrContents";
+export * from "./SetRoleTeam";
 export * from "./SetTaskCounts";

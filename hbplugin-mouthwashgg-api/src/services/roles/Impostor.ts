@@ -1,5 +1,5 @@
-import { PlayerData, PlayerDieEvent, Room } from "@skeldjs/hindenburg";
-import { EnumValue, KeyCode, NumberValue, Palette } from "mouthwash-types";
+import { PlayerData, PlayerDieEvent, RoleTeamType, Room } from "@skeldjs/hindenburg";
+import { EnumValue, KeyCode, NumberValue, Palette, SetRoleTeamMessage } from "mouthwash-types";
 
 import {
     BaseRole,
@@ -45,7 +45,9 @@ export class Impostor extends BaseRole {
 
     async markImpostor() {
         this.giveFakeTasks();
-        this.player.info?.setImpostor(true);
+        await this.room.broadcast([], [
+            new SetRoleTeamMessage(RoleTeamType.Impostor)
+        ], [ this.player ]);
     }
 
     async createKillButton() {
@@ -61,12 +63,13 @@ export class Impostor extends BaseRole {
         );
 
         this._killButton?.on("mwgg.button.click", ev => {
-            if (!this._killButton || !this.isKillButtonEnabled() || this._killButton.currentTime > 0 || !this._killTarget || this.player.info?.isDead)
+            if (!this._killButton || !this.isKillButtonEnabled() || this._killButton.currentTime > 0 || !this._killTarget || this.player.playerInfo?.isDead)
                 return;
 
             if (this._killTarget.transform) {
                 this.player.transform?.snapTo(this._killTarget.transform.position);
             }
+            console.log("got impostor button click");
             this.patchMurderPlayer(this._killTarget, this._killTarget);
             this._killButton.setCurrentTime(this._killButton.maxTimer);
         });
@@ -82,7 +85,7 @@ export class Impostor extends BaseRole {
             return undefined;
         }
 
-        if (this.player.physics && this.player.physics.ventid > -1) {
+        if (this.player.physics && this.player.physics.ventId > -1) {
             return undefined;
         }
 
@@ -112,7 +115,7 @@ export class Impostor extends BaseRole {
 
         if (this._killTarget !== oldTarget) {
             if (oldTarget) {
-                this.api.animationService.setOutlineFor(oldTarget, Palette.null, [ this.player ]);
+                this.api.animationService.clearOutlineFor(oldTarget, [ this.player ]);
             }
             if (this._killTarget) {
                 this.api.animationService.setOutlineFor(this._killTarget, Palette.impostorRed, [ this.player ]);

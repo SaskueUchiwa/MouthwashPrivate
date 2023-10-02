@@ -136,7 +136,6 @@ export class FetchResourceMessage extends BaseRootMessage {
                     );
                 default:
                     throw new Error("Received invalid fetch resource response type: " + responseType);
-                    break;
             }
         } else {
             const resourceId = reader.packed();

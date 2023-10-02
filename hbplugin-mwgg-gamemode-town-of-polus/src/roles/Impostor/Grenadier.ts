@@ -95,7 +95,7 @@ export class Grenadier extends Impostor {
         );
 
         this._throwButton?.on("mwgg.button.click", async ev => {
-            if (!this._throwButton || this._throwButton.currentTime > 0 || this.player.info?.isDead || !this.player.transform)
+            if (!this._throwButton || this._throwButton.currentTime > 0 || this.player.playerInfo?.isDead || !this.player.transform)
                 return;
             
             const playersInRange = this.getPossibleTargets();
@@ -131,7 +131,7 @@ export class Grenadier extends Impostor {
 
         const players = [];
         for (const [ , player ] of this.room.players) {
-            const playerInfo = player.info;
+            const playerInfo = player.playerInfo;
             if (playerInfo && player.transform && player !== this.player && !playerInfo.isImpostor && !playerInfo.isDead && player.transform.position.dist(this.player.transform.position) < this._grenadierRange) {
                 players.push(player);
             }

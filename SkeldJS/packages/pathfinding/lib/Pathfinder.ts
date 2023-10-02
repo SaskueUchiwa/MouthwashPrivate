@@ -116,7 +116,7 @@ export class SkeldjsPathfinder extends EventEmitter<SkeldjsPathfinderEvents> {
         return this.transform?.position;
     }
 
-    get transform(): CustomNetworkTransform|undefined {
+    get transform(): CustomNetworkTransform<SkeldjsClient>|undefined {
         return this.myPlayer?.transform;
     }
 
@@ -226,7 +226,7 @@ export class SkeldjsPathfinder extends EventEmitter<SkeldjsPathfinderEvents> {
 
     pause() {
         this.isPaused = true;
-        this.emit(new PathfinderPauseEvent);
+        this.emitSync(new PathfinderPauseEvent);
     }
 
     start() {
@@ -234,16 +234,16 @@ export class SkeldjsPathfinder extends EventEmitter<SkeldjsPathfinderEvents> {
             return;
 
         this.isPaused = false;
-        this.emit(new PathfinderStartEvent(this.destination));
+        this.emitSync(new PathfinderStartEvent(this.destination));
     }
 
     private _stop(reached: boolean) {
         this.destination = undefined;
         if (!reached) this._moved = true;
 
-        this.emit(new PathfinderStopEvent(reached));
+        this.emitSync(new PathfinderStopEvent(reached));
         if (reached) {
-            this.emit(new PathfinderEndEvent);
+            this.emitSync(new PathfinderEndEvent);
         }
     }
 
@@ -287,8 +287,8 @@ export class SkeldjsPathfinder extends EventEmitter<SkeldjsPathfinderEvents> {
         }
     }
 
-    vent(ventid: number) {
-        const coords = this.getVentForMap(ventid);
+    vent(ventId: number) {
+        const coords = this.getVentForMap(ventId);
 
         if (!coords)
             return;

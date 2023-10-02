@@ -18,9 +18,12 @@ export interface UserAccountModel {
     banned_until: string|null;
     muted_until: string|null;
     game_settings: any;
-    cosmetic_hat: number;
-    cosmetic_pet: number;
-    cosmetic_skin: number;
+    cosmetic_hat: string;
+    cosmetic_pet: string;
+    cosmetic_skin: string;
+    cosmetic_color: number;
+    cosmetic_visor: string;
+    cosmetic_nameplate: string;
 }
 
 export interface UserSessionModel {
@@ -32,7 +35,7 @@ export interface UserSessionModel {
 export interface BundleItemModel {
     id: string;
     name: string;
-    among_us_id: number;
+    among_us_id: string;
     resource_path: string;
     resource_id: number;
     asset_bundle_url: string;
@@ -160,11 +163,10 @@ export class MouthwashAuthPlugin extends WorkerPlugin {
         }
     }
 
-    async getUser(clientId: string) {
+    async getUser(clientId: string, invalidateCache = false) {
         const cachedUser = this.getCached(this.userCache, clientId);
-        if (cachedUser) {
+        if (cachedUser && !invalidateCache)
             return cachedUser;
-        }
 
         const res = await this.make<InternalUserInformationModel>("GET", "/api/v2/internal/users/" + clientId);
         if (res.success) {
@@ -175,24 +177,23 @@ export class MouthwashAuthPlugin extends WorkerPlugin {
         return undefined;
     }
 
-    async getConnectionUser(connection: Connection) {
+    async getConnectionUser(connection: Connection, invalidateCache = false) {
         const cachedUser = this.connectionUserCache.get(connection);
 
-        if (!cachedUser) {
-            const cachedSession = this.connectionSessionCache.get(connection);
-            if (!cachedSession)
-                return undefined;
+        if (cachedUser && !invalidateCache)
+            return cachedUser;
 
-            const user = await this.getUser(cachedSession.user_id);
-            if (!user) {
-                return undefined;
-            }
+        const cachedSession = this.connectionSessionCache.get(connection);
+        if (!cachedSession)
+            return undefined;
 
-            this.connectionUserCache.set(connection, user);
-            return user;
+        const user = await this.getUser(cachedSession.user_id, invalidateCache);
+        if (!user) {
+            return undefined;
         }
 
-        return cachedUser;
+        this.connectionUserCache.set(connection, user);
+        return user;
     }
 
     async getSession(clientId: string) {
@@ -222,11 +223,14 @@ export class MouthwashAuthPlugin extends WorkerPlugin {
         }
     }
 
-    async updateUserCosmetics(clientId: string, hatId: number, petId: number, skinId: number) {
+    async updateUserCosmetics(clientId: string, hatId: string, petId: string, skinId: string, colorId: number, visorId: string, nameplateId: string) {
         await this.make("PUT", "/api/v2/internal/users/" + clientId + "/cosmetics", {
             cosmetic_hat: hatId,
             cosmetic_pet: petId,
-            cosmetic_skin: skinId
+            cosmetic_skin: skinId,
+            cosmetic_color: colorId,
+            cosmetic_visor: visorId,
+            cosmetic_nameplate: nameplateId
         });
 
         const cachedUser = this.getCached(this.userCache, clientId);

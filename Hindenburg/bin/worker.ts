@@ -196,7 +196,7 @@ async function fetchExternalIp(logger: Logger) {
 
     const ipSpinner = new Spinner("Fetching ip address.. %s").start();
     try {
-        cachedIp = (await makeHttpRequest("https://api.ipify.org")).toString("utf8");
+        cachedIp = (await makeHttpRequest("https://icanhazip.com")).toString("utf8");
         cachedIp = cachedIp.toString().trim();
         ipSpinner.success();
     } catch (e) {
@@ -367,7 +367,7 @@ async function checkConfigDeprecations(config: HindenburgConfig, configFilename:
     worker.logger.info("");
     worker.logger.info("Listening on:");
 
-    const listeningPort = worker.config.socket.port;
+    const listeningPort = worker.matchmaker?.port || worker.config.socket.port;
     if (!worker.config.logging.hideSensitiveInfo) {
         worker.logger.info(chalk.grey`External: ${chalk.white(externalIp)}:${listeningPort}`);
     }

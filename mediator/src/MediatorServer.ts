@@ -1,4 +1,4 @@
-import * as express from "express";
+import express from "express";
 import * as kleur from "kleur";
 import { DeclaredEndpointInformation, getAllEndpoints } from "./hooks";
 import { Transaction } from "./Transaction";
@@ -39,6 +39,8 @@ export class MediatorServer<RouteType extends { new(...args: any[]): any }> {
     constructor(public readonly config: MediatorServerConfig, name: string, ...args: ConstructorParameters<RouteType>) {
         this._routeInitArgs = args;
         this.expressServer = express();
+
+        this.expressServer.use(express.json({ limit: "10mb" }));
 
         this.expressServer.use((req, res, next) => {
             res.header("Access-Control-Allow-Origin", config.crossDomains.join(", "));

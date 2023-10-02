@@ -45,7 +45,7 @@ export class SoundService {
     ) {}
 
     async playSound(sound: Sound, position: Vector2, players: PlayerData<Room>[]) {
-        const spawnedObject = this.plugin.room.spawnPrefab(
+        const spawnedObject = this.plugin.room.spawnPrefabOfType(
             MouthwashSpawnType.SoundSource,
             -2,
             0,
@@ -81,7 +81,7 @@ export class SoundService {
             this.plugin.room.objectList.splice(idx, 1);
         }
 
-        const connections = this.plugin.room.getConnections(players, true);
+        const connections = this.plugin.room.getRealConnections(players);
         
         if (connections.length) {
             const ssWriter = HazelWriter.alloc(24);

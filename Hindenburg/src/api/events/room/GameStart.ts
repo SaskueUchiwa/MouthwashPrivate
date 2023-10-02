@@ -1,11 +1,12 @@
-import { RoomGameStartEvent as SkeldjsRoomGameStartEvent, Hostable } from "@skeldjs/core";
+import { RoomGameStartEvent as SkeldjsRoomGameStartEvent } from "@skeldjs/core";
 import { CancelableEvent } from "@skeldjs/events";
+import { Room } from "../../../worker";
 
-export class RoomGameStartEvent<RoomType extends Hostable = Hostable> extends SkeldjsRoomGameStartEvent<RoomType> implements CancelableEvent {
+export class RoomGameStartEvent extends SkeldjsRoomGameStartEvent implements CancelableEvent {
     canceled: boolean;
 
     constructor(
-        public readonly room: RoomType
+        public readonly room: Room
     ) {
         super(room);
 

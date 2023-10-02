@@ -1,5 +1,16 @@
-import { Hostable, Language, PlayerData, StringNames } from "@skeldjs/core";
-import { QuickChatMessageData, QuickChatPhraseMessageData, QuickChatPlayerMessageData, QuickChatSentenceMessageData } from "@skeldjs/protocol";
+import {
+    Hostable,
+    Language,
+    PlayerData,
+    StringNames
+} from "@skeldjs/core";
+
+import {
+    QuickChatComplexMessageData,
+    QuickChatMessageData,
+    QuickChatPlayerMessageData,
+    QuickChatSimpleMessageData
+} from "@skeldjs/protocol";
 
 import { AllTranslations } from "./translations";
 
@@ -15,7 +26,7 @@ export class TranslationController {
     constructor(public readonly room?: Hostable) {}
 
     private getPlayerName(playerId: number) {
-        return this.room?.getPlayerByPlayerId(playerId)?.info?.name || "";
+        return this.room?.getPlayerByPlayerId(playerId)?.playerInfo?.defaultOutfit.name || "";
     }
 
     private getQuickchatTranslation(stringName: StringNames, language: Language) {
@@ -37,7 +48,7 @@ export class TranslationController {
      * @param language The language of the string.
      * @returns The formatted string.
      */
-    formatString(str: string|StringNames, elements: (number|QuickChatPlayerMessageData|PlayerData)[], language: Language) {
+    formatString(str: string|StringNames, elements: (undefined|number|QuickChatSimpleMessageData|QuickChatPlayerMessageData|PlayerData)[], language: Language) {
         const translationString = typeof str === "string"
             ? str
             : this.getTranslation(str, language);
@@ -50,12 +61,16 @@ export class TranslationController {
                 return "";
             }
 
+            if (element instanceof QuickChatSimpleMessageData) {
+                return this.getTranslation(element.formatString, language);
+            }
+
             if (typeof element === "number") {
                 return this.getTranslation(element as StringNames, language);
             }
 
             if (element instanceof PlayerData) {
-                return element.info?.name || "";
+                return element.playerInfo?.defaultOutfit.name || "";
             }
 
             return this.getPlayerName(element.playerId);
@@ -93,9 +108,9 @@ export class TranslationController {
     serializeQuickChat(quickChatMessage: QuickChatMessageData, language: Language): string {
         if (quickChatMessage instanceof QuickChatPlayerMessageData) {
             return this.getPlayerName(quickChatMessage.playerId);
-        } else if (quickChatMessage instanceof QuickChatPhraseMessageData) {
+        } else if (quickChatMessage instanceof QuickChatSimpleMessageData) {
             return this.getTranslation(quickChatMessage.formatString as StringNames, language);
-        } else if (quickChatMessage instanceof QuickChatSentenceMessageData) {
+        } else if (quickChatMessage instanceof QuickChatComplexMessageData) {
             const formatTranslation = this.getQuickchatTranslation(quickChatMessage.formatString, language);
 
             if (typeof formatTranslation === "string") {
@@ -104,12 +119,14 @@ export class TranslationController {
 
             const elementTypes = [];
             for (const element of quickChatMessage.elements) {
-                if (element === StringNames.QCCrewNoOne) {
-                    elementTypes.push("QCCrewNoOne");
-                } else if (element === StringNames.QCCrewMe || element === StringNames.QCCrewI) {
-                    elementTypes.push("QCCrewMe");
-                } else {
-                    elementTypes.push("ANY");
+                if (element instanceof QuickChatSimpleMessageData) {
+                    if (element.formatString === StringNames.QCCrewNoOne) {
+                        elementTypes.push("QCCrewNoOne");
+                    } else if (element.formatString === StringNames.QCCrewMe || element.formatString === StringNames.QCCrewI) {
+                        elementTypes.push("QCCrewMe");
+                    } else {
+                        elementTypes.push("ANY");
+                    }
                 }
             }
 
@@ -126,5 +143,16 @@ export class TranslationController {
         }
 
         return "";
+    }
+
+    /**
+     * Get the translation string of a cosmetic.
+     * @param cosmeticId The ID of the cosmetic to get the name of.
+     * @param language The language to translate the cosmetic name into.
+     * @returns The cosmetic name as translated into the given language.
+     */
+    getCosmeticName(cosmeticId: string, language: Language) {
+        const cosmeticTranslations = AllTranslations[language]["Cosmetic"] as Record<string, string>;
+        return cosmeticTranslations[cosmeticId];
     }
 }

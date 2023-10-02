@@ -1,4 +1,3 @@
 export enum ResourceType {
-    AssetBundle,
-    Assembly
+    AssetBundle
 }

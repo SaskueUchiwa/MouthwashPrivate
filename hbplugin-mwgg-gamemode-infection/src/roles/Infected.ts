@@ -97,7 +97,7 @@ export class Infected extends Impostor {
         );
 
         this._killButton?.on("mwgg.button.click", async ev => {
-            if (!this._killButton || !this.isKillButtonEnabled() || this._killButton.currentTime > 0 || !this._killTarget || this.player.info?.isDead)
+            if (!this._killButton || !this.isKillButtonEnabled() || this._killButton.currentTime > 0 || !this._killTarget || this.player.playerInfo?.isDead)
                 return;
 
             if (this._killCooldown > 0) {
@@ -108,7 +108,7 @@ export class Infected extends Impostor {
             }
             await this.quietMurder(this._killTarget);
             this._totalInfections++;
-            this._killTarget.info?.setDead(false);
+            this._killTarget.playerInfo?.setDead(false);
             if (await this.checkForAllInfectedEndGame(this._killTarget))
                 return;
 

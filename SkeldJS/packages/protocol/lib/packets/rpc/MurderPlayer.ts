@@ -6,25 +6,25 @@ export class MurderPlayerMessage extends BaseRpcMessage {
     static messageTag = RpcMessageTag.MurderPlayer as const;
     messageTag = RpcMessageTag.MurderPlayer as const;
 
-    victimid: number;
+    victimNetId: number;
 
-    constructor(victimid: number) {
+    constructor(victimNetId: number) {
         super();
 
-        this.victimid = victimid;
+        this.victimNetId = victimNetId;
     }
 
     static Deserialize(reader: HazelReader) {
-        const victimid = reader.upacked();
+        const victimNetId = reader.upacked();
 
-        return new MurderPlayerMessage(victimid);
+        return new MurderPlayerMessage(victimNetId);
     }
 
     Serialize(writer: HazelWriter) {
-        writer.upacked(this.victimid);
+        writer.upacked(this.victimNetId);
     }
 
     clone() {
-        return new MurderPlayerMessage(this.victimid);
+        return new MurderPlayerMessage(this.victimNetId);
     }
 }
