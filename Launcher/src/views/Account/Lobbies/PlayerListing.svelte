@@ -26,7 +26,7 @@
     >
         <span class="block truncate max-w-35">{player.cosmetic_name || "Some player"}</span>
         {#if player.role_name !== undefined}
-            ({player.role_name || "Crewmate"})
+            &nbsp;({player.role_name || "Crewmate"})
         {/if}
     </span>
 </div>
