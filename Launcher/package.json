@@ -17,7 +17,6 @@
     "base64-arraybuffer": "^1.0.2",
     "emittery": "^1.0.1",
     "js-sha256": "^0.10.1",
-    "jszip": "^3.10.1",
     "stripe": "^13.7.0",
     "unzipit": "^1.4.3"
   },
