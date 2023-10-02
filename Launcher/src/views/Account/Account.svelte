@@ -136,12 +136,14 @@
                 {/if}
             </div>
         {/if}
-        <div class="min-h-0 flex flex-col bg-base-200 rounded-xl p-4 px-6 gap-2">
-            <span>Color</span>
-            <UserColorPicker
-                playerColor={$user === loading || $user === unavailable ? null : $user.cosmetic_color}
-                on:wear-color={onWearColor}/>
-        </div>
+        {#if currentPage === ""}
+            <div class="min-h-0 flex flex-col bg-base-200 rounded-xl p-4 px-6 gap-2">
+                <span>Color</span>
+                <UserColorPicker
+                    playerColor={$user === loading || $user === unavailable ? null : $user.cosmetic_color}
+                    on:wear-color={onWearColor}/>
+            </div>
+        {/if}
         <div class="min-h-0 flex-1 flex flex-col bg-base-200 rounded-xl p-4 px-6 gap-2">
             {#if $user === loading}
                 <div class="flex-1 flex items-center justify-center text-text-300">
