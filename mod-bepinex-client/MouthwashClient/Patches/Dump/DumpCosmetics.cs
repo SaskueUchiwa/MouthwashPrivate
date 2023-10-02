@@ -176,6 +176,7 @@ namespace MouthwashClient.Patches.Dump
             else
             {
                 WritePngForSpriteName(skinId, "main.png", skinData.ProductId.ToLower() + ".png");
+                WritePngForSpriteName(skinId, "thumb.png", skinData.ProductId.ToLower() + ".png");
             }
             NumAllLoaded++;
             AllAssets.Add(new AssetInfo
@@ -185,22 +186,25 @@ namespace MouthwashClient.Patches.Dump
                 use_player_color = skinViewData.MatchPlayerColor,
                 chip_offset = new AssetInfoVec2{ x = skinData.ChipOffset.x, y = skinData.ChipOffset.y },
                 main = skinData.ProductId == "skin_None" || skinViewData.IdleFrame == null ? null : new AssetFileReference{ file = "main.png", pivot = { x = skinViewData.IdleFrame.pivot.x, y = skinViewData.IdleFrame.pivot.y } },
-                thumb = skinData.ProductId == "skin_None" || skinData.SpritePreview == null ? null : new AssetFileReference{ file = "thumb.png", pivot = { x = skinData.SpritePreview.pivot.x, y = skinData.SpritePreview.pivot.y } }
+                thumb = skinData.ProductId == "skin_None" || skinViewData.IdleFrame == null ? null : new AssetFileReference{ file = "thumb.png", pivot = { x = skinViewData.IdleFrame.pivot.x, y = skinViewData.IdleFrame.pivot.y } }
             });
         }
 
         public static IEnumerator CoLoadVisorViewData(int visorId, VisorData visorData, AddressableAsset<VisorViewData> visorViewDataAddr)
         {
             yield return visorViewDataAddr.CoLoadAsync();
-            VisorViewData vkinViewData = visorViewDataAddr.GetAsset();
-            WritePngForSprite(visorId, "main.png", vkinViewData.IdleFrame);
+            VisorViewData visorViewData = visorViewDataAddr.GetAsset();
+            WritePngForSprite(visorId, "main.png", visorViewData.IdleFrame);
+            WritePngForSprite(visorId, "thumb.png", visorViewData.IdleFrame);
             NumAllLoaded++;
             AllAssets.Add(new AssetInfo
             {
                 type = "VISOR",
                 product_id = visorData.ProductId,
+                use_player_color = false,
                 chip_offset = new AssetInfoVec2{ x = visorData.ChipOffset.x, y = visorData.ChipOffset.y },
-                main = vkinViewData.IdleFrame == null ? null : new AssetFileReference{ file = "main.png", pivot = { x = vkinViewData.IdleFrame.pivot.x, y = vkinViewData.IdleFrame.pivot.y } },
+                main = visorViewData.IdleFrame == null ? null : new AssetFileReference{ file = "main.png", pivot = { x = visorViewData.IdleFrame.pivot.x, y = visorViewData.IdleFrame.pivot.y } },
+                thumb = visorViewData.IdleFrame == null ? null : new AssetFileReference{ file = "main.png", pivot = { x = visorViewData.IdleFrame.pivot.x, y = visorViewData.IdleFrame.pivot.y } }
             });
         }
 
