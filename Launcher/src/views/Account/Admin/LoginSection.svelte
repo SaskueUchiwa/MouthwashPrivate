@@ -4,7 +4,7 @@
     import Key from "../../../icons/Key.svelte";
     import { accountUrl, user } from "../../../stores/accounts";
     import ErrorNotes from "./ErrorNotes.svelte";
-    import Ellipsis from "../../icons/Ellipsis.svelte";
+    import Ellipsis from "../../../icons/Ellipsis.svelte";
     
     let errorMessages: string[] = [];
     let erroredInputs: Set<string> = new Set;

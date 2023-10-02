@@ -28,11 +28,11 @@
         "jszip": "^3.10.1",
         "mailgun.js": "^9.2.0",
         "mouthwash-mediator": "workspace:*",
-        "sharp": "^0.32.6",
-        "stripe": "^13.4.0",
         "node-mailjet": "^6.0.4",
         "pg": "^8.7.1",
-        "reflect-metadata": "0.1.13"
+        "reflect-metadata": "0.1.13",
+        "sharp": "^0.32.6",
+        "stripe": "^13.4.0"
     },
     "workspaces": [
         "lib"
