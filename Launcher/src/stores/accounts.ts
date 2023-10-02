@@ -20,6 +20,7 @@ export interface UserLogin {
     cosmetic_color: number;
     cosmetic_visor: string;
     cosmetic_nameplate: string;
+    bundle_previews: { id: string; url: string; hash: string; }[];
 }
 
 export interface GameLobbyInfo {
@@ -67,4 +68,9 @@ export interface Bundle {
 
 export type Deferred<T> = T|typeof loading|typeof unavailable;
 
-export const user = writable<Deferred<UserLogin>>(loading);
+const user = writable<Deferred<UserLogin>>(loading);
+user.subscribe(() => {
+
+});
+
+export { user };

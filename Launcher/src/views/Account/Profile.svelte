@@ -2,6 +2,7 @@
     import { createEventDispatcher } from "svelte";
     const dispatchEvent = createEventDispatcher();
 
+    import * as amongus from "@skeldjs/constant";
     import { get } from "svelte/store";
     import ArrowLeftRect from "../../icons/ArrowLeftRect.svelte";
     import ArrowRight from "../../icons/ArrowRight.svelte";
@@ -10,6 +11,7 @@
     import Swatch from "../../icons/Swatch.svelte";
     import type { LoadedCosmeticImages } from "../../lib/previewTypes";
     import CharacterOutfitPreview from "../Preview/CharacterOutfitPreview.svelte";
+    import { getPreviewAssetsByUrl } from "../../lib/previewAssets";
 
     export let user: UserLogin;
     export let page: ""|"games";
@@ -27,6 +29,16 @@
             visorCosmetic = cosmeticItem;
         }
     }
+
+    let isPreviewLoading = false;
+    $: user, (async () => {
+        isPreviewLoading = true;
+        const allAssets = (await Promise.all(user.bundle_previews.map(x => getPreviewAssetsByUrl(x.id, x.url, x.hash, true, false, null)))).flat();
+        hatCosmetic = user.cosmetic_hat === amongus.Hat.NoHat ? undefined : allAssets.find(x => x.asset.product_id === user.cosmetic_hat);
+        skinCosmetic = user.cosmetic_skin === amongus.Skin.None ? undefined : allAssets.find(x => x.asset.product_id === user.cosmetic_skin);
+        visorCosmetic = user.cosmetic_visor === amongus.Visor.EmptyVisor ? undefined : allAssets.find(x => x.asset.product_id === user.cosmetic_visor);
+        isPreviewLoading = false;
+    })();
 
     async function logoutAccount() {
         const logoutResponse = await fetch(get(accountUrl) + "/api/v2/auth/logout", {
@@ -54,7 +66,7 @@
 
 <div class="flex-1 flex flex-col items-center gap-4">
     <div class="flex flex-col items-center gap-2">
-        <CharacterOutfitPreview {hatCosmetic} {skinCosmetic} {visorCosmetic} playerColor={user.cosmetic_color}/>
+        <CharacterOutfitPreview {hatCosmetic} {skinCosmetic} {visorCosmetic} playerColor={user.cosmetic_color} loading={isPreviewLoading}/>
         <span class="text-stroke-black text-white italic text-2xl">{user.display_name}</span>
     </div>
     <span class="text-text-300 italic">Joined on {joinDateFormat.format(new Date(user.created_at))}</span>

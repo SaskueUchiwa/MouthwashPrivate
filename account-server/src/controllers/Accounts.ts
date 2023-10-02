@@ -65,6 +65,20 @@ export class AccountsController {
         return foundUsers[0] as User|undefined;
     }
 
+    async getUserByEmailWithCosmetics(email: string): Promise<(User & { preview_bundles_id_url_and_hash: string; })|undefined> {
+        const { rows: foundUsers } = await this.server.postgresClient.query(`
+            SELECT users.*, string_agg(bundle.id || '$$' || asset_bundle.preview_contents_url::character varying || '$$' || asset_bundle.preview_contents_hash, ',') AS preview_bundles_id_url_and_hash
+            FROM asset_bundle
+            LEFT JOIN bundle ON bundle.asset_bundle_id = asset_bundle.id
+            LEFT JOIN bundle_item ON bundle_item.bundle_id = bundle.id
+            RIGHT JOIN users ON bundle_item.among_us_id = users.cosmetic_hat OR bundle_item.among_us_id = users.cosmetic_skin OR bundle_item.among_us_id = users.cosmetic_visor
+            WHERE users.email = $1
+            GROUP BY users.id
+        `, [ email ]);
+
+        return foundUsers[0] as (User & { preview_bundles_id_url_and_hash: string; })|undefined;
+    }
+
     async getUserByDisplayName(displayName: string) {
         const { rows: foundUsers } = await this.server.postgresClient.query(`
             SELECT *
@@ -75,14 +89,18 @@ export class AccountsController {
         return foundUsers[0] as User|undefined;
     }
 
-    async getUserById(userId: string) {
+    async getUserById(userId: string): Promise<(User & { preview_bundles_id_url_and_hash: string; })|undefined> {
         const { rows: foundUsers } = await this.server.postgresClient.query(`
-            SELECT *
-            FROM users
-            WHERE id = $1
+            SELECT users.*, string_agg(bundle.id || '$$' || asset_bundle.preview_contents_url::character varying || '$$' || asset_bundle.preview_contents_hash, ',') AS preview_bundles_id_url_and_hash
+            FROM asset_bundle
+            LEFT JOIN bundle ON bundle.asset_bundle_id = asset_bundle.id
+            LEFT JOIN bundle_item ON bundle_item.bundle_id = bundle.id
+            RIGHT JOIN users ON bundle_item.among_us_id = users.cosmetic_hat OR bundle_item.among_us_id = users.cosmetic_skin OR bundle_item.among_us_id = users.cosmetic_visor
+            WHERE users.id = $1
+            GROUP BY users.id
         `, [ userId ]);
 
-        return foundUsers[0] as User|undefined;
+        return foundUsers[0] as (User & { preview_bundles_id_url_and_hash: string; })|undefined;
     }
 
     async createUser(displayName: string, email: string, password: string, emailVerified: boolean) {
