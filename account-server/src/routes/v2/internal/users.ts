@@ -19,7 +19,7 @@ export class UsersRoute extends BaseRoute {
         const user = await this.server.accountsController.getUserById(user_id);
         if (user === undefined) throw new UserNotFoundError({ id: user_id });
 
-        const cosmetics = await this.server.cosmeticsController.getAllBundlesOwnedByUserWithAsset(user.id);
+        const cosmetics = await this.server.cosmeticsController.getAllCosmeticItemAssetsOwnedByUser(user.id);
         const perks = await this.server.cosmeticsController.getUserPerks(user_id);
 
         transaction.respondJson({
