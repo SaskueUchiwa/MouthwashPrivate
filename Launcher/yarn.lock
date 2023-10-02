@@ -647,6 +647,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"base64-arraybuffer@npm:^1.0.2":
+  version: 1.0.2
+  resolution: "base64-arraybuffer@npm:1.0.2"
+  checksum: 15e6400d2d028bf18be4ed97702b11418f8f8779fb8c743251c863b726638d52f69571d4cc1843224da7838abef0949c670bde46936663c45ad078e89fee5c62
+  languageName: node
+  linkType: hard
+
 "binary-extensions@npm:^2.0.0":
   version: 2.2.0
   resolution: "binary-extensions@npm:2.2.0"
@@ -1417,6 +1424,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"js-sha256@npm:^0.10.1":
+  version: 0.10.1
+  resolution: "js-sha256@npm:0.10.1"
+  checksum: 6eb5c9f95aa902cec1930f036deb3bc664024b75fede456c0ac74b855797776c18620f47efec36787077a56ba2f3b8d6aacc7733ff8a2b5bb9ce6b655a35c5e6
+  languageName: node
+  linkType: hard
+
 "jszip@npm:^3.10.1":
   version: 3.10.1
   resolution: "jszip@npm:3.10.1"
@@ -1693,7 +1707,9 @@ __metadata:
     "@tauri-apps/api": ^1.4.0
     "@tauri-apps/cli": ^1.4.0
     "@tsconfig/svelte": ^5.0.0
+    base64-arraybuffer: ^1.0.2
     emittery: ^1.0.1
+    js-sha256: ^0.10.1
     jszip: ^3.10.1
     stripe: ^13.7.0
     svelte: ^4.0.5
@@ -1701,6 +1717,7 @@ __metadata:
     svelte-preprocess: ^5.0.0
     tslib: ^2.6.0
     typescript: latest
+    unzipit: ^1.4.3
     vite: ^4.4.4
     vite-plugin-windicss: ^1.9.1
   languageName: unknown
@@ -2456,10 +2473,26 @@ __metadata:
   languageName: node
   linkType: hard
 
+"unzipit@npm:^1.4.3":
+  version: 1.4.3
+  resolution: "unzipit@npm:1.4.3"
+  dependencies:
+    uzip-module: ^1.0.2
+  checksum: ce29348edab7b5fb5b7b4d43437f48e35812ac8b3cc2d76efd1acfcad6dd1b96b4f96bfd03250a724b87ba99dd531d7727ad24b590acf727dde79f54f5e779ed
+  languageName: node
+  linkType: hard
+
 "util-deprecate@npm:^1.0.1, util-deprecate@npm:~1.0.1":
   version: 1.0.2
   resolution: "util-deprecate@npm:1.0.2"
   checksum: 474acf1146cb2701fe3b074892217553dfcf9a031280919ba1b8d651a068c9b15d863b7303cb15bd00a862b498e6cf4ad7b4a08fb134edd5a6f7641681cb54a2
+  languageName: node
+  linkType: hard
+
+"uzip-module@npm:^1.0.2":
+  version: 1.0.3
+  resolution: "uzip-module@npm:1.0.3"
+  checksum: fc286c44a04d75055577fae8293d3fee499d1e850f87e88c158b1e3657f4794a3a40ca2d34f73474ff82917176dd5ca9d1c0d1e375a083714e11afabd3afa423
   languageName: node
   linkType: hard
 

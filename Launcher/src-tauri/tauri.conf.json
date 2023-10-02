@@ -22,12 +22,12 @@
         "createDir": true,
         "exists": true,
         "readDir": true,
-        "readFile": false,
+        "readFile": true,
         "removeDir": true,
         "removeFile": false,
         "renameFile": true,
         "scope": [ "**" ],
-        "writeFile": false
+        "writeFile": true
       },
       "dialog": {
         "all": false,

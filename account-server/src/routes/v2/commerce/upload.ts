@@ -3,6 +3,7 @@ import * as undici from "undici";
 import * as crypto from "crypto";
 import * as ark from "arktype";
 import * as express from "express";
+import * as fs from "fs/promises";
 import JSZip from "jszip";
 import { BaseRoute } from "../../BaseRoute";
 import { ForbiddenError, InvalidBodyError } from "../../../errors";
@@ -111,7 +112,6 @@ export class UploadRoute extends BaseRoute {
         const { data, problems } = uploadCosmeticBundleBodyValidator.bundle_data_info(transaction.getBody());
         if (data === undefined) throw new InvalidBodyError(problems);
         const bundleData = Buffer.from(data.bundle_data_base_64, "base64");
-
         const hash = crypto.createHash("sha256").update(bundleData).digest("hex").toUpperCase();
 
         const bundleMeta: any = {
@@ -165,7 +165,7 @@ export class UploadRoute extends BaseRoute {
         const spritesArchiveData = await bundleAssetsZip.generateAsync({ type: "nodebuffer" });
         const spritesArchiveHash = crypto.createHash("sha256").update(spritesArchiveData).digest("hex").toUpperCase();
 
-        await this.uploadFileToBucket("MouthwashAssets/" + data.file_uuid + "-assets.zip", spritesArchiveData, "application/octet-stream");
+        await this.uploadFileToBucket("MouthwashAssets/" + data.file_uuid + "-assets", spritesArchiveData, "application/octet-stream");
         await this.uploadFileToBucket("MouthwashAssets/" + data.file_uuid, bundleData, "application/octet-stream");
         await this.uploadFileToBucket("MouthwashAssets/" + data.file_uuid + ".sha256", Buffer.from(hash), "text/plain");
         await this.uploadFileToBucket("MouthwashAssets/" + data.file_uuid + ".json", Buffer.from(JSON.stringify(bundleMeta), "utf8"), "application/json");
@@ -183,12 +183,12 @@ export class UploadRoute extends BaseRoute {
                 UPDATE asset_bundle
                 SET url = $2, hash = $3, preview_contents_url = $4, preview_contents_hash = $5
                 WHERE id = $1
-            `, [ data.file_uuid, fileUrl, hash, fileUrl + "-assets.zip", spritesArchiveHash ]);
+            `, [ data.file_uuid, fileUrl, hash, fileUrl + "-assets", spritesArchiveHash ]);
         } else {
             await this.server.postgresClient.query(`
                 INSERT INTO asset_bundle(id, url, hash, preview_contents_url, preview_contents_hash)
                 VALUES ($1, $2, $3, $4, $5)
-            `, [ data.file_uuid, fileUrl, hash, fileUrl + "-assets.zip", spritesArchiveHash ]);
+            `, [ data.file_uuid, fileUrl, hash, fileUrl + "-assets", spritesArchiveHash ]);
         }
 
         transaction.respondJson({});
