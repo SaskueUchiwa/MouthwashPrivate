@@ -115,7 +115,7 @@
             </div>
             {#if Array.isArray($ownedBundles)}
                 {#if $ownedBundles.length === 0}
-                    <div class="mt-12 self-center flex flex-col items-center justify-center gap-2">
+                    <div class="mt-5 self-center flex flex-col items-center justify-center gap-2">
                         <p>You don't have any bundles purchased.<br>Head to the shop to show off your style.</p>
                         <button class="rounded-lg bg-card-200 px-4 py-1 hover:bg-card-300 hover:text-text-300 filter border-none font-inherit text-inherit text-inherit cursor-pointer flex items-center gap-2"
                             on:click={goToShop}
