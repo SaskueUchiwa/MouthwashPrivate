@@ -61,7 +61,7 @@
         feature_tags: "",
         preview_contents_url: "/CosmeticOfficial.zip",
         preview_contents_hash: "",
-        num_items: 61,
+        num_items: 75,
         owned_at: null
     };
 

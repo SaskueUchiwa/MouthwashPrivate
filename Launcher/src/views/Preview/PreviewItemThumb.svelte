@@ -19,6 +19,15 @@
         dispatchEvent("wear-item", cosmeticImage);
         selectedItemId = cosmeticImage.asset.product_id;
     }
+
+    let offset: { x: number; y: number; } = { x: 0, y: 0 };
+    $: if (cosmeticImage.asset.type === "HAT") {
+        offset = { x: cosmeticImage.asset.chip_offset.x * 100, y: 15 - cosmeticImage.asset.chip_offset.y * 100 };
+    } else if (cosmeticImage.asset.type === "SKIN") {
+        offset = { x: cosmeticImage.asset.chip_offset.x * 100, y: -10 - cosmeticImage.asset.chip_offset.y * 100 };
+    } else if (cosmeticImage.asset.type === "VISOR") {
+        offset = { x: cosmeticImage.asset.chip_offset.x * 100, y: -5 - cosmeticImage.asset.chip_offset.y * 100 };
+    }
 </script>
 
 <button
@@ -35,7 +44,7 @@
     <div class="transition duration-250 transform group-hover:scale-115 w-full h-full">
         <ItemCanvas
             layers={[ { ...cosmeticImage.thumb, scale: thumbScale } ]}
-            offset={{ x: cosmeticImage.asset.chip_offset.x * 100, y: 15 - cosmeticImage.asset.chip_offset.y * 100 }}
+            {offset}
             {playerColor}
             />
     </div>

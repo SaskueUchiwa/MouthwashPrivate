@@ -55,7 +55,7 @@ async function formatHatCosmetic(archive, baseAssetPath, assetMetadata, referenc
  * @param {sharp.Metadata} referenceDimensions 
  */
 async function formatSkinCosmetic(archive, baseAssetPath, assetMetadata, referenceDimensions) {
-    const pivotCentre = { x: 0, y: 0 };
+    const pivotCentre = { x: 0, y: -66 };
     archive.folder(baseAssetPath);
     if (assetMetadata.main) await formatImage(archive, path.join(baseAssetPath, assetMetadata.main.file), assetMetadata.main.pivot, pivotCentre, referenceDimensions);
     if (assetMetadata.back) await formatImage(archive, path.join(baseAssetPath, assetMetadata.back.file), assetMetadata.back.pivot, pivotCentre, referenceDimensions);

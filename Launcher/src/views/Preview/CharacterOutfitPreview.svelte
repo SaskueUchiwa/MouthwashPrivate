@@ -4,29 +4,41 @@
     import ItemCanvas from "./ItemCanvas.svelte";
 
     export let hatCosmetic: LoadedCosmeticImages|undefined;
+    export let skinCosmetic: LoadedCosmeticImages|undefined;
+    export let visorCosmetic: LoadedCosmeticImages|undefined;
     export let playerColor: amongus.Color;
 
     const colorImage = new Image;
     colorImage.src = `/Template_Color.png`;
 
     $: loadedColorImage = colorImage ? { img: colorImage, material: "player", pivot: { x: 0, y: 0 }, scale: 1 } as LoadedCosmeticImage : undefined;
+
+    let layers: LoadedCosmeticImage[] = [ loadedColorImage ];
+    $: loadedColorImage, visorCosmetic, skinCosmetic, hatCosmetic, (() => {
+        layers = [ loadedColorImage ];
+        if (visorCosmetic) {
+            layers.push(visorCosmetic.main);
+        }
+        if (skinCosmetic) {
+            layers.push(skinCosmetic.main);
+        }
+        if (hatCosmetic) {
+            if (hatCosmetic.asset.in_front) {
+                layers.unshift(hatCosmetic.back);
+                layers.push(hatCosmetic.main);
+            } else {
+                layers.unshift(hatCosmetic.back, hatCosmetic.main);
+            }
+        }
+        layers = layers;
+    })();
 </script>
 
 <div class="w-40 h-45 relative">
     <div class="absolute w-80 h-120 -bottom-3/5 -left-1/2">
-        {#if hatCosmetic}
-            {#key hatCosmetic}
-                {#if hatCosmetic.asset.in_front}
-                    <ItemCanvas
-                        layers={[ hatCosmetic.back, loadedColorImage, hatCosmetic.main ]} {playerColor} offset={{ x: 0, y: 0 }}/>
-                {:else}
-                    <ItemCanvas
-                        layers={[ hatCosmetic.back, hatCosmetic.main, loadedColorImage ]} {playerColor} offset={{ x: 0, y: 0 }}/>
-                {/if}
-            {/key}
-        {:else}
+        {#key layers}
             <ItemCanvas
-                layers={[ loadedColorImage ]} {playerColor} offset={{ x: 0, y: 0 }}/>
-        {/if}
+                {layers} {playerColor} offset={{ x: 0, y: 0 }}/>
+        {/key}
     </div>
 </div>

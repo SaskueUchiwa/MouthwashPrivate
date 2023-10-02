@@ -46,7 +46,7 @@
                 </p>-->
                 <div class="flex flex-1 w-full">
                     <div class="flex-1 w-full h-full flex justify-center items-center px-8">
-                        <CharacterOutfitPreview {playerColor} {hatCosmetic}/>
+                        <CharacterOutfitPreview {playerColor} {hatCosmetic} {skinCosmetic} {visorCosmetic}/>
                     </div>
                 </div>
             </div>

@@ -54,7 +54,7 @@
 
 <div class="flex-1 flex flex-col items-center gap-4">
     <div class="flex flex-col items-center gap-2">
-        <CharacterOutfitPreview bind:hatCosmetic playerColor={user.cosmetic_color}/>
+        <CharacterOutfitPreview {hatCosmetic} {skinCosmetic} {visorCosmetic} playerColor={user.cosmetic_color}/>
         <span class="text-stroke-black text-white italic text-2xl">{user.display_name}</span>
     </div>
     <span class="text-text-300 italic">Joined on {joinDateFormat.format(new Date(user.created_at))}</span>
