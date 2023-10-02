@@ -314,38 +314,26 @@
                 class:pointer-events-none={resetPasswordId !== null}
             >
                 <div class="p-2 bg-card-200 rounded-l-lg"><Email size={20}/></div>
-                <input class="border-none font-inherit text-inherit text-md outline-none rounded-r-lg bg-card-200 w-64" placeholder="Email" bind:value={email}>
-            </div>
-            <div class="flex border-2 border-transparent rounded-lg" class:border-red-500={erroredInputs.has("password")}>
-                <div class="p-2 bg-card-200 rounded-l-lg"><Key size={20}/></div>
-                <input class="border-none font-inherit text-inherit text-md outline-none rounded-r-lg bg-card-200 w-64" placeholder="Password" type="password" bind:value={password}>
-            </div>
-            <button class="rounded-lg bg-card-200 px-4 py-1 hover:bg-card-300 hover:text-text-300 filter border-none font-inherit text-inherit text-inherit cursor-pointer"
-                class:grayscale={loadingLogin}
-                class:pointer-events-none={loadingLogin}
-                on:click={logInToAccount}
-            >
-                <div class="p-2 bg-[#27063e] rounded-l-lg"><Email size={20}/></div>
                 <input
-                    class="border-none font-inherit text-inherit text-md outline-none rounded-r-lg bg-[#27063e] w-64"
+                    class="border-none font-inherit text-inherit text-md outline-none rounded-r-lg bg-card-200 w-64"
                     placeholder="Email"
                     bind:value={email}
                     readonly={resetPasswordId !== null}>
-            </button>
+            </div>
             {#if resetPasswordId !== null}
                 <div
                     class="flex border-2 border-transparent rounded-lg" class:border-red-500={erroredInputs.has("reset-code")}
                 >
-                    <div class="p-2 bg-[#27063e] rounded-l-lg"><Ellipsis size={20}/></div>
-                    <input class="border-none font-inherit text-inherit text-md outline-none rounded-r-lg bg-[#27063e] w-64" placeholder="Reset Code" bind:value={resetCode}>
+                    <div class="p-2 bg-card-200 rounded-l-lg"><Ellipsis size={20}/></div>
+                    <input class="border-none font-inherit text-inherit text-md outline-none rounded-r-lg bg-card-200 w-64" placeholder="Reset Code" bind:value={resetCode}>
                 </div>
                 <div
                     class="flex border-2 border-transparent rounded-lg" class:border-red-500={erroredInputs.has("new-password")}
                 >
-                    <div class="p-2 bg-[#27063e] rounded-l-lg"><Key size={20}/></div>
-                    <input class="border-none font-inherit text-inherit text-md outline-none rounded-r-lg bg-[#27063e] w-64" placeholder="New Password" type="password" bind:value={newPassword}>
+                    <div class="p-2 bg-card-200 rounded-l-lg"><Key size={20}/></div>
+                    <input class="border-none font-inherit text-inherit text-md outline-none rounded-r-lg bg-card-200 w-64" placeholder="New Password" type="password" bind:value={newPassword}>
                 </div>
-                <button class="rounded-lg bg-[#27063e] px-4 py-1 hover:bg-[#1C072B] hover:text-[#bba1ce] filter border-none font-inherit text-inherit text-inherit cursor-pointer"
+                <button class="rounded-lg bg-card-200 px-4 py-1 hover:bg-card-300 hover:text-text-300 filter border-none font-inherit text-inherit text-inherit cursor-pointer"
                     class:grayscale={loadingResetPassword}
                     class:pointer-events-none={loadingResetPassword}
                     on:click={finaliseResetPassword}
@@ -358,16 +346,16 @@
                     class:grayscale={isResettingPassword}
                     class:pointer-events-none={isResettingPassword}
                 >
-                    <div class="p-2 bg-[#27063e] rounded-l-lg"><Key size={20}/></div>
+                    <div class="p-2 bg-card-200 rounded-l-lg"><Key size={20}/></div>
                     <input
-                        class="border-none font-inherit text-inherit text-md outline-none rounded-r-lg bg-[#27063e] w-64"
+                        class="border-none font-inherit text-inherit text-md outline-none rounded-r-lg bg-card-200 w-64"
                         placeholder="Password"
                         type="password"
                         readonly={isResettingPassword}
                         bind:value={password}>
                 </div>
                 {#if isResettingPassword}
-                    <button class="rounded-lg bg-[#27063e] px-4 py-1 hover:bg-[#1C072B] hover:text-[#bba1ce] filter border-none font-inherit text-inherit text-inherit cursor-pointer"
+                    <button class="rounded-lg bg-card-200 px-4 py-1 hover:bg-card-300 hover:text-text-300 filter border-none font-inherit text-inherit text-inherit cursor-pointer"
                         class:grayscale={loadingRequestResetPassword || resetPasswordId !== null}
                         class:pointer-events-none={loadingRequestResetPassword || resetPasswordId !== null}
                         on:click={requestPasswordReset}
@@ -375,7 +363,7 @@
                         Request Password Reset
                     </button>
                 {:else}
-                    <button class="rounded-lg bg-[#27063e] px-4 py-1 hover:bg-[#1C072B] hover:text-[#bba1ce] filter border-none font-inherit text-inherit text-inherit cursor-pointer"
+                    <button class="rounded-lg bg-card-200 px-4 py-1 hover:bg-card-300 hover:text-text-300 filter border-none font-inherit text-inherit text-inherit cursor-pointer"
                         class:grayscale={loadingLogin}
                         class:pointer-events-none={loadingLogin}
                         on:click={logInToAccount}
