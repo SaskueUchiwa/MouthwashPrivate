@@ -1,16 +1,12 @@
-export interface AssetsListingMetadataAsset {
-    type: string;
-}
-
 export interface SpriteFileReference {
     file: string;
     pivot: { x: number; y: number; };
 }
 
-export interface AssetsListingMetadataAssetHat extends AssetsListingMetadataAsset {
-    type: "HAT";
+export interface AssetsListingMetadataAsset {
+    type: "HAT"|"SKIN"|"VISOR";
     chip_offset: { x: number; y: number; };
-    player_material: boolean;
+    use_player_color: boolean;
     product_id: string;
     in_front: boolean;
     main?: SpriteFileReference|null;
@@ -25,7 +21,7 @@ export interface AssetsListingMetadataAssetHat extends AssetsListingMetadataAsse
 }
 
 export interface AssetsListingMetadata {
-    assets: AssetsListingMetadataAssetHat[];
+    assets: AssetsListingMetadataAsset[];
 }
 
 export interface LoadedCosmeticImage {
@@ -39,8 +35,8 @@ export interface LoadedBaseCosmeticImages {
     asset: AssetsListingMetadataAsset;
 }
 
-export interface LoadedHatCosmeticImages extends LoadedBaseCosmeticImages {
-    asset: AssetsListingMetadataAssetHat;
+export interface LoadedCosmeticImages extends LoadedBaseCosmeticImages {
+    asset: AssetsListingMetadataAsset;
     main?: LoadedCosmeticImage;
     back?: LoadedCosmeticImage;
     left_main?: LoadedCosmeticImage;
@@ -51,5 +47,3 @@ export interface LoadedHatCosmeticImages extends LoadedBaseCosmeticImages {
     left_floor?: LoadedCosmeticImage;
     thumb?: LoadedCosmeticImage;
 }
-
-export type SomeLoadedCosmeticImages = LoadedHatCosmeticImages;

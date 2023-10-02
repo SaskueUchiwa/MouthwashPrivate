@@ -10,7 +10,7 @@
     import jsShaHashes from "js-sha256";
     import type { Bundle } from "../../stores/accounts";
     import { onMount } from "svelte";
-    import type { AssetsListingMetadata, LoadedCosmeticImage, LoadedHatCosmeticImages, SpriteFileReference } from "../../lib/previewTypes";
+    import type { AssetsListingMetadata, LoadedCosmeticImage, LoadedCosmeticImages, SpriteFileReference } from "../../lib/previewTypes";
     import PreviewItemThumb from "./PreviewItemThumb.svelte";
     import Loader from "../../icons/Loader.svelte";
     import Plus from "../../icons/Plus.svelte";
@@ -70,7 +70,8 @@
     async function loadCosmeticSpriteAsImage(entries: Record<string, unzipit.ZipEntry>, assetId: number, material: "default"|"player", spriteFileReference: SpriteFileReference|undefined|null): Promise<LoadedCosmeticImage|undefined> {
         if (spriteFileReference === undefined || spriteFileReference === null) return undefined;
 
-        const spriteFileData = await entries[`${assetId}/${spriteFileReference.file}`].arrayBuffer();
+        const spriteFileData = await entries[`${assetId}/${spriteFileReference.file}`]?.arrayBuffer();
+        if (spriteFileData === undefined) return undefined;
         const spriteFileBase64 = b64ab.encode(spriteFileData);
 
         const img = new Image;
@@ -78,7 +79,7 @@
         return { img, material, pivot: spriteFileReference.pivot, scale: isOfficial ? 1 : 0.5 };
     }
 
-    let loadedCosmeticImages: LoadedHatCosmeticImages[] = [];
+    let loadedCosmeticImages: LoadedCosmeticImages[] = [];
     let loadingCosmetics = true;
     let hasMore = false;
     onMount(async () => {
@@ -90,21 +91,19 @@
         let i = 0;
         for (; i < (showMax !== null ? Math.min(showMax, metadata.assets.length) : metadata.assets.length); i++) {
             const asset = metadata.assets[i];
-            if (asset.type === "HAT") {
-                const material = asset.player_material ? "player" : "default";
-                loadedCosmeticImages.push({
-                    asset,
-                    main: await loadCosmeticSpriteAsImage(entries, i, material, asset.main),
-                    back: await loadCosmeticSpriteAsImage(entries, i, material, asset.back),
-                    left_main: await loadCosmeticSpriteAsImage(entries, i, material, asset.left_main),
-                    left_back: await loadCosmeticSpriteAsImage(entries, i, material, asset.left_back),
-                    climb: await loadCosmeticSpriteAsImage(entries, i, material, asset.climb),
-                    floor: await loadCosmeticSpriteAsImage(entries, i, material, asset.floor),
-                    left_climb: await loadCosmeticSpriteAsImage(entries, i, material, asset.left_climb),
-                    left_floor: await loadCosmeticSpriteAsImage(entries, i, material, asset.left_floor),
-                    thumb: await loadCosmeticSpriteAsImage(entries, i, material, asset.thumb)
-                });
-            }
+            const material = asset.use_player_color ? "player" : "default";
+            loadedCosmeticImages.push({
+                asset,
+                main: await loadCosmeticSpriteAsImage(entries, i, material, asset.main),
+                back: await loadCosmeticSpriteAsImage(entries, i, material, asset.back),
+                left_main: await loadCosmeticSpriteAsImage(entries, i, material, asset.left_main),
+                left_back: await loadCosmeticSpriteAsImage(entries, i, material, asset.left_back),
+                climb: await loadCosmeticSpriteAsImage(entries, i, material, asset.climb),
+                floor: await loadCosmeticSpriteAsImage(entries, i, material, asset.floor),
+                left_climb: await loadCosmeticSpriteAsImage(entries, i, material, asset.left_climb),
+                left_floor: await loadCosmeticSpriteAsImage(entries, i, material, asset.left_floor),
+                thumb: await loadCosmeticSpriteAsImage(entries, i, material, asset.thumb)
+            });
         }
         hasMore = i != metadata.assets.length;
         loadedCosmeticImages = loadedCosmeticImages;

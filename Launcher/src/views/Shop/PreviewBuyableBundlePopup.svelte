@@ -3,7 +3,7 @@
     const dispatchEvent = createEventDispatcher();
 
     import * as amongus from "@skeldjs/constant";
-    import type { LoadedHatCosmeticImages, SomeLoadedCosmeticImages } from "../../lib/previewTypes";
+    import type { LoadedCosmeticImages } from "../../lib/previewTypes";
     import { type Bundle } from "../../stores/accounts";
     import BundlePreviewList from "../Account/Cosmetics/BundlePreviewList.svelte";
     import CharacterOutfitPreview from "../Preview/CharacterOutfitPreview.svelte";
@@ -13,13 +13,19 @@
     export let playerColor: amongus.Color;
 
     let selectedItemId = "";
-    let hatCosmetic: LoadedHatCosmeticImages|undefined = undefined;
+    let hatCosmetic: LoadedCosmeticImages|undefined = undefined;
+    let skinCosmetic: LoadedCosmeticImages|undefined = undefined;
+    let visorCosmetic: LoadedCosmeticImages|undefined = undefined;
 
     let bundlePreviewList: BundlePreviewList|undefined = undefined;
 
-    function wearItem(cosmeticItem: SomeLoadedCosmeticImages) {
+    function wearItem(cosmeticItem: LoadedCosmeticImages) {
         if (cosmeticItem.asset.type === "HAT") {
             hatCosmetic = cosmeticItem;
+        } else if (cosmeticItem.asset.type === "SKIN") {
+            skinCosmetic = cosmeticItem;
+        } else if (cosmeticItem.asset.type === "VISOR") {
+            visorCosmetic = cosmeticItem;
         }
     }
 

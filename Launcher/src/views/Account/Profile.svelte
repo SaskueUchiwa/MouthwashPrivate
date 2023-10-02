@@ -8,17 +8,23 @@
     import Link from "../../icons/Link.svelte";
     import { accountUrl, type UserLogin } from "../../stores/accounts";
     import Swatch from "../../icons/Swatch.svelte";
-    import type { LoadedHatCosmeticImages, SomeLoadedCosmeticImages } from "../../lib/previewTypes";
+    import type { LoadedCosmeticImages } from "../../lib/previewTypes";
     import CharacterOutfitPreview from "../Preview/CharacterOutfitPreview.svelte";
 
     export let user: UserLogin;
     export let page: ""|"games";
 
-    let hatCosmetic: LoadedHatCosmeticImages|undefined = undefined;
+    let hatCosmetic: LoadedCosmeticImages|undefined = undefined;
+    let skinCosmetic: LoadedCosmeticImages|undefined = undefined;
+    let visorCosmetic: LoadedCosmeticImages|undefined = undefined;
 
-    export function wearItem(cosmeticItem: SomeLoadedCosmeticImages) {
+    export function wearItem(cosmeticItem: LoadedCosmeticImages) {
         if (cosmeticItem.asset.type === "HAT") {
             hatCosmetic = cosmeticItem;
+        } else if (cosmeticItem.asset.type === "SKIN") {
+            skinCosmetic = cosmeticItem;
+        } else if (cosmeticItem.asset.type === "VISOR") {
+            visorCosmetic = cosmeticItem;
         }
     }
 

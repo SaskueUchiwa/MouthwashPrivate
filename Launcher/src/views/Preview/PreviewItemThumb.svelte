@@ -3,10 +3,10 @@
     import { createEventDispatcher } from "svelte";
     const dispatchEvent = createEventDispatcher();
 
-    import type { LoadedHatCosmeticImages } from "../../lib/previewTypes";
+    import type { LoadedCosmeticImages } from "../../lib/previewTypes";
     import ItemCanvas from "./ItemCanvas.svelte";
 
-    export let cosmeticImage: LoadedHatCosmeticImages;
+    export let cosmeticImage: LoadedCosmeticImages;
     export let searchTerm: string;
     export let selectedItemId: string|null;
     export let thumbScale: number;

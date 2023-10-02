@@ -9,7 +9,7 @@
     import { get } from "svelte/store";
     import UserGames from "./Lobbies/UserGames.svelte";
     import UserCosmetics from "./Cosmetics/UserCosmetics.svelte";
-    import type { SomeLoadedCosmeticImages } from "../../lib/previewTypes";
+    import type { LoadedCosmeticImages } from "../../lib/previewTypes";
     import UserColorPicker from "./Cosmetics/UserColorPicker.svelte";
     
     let currentPage: ""|"games" = "";
@@ -26,7 +26,7 @@
         await userCosmetics?.openBundle(bundleId);
     }
 
-    function onWearItem(ev: CustomEvent<SomeLoadedCosmeticImages>) {
+    function onWearItem(ev: CustomEvent<LoadedCosmeticImages>) {
         profileSection?.wearItem(ev.detail);
     }
 

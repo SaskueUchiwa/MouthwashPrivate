@@ -1,9 +1,9 @@
 <script lang="ts">
     import * as amongus from "@skeldjs/constant";
-    import type { LoadedCosmeticImage, LoadedHatCosmeticImages } from "../../lib/previewTypes";
+    import type { LoadedCosmeticImage, LoadedCosmeticImages } from "../../lib/previewTypes";
     import ItemCanvas from "./ItemCanvas.svelte";
 
-    export let hatCosmetic: LoadedHatCosmeticImages|undefined;
+    export let hatCosmetic: LoadedCosmeticImages|undefined;
     export let playerColor: amongus.Color;
 
     const colorImage = new Image;
