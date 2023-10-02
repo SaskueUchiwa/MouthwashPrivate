@@ -54,7 +54,7 @@
         materialApplicationCtx.drawImage(img, 0, 0, actualWidth, actualHeight);
 
         // Adapted from https://github.com/edqx/MouthwashUnity/blob/master/Assets/Mods/BundleCosmetics/BlendPlayerShader.shader
-        const _Tolerance = 255;
+        const _Tolerance = 9000;
         const _BodyColor = normaliseColor(audata.ColorCodes[playerColor].highlightRGB as RGB);
         const _BackColor = normaliseColor(audata.ColorCodes[playerColor].shadowRGB as RGB);
         const _VisorColor = normaliseColor([ 149, 202, 220 ] as RGB);

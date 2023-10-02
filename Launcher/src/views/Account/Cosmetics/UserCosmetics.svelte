@@ -2,7 +2,6 @@
     import { createEventDispatcher, onMount } from "svelte";
     const dispatchEvent = createEventDispatcher();
 
-    import * as audata from "@skeldjs/data";
     import { writable } from "svelte/store";
     import Loader from "../../../icons/Loader.svelte";
     import { type UserLogin, accountUrl, loading, unavailable, type Bundle } from "../../../stores/accounts";
@@ -92,54 +91,47 @@
             {#if Array.isArray($ownedBundles)}
                 {@const bundle = selectedBundleId === officialBundle.id ? officialBundle : $ownedBundles.find(x => x.id === selectedBundleId)}
                 {#if bundle}
-                    <BundlePreviewList {bundle} playerColor={user.cosmetic_color} isOfficial={selectedBundleId === officialBundle.id} bind:selectedItemId on:wear-item/>
+                    <BundlePreviewList
+                        small={true}
+                        playerColor={user.cosmetic_color}
+                        isOfficial={selectedBundleId === officialBundle.id}
+                        {bundle}
+                        bind:selectedItemId
+                        on:wear-item/>
                 {/if}
             {/if}
         </div>
     {/if}
-    <div class="flex flex-col gap-2 min-h-0 overflow-auto w-full" class:hidden={selectedBundleId !== undefined}>
-        <span>Color</span>
-        <div class="flex flex-wrap max-w-4/5">
-            {#each Object.entries(audata.ColorCodes) as [ colorId, color ]}
-                <button
-                    class="p-1 border-2 rounded-lg"
-                    class:border-transparent={parseInt(colorId) !== user.cosmetic_color}
-                    class:hover:border-text-300={parseInt(colorId) !== user.cosmetic_color}
-                    class:border-text-200={parseInt(colorId) === user.cosmetic_color}
-                    on:click={() => dispatchEvent("wear-color", parseInt(colorId))}>
-                    <div class="w-8 h-8 rounded-lg" style="background: linear-gradient(45deg, #{color.shadowHex} 0%, #{color.shadowHex} 30%, #{color.highlightHex} 70%, #{color.highlightHex} 100%)">
-        
-                    </div>
-                </button>
-            {/each}
-        </div>
+    <div class="flex flex-col gap-2 min-h-0" class:hidden={selectedBundleId !== undefined}>
         <span>Owned Bundles</span>
         <p class="text-text-300 italic text-sm text-left">
             These are the bundles you've bought or otherwise own. You can change your cosmetics by clicking the bundles
             below. <button class="text-text-200" on:click={goToShop}>Visit the shop</button> to purchase more, or join
             the discord to stay tuned for exclusive events.
         </p>
-        <div class="flex flex-col gap-4">
-            <CosmeticBundle bundleInfo={officialBundle} on:select-bundle={() => selectBundle(officialBundle)} on:wear-item/>
-        </div>
-        {#if Array.isArray($ownedBundles)}
-            {#if $ownedBundles.length === 0}
-                <div class="mt-12 self-center flex flex-col items-center justify-center gap-2">
-                    <p>You don't have any bundles purchased.<br>Head to the shop to show off your style.</p>
-                    <button class="rounded-lg bg-card-200 px-4 py-1 hover:bg-card-300 hover:text-text-300 filter border-none font-inherit text-inherit text-inherit cursor-pointer flex items-center gap-2"
-                        on:click={goToShop}
-                    >
-                        <span>View the Shop</span>
-                        <ArrowRight size={16}/>
-                    </button>
-                </div>
-            {:else}
-                {#each $ownedBundles as bundleInfo}
-                    <div class="flex flex-col gap-4">
-                        <CosmeticBundle {bundleInfo} on:select-bundle={() => selectBundle(bundleInfo)} on:wear-item/>
+        <div class="flex flex-col gap-2 min-h-0 overflow-auto w-full">
+            <div class="flex flex-col gap-4">
+                <CosmeticBundle bundleInfo={officialBundle} on:select-bundle={() => selectBundle(officialBundle)} on:wear-item/>
+            </div>
+            {#if Array.isArray($ownedBundles)}
+                {#if $ownedBundles.length === 0}
+                    <div class="mt-12 self-center flex flex-col items-center justify-center gap-2">
+                        <p>You don't have any bundles purchased.<br>Head to the shop to show off your style.</p>
+                        <button class="rounded-lg bg-card-200 px-4 py-1 hover:bg-card-300 hover:text-text-300 filter border-none font-inherit text-inherit text-inherit cursor-pointer flex items-center gap-2"
+                            on:click={goToShop}
+                        >
+                            <span>View the Shop</span>
+                            <ArrowRight size={16}/>
+                        </button>
                     </div>
-                {/each}
+                {:else}
+                    {#each $ownedBundles as bundleInfo}
+                        <div class="flex flex-col gap-4">
+                            <CosmeticBundle {bundleInfo} on:select-bundle={() => selectBundle(bundleInfo)} on:wear-item/>
+                        </div>
+                    {/each}
+                {/if}
             {/if}
-        {/if}
+        </div>
     </div>
 {/if}

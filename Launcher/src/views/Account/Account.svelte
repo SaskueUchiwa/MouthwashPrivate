@@ -10,6 +10,7 @@
     import UserGames from "./Lobbies/UserGames.svelte";
     import UserCosmetics from "./Cosmetics/UserCosmetics.svelte";
     import type { SomeLoadedCosmeticImages } from "../../lib/previewTypes";
+    import UserColorPicker from "./Cosmetics/UserColorPicker.svelte";
     
     let currentPage: ""|"games" = "";
 
@@ -135,6 +136,12 @@
                 {/if}
             </div>
         {/if}
+        <div class="min-h-0 flex flex-col bg-base-200 rounded-xl p-4 px-6 gap-2">
+            <span>Color</span>
+            <UserColorPicker
+                playerColor={$user === loading || $user === unavailable ? null : $user.cosmetic_color}
+                on:wear-color={onWearColor}/>
+        </div>
         <div class="min-h-0 flex-1 flex flex-col bg-base-200 rounded-xl p-4 px-6 gap-2">
             {#if $user === loading}
                 <div class="flex-1 flex items-center justify-center text-text-300">
@@ -150,7 +157,6 @@
                             user={$user}
                             bind:this={userCosmetics}
                             on:wear-item={onWearItem}
-                            on:wear-color={onWearColor}
                             on:switch-view/>
                     {:else if currentPage === "games"}
                         <UserGames user={$user}/>
