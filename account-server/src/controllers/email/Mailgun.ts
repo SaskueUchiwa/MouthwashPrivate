@@ -35,7 +35,7 @@ export class MailgunEmailProvider extends EmailProvider {
         await this.mgClient.messages.create(process.env.VERIFICATION_EMAIL as string, {
             from: `Polus.GG: Rewritten Accounts <${process.env.VERIFICATION_EMAIL as string}>`,
             to: email,
-            subject: "Code to Reset Your Account Password",
+            subject: "Reset Password for Your Account",
             text: `You requested to reset your password for your account '${displayName}', use the following code in the launcher to do so: ${code}`,
             html: `You requested to reset your password for your account '${displayName}', use the following code in the launcher to do so: <pre>${code}</pre>`
         });

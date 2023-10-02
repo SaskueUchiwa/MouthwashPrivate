@@ -53,7 +53,7 @@ export class MailjetEmailProvider extends EmailProvider {
                                 "Email": email
                             }
                         ],
-                        "Subject": "Verify Email Address to Sign Up",
+                        "Subject": "Reset Password for Your Account",
                         "TextPart": `You requested to reset your password for your account '${displayName}', use the following code in the launcher to do so: ${code}`,
                         "HTMLPart":`You requested to reset your password for your account '${displayName}', use the following code in the launcher to do so: <pre>${code}</pre>`
                     }
