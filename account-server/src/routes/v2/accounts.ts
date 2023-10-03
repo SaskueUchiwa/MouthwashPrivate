@@ -174,8 +174,8 @@ export class AccountsRoute extends BaseRoute {
     @mediator.Endpoint(mediator.HttpMethod.GET, "/v2/accounts/owned_items")
     async getOwnedItems(transaction: mediator.Transaction<{}>) {
         const session = await this.server.sessionsController.validateAuthorization(transaction);
-        const ownedBundles = await this.server.cosmeticsController.getAllCosmeticItemsOwnedByUser(session.user_id);
-        transaction.respondJson(ownedBundles);
+        const ownedItems = await this.server.cosmeticsController.getAllCosmeticItemsOwnedByUser(session.user_id);
+        transaction.respondJson(ownedItems);
     }
     
     @mediator.Endpoint(mediator.HttpMethod.POST, "/v2/accounts/checkout_bundle")

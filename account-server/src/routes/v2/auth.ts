@@ -32,6 +32,7 @@ export class AuthRoute extends BaseRoute {
                     const [ id, url, hash ] = urlAndHash.split("$$");
                     return { id, url, hash };
                 }),
+            stripe_customer_id: undefined,
             preview_bundles_id_url_and_hash: undefined,
             client_token: session.client_token,
             password_hash: undefined
@@ -79,6 +80,7 @@ export class AuthRoute extends BaseRoute {
                     const [ id, url, hash ] = urlAndHash.split("$$");
                     return { id, url, hash };
                 }),
+            stripe_customer_id: undefined,
             preview_bundles_id_url_and_hash: undefined,
             client_token: session.client_token,
             password_hash: undefined
