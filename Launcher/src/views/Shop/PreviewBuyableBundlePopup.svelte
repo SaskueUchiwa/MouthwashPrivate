@@ -40,9 +40,9 @@
         isPreviewLoading = true;
         const allAssets = (await Promise.all(preloadBundles.map(x => getPreviewAssetsByUrl(x.id, x.url, x.hash, true, false, null)))).flat();
         allAssets.push(...await getPreviewAssetsByUrl("00000000-0000-0000-0000-000000000000", "/CosmeticOfficial.zip", "", false, true, null));
-        hatCosmetic = playerHat === amongus.Hat.NoHat ? undefined : allAssets.find(x => x.asset.product_id === playerHat);
-        skinCosmetic = playerSkin === amongus.Skin.None ? undefined : allAssets.find(x => x.asset.product_id === playerSkin);
-        visorCosmetic = playerVisor === amongus.Visor.EmptyVisor ? undefined : allAssets.find(x => x.asset.product_id === playerVisor);
+        if (hatCosmetic === undefined) hatCosmetic = playerHat === amongus.Hat.NoHat ? undefined : allAssets.find(x => x.asset.product_id === playerHat);
+        if (skinCosmetic === undefined) skinCosmetic = playerSkin === amongus.Skin.None ? undefined : allAssets.find(x => x.asset.product_id === playerSkin);
+        if (visorCosmetic === undefined) visorCosmetic = playerVisor === amongus.Visor.EmptyVisor ? undefined : allAssets.find(x => x.asset.product_id === playerVisor);
         isPreviewLoading = false;
     }
 
@@ -78,7 +78,7 @@
         <div class="flex flex-col gap-4">
             <div class="bg-surface-200 rounded-xl shadow-lg px-6 p-4 flex cursor-default" on:click={ev => ev.stopPropagation()}>
                 <div class="flex flex-col items-start flex-1 gap-4">
-                    <span class="text-xl">Color</span>
+                    <span class="text-xl">Preview Color</span>
                     <UserColorPicker
                         {playerColor}
                         on:wear-color={onWearColor}/>
