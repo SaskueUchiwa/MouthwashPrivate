@@ -68,9 +68,4 @@ export interface Bundle {
 
 export type Deferred<T> = T|typeof loading|typeof unavailable;
 
-const user = writable<Deferred<UserLogin>>(loading);
-user.subscribe(() => {
-
-});
-
-export { user };
+export const user = writable<Deferred<UserLogin>>(loading);

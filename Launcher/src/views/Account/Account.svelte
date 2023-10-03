@@ -35,6 +35,28 @@
             return;
 
         user.set({ ...($user as UserLogin), cosmetic_color: ev.detail });
+        updateUserCosmetics();
+    }
+
+    async function updateUserCosmetics() {
+        if ($user === loading || $user === unavailable)
+            return;
+
+        await fetch(get(accountUrl) + "/api/v2/accounts/cosmetics", {
+            method: "PUT",
+            headers: {
+                Authorization: `Bearer ${$user.client_token}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                cosmetic_hat: $user.cosmetic_hat,
+                cosmetic_skin: $user.cosmetic_skin,
+                cosmetic_pet: $user.cosmetic_pet,
+                cosmetic_color: $user.cosmetic_color,
+                cosmetic_visor: $user.cosmetic_visor,
+                cosmetic_nameplate: $user.cosmetic_nameplate
+            })
+        });
     }
 
     async function checkLogin(userLogin: UserLogin) {
@@ -122,7 +144,12 @@
                     <span class="text-text-300 italic">Not logged in.</span>
                 </div>
             {:else if $user}
-                <Profile user={$user} page={currentPage} on:logout={onLogOut} on:set-page={onSetPage} bind:this={profileSection}/>
+                <Profile
+                    page={currentPage}
+                    on:logout={onLogOut}
+                    on:set-page={onSetPage}
+                    on:update-cosmetics={updateUserCosmetics}
+                    bind:this={profileSection}/>
             {/if}
         {/if}
     </div>

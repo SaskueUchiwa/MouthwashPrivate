@@ -30,7 +30,7 @@ const uploadCosmeticBundleBodyValidator = ark.scope({
         thumb: "string|null",
         product_id: "string",
         in_front: "boolean",
-        player_material: "boolean",
+        use_player_color: "boolean",
         chip_offset: {
             x: "number",
             y: "number"
@@ -147,7 +147,7 @@ export class UploadRoute extends BaseRoute {
                     chip_offset: bundleAsset.chip_offset,
                     product_id: bundleAsset.product_id,
                     in_front: bundleAsset.in_front,
-                    player_material: bundleAsset.player_material,
+                    use_player_color: bundleAsset.use_player_color,
                     main: bundleAsset.main ? { file: "main.png", pivot: { x: 0, y: 0 } } : undefined,
                     back: bundleAsset.back ? { file: "back.png", pivot: { x: 0, y: 0 } } : undefined,
                     left_main: bundleAsset.left_main ? { file: "left_main.png", pivot: { x: 0, y: 0 } } : undefined,

@@ -272,6 +272,7 @@ export class AccountsRoute extends BaseRoute {
     }
 
     @mediator.Endpoint(mediator.HttpMethod.PUT, "/v2/accounts/cosmetics")
+    @mediator.Middleware(express.json())
     async saveSelectedCosmetics(transaction: mediator.Transaction<{}>) {
         const session = await this.server.sessionsController.validateAuthorization(transaction);
         const ownedItems = await this.server.cosmeticsController.getAllCosmeticItemsOwnedByUser(session.user_id);

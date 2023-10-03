@@ -26,10 +26,12 @@ export class AuthRoute extends BaseRoute {
 
         transaction.respondJson<SafeUser & { client_token: string; preview_bundles_id_url_and_hash: undefined; bundle_previews: { id: string; url: string; hash: string; }[]; }>({
             ...user,
-            bundle_previews: [...new Set(user.preview_bundles_id_url_and_hash.split(","))].map(urlAndHash => {
-                const [ id, url, hash ] = urlAndHash.split("$$");
-                return { id, url, hash };
-            }),
+            bundle_previews: user.preview_bundles_id_url_and_hash === null
+                ? []
+                : [...new Set(user.preview_bundles_id_url_and_hash.split(","))].map(urlAndHash => {
+                    const [ id, url, hash ] = urlAndHash.split("$$");
+                    return { id, url, hash };
+                }),
             preview_bundles_id_url_and_hash: undefined,
             client_token: session.client_token,
             password_hash: undefined
@@ -71,10 +73,12 @@ export class AuthRoute extends BaseRoute {
 
         transaction.respondJson<SafeUser & { client_token: string; preview_bundles_id_url_and_hash: undefined; bundle_previews: { id: string; url: string; hash: string; }[] }>({
             ...user,
-            bundle_previews: [...new Set(user.preview_bundles_id_url_and_hash.split(","))].map(urlAndHash => {
-                const [ id, url, hash ] = urlAndHash.split("$$");
-                return { id, url, hash };
-            }),
+            bundle_previews: user.preview_bundles_id_url_and_hash === null
+                ? []
+                : [...new Set(user.preview_bundles_id_url_and_hash.split(","))].map(urlAndHash => {
+                    const [ id, url, hash ] = urlAndHash.split("$$");
+                    return { id, url, hash };
+                }),
             preview_bundles_id_url_and_hash: undefined,
             client_token: session.client_token,
             password_hash: undefined

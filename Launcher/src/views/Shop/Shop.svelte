@@ -38,8 +38,10 @@
         ownedBundles.set(json.data);
     }
 
-    $: if ($user !== loading && $user !== unavailable) {
+    let hasLoadedCosmetics = false;
+    $: if ($user !== loading && $user !== unavailable && !hasLoadedCosmetics) {
         getUserCosmetics();
+        hasLoadedCosmetics = true;
     }
 
     const allFeatureTags: Record<string, string> = {
@@ -109,5 +111,9 @@
     <PreviewBuyableBundlePopup
         bundle={previewingBundle}
         playerColor={$user === loading || $user === unavailable ? amongus.Color.Red : $user.cosmetic_color}
+        playerHat={$user === loading || $user === unavailable ? amongus.Hat.NoHat : $user.cosmetic_hat}
+        playerSkin={$user === loading || $user === unavailable ? amongus.Skin.None : $user.cosmetic_skin}
+        playerVisor={$user === loading || $user === unavailable ? amongus.Visor.EmptyVisor : $user.cosmetic_visor}
+        preloadBundles={$user === loading || $user === unavailable ? [] : $user.bundle_previews}
         on:close={() => previewingBundle = undefined}/>
 {/if}

@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { createEventDispatcher } from "svelte";
+    import { createEventDispatcher, onMount } from "svelte";
     const dispatchEvent = createEventDispatcher();
 
     import * as amongus from "@skeldjs/constant";
@@ -8,14 +8,21 @@
     import BundlePreviewList from "../Account/Cosmetics/BundlePreviewList.svelte";
     import CharacterOutfitPreview from "../Preview/CharacterOutfitPreview.svelte";
     import UserColorPicker from "../Account/Cosmetics/UserColorPicker.svelte";
+    import { getPreviewAssetsByUrl } from "../../lib/previewAssets";
 
     export let bundle: Bundle|undefined;
     export let playerColor: amongus.Color;
+    export let playerHat: string;
+    export let playerSkin: string;
+    export let playerVisor: string;
+    export let preloadBundles: { id: string; url: string; hash: string; }[];
 
-    let selectedItemId = "";
     let hatCosmetic: LoadedCosmeticImages|undefined = undefined;
     let skinCosmetic: LoadedCosmeticImages|undefined = undefined;
     let visorCosmetic: LoadedCosmeticImages|undefined = undefined;
+
+    let selectedItemId = "";
+    let isPreviewLoading = false;
 
     let bundlePreviewList: BundlePreviewList|undefined = undefined;
 
@@ -28,6 +35,22 @@
             visorCosmetic = cosmeticItem;
         }
     }
+
+    async function loadExistingCosmetics() {
+        isPreviewLoading = true;
+        const allAssets = (await Promise.all(preloadBundles.map(x => getPreviewAssetsByUrl(x.id, x.url, x.hash, true, false, null)))).flat();
+        allAssets.push(...await getPreviewAssetsByUrl("00000000-0000-0000-0000-000000000000", "/CosmeticOfficial.zip", "", false, true, null));
+        hatCosmetic = playerHat === amongus.Hat.NoHat ? undefined : allAssets.find(x => x.asset.product_id === playerHat);
+        skinCosmetic = playerSkin === amongus.Skin.None ? undefined : allAssets.find(x => x.asset.product_id === playerSkin);
+        visorCosmetic = playerVisor === amongus.Visor.EmptyVisor ? undefined : allAssets.find(x => x.asset.product_id === playerVisor);
+        isPreviewLoading = false;
+    }
+
+    onMount(() => {
+        loadExistingCosmetics();
+    });
+
+    $: playerHat, playerSkin, playerVisor, preloadBundles, loadExistingCosmetics();
 
     function onWearColor(ev: CustomEvent<amongus.Color>) {
         playerColor = ev.detail; // we don't want this to be committed to the player's cosmetics
@@ -46,7 +69,7 @@
                 </p>-->
                 <div class="flex flex-1 w-full">
                     <div class="flex-1 w-full h-full flex justify-center items-center px-8">
-                        <CharacterOutfitPreview {playerColor} {hatCosmetic} {skinCosmetic} {visorCosmetic}/>
+                        <CharacterOutfitPreview {playerColor} {hatCosmetic} {skinCosmetic} {visorCosmetic} loading={isPreviewLoading}/>
                     </div>
                 </div>
             </div>
