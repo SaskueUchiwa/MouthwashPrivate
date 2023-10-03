@@ -16,7 +16,8 @@ create table users
     cosmetic_skin      varchar not null,
     cosmetic_color     integer not null,
     cosmetic_visor     varchar not null,
-    cosmetic_nameplate varchar not null
+    cosmetic_nameplate varchar not null,
+    stripe_customer_id varchar
 );
 
 alter table users
@@ -159,11 +160,13 @@ alter table user_perk
 
 create table asset_bundle
 (
-    id   uuid    not null
+    id                    uuid    not null
         constraint asset_bundle_pk
             primary key,
-    url  varchar not null,
-    hash varchar not null
+    url                   varchar not null,
+    hash                  varchar not null,
+    preview_contents_url  varchar,
+    preview_contents_hash varchar
 );
 
 alter table asset_bundle
@@ -181,7 +184,7 @@ create table checkout_session
     bundle_id                varchar,
     created_at               timestamp with time zone not null,
     canceled_at              timestamp with time zone,
-    stripe_payment_intent_id varchar,
+    stripe_payment_intent_id varchar                  not null,
     completed_at             timestamp with time zone
 );
 
@@ -190,40 +193,11 @@ alter table checkout_session
 
 create table stripe_item
 (
-    id              uuid not null
+    id                uuid not null
         constraint stripe_item_pk
             primary key,
-    stripe_price_id varchar
-);
-
-alter table stripe_item
-    owner to postgres;
-
-create table checkout_session
-(
-    id                       uuid                     not null
-        constraint checkout_session_pk
-            primary key,
-    user_id                  uuid                     not null
-        constraint checkout_session_users_id_fk
-            references users,
-    stripe_price_id          varchar                  not null,
-    bundle_id                varchar,
-    created_at               timestamp with time zone not null,
-    canceled_at              timestamp with time zone,
-    stripe_payment_intent_id varchar,
-    completed_at             timestamp with time zone
-);
-
-alter table checkout_session
-    owner to postgres;
-
-create table stripe_item
-(
-    id              uuid not null
-        constraint stripe_item_pk
-            primary key,
-    stripe_price_id varchar
+    stripe_price_id   varchar,
+    stripe_product_id varchar
 );
 
 alter table stripe_item
@@ -248,8 +222,9 @@ create table bundle
         constraint bundle_stripe_item_id_fk
             references stripe_item,
     valuation        varchar                  not null,
-    tags             varchar default ''::character varying,
-    description      varchar default ''::character varying
+    tags             varchar                  not null,
+    description      varchar                  not null,
+    feature_tags     varchar                  not null
 );
 
 alter table bundle
@@ -280,6 +255,9 @@ create table bundle_item
 alter table bundle_item
     owner to postgres;
 
+create index bundle_item__index
+    on bundle_item (among_us_id);
+
 create table user_owned_item
 (
     id        uuid                     not null
@@ -298,4 +276,23 @@ create table user_owned_item
 
 alter table user_owned_item
     owner to postgres;
+
+create table password_reset
+(
+    id          uuid                     not null
+        constraint password_reset_pk
+            primary key,
+    user_id     uuid                     not null
+        constraint password_reset_users_id_fk
+            references users,
+    code        varchar                  not null,
+    sent_at     timestamp with time zone not null,
+    accepted_at timestamp with time zone
+);
+
+alter table password_reset
+    owner to postgres;
+
+create index password_reset_code_index
+    on password_reset (code);
 

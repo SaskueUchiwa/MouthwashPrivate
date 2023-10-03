@@ -191,14 +191,24 @@ export class AccountsRoute extends BaseRoute {
             throw new BundleNotFoundError(data.bundle_id);
 
         const session = await this.server.sessionsController.validateAuthorization(transaction);
+        const user = await this.server.accountsController.getUserById(session.user_id);
+        if (!user)
+            throw new mediator.InternalServerError(new Error(`User had session but no user existed in database (user_id=${session.user_id})`));
+
         const ownedItem = await this.server.cosmeticsController.doesUserOwnBundle(session.user_id, data.bundle_id);
-        
         if (ownedItem)
             throw new BundleAlreadyOwnedError(data.bundle_id);
+
+        if (!user.stripe_customer_id) {
+            const customer = await this.server.stripe.customers.create();
+            await this.server.accountsController.setUserStripeCustomer(session.user_id, customer.id);
+            user.stripe_customer_id = customer.id;
+        }
         
         const paymentIntent = await this.server.stripe.paymentIntents.create({
             amount: bundle.price_usd,
-            currency: "USD"
+            currency: "USD",
+            customer: user.stripe_customer_id
         });
 
         const mouthwashCheckoutSession = await this.server.checkoutController.createCheckout(

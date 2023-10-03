@@ -54,7 +54,7 @@
     {#if showGroups}
         <div class="flex flex-col gap-4">
             {#each Object.entries(groupedCosmeticImages) as [ groupType, cosmeticImages ]}
-                <div class="flex flex-col">
+                <div class="flex flex-col items-start">
                     <span class="sticky">{groupType[0].toUpperCase() + groupType.substring(1).toLowerCase()}s</span>
                     <div class="flex gap-2 flex-wrap items-center">
                         {#each cosmeticImages as cosmeticImage}

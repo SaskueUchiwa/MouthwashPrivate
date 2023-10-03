@@ -21,6 +21,7 @@ export interface User {
     cosmetic_color: number;
     cosmetic_visor: string;
     cosmetic_nameplate: string;
+    stripe_customer_id: string;
 }
 
 export type SafeUser = DeclareSafeKeys<User, "id"|"email"|"created_at"|"banned_until"|"muted_until"|"email_verified"|"display_name"|"cosmetic_hat"|"cosmetic_pet"|"cosmetic_skin"|"cosmetic_color"|"cosmetic_visor"|"cosmetic_nameplate">;
@@ -282,5 +283,15 @@ export class AccountsController {
         `, [ crypto.randomUUID(), userId, randomCode ]);
 
         return createdResetPasswordIntents[0] as PasswordReset|undefined;
+    }
+
+    async setUserStripeCustomer(userId: string, stripeCustomerId: string) {
+        const { rows: updatedUsers } = await this.server.postgresClient.query(`
+            UPDATE users
+            SET stripe_customer_id = $2
+            WHERE id = $1
+            RETURNING *
+        `, [ userId, stripeCustomerId ]);
+        return updatedUsers.length > 0;
     }
 }
