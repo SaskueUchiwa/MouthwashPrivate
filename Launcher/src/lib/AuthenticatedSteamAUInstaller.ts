@@ -39,7 +39,7 @@ export class AuthenticatedSteamAUInstaller extends AUInstaller {
     protected async callDepotDownloader(installPath: string, depotDownloaderPath: string) {
         await sleep(5000);
         await fs.createDir(installPath, { recursive: true });
-        const cmd = new shell.Command("depot-downloader-download-au", [
+        const cmd = shell.Command.sidecar("../external/depot-downloader", [
             "-app", "945360",
             "-depot", "945361",
             "-manifest", "4593126137370998619",

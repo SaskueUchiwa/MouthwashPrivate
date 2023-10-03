@@ -39,12 +39,12 @@ export class AuthenticatedEpicGamesAUInstaller extends AUInstaller {
         await sleep(2000);
 
         console.log("Logging out of any existing session..");
-        const logoutCmd = new shell.Command("legendary-download-au", [ "auth", "--delete" ]);
+        const logoutCmd = shell.Command.sidecar("../external/legendary", [ "auth", "--delete" ]);
         await logoutCmd.execute();
 
         await sleep(2000);
         console.log("Requesting log-in into EpicGames account..");
-        const cmd = new shell.Command("legendary-download-au", [
+        const cmd = shell.Command.sidecar("../external/legendary", [
             "auth",
             useLauncherLogin ? "--import" : ""
         ]);
@@ -84,7 +84,7 @@ export class AuthenticatedEpicGamesAUInstaller extends AUInstaller {
         console.log("Calling legendary install manifest..");
         await sleep(5000);
         await fs.createDir(installPath, { recursive: true });
-        const cmd = new shell.Command("legendary-download-au", [
+        const cmd = shell.Command.sidecar("../external/legendary", [
             "install", "AmongUs",
             "-manifest", "https://jhwupengaqaqjewreahz.supabase.co/storage/v1/object/public/Downloads/E6C20FC34525F4BAA321CA9909D831E2.manifest",
             "--game-folder", installPath,

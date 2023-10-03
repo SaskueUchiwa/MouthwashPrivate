@@ -42,12 +42,12 @@
         "execute": true,
         "open": ".+",
         "scope": [{
-          "cmd": "$APPDATA/depot-downloader/DepotDownloader.exe",
-          "name": "depot-downloader-download-au",
+          "name": "../external/depot-downloader",
+          "sidecar": true,
           "args": true
         },{
-          "cmd": "$APPDATA/legendary/legendary.exe",
-          "name": "legendary-download-au",
+          "name": "../external/legendary",
+          "sidecar": true,
           "args": true
         }, {
           "cmd": "powershell",
@@ -58,7 +58,7 @@
           "name": "cmd",
           "args": true
         }],
-        "sidecar": false
+        "sidecar": true
       }
     },
     "bundle": {
@@ -71,6 +71,10 @@
         "icons/128x128@2x.png",
         "icons/icon.icns",
         "icons/icon.ico"
+      ],
+      "externalBin": [
+        "../external/legendary",
+        "../external/depot-downloader"
       ]
     },
     "security": {

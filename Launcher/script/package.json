@@ -2,7 +2,9 @@
     "name": "launcher-scripts",
     "private": true,
     "dependencies": {
+        "got": "^11.8.2",
         "jszip": "^3.10.1",
+        "node-fetch": "^3.3.2",
         "sharp": "^0.32.6"
     }
 }

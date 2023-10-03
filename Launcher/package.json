@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "check": "svelte-check --tsconfig ./tsconfig.json",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "setup": "cd script && yarn && node setup.js"
   },
   "dependencies": {
     "@skeldjs/constant": "^2.15.49",

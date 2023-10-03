@@ -589,3 +589,6 @@ dist-ssr
 *.sln
 *.sw?
 misc
+
+# sidecar executables for use with tauri
+external
