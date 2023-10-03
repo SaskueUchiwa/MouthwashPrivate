@@ -1,22 +1,12 @@
 [
     {
-        "version": "2023.8.20",
-        "date_released": "2023-08-19T23:16:48.529Z",
-        "release_download_bytes": 12602670,
-        "release_download_sha256": "753bae457a3289b6e3a56a8b08850ea05b22fadbcebeaa941d27332ec22685f3",
-        "release_url": "https://jhwupengaqaqjewreahz.supabase.co/storage/v1/object/public/Downloads/Mods.zip?t=2023-08-20T02%3A20%3A19.750Z",
+        "version": "2023.10.3",
+        "date_released": "2023-10-03T18:20:58.066Z",
+        "release_download_bytes": 30734996,
+        "release_download_sha256": "AB548711673AD098E10BBBCD2CE948910FEE15D0AC4C1DB4743EFB65E66D5799",
+        "release_url": "https://jhwupengaqaqjewreahz.supabase.co/storage/v1/object/public/Downloads/2023.10.3.zip?t=2023-10-03T18%3A24%3A08.437Z",
         "notes": [
-            "Draft update"
-        ]
-    },
-    {
-        "version": "2023.8.19",
-        "date_released": "2023-08-19T16:35:28.631Z",
-        "release_download_bytes": 12602670,
-        "release_download_sha256": "753bae457a3289b6e3a56a8b08850ea05b22fadbcebeaa941d27332ec22685f3",
-        "release_url": "https://jhwupengaqaqjewreahz.supabase.co/storage/v1/object/public/Downloads/Mods.zip?t=2023-08-20T02%3A20%3A19.750Z",
-        "notes": [
-            "Draft release"
+            "Draft client rewrite release"
         ]
     }
 ]
