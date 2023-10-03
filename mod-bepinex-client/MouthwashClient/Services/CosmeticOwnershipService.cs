@@ -57,7 +57,7 @@ namespace MouthwashClient.Services
         public static IEnumerator CoLoadOwnedCosmetics()
         {
             PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage($"Loading cosmetics owned by user..");
-            string url = $"{Environment.GetEnvironmentVariable("MWGG_ACCOUNTS_URL")!}/api/v2/accounts/owned_bundles";
+            string url = $"{Environment.GetEnvironmentVariable("MWGG_ACCOUNTS_URL")!}/api/v2/accounts/owned_items";
             HttpRequestMessage ownedBundlesRequest = new()
             {
                 Method = HttpMethod.Get,
