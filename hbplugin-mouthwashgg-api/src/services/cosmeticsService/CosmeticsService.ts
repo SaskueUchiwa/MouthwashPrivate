@@ -126,7 +126,7 @@ export class CosmeticsService {
                 problems in terms of desync between the client/server since colours are a fairly passive
                 part of the game.
             */
-            let validColor = clientUser.cosmetic_color === -1 ? Color.Red : clientUser.cosmetic_color;
+            let validColor = clientUser.cosmetic_color < 0 || clientUser.cosmetic_color > Color.Coral ? Color.Red : clientUser.cosmetic_color;
             let newColor = validColor;
 
             // if (this.plugin.room.gameData) {

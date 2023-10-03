@@ -44,7 +44,7 @@ export class PlayerOutfit {
 
     get isIncomplete() {
         return this.name === ""
-            || this.color === -1 as Color
+            || this.color === Color.Red
             || this.hatId === "missing"
             || this.petId === "missing"
             || this.skinId === "missing"
@@ -53,7 +53,7 @@ export class PlayerOutfit {
     }
 
     static createDefault(outfitType: PlayerOutfitType) {
-        return new PlayerOutfit(outfitType, "", -1 as Color, "missing", "missing", "missing", "missing", "missing");
+        return new PlayerOutfit(outfitType, "", Color.Red, "missing", "missing", "missing", "missing", "missing");
     }
 
     static Deserialize(reader: HazelReader, type: PlayerOutfitType) {

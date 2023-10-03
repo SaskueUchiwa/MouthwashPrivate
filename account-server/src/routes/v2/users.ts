@@ -12,6 +12,7 @@ export class UsersRoute extends BaseRoute {
 
         transaction.respondJson<PublicUser>({
             ...user,
+            stripe_customer_id: undefined,
             password_hash: undefined,
             email: undefined,
             email_verified: undefined,

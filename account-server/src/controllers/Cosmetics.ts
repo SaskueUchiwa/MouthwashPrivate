@@ -53,11 +53,6 @@ export interface UserPerkSettings {
     settings: any;
 }
 
-export interface StripeItem {
-    id: string;
-    stripe_price_id: string;
-}
-
 export class CosmeticsController {
     constructor(public readonly server: AccountServer) {}
     
