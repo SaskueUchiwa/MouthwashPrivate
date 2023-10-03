@@ -42,7 +42,7 @@ export class AuthenticatedSteamAUInstaller extends AUInstaller {
         const cmd = new shell.Command("depot-downloader-download-au", [
             "-app", "945360",
             "-depot", "945361",
-            "-manifest", "3510344350358296660",
+            "-manifest", "4593126137370998619",
             "-username", this.username,
             "-password", this.password,
             "-dir", installPath

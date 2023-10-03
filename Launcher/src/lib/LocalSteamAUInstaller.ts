@@ -36,7 +36,7 @@ export class LocalSteamAUInstaller extends AUInstaller {
 
         await fs.removeDir(steamInstallAppFolder, { recursive: true });
 
-        const cmd = new shell.Command("powershell", [ "-Command", steamExePath.replace(/\\(.+\s+.+?)\\/g, `\\'$1'\\`), "-argument \"+download_depot 945360 945361 3510344350358296660\"" ]);
+        const cmd = new shell.Command("powershell", [ "-Command", steamExePath.replace(/\\(.+\s+.+?)\\/g, `\\'$1'\\`), "-argument \"+download_depot 945360 945361 4593126137370998619\"" ]);
         const proc = await cmd.spawn();
 
         this.emit("start", { hasProgress: false });

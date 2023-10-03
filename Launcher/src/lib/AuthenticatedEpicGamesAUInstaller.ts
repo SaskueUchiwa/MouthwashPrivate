@@ -86,7 +86,7 @@ export class AuthenticatedEpicGamesAUInstaller extends AUInstaller {
         await fs.createDir(installPath, { recursive: true });
         const cmd = new shell.Command("legendary-download-au", [
             "install", "AmongUs",
-            "-manifest", "https://github.com/NuclearPowered/Data/raw/master/epic/manifests/963137e4c29d4c79a81323b8fab03a40_2021.6.30.0.manifest",
+            "-manifest", "https://jhwupengaqaqjewreahz.supabase.co/storage/v1/object/public/Downloads/E6C20FC34525F4BAA321CA9909D831E2.manifest",
             "--game-folder", installPath,
             "--force"
         ]);
