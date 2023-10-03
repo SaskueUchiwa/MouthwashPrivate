@@ -76,6 +76,7 @@
         bundleInfo={bundle}
         searchTerm={bundleSearchTerm}
         isOfficial={isOfficial}
+        showGroups={true}
         thumbScale={isOfficial ? 3 : 1}
         itemSize={56}
         bind:selectedItemId

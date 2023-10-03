@@ -59,6 +59,7 @@
                 {bundleInfo}
                 {playerColor}
                 isOfficial={false}
+                showGroups={false}
                 selectedItemId={null}
                 searchTerm={""}
                 thumbScale={1}
