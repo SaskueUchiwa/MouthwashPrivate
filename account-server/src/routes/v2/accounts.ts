@@ -165,10 +165,16 @@ export class AccountsRoute extends BaseRoute {
     }
 
     @mediator.Endpoint(mediator.HttpMethod.GET, "/v2/accounts/owned_bundles")
-    async getOwnedItems(transaction: mediator.Transaction<{}>) {
+    async getOwnedBundles(transaction: mediator.Transaction<{}>) {
         const session = await this.server.sessionsController.validateAuthorization(transaction);
         const ownedBundles = await this.server.cosmeticsController.getAllBundlesOwnedByUser(session.user_id);
+        transaction.respondJson(ownedBundles);
+    }
 
+    @mediator.Endpoint(mediator.HttpMethod.GET, "/v2/accounts/owned_items")
+    async getOwnedItems(transaction: mediator.Transaction<{}>) {
+        const session = await this.server.sessionsController.validateAuthorization(transaction);
+        const ownedBundles = await this.server.cosmeticsController.getAllCosmeticItemsOwnedByUser(session.user_id);
         transaction.respondJson(ownedBundles);
     }
     
