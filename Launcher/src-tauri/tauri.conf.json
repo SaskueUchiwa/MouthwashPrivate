@@ -40,7 +40,7 @@
       "shell": {
         "all": false,
         "execute": true,
-        "open": true,
+        "open": ".+",
         "scope": [{
           "cmd": "$APPDATA/depot-downloader/DepotDownloader.exe",
           "name": "depot-downloader-download-au",
