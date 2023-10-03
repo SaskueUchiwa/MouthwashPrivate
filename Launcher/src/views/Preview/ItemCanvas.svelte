@@ -55,8 +55,9 @@
 
         // Adapted from https://github.com/edqx/MouthwashUnity/blob/master/Assets/Mods/BundleCosmetics/BlendPlayerShader.shader
         const _Tolerance = 9000;
-        const _BodyColor = normaliseColor(audata.ColorCodes[playerColor].highlightRGB as RGB);
-        const _BackColor = normaliseColor(audata.ColorCodes[playerColor].shadowRGB as RGB);
+        const colorCodes = audata.ColorCodes[playerColor] || audata.ColorCodes[amongus.Color.Red];
+        const _BodyColor = normaliseColor(colorCodes.highlightRGB as RGB);
+        const _BackColor = normaliseColor(colorCodes.shadowRGB as RGB);
         const _VisorColor = normaliseColor([ 149, 202, 220 ] as RGB);
         const canvasData = materialApplicationCtx.getImageData(0, 0, img.width, img.height);
         for (let i = 0; i < canvasData.data.length; i += 4) {
