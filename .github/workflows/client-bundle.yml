@@ -46,5 +46,5 @@ jobs:
         run: node createBundle.js ${{ github.ref }}
         working-directory: ${{env.working-directory}}/script
         env:
-          SUPABASE_BASE_API_URL: ${{ vars.SUPABASE_BASE_API_URL }
-          SUPABASE_SERVICE_ROLE_TOKEN: ${{ vars.SUPABASE_SERVICE_ROLE_TOKEN }
+          SUPABASE_BASE_API_URL: ${{ vars.SUPABASE_BASE_API_URL }}
+          SUPABASE_SERVICE_ROLE_TOKEN: ${{ vars.SUPABASE_SERVICE_ROLE_TOKEN }}
