@@ -22,7 +22,6 @@ jobs:
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
-        working-directory: ${{env.working-directory}}
         with:
           dotnet-version: 6.x
 
@@ -34,7 +33,6 @@ jobs:
 
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v1
-        working-directory: ${{env.working-directory}}/script
         with:
           node-version: ${{ matrix.node-version }}
 
