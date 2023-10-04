@@ -4,10 +4,6 @@ on:
   push:
     tags: [ release/client/* ]
 
-env:
-  SUPABASE_BASE_API_URL: ${{ vars.SUPABASE_BASE_API_URL }
-  SUPABASE_SERVICE_ROLE_TOKEN: ${{ vars.SUPABASE_SERVICE_ROLE_TOKEN }
-
 jobs:
   build:
     runs-on: ubuntu-20.04
@@ -49,3 +45,6 @@ jobs:
       - name: Install script dependencies
         run: node createBundle.js ${{ github.ref }}
         working-directory: ${{env.working-directory}}/script
+        env:
+          SUPABASE_BASE_API_URL: ${{ vars.SUPABASE_BASE_API_URL }
+          SUPABASE_SERVICE_ROLE_TOKEN: ${{ vars.SUPABASE_SERVICE_ROLE_TOKEN }
