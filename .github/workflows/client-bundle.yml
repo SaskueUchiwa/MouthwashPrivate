@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    tags: [ release/client/* ]
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+
+    env:
+      working-directory: ./mod-bepinex-client
+      
+    strategy:
+      matrix:
+        node-version: [18.x]
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        working-directory: ${{env.working-directory}}
+        with:
+          dotnet-version: 6.x
+
+      - name: Cake script
+        uses: cake-build/cake-action@v1
+        working-directory: ${{env.working-directory}}
+        with:
+          verbosity: Diagnostic
+          script-path: ./mod-bepinex-client/build.cake
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        working-directory: ${{env.working-directory}}/script
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install script dependencies
+        uses: borales/actions-yarn@v4.2.0
+        with:
+          cmd: install
+          dir: ./mod-bepinex-client/script
+
+      - name: Install script dependencies
+        run: node createBundle.js ${{ github.ref }}
+        working-directory: ${{env.working-directory}}/script

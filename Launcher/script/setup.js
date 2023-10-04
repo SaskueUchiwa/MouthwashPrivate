@@ -1,4 +1,4 @@
-const { default: got }= require("got");
+const { default: got } = require("got");
 const fs = require("fs/promises");
 const path = require("path");
 const JSZip = require("jszip");
