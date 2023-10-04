@@ -15,7 +15,7 @@ Task("Build")
 
     if (tag != null) 
     {
-        settings.MSBuildSettings.Version = tag.Replace("release/client", "");
+        settings.MSBuildSettings.Version = tag.Replace("release/client/", "");
     }
     else if (buildId != 0)
     {
