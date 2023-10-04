@@ -59,7 +59,7 @@ export class LocalSteamAUInstaller extends AUInstaller {
 
             this.emit("error", { error: "Couldn't download Among Us. You likely don't own the game, or there's some other issue. Contact support for help." });
             this._validateInterval = undefined;
-        }, 10000);
+        }, 20000);
     }
 
     async cancelInstallation(): Promise<void> {

@@ -6,7 +6,7 @@
     import * as fs from "@tauri-apps/api/fs";
     import Cog from "../../icons/Cog.svelte";
     import Folder from "../../icons/Folder.svelte";
-    import { gameInstalledPathState, gameInstalledVersionState } from "../../stores/gameState";
+    import { amongUsProcess, gameInstalledPathState, gameInstalledVersionState } from "../../stores/gameState";
     import { loading, unavailable } from "../../stores/accounts";
 
     export let isVisible = false;
@@ -33,6 +33,7 @@
         await fs.removeDir($gameInstalledPathState, { recursive: true });
         gameInstalledPathState.set(unavailable);
         gameInstalledVersionState.set(unavailable);
+        localStorage.removeItem("installation-path");
         localStorage.removeItem("installation-version");
         close();
 
@@ -71,10 +72,15 @@
                 at any point.
             </p>
             <button class="rounded-lg bg-card-200 px-4 py-1 hover:bg-card-300 hover:text-text-300 filter"
+                class:grayscale={$amongUsProcess !== unavailable}
+                class:pointer-events-none={$amongUsProcess !== unavailable}
                 on:click={uninstall}
             >
                 Uninstall
             </button>
+            {#if $amongUsProcess !== unavailable}
+                <span class="text-yellow-500 text-xs my-0.5">Cannot uninstall game while it is running.</span>
+            {/if}
             <button class="rounded-lg bg-card-200 px-4 py-1 self-end mt-4 hover:bg-card-300 hover:text-text-300 filter"
                 on:click={close}
             >

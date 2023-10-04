@@ -63,6 +63,8 @@
             localStorage.setItem("installation-version", remoteVersion.version);
 
             dispatchEvent("switch-view", { view: "Play" });
+            downloadState = undefined;
+            downloadStage = null;
         });
 
         const success = await invoke("download_file_and_extract", {
