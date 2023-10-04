@@ -1,6 +1,6 @@
 [package]
 name = "mouthwash-launcher"
-version = "0.0.0"
+version = "0.0.1"
 description = "Polus.gg: Rewritten Launcher"
 authors = ["you"]
 license = ""
