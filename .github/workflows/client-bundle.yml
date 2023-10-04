@@ -5,11 +5,8 @@ on:
     tags: [ release/client/* ]
 
 jobs:
-  build:
+  publish-bundle:
     runs-on: ubuntu-20.04
-
-    env:
-      working-directory: ./mod-bepinex-client
       
     strategy:
       matrix:
@@ -42,9 +39,9 @@ jobs:
           cmd: install
           dir: ./mod-bepinex-client/script
 
-      - name: Install script dependencies
-        run: node createBundle.js ${{ github.ref }}
-        working-directory: ${{env.working-directory}}/script
+      - name: Publish bundle
+        run: node createBundle.js
+        working-directory: ./mod-bepinex-client/script
         env:
           SUPABASE_BASE_API_URL: ${{ vars.SUPABASE_BASE_API_URL }}
-          SUPABASE_SERVICE_ROLE_TOKEN: ${{ vars.SUPABASE_SERVICE_ROLE_TOKEN }}
+          SUPABASE_SERVICE_ROLE_TOKEN: ${{ secrets.SUPABASE_SERVICE_ROLE_TOKEN }}

@@ -20,7 +20,7 @@ function runCommandInDir(dir, command) {
             resolve(stdout);
         });
     });
-  }
+}
 
 const baseMouthwashDllPath = path.join(__dirname, "../MouthwashClient/bin/Release/net6.0/MouthwashClient.dll");
 
@@ -37,7 +37,7 @@ const baseMouthwashDllPath = path.join(__dirname, "../MouthwashClient/bin/Releas
 (async () => {
     console.log("Fetching release version..");
     const releaseVersionTag = (await runCommandInDir(process.cwd(), `git describe --tags --abbrev=0`)).trim();
-    const tagDescription = (await runCommandInDir(process.cwd(), `git for-each-ref refs/tags/${releaseVersionTag} --format='%(contents)'`)).trim().replace(/(^')|('$)/g, "");
+    const tagDescription = (await runCommandInDir(process.cwd(), `git for-each-ref refs/tags/${releaseVersionTag} --format='%(contents)'`)).replace(/(^')|('$)/g, "").trim();
     const releaseVersion = releaseVersionTag.replace("release/client/", "");
     console.log("|- Release version: %s", releaseVersion);
     console.log("|- Release description:");
@@ -144,7 +144,8 @@ const baseMouthwashDllPath = path.join(__dirname, "../MouthwashClient/bin/Releas
         body: JSON.stringify(remoteChangelog),
         headers: {
             authorization: "Bearer " + process.env.SUPABASE_SERVICE_ROLE_TOKEN,
-            "cache-control": "3600"
+            "cache-control": "3600",
+            "content-type": "application/json"
         },
         responseType: "json"
     });
