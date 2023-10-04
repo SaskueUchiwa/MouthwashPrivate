@@ -28,7 +28,6 @@ jobs:
 
       - name: Cake script
         uses: cake-build/cake-action@v1
-        working-directory: ${{env.working-directory}}
         with:
           verbosity: Diagnostic
           script-path: ./mod-bepinex-client/build.cake
