@@ -7,7 +7,7 @@
     "withGlobalTauri": false
   },
   "package": {
-    "productName": "Polus.GG Rewritten",
+    "productName": "PGG Rewritten",
     "version": "0.0.2"
   },
   "tauri": {
