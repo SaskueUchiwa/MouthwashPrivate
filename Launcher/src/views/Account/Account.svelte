@@ -185,7 +185,6 @@
                 {:else}
                     {#if currentPage === ""}
                         <UserCosmetics
-                            user={$user}
                             bind:this={userCosmetics}
                             on:wear-item={onWearItem}
                             on:switch-view/>

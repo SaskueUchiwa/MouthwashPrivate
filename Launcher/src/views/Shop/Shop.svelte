@@ -18,8 +18,10 @@
     let featureTag: string|undefined = undefined;
     
     async function getUserCosmetics() {
-        if ($user === loading || $user === unavailable)
+        if ($user === loading || $user === unavailable) {
+            ownedBundles.set([]);
             return;
+        }
 
         ownedBundles.set(loading);
         const userCosmeticsRes = await fetch($accountUrl + "/api/v2/accounts/owned_bundles", {
@@ -39,7 +41,7 @@
     }
 
     let hasLoadedCosmetics = false;
-    $: if ($user !== loading && $user !== unavailable && !hasLoadedCosmetics) {
+    $: if ($user === loading || $user === unavailable || !hasLoadedCosmetics) {
         getUserCosmetics();
         hasLoadedCosmetics = true;
     }

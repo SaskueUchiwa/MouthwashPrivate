@@ -2,14 +2,13 @@
     import { createEventDispatcher, onMount } from "svelte";
     const dispatchEvent = createEventDispatcher();
 
+    import * as amongus from "@skeldjs/constant";
     import { writable } from "svelte/store";
     import Loader from "../../../icons/Loader.svelte";
-    import { type UserLogin, accountUrl, loading, unavailable, type Bundle } from "../../../stores/accounts";
+    import { type accountUrl, loading, unavailable, type Bundle, user } from "../../../stores/accounts";
     import CosmeticBundle from "./CosmeticBundle.svelte";
     import ArrowRight from "../../../icons/ArrowRight.svelte";
     import BundlePreviewList from "./BundlePreviewList.svelte";
-
-    export let user: UserLogin;
 
     let error = "";
     let ownedBundles = writable<(Bundle & { owned_at: string; })[]|typeof loading|typeof unavailable>(loading);
@@ -23,10 +22,13 @@
     }
 
     export async function getUserCosmetics() {
+        if ($user === loading || $user === unavailable)
+            return;
+
         ownedBundles.set(loading);
         const userCosmeticsRes = await fetch($accountUrl + "/api/v2/accounts/owned_bundles", {
             headers: {
-                Authorization: `Bearer ${user.client_token}`
+                Authorization: `Bearer ${$user.client_token}`
             }
         });
 
@@ -93,7 +95,7 @@
                 {#if bundle}
                     <BundlePreviewList
                         small={true}
-                        playerColor={user.cosmetic_color}
+                        playerColor={$user === loading || $user === unavailable ? amongus.Color.Red : $user.cosmetic_color}
                         isOfficial={selectedBundleId === officialBundle.id}
                         {bundle}
                         bind:selectedItemId

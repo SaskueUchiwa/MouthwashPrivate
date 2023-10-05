@@ -83,6 +83,7 @@
             </button>
             <button
                 class="rounded-lg text-xs border-2 border-accent2/80 text-text-200 px-4 py-1 transition-colors duration-100 hover:border-accent2/40 hover:text-text-300 filter font-inherit text-inherit text-inherit cursor-pointer"
+                class:grayscale={loadingBuy || $user === loading || $user === unavailable || doesAlreadyOwn}
                 class:pointer-events-none={loadingBuy || $user === loading || $user === unavailable || doesAlreadyOwn}
                 on:click={previewBundle}
             >
