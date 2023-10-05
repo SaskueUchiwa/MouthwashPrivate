@@ -39,7 +39,7 @@ function runCommandInDir(dir, command) {
     console.log("|- Release description:");
     console.log("  |- " + tagDescription.split("\n").join("\n  |- "));
 
-    const basePggRewrittenZipPath = path.join(__dirname, `../src-tauri/target/release/bundle/msi/pgg-rewritten_${releaseVersion}_x64_en-US.msi.zip`);
+    const basePggRewrittenZipPath = path.join(__dirname, `../src-tauri/target/release/bundle/msi/PGG Rewritten_${releaseVersion}_x64_en-US.msi.zip`);
     const basePggRewrittenSigPath = basePggRewrittenZipPath + ".sig";
 
     const signatureBase64 = await fs.readFile(basePggRewrittenSigPath, "utf8");
