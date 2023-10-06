@@ -5,7 +5,7 @@
     import * as amongus from "@skeldjs/constant";
     import { writable } from "svelte/store";
     import Loader from "../../../icons/Loader.svelte";
-    import { type accountUrl, loading, unavailable, type Bundle, user } from "../../../stores/accounts";
+    import { accountUrl, loading, unavailable, type Bundle, user } from "../../../stores/accounts";
     import CosmeticBundle from "./CosmeticBundle.svelte";
     import ArrowRight from "../../../icons/ArrowRight.svelte";
     import BundlePreviewList from "./BundlePreviewList.svelte";
