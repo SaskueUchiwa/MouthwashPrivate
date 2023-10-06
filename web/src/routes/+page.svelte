@@ -6,13 +6,13 @@
     let postDownloadInstructionsOpen = false;
 </script>
 
-<div class="flex flex-col items-center gap-16">
-    <div class="flex items-center gap-4">
-        <img src="/polus.png" width={128} alt="polus icon"/>
-        <div class="flex flex-col">
-            <span class="text-6xl"><span class="font-bold">Polus.GG:</span>&nbsp;<span class="italic">Rewritten</span></span>
-            <p>
-                A revival of the original Polus.GG mod for Among Us - a private server and client mod<br>
+<div class="flex flex-col items-center px-4 md:px-0 gap-16">
+    <div class="flex flex-col md:flex-row items-center gap-4">
+        <img src="/polus.png" class="w-24 md:w-32" alt="polus icon"/>
+        <div class="flex flex-col items-center md:items-stretch">
+            <span class="text-4xl md:text-6xl"><span class="font-bold">Polus.GG:</span>&nbsp;<span class="italic">Rewritten</span></span>
+            <p class="text-xs md:text-md max-w-144">
+                A revival of the original Polus.GG mod for Among Us - a private server and client mod
                 with brand new gamemodes, cosmetics and roles, unleashing thousands of new ways to play.
             </p>
         </div>
