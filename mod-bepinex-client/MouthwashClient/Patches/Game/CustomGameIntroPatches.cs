@@ -200,22 +200,7 @@ namespace MouthwashClient.Patches.Game
             __instance.ImpostorRules.SetActive(false);
             __instance.ImpostorName.gameObject.SetActive(false);
             __instance.ImpostorTitle.gameObject.SetActive(false);
-            if (PlayerControl.LocalPlayer.Data.Role.IsImpostor)
-            {
-                __instance.ImpostorText.gameObject.SetActive(false);
-            }
-            else
-            {
-                int adjustedNumImpostors = GameManager.Instance.LogicOptions.GetAdjustedNumImpostors(GameData.Instance.PlayerCount);
-                if (adjustedNumImpostors == 1)
-                {
-                    __instance.ImpostorText.text = IntroInformation.SubtitleText;
-                }
-                else
-                {
-                    __instance.ImpostorText.text = IntroInformation.SubtitleText;
-                }
-            }
+            __instance.ImpostorText.text = IntroInformation.SubtitleText;
             PlayerControl[] list = IntroInformation.YourTeam.Select(x => GetPlayerControlById(x))
                 .Where(x => x != null)
                 .Select(x => x!)
