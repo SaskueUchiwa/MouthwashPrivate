@@ -74,7 +74,7 @@ function runCommandInDir(dir, command) {
         platforms: {
             "windows-x86_64": {
                 signature: signatureBase64,
-                url: `${process.env.SUPABASE_BASE_API_URL}/storage/v1/object/Downloads/Launcher_${releaseVersion}.zip`
+                url: `${process.env.SUPABASE_BASE_API_URL}/storage/v1/object/public/Downloads/Launcher_${releaseVersion}.zip`
             }
         }
     };
