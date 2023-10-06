@@ -18,7 +18,7 @@
         </div>
     </div>
     <a
-        class="flex items-center justify-center rounded-lg px-6 py-4 bg-card-200 hover:bg-[#1c072b] hover:text-text-300 filter border-none font-inherit text-inherit cursor-pointer"
+        class="flex items-center justify-center rounded-lg px-6 py-4 bg-card-200 hover:bg-[#1c072b] hover:text-text-300 filter border-none font-inherit text-inherit cursor-pointer transition-colors duration-150"
         href="{import.meta.env.VITE_SUPABASE_BASE_API_URL}/storage/v1/object/public/Downloads/Polus.GG Rewritten {data.launcherRelease.version}.msi"
         target="_blank"
         on:click={() => postDownloadInstructionsOpen = true}
