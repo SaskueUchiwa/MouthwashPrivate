@@ -39,15 +39,23 @@ function runCommandInDir(dir, command) {
     console.log("|- Release description:");
     console.log("  |- " + tagDescription.split("\n").join("\n  |- "));
 
+    const basePggRewrittenMsiPath = path.join(__dirname, `../src-tauri/target/release/bundle/msi/PGG Rewritten_${releaseVersion}_x64_en-US.msi`);
     const basePggRewrittenZipPath = path.join(__dirname, `../src-tauri/target/release/bundle/msi/PGG Rewritten_${releaseVersion}_x64_en-US.msi.zip`);
     const basePggRewrittenSigPath = basePggRewrittenZipPath + ".sig";
 
     const signatureBase64 = await fs.readFile(basePggRewrittenSigPath, "utf8");
 
-    console.log("Uploading zip to %s..", `${process.env.SUPABASE_BASE_API_URL}/storage/v1/object/Downloads/Launcher_${releaseVersion}.zip`);
+    console.log("Uploading zip to %s..", `${process.env.SUPABASE_BASE_API_URL}/storage/v1/object/Downloads/Polus.GG: Rewritten Launcher ${releaseVersion}.zip`);
     try {
         console.log("|- Removing existing..");
-        await got.delete(`${process.env.SUPABASE_BASE_API_URL}/storage/v1/object/Downloads/Launcher_${releaseVersion}.zip`, {
+        await got.delete(`${process.env.SUPABASE_BASE_API_URL}/storage/v1/object/Downloads/Polus.GG: Rewritten Launcher ${releaseVersion}.zip`, {
+            headers: {
+                authorization: "Bearer " + process.env.SUPABASE_SERVICE_ROLE_TOKEN,
+                "cache-control": "3600"
+            },
+            responseType: "json"
+        });
+        await got.delete(`${process.env.SUPABASE_BASE_API_URL}/storage/v1/object/Downloads/Polus.GG: Rewritten Launcher ${releaseVersion}.msi`, {
             headers: {
                 authorization: "Bearer " + process.env.SUPABASE_SERVICE_ROLE_TOKEN,
                 "cache-control": "3600"
@@ -58,8 +66,16 @@ function runCommandInDir(dir, command) {
         console.log("|- Existing does not exist, continuing..");
     }
     console.log("|- Uploading new..");
-    await got.post(`${process.env.SUPABASE_BASE_API_URL}/storage/v1/object/Downloads/Launcher_${releaseVersion}.zip`, {
+    await got.post(`${process.env.SUPABASE_BASE_API_URL}/storage/v1/object/Downloads/Polus.GG: Rewritten Launcher ${releaseVersion}.zip`, {
         body: await fs.readFile(basePggRewrittenZipPath),
+        headers: {
+            authorization: "Bearer " + process.env.SUPABASE_SERVICE_ROLE_TOKEN,
+            "cache-control": "3600",
+            "content-type": "application/octet-stream"
+        }
+    });
+    await got.post(`${process.env.SUPABASE_BASE_API_URL}/storage/v1/object/Downloads/Polus.GG: Rewritten Launcher ${releaseVersion}.msi`, {
+        body: await fs.readFile(basePggRewrittenMsiPath),
         headers: {
             authorization: "Bearer " + process.env.SUPABASE_SERVICE_ROLE_TOKEN,
             "cache-control": "3600",
@@ -74,7 +90,7 @@ function runCommandInDir(dir, command) {
         platforms: {
             "windows-x86_64": {
                 signature: signatureBase64,
-                url: `${process.env.SUPABASE_BASE_API_URL}/storage/v1/object/public/Downloads/Launcher_${releaseVersion}.zip`
+                url: `${process.env.SUPABASE_BASE_API_URL}/storage/v1/object/public/Downloads/Polus.GG: Rewritten Launcher ${releaseVersion}.zip`
             }
         }
     };
