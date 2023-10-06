@@ -12,12 +12,10 @@ namespace MouthwashClient.Patches.Game
             if (!__result)
             {
                 DeadBody[] deadBodies = Object.FindObjectsOfType<DeadBody>();
-                PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage($"Found {deadBodies.Length} dead bodies in scene");
                 foreach (DeadBody deadBody in deadBodies)
                 {
                     if (deadBody.ParentId != 255)
                     {
-                        PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage($"Destroying {deadBody}");
                         Object.Destroy(deadBody.gameObject);
                     }
                 }

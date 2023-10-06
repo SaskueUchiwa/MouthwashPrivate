@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using HarmonyLib;
 using Hazel;
 using InnerNet;
@@ -55,7 +56,7 @@ namespace MouthwashClient.Patches.Game
             public static bool Prefix(InnerNetClient __instance,
                 [HarmonyArgument(0)] MessageReader reader, [HarmonyArgument(1)] SendOption sendOption)
             {
-                switch (reader.Tag)
+	            switch (reader.Tag)
                 {
                     case (byte)MouthwashRootPacketTag.OverwriteGameOver:
                         string titleText = reader.ReadString();
@@ -96,7 +97,7 @@ namespace MouthwashClient.Patches.Game
         {
             public static bool Prefix(EndGameManager __instance)
             {
-                CustomSetEverythingUp(__instance);
+	            CustomSetEverythingUp(__instance);
                 return false;
             }
         }

@@ -14,10 +14,16 @@ namespace MouthwashClient.Patches.Network
     {
         private static bool _receivedFirstNonce;
         private static ushort _nextExpectedNonce = 1;
-        private static Dictionary<ushort, MessageReader> _packetQueue = new();
+
+        public struct ReceivedPacket
+        {
+            public MessageReader reader;
+            public int bytesReceived;
+        }
+        private static Dictionary<ushort, ReceivedPacket> _packetQueue = new();
         
         public static void Reset() {
-            _packetQueue = new Dictionary<ushort, MessageReader>();
+            _packetQueue = new Dictionary<ushort, ReceivedPacket>();
             _receivedFirstNonce = false;
             _nextExpectedNonce = 1;
         }
@@ -43,19 +49,19 @@ namespace MouthwashClient.Patches.Network
                             PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogWarning($"Server is behind (got {nonce}, expected {_nextExpectedNonce})");
                             return false;
                         }
-                        _packetQueue[nonce] = reader;
+                        _packetQueue[nonce] = new ReceivedPacket{ reader = reader, bytesReceived = bytesReceived };
                         if (nonce != _nextExpectedNonce)
                         {
                             PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogWarning($"Server is ahead, waiting for {_nextExpectedNonce} to process {nonce}");
                             return false;
                         }
 
-                        while (_packetQueue.TryGetValue(_nextExpectedNonce, out MessageReader? processReader))
+                        while (_packetQueue.TryGetValue(_nextExpectedNonce, out ReceivedPacket processReader))
                         {
                             try
                             {
-                                __instance.InvokeDataReceived(SendOption.Reliable, _packetQueue[_nextExpectedNonce], 3,
-                                    bytesReceived);
+                                __instance.InvokeDataReceived(SendOption.Reliable, processReader.reader, 3,
+                                    processReader.bytesReceived);
                                 _packetQueue.Remove(_nextExpectedNonce);
                             }
                             catch (Exception e)

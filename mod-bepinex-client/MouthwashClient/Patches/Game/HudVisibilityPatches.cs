@@ -26,7 +26,6 @@ namespace MouthwashClient.Patches.Game
                     case (byte)MouthwashRootPacketTag.SetHudVisibility:
                         HudItem hudItem = (HudItem)reader.ReadByte();
                         bool isVisible = reader.ReadBoolean();
-                        PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage($"HUD ITEM: {hudItem} = {isVisible}");
                         lock (hiddenItems)
                         {
                             if (isVisible)

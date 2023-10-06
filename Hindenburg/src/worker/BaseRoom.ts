@@ -973,6 +973,8 @@ export class BaseRoom extends Hostable<RoomEvents> {
                 }
             }
 
+            await Promise.all(promises);
+
             return;
         }
 
@@ -1123,7 +1125,8 @@ export class BaseRoom extends Hostable<RoomEvents> {
         const includedConnections = include ? this.getRealConnections(include) : undefined;
         const excludedConnections = exclude ? this.getRealConnections(exclude) : undefined;
 
-        this.broadcastMessages(gameData, payloads, includedConnections, excludedConnections, reliable);
+        const promises = [];
+        promises.push(this.broadcastMessages(gameData, payloads, includedConnections, excludedConnections, reliable));
 
         for (let i = 0; i < this.activePerspectives.length; i++) {
             const otherPerspective = this.activePerspectives[i];
@@ -1138,9 +1141,10 @@ export class BaseRoom extends Hostable<RoomEvents> {
             await otherPerspective.processMessagesAndGetNotCanceled(notCanceledOtherIncomingPayloads, notCanceledPerspectivePayloads, ctx);
 
             if (notCanceledPerspectiveGameData.length > 0 || notCanceledPerspectivePayloads.length > 0) {
-                otherPerspective.broadcastMessages(notCanceledPerspectiveGameData, notCanceledPerspectivePayloads, includedConnections, excludedConnections, reliable);
+                promises.push(otherPerspective.broadcastMessages(notCanceledPerspectiveGameData, notCanceledPerspectivePayloads, includedConnections, excludedConnections, reliable));
             }
         }
+        await Promise.all(promises);
     }
 
     async processMessagesAndGetNotCanceled(messages: BaseMessage[], notCanceled: BaseMessage[], ctx: PacketContext) {

@@ -21,7 +21,6 @@ namespace MouthwashClient.Patches.Game
             {
                 if (MouthwashBasicRole == null)
                 {
-                    PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage($"Creating basic role 1..");
                     GameObject roleContainerObject = new GameObject();
                     roleContainerObject.name = "Basic Mouthwash Role";
                     MouthwashBasicRole = roleContainerObject.AddComponent<MouthwashRole>();
@@ -65,7 +64,6 @@ namespace MouthwashClient.Patches.Game
 
                         if (MouthwashBasicRole == null)
                         {
-                            PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage($"Creating basic role 2..");
                             GameObject roleContainerObject = new GameObject();
                             roleContainerObject.name = "Basic Mouthwash Role";
                             MouthwashBasicRole = roleContainerObject.AddComponent<MouthwashRole>();

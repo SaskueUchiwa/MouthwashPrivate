@@ -114,7 +114,6 @@ namespace MouthwashClient.Services
                 cosmetic_visor = cosmeticVisor,
                 cosmetic_nameplate = cosmeticNameplate
             });
-            PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage(requestContents);
             HttpRequestMessage ownedBundlesRequest = new()
             {
                 Method = HttpMethod.Put,

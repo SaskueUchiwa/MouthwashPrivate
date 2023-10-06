@@ -10,7 +10,7 @@ using MouthwashClient.Services;
 using Reactor.Utilities;
 using SocketFlags = Il2CppSystem.Net.Sockets.SocketFlags;
 
-namespace MouthwashClient.Patches.OnlinePlay
+namespace MouthwashClient.Patches.Network
 {
     public static class SignedPacketsPatch
     {
