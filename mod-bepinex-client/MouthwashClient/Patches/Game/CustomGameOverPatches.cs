@@ -115,7 +115,7 @@ namespace MouthwashClient.Patches.Game
             StatsManager.Instance.IncrementStat(StringNames.StatsGamesFinished);
 			__instance.Navigation.HideButtons();
 			bool flag = GameManager.Instance.DidHumansWin(TempData.EndReason);
-			__instance.WinText.text = GameOverInformation.TitleText;
+			__instance.WinText.text = $"{GameOverInformation.TitleText}<br><size=50%>{GameOverInformation.SubtitleText}</size>";
 			__instance.WinText.color = GameOverInformation.BackgroundColor;
 			__instance.BackgroundBar.material.SetColor("_Color", GameOverInformation.BackgroundColor);
 			switch (GameOverInformation.WinSound)
