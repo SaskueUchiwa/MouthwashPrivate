@@ -14,23 +14,22 @@ export class BeginCameraAnimationMessage extends BaseRpcMessage {
     }
 
     static Deserialize(reader: HazelReader) {
+        const reset = reader.bool();
         const keyframes: CameraAnimationKeyframe[] = [];
         while (reader.left) {
             const [ , kreader ] = reader.message();
             keyframes.push(kreader.read(CameraAnimationKeyframe));
         }
 
-        const reset = reader.bool();
-
         return new BeginCameraAnimationMessage(keyframes, reset);
     }
 
     Serialize(writer: HazelWriter) {
+        writer.bool(this.reset);
         for (const keyframe of this.keyframes) {
             writer.begin(0);
             writer.write(keyframe);
             writer.end();
         }
-        writer.bool(this.reset);
     }
 }

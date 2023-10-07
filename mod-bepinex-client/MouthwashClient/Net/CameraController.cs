@@ -1,41 +1,96 @@
-﻿using System;
+﻿using System.Collections;
+using System.Collections.Generic;
 using Hazel;
 using InnerNet;
+using MouthwashClient.Enums;
+using MouthwashClient.Patches.Lobby;
+using Reactor.Networking.Extensions;
 using Reactor.Utilities;
 using Reactor.Utilities.Attributes;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace MouthwashClient.Net
 {
+    public struct CameraAnimationKeyframe
+    {
+        public float Offset;
+        public float Duration;
+        public Vector2 Position;
+        public float Rotation;
+        public Color Color;
+    }
+
+    public struct AnimationState
+    {
+        public Vector2 Position;
+        public float Rotation;
+        public Color Color;
+    }
+    
     [RegisterInIl2Cpp]
     public class CameraController : InnerNetObject
     {
-        public Vector2 offset = Vector2.zero;
+        private List<IEnumerator> _activeAnimations = new();
+        public Vector2 positionOffset = Vector2.zero;
+
+        public AnimationState AnimationFrameState = new(){ Position = Vector2.zero, Rotation = 0f, Color = Color.clear };
     
         public override void HandleRpc(byte callId, MessageReader reader)
         {
-            PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage($"Got RPC for camera {callId}");
+            switch ((MouthwashRpcPacketTag)callId)
+            {
+            case MouthwashRpcPacketTag.BeginCameraAnimation:
+                bool doReset = reader.ReadBoolean();
+                List<CameraAnimationKeyframe> keyframes = new();
+                while (reader.BytesRemaining > 0)
+                {
+                    MessageReader animationReader = reader.ReadMessage();
+                    float offset = animationReader.ReadPackedUInt32();
+                    float duration = animationReader.ReadPackedUInt32();
+                    Vector2 position = animationReader.ReadVector2();
+                    float rotation = animationReader.ReadSingle();
+                    Color color = MouthwashChatMessageAppearance.ReadColor(animationReader);
+                    keyframes.Add(new CameraAnimationKeyframe
+                    {
+                        Offset = offset,
+                        Duration = duration,
+                        Position = position,
+                        Rotation = rotation,
+                        Color = color
+                    });
+                }
+
+                if (doReset)
+                {
+                    foreach (IEnumerator animation in _activeAnimations) gameObject.EnsureComponent<CoroutineManager>().StopCoroutine(animation);
+                    _activeAnimations.Clear();
+                    ResetAppearance();
+                }
+
+                PlayAnimation(keyframes.ToArray());
+                break;
+            }
+        }
+
+        public bool DoesCameraExist()
+        {
+            return OwnerId == PlayerControl.LocalPlayer.OwnerId
+                   && DestroyableSingleton<HudManager>.InstanceExists
+                   && DestroyableSingleton<HudManager>.Instance.PlayerCam != null;
         }
 
         public void Awake()
         {
-            if (OwnerId != PlayerControl.LocalPlayer.OwnerId)
+            if (!DoesCameraExist())
                 return;
-            if (!DestroyableSingleton<HudManager>.InstanceExists)
-                return;
-            if (DestroyableSingleton<HudManager>.Instance.PlayerCam == null)
-                return;
-
+            
             DestroyableSingleton<HudManager>.Instance.PlayerCam.Target = this;
         }
 
         public void OnDestroy()
         {
-            if (OwnerId == 0)
-                return;
-            if (!DestroyableSingleton<HudManager>.InstanceExists)
-                return;
-            if (DestroyableSingleton<HudManager>.Instance.PlayerCam == null)
+            if (!DoesCameraExist())
                 return;
             
             DestroyableSingleton<HudManager>.Instance.PlayerCam.Target = PlayerControl.LocalPlayer;
@@ -43,27 +98,64 @@ namespace MouthwashClient.Net
 
         public void Update()
         {
-            if (OwnerId == 0)
-                return;
-            
-            if (OwnerId != PlayerControl.LocalPlayer.OwnerId)
-                return;
-            
-            if (PlayerControl.LocalPlayer == null)
+            if (!DoesCameraExist())
                 return;
 
-            transform.position = PlayerControl.LocalPlayer.transform.position + new Vector3(offset.x, offset.y, 0f);
+            transform.position = PlayerControl.LocalPlayer.transform.position
+                                 + new Vector3(AnimationFrameState.Position.x, AnimationFrameState.Position.y, 0f)
+                                 + new Vector3(positionOffset.x, positionOffset.y, 0f);
+            transform.rotation = Quaternion.Euler(0f, 0f, AnimationFrameState.Rotation);
         }
 
         public override bool Serialize(MessageWriter writer, bool initialState)
         {
-            NetHelpers.WriteVector2(offset, writer);
+            NetHelpers.WriteVector2(positionOffset, writer);
             return true;
         }
 
         public override void Deserialize(MessageReader reader, bool initialState)
         {
-            offset = NetHelpers.ReadVector2(reader);
+            positionOffset = NetHelpers.ReadVector2(reader);
+        }
+
+        public void ResetAppearance()
+        {
+            AnimationFrameState = new(){ Position = Vector2.zero, Rotation = 0f, Color = Color.clear };
+        }
+
+        public void PlayAnimation(CameraAnimationKeyframe[] keyframes)
+        {
+            foreach (CameraAnimationKeyframe keyframe in keyframes)
+                _activeAnimations.Add(gameObject.EnsureComponent<CoroutineManager>().StartCoroutine(PlayAnimationKeyframe(keyframe)));
+        }
+
+        public IEnumerator PlayAnimationKeyframe(CameraAnimationKeyframe keyframe)
+        {
+            for (float t = 0f; t < keyframe.Offset; t += Time.deltaTime * 1000f)
+                yield return null;
+
+            Vector2 startPosition = AnimationFrameState.Position;
+            float startRotation = AnimationFrameState.Rotation;
+            Color startColor = AnimationFrameState.Color;
+
+            for (float t = 0f; t < keyframe.Duration; t += Time.deltaTime * 1000f)
+            {
+                float x = t / keyframe.Duration;
+                AnimationFrameState = new AnimationState
+                {
+                    Position = Vector2.Lerp(startPosition, keyframe.Position, x),
+                    Rotation = Mathf.Lerp(startRotation, keyframe.Rotation, x),
+                    Color = Color.Lerp(startColor, keyframe.Color, x)
+                };
+                DestroyableSingleton<HudManager>.Instance.FullScreen.gameObject.SetActive(true);
+                DestroyableSingleton<HudManager>.Instance.FullScreen.color = AnimationFrameState.Color;
+                if (AnimationFrameState.Color.a < 0.05f)
+                {
+                    DestroyableSingleton<HudManager>.Instance.FullScreen.gameObject.SetActive(false);
+                }
+
+                yield return null;
+            }
         }
     }
 }

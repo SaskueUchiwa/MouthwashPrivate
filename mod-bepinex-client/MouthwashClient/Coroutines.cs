@@ -6,6 +6,7 @@ using Cpp2IL.Core.Extensions;
 using Il2CppInterop.Runtime.Attributes;
 using Il2CppInterop.Runtime.Injection;
 using Il2CppInterop.Runtime.InteropTypes;
+using InnerNet;
 using Reactor.Utilities;
 using Reactor.Utilities.Attributes;
 using UnityEngine;
