@@ -1,4 +1,5 @@
-﻿using Hazel;
+﻿using AmongUs.Data;
+using Hazel;
 using InnerNet;
 using MouthwashClient.Services;
 using Reactor.Utilities;
@@ -53,10 +54,10 @@ namespace MouthwashClient.Net
 
             AudioPlayerObject.clip = audioClip;
             AudioPlayerObject.pitch = pitch;
-            AudioPlayerObject.volume = volumeModifier;
+            AudioPlayerObject.volume = DataManager.Settings.Audio.SfxVolume * volumeModifier;
             AudioPlayerObject.loop = looping;
             AudioPlayerObject.time = seek;
-            
+
             if (paused) AudioPlayerObject.Pause(); else AudioPlayerObject.Play();
         }
 
