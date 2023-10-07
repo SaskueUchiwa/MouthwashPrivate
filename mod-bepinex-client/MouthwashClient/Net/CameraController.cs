@@ -1,6 +1,7 @@
 ﻿using System;
 using Hazel;
 using InnerNet;
+using Reactor.Utilities;
 using Reactor.Utilities.Attributes;
 using UnityEngine;
 
@@ -13,7 +14,7 @@ namespace MouthwashClient.Net
     
         public override void HandleRpc(byte callId, MessageReader reader)
         {
-            base.HandleRpc(callId, reader);
+            PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage($"Got RPC for camera {callId}");
         }
 
         public void Awake()

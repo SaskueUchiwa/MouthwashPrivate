@@ -16,6 +16,7 @@ namespace MouthwashClient.Patches.Behaviours
         public static InnerNetObject? ButtonPrefab;
         public static InnerNetObject? CameraControllerPrefab;
         public static InnerNetObject? DeadBodyGenericPrefab;
+        public static InnerNetObject? SoundSourcePrefab;
         
         [HarmonyPatch(typeof(AmongUsClient), nameof(AmongUsClient.Awake))]
         public static class RegisterCustomSpawnTypeOnAwakePatch
@@ -25,10 +26,12 @@ namespace MouthwashClient.Patches.Behaviours
                 ButtonPrefab ??= CreateButtonPrefab();
                 CameraControllerPrefab ??= CreateCameraControllerPrefab();
                 DeadBodyGenericPrefab ??= CreateDeadBodyGenericPrefab();
+                SoundSourcePrefab ??= CreateSoundSourcePrefab();
                 __instance.NonAddressableSpawnableObjects = __instance.NonAddressableSpawnableObjects
                     .AddItem(ButtonPrefab)
                     .AddItem(CameraControllerPrefab)
-                    .AddItem(DeadBodyGenericPrefab).ToArray();
+                    .AddItem(DeadBodyGenericPrefab)
+                    .AddItem(SoundSourcePrefab).ToArray();
                 IEnumerable<AssetReference> spawnableObjects = __instance.SpawnableObjects.AsEnumerable();
                 for (int i = 0; i < 255 - __instance.SpawnableObjects.Length; i++)
                 {
@@ -86,6 +89,18 @@ namespace MouthwashClient.Patches.Behaviours
             deadBodyGeneric.SpawnId = (uint)MouthwashSpawnType.DeadBody;
             CustomNetworkTransformGeneric cntGeneric = obj.AddComponent<CustomNetworkTransformGeneric>();
             return deadBodyGeneric;
+        }
+
+        public static InnerNetObject CreateSoundSourcePrefab()
+        {
+            PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage("Creating sound source object..");
+            GameObject obj = new("Sound Source");
+            obj.SetActive(false);
+            obj.DontDestroy();
+            SoundSource soundSource = obj.AddComponent<SoundSource>();
+            soundSource.SpawnId = (uint)MouthwashSpawnType.SoundSource;
+            CustomNetworkTransformGeneric cntGeneric = obj.AddComponent<CustomNetworkTransformGeneric>();
+            return soundSource;
         }
     }
 }
