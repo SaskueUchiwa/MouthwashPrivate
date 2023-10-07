@@ -242,11 +242,11 @@ export class HideAndSeekGamemodePlugin extends BaseGamemodePlugin {
                 [
                     new RpcMessage(
                         seeker.control!.netId,
-                        new SetPlayerSpeedModifierMessage(this.room.settings.playerSpeed)
+                        new SetPlayerSpeedModifierMessage(1)
                     ),
                     new RpcMessage(
                         seeker.control!.netId,
-                        new SetPlayerVisionModifierMessage(this.room.settings.impostorVision)
+                        new SetPlayerVisionModifierMessage(1)
                     )
                 ],
                 [],
