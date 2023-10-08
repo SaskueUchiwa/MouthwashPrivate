@@ -64,8 +64,8 @@ export class PlayerAnimationKeyframe extends Keyframe implements PlayerAnimation
     }
 
     static Deserialize(reader: HazelReader, enabledBitfield: Bitfield) {
-        const offset = reader.packed();
-        const duration = reader.packed();
+        const offset = reader.upacked();
+        const duration = reader.upacked();
 
         const opacity = enabledBitfield.has(PlayerKeyframeEnabledValues.Opacity) ? reader.float() : undefined;
         const hatOpacity = enabledBitfield.has(PlayerKeyframeEnabledValues.HatOpacity) ? reader.float() : undefined;
@@ -96,8 +96,8 @@ export class PlayerAnimationKeyframe extends Keyframe implements PlayerAnimation
 
     Serialize(writer: HazelWriter) {
         const enabledBitfield = new Bitfield(0);
-        writer.packed(this.offset);
-        writer.packed(this.duration);
+        writer.upacked(this.offset);
+        writer.upacked(this.duration);
         if (this.opacity !== undefined) {
             enabledBitfield.on(PlayerKeyframeEnabledValues.Opacity);
             writer.float(this.opacity);

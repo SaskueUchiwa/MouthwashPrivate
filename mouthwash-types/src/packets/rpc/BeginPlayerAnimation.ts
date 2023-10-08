@@ -15,17 +15,19 @@ export class BeginPlayerAnimationMessage extends BaseRpcMessage {
     }
 
     static Deserialize(reader: HazelReader) {
+        const reset = reader.bool();
         const enabledBitfield = new Bitfield(reader.uint16());
         const keyframes: PlayerAnimationKeyframe[] = [];
         while (reader.left) {
             const [ , kreader ] = reader.message();
             keyframes.push(kreader.read(PlayerAnimationKeyframe, enabledBitfield));
         }
-        const reset = reader.bool();
         return new BeginPlayerAnimationMessage(keyframes, reset);
     }
 
     Serialize(writer: HazelWriter) {
+        writer.bool(this.reset);
+
         const kwriter = HazelWriter.alloc(55 * this.keyframes.length);
         let maxBitfield = new Bitfield(0);
         for (const keyframe of this.keyframes) {
@@ -35,8 +37,8 @@ export class BeginPlayerAnimationMessage extends BaseRpcMessage {
             kwriter.end();
         }
         kwriter.realloc(kwriter.cursor);
+        
         writer.uint16(maxBitfield.value);
         writer.bytes(kwriter);
-        writer.bool(this.reset);
     }
 }

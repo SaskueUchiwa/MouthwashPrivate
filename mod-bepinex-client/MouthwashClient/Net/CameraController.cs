@@ -121,15 +121,19 @@ namespace MouthwashClient.Net
         public void ResetAppearance()
         {
             AnimationFrameState = new(){ Position = Vector2.zero, Rotation = 0f, Color = Color.clear };
+            if (DestroyableSingleton<HudManager>.Instance.FullScreen != null)
+            {
+                DestroyableSingleton<HudManager>.Instance.FullScreen.gameObject.SetActive(false);
+            }
         }
 
         public void PlayAnimation(CameraAnimationKeyframe[] keyframes)
         {
             foreach (CameraAnimationKeyframe keyframe in keyframes)
-                _activeAnimations.Add(gameObject.EnsureComponent<CoroutineManager>().StartCoroutine(PlayAnimationKeyframe(keyframe)));
+                _activeAnimations.Add(gameObject.EnsureComponent<CoroutineManager>().StartCoroutine(CoPlayAnimationKeyframe(keyframe)));
         }
 
-        public IEnumerator PlayAnimationKeyframe(CameraAnimationKeyframe keyframe)
+        public IEnumerator CoPlayAnimationKeyframe(CameraAnimationKeyframe keyframe)
         {
             for (float t = 0f; t < keyframe.Offset; t += Time.deltaTime * 1000f)
                 yield return null;
@@ -141,6 +145,7 @@ namespace MouthwashClient.Net
             for (float t = 0f; t < keyframe.Duration; t += Time.deltaTime * 1000f)
             {
                 float x = t / keyframe.Duration;
+                if (float.IsNaN(x)) x = 1f;
                 AnimationFrameState = new AnimationState
                 {
                     Position = Vector2.Lerp(startPosition, keyframe.Position, x),
