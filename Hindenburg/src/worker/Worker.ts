@@ -344,8 +344,6 @@ export class Worker extends EventEmitter<WorkerEvents> {
                     ? args.options.reason
                     : GameOverReason[args.options.reason]) || GameOverReason.None;
 
-                console.log(reason);
-
                 const codeId = roomName === "LOCAL"
                     ? 0x20
                     : GameCode.convertStringToInt(roomName);

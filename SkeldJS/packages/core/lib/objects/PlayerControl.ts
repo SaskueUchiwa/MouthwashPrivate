@@ -1337,7 +1337,6 @@ export class PlayerControl<RoomType extends Hostable = Hostable> extends Network
             this.room.gameData?.markDirty(this.playerId);
         }
 
-        console.log(ev.alteredHatId, ev.oldHatId);
         if (ev.alteredHatId !== oldHat)
             this._rpcSetHat(ev.alteredHatId);
     }
