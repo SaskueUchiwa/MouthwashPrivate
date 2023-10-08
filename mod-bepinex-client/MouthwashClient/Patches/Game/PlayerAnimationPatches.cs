@@ -316,6 +316,16 @@ namespace MouthwashClient.Patches.Game
                 // TODO: scale, position and rotation (sounds like a nightmare)
             }
         }
+
+        [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.OnDisable))]
+        public static class PlayerResetAnimationsPatch
+        {
+            public static void Postfix(PlayerControl __instance)
+            {
+                PlayerAnimationStates.Remove(__instance.PlayerId);
+                PlayerAnimationCoroutines.Remove(__instance.PlayerId);
+            }
+        }
         
         public static PlayerControl? GetPlayerControlById(byte playerId)
         {

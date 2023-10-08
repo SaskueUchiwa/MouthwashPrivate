@@ -55,23 +55,21 @@ export class Jester extends BaseRole {
     async onPlayerDie(ev: PlayerDieEvent) {
         if (ev.reason === "exiled") {
             const players = this.api.getEndgamePlayers();
-            const myPlayerInfo = this.player.playerInfo;
-
             this.room.registerEndGameIntent(
                 new EndGameIntent(
                     "jester voted out",
                     GameOverReason.None,
                     {
-                        endGameScreen: new Map(players.map<[number, EndGameScreen]>(playerInfo => {
+                        endGameScreen: new Map(players.map<[number, EndGameScreen]>(playerRole => {
                             return [
-                                playerInfo.playerId,
+                                playerRole.player.playerId!,
                                 {
-                                    titleText: playerInfo === myPlayerInfo ? "Victory" : Palette.impostorRed.text("Defeat"),
+                                    titleText: playerRole === this ? "Victory" : Palette.impostorRed.text("Defeat"),
                                     subtitleText: `The ${jesterColor.text("Jester")} was voted out`,
                                     backgroundColor: jesterColor,
                                     yourTeam: [ this.player ],
                                     winSound: new AssetReference("PggResources/TownOfPolus", "Assets/Mods/TownOfPolus/JesterSfx.mp3"),
-                                    hasWon: playerInfo.isImpostor
+                                    hasWon: playerRole === this
                                 }
                             ];
                         }))

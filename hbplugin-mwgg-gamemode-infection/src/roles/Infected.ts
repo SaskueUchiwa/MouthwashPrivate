@@ -173,28 +173,16 @@ export class Infected extends Impostor {
     }
 
     async checkForAllInfectedEndGame(finalTarget: PlayerData<Room>) {
-        const players = [];
-        for (const [ , player ] of this.room.players) {
-            players.push(player);
-            if (player === finalTarget)
-                continue;
-            
-            const playerRole = this.api.roleService.getPlayerRole(player);
-            if (playerRole && !(playerRole instanceof Infected)) {
-                return false;
-            }
-        }
-
+        const players = this.api.getEndgamePlayers();
         this.room.registerEndGameIntent(
             new EndGameIntent(
                 "crewmates infected",
                 GameOverReason.ImpostorByKill,
                 {
-                    endGameScreen: new Map(players.map<[number, EndGameScreen]>(player => {
-                        const playerRole = this.api.roleService.getPlayerRole(player);
+                    endGameScreen: new Map(players.map<[number, EndGameScreen]>(playerRole => {
                         if (playerRole instanceof Infected) {
                             return [
-                                player.playerId!,
+                                playerRole.player.playerId!,
                                 {
                                     titleText: playerRole._totalInfections > 0 ? "Victory" : Palette.impostorRed.text("Defeat"),
                                     subtitleText: playerRole._totalInfections > 0
@@ -208,7 +196,7 @@ export class Infected extends Impostor {
                             ];
                         } else {
                             return [
-                                player.playerId!,
+                                playerRole.player.playerId!,
                                 {
                                     titleText: Palette.impostorRed.text("Defeat"),
                                     subtitleText: `All ${uninfectedColor.text("Crewmates")} were infected`,

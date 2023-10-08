@@ -86,6 +86,7 @@ import {
 
 import {
     BaseGamemodePlugin,
+    BaseRole,
     EndGameScreen,
     getRegisteredBundles,
     getRegisteredRoles,
@@ -603,12 +604,11 @@ export class MouthwashApiPlugin extends RoomPlugin {
     }
 
     getEndgamePlayers() {
-        const players: PlayerInfo<Room>[] = [];
-        if (this.room.gameData) {
-            for (const [ , player ] of this.room.gameData.players) {
-                if (player.playerId !== undefined) {
-                    players.push(player);
-                }
+        const players: BaseRole[] = [];
+        for (const [ , player ] of this.room.players) {
+            const playerRole = this.roleService.getPlayerRole(player);
+            if (playerRole !== undefined) {
+                players.push(playerRole);
             }
         }
         return players;
@@ -639,16 +639,16 @@ export class MouthwashApiPlugin extends RoomPlugin {
                     MouthwashEndGames.SystemSabotage,
                     GameOverReason.ImpostorBySabotage,
                     {
-                        endGameScreen: new Map(players.map<[number, EndGameScreen]>(player => {
+                        endGameScreen: new Map(players.map<[number, EndGameScreen]>(playerRole => {
                             return [
-                                player.playerId,
+                                playerRole.player.playerId!,
                                 {
-                                    titleText: player.isImpostor ? "Victory" : Palette.impostorRed.text("Defeat"),
+                                    titleText: playerRole.metadata.alignment === RoleAlignment.Impostor ? "Victory" : Palette.impostorRed.text("Defeat"),
                                     subtitleText: `${Palette.impostorRed.text("Impostors")} won by sabotage`,
                                     backgroundColor: Palette.impostorRed,
                                     yourTeam: RoleAlignment.Impostor,
                                     winSound: WinSound.ImpostorWin,
-                                    hasWon: player.isImpostor
+                                    hasWon: playerRole.metadata.alignment === RoleAlignment.Impostor
                                 }
                             ];
                         }))
@@ -663,16 +663,16 @@ export class MouthwashApiPlugin extends RoomPlugin {
                         MouthwashEndGames.ImpostorsDisconnected,
                         GameOverReason.ImpostorDisconnect,
                         {
-                            endGameScreen: new Map(players.map<[number, EndGameScreen]>(player => {
+                            endGameScreen: new Map(players.map<[number, EndGameScreen]>(playerRole => {
                                 return [
-                                    player.playerId,
+                                    playerRole.player.playerId!,
                                     {
-                                        titleText: !player.isImpostor ? "Victory" : Palette.impostorRed.text("Defeat"),
+                                        titleText: playerRole.metadata.alignment === RoleAlignment.Impostor ? "Victory" : Palette.impostorRed.text("Defeat"),
                                         subtitleText: `${Palette.impostorRed.text("Impostors")} disconnected`,
                                         backgroundColor: Palette.crewmateBlue,
                                         yourTeam: RoleAlignment.Crewmate,
                                         winSound: WinSound.CrewmateWin,
-                                        hasWon: !player.isImpostor
+                                        hasWon: playerRole.metadata.alignment !== RoleAlignment.Impostor
                                     }
                                 ];
                             }))
@@ -685,16 +685,16 @@ export class MouthwashApiPlugin extends RoomPlugin {
                         MouthwashEndGames.CrewmatesDisconnected,
                         GameOverReason.HumansDisconnect,
                         {
-                            endGameScreen: new Map(players.map<[number, EndGameScreen]>(player => {
+                            endGameScreen: new Map(players.map<[number, EndGameScreen]>(playerRole => {
                                 return [
-                                    player.playerId,
+                                    playerRole.player.playerId!,
                                     {
-                                        titleText: player.isImpostor ? "Victory" : Palette.impostorRed.text("Defeat"),
+                                        titleText: playerRole.metadata.alignment === RoleAlignment.Impostor ? "Victory" : Palette.impostorRed.text("Defeat"),
                                         subtitleText: `${Palette.crewmateBlue.text("Crewmates")} disconnected`,
                                         backgroundColor: Palette.impostorRed,
                                         yourTeam: RoleAlignment.Impostor,
                                         winSound: WinSound.ImpostorWin,
-                                        hasWon: player.isImpostor
+                                        hasWon: playerRole.metadata.alignment === RoleAlignment.Impostor
                                     }
                                 ];
                             }))
@@ -708,16 +708,16 @@ export class MouthwashApiPlugin extends RoomPlugin {
                     MouthwashEndGames.ImpostorsKilledCrewmates,
                     GameOverReason.ImpostorByKill,
                     {
-                        endGameScreen: new Map(players.map<[number, EndGameScreen]>(player => {
+                        endGameScreen: new Map(players.map<[number, EndGameScreen]>(playerRole => {
                             return [
-                                player.playerId,
+                                playerRole.player.playerId!,
                                 {
-                                    titleText: player.isImpostor ? "Victory" : Palette.impostorRed.text("Defeat"),
+                                    titleText: playerRole.metadata.alignment === RoleAlignment.Impostor ? "Victory" : Palette.impostorRed.text("Defeat"),
                                     subtitleText: `The ${Palette.impostorRed.text("Impostors")} killed all of the ${Palette.crewmateBlue.text("Crewmates")}`,
                                     backgroundColor: Palette.impostorRed,
                                     yourTeam: RoleAlignment.Impostor,
                                     winSound: WinSound.ImpostorWin,
-                                    hasWon: player.isImpostor
+                                    hasWon: playerRole.metadata.alignment === RoleAlignment.Impostor
                                 }
                             ];
                         }))
@@ -732,16 +732,16 @@ export class MouthwashApiPlugin extends RoomPlugin {
                         MouthwashEndGames.CrewmateVotedOut,
                         GameOverReason.ImpostorByVote,
                         {
-                            endGameScreen: new Map(players.map<[number, EndGameScreen]>(player => {
+                            endGameScreen: new Map(players.map<[number, EndGameScreen]>(playerRole => {
                                 return [
-                                    player.playerId,
+                                    playerRole.player.playerId!,
                                     {
-                                        titleText: player.isImpostor ? "Victory" : Palette.impostorRed.text("Defeat"),
+                                        titleText: playerRole.metadata.alignment === RoleAlignment.Impostor ? "Victory" : Palette.impostorRed.text("Defeat"),
                                         subtitleText: `The ${Palette.impostorRed.text("Impostors")} voted out the last ${Palette.crewmateBlue.text("Crewmate")}`,
                                         backgroundColor: Palette.impostorRed,
                                         yourTeam: RoleAlignment.Impostor,
                                         winSound: WinSound.ImpostorWin,
-                                        hasWon: player.isImpostor
+                                        hasWon: playerRole.metadata.alignment === RoleAlignment.Impostor
                                     }
                                 ];
                             }))
@@ -754,16 +754,16 @@ export class MouthwashApiPlugin extends RoomPlugin {
                         MouthwashEndGames.ImpostorVotedOut,
                         GameOverReason.HumansByVote,
                         {
-                            endGameScreen: new Map(players.map<[number, EndGameScreen]>(player => {
+                            endGameScreen: new Map(players.map<[number, EndGameScreen]>(playerRole => {
                                 return [
-                                    player.playerId,
+                                    playerRole.player.playerId!,
                                     {
-                                        titleText: !player.isImpostor ? "Victory" : Palette.impostorRed.text("Defeat"),
+                                        titleText: playerRole.metadata.alignment === RoleAlignment.Crewmate ? "Victory" : Palette.impostorRed.text("Defeat"),
                                         subtitleText: `The ${Palette.crewmateBlue.text("Crewmates")} voted out the last ${Palette.impostorRed.text("Impostor")}`,
                                         backgroundColor: Palette.crewmateBlue,
                                         yourTeam: RoleAlignment.Crewmate,
                                         winSound: WinSound.CrewmateWin,
-                                        hasWon: !player.isImpostor
+                                        hasWon: playerRole.metadata.alignment === RoleAlignment.Crewmate
                                     }
                                 ];
                             }))
@@ -921,15 +921,15 @@ export class MouthwashApiPlugin extends RoomPlugin {
                     MouthwashEndGames.CrewmatesCompletedTasks,
                     GameOverReason.HumansByTask,
                     {
-                        endGameScreen: new Map(players.map<[number, EndGameScreen]>(player => {
+                        endGameScreen: new Map(players.map<[number, EndGameScreen]>(playerRole => {
                             return [
-                                player.playerId,
+                                playerRole.player.playerId!,
                                 {
-                                    titleText: !player.isImpostor ? "Victory" : Palette.impostorRed.text("Defeat"),
+                                    titleText: playerRole.metadata.alignment === RoleAlignment.Crewmate ? "Victory" : Palette.impostorRed.text("Defeat"),
                                     subtitleText: `The ${Palette.crewmateBlue.text("Crewmates")} completed all of the tasks`,
                                     backgroundColor: Palette.crewmateBlue,
                                     winSound: WinSound.CrewmateWin,
-                                    hasWon: !player.isImpostor
+                                    hasWon: playerRole.metadata.alignment === RoleAlignment.Crewmate
                                 }
                             ];
                         }))

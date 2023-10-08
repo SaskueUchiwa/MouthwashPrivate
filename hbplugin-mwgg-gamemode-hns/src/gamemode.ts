@@ -285,31 +285,31 @@ export class HideAndSeekGamemodePlugin extends BaseGamemodePlugin {
                         "seekers failed to find all of the hiders",
                         GameOverReason.HumansByTask,
                         {
-                            endGameScreen: new Map(players.map<[number, EndGameScreen]>(player => {
+                            endGameScreen: new Map(players.map<[number, EndGameScreen]>(playerRole => {
                                 if (taskCompletion) {
                                     return [
-                                        player.playerId,
+                                        playerRole.player.playerId!,
                                         {
                                             titleText: Palette.impostorRed.text("Defeat"),
                                             subtitleText: `No-one completed their objective in time`,
                                             backgroundColor: Palette.grey,
-                                            yourTeam: player.isImpostor ? RoleAlignment.Impostor : RoleAlignment.Crewmate,
+                                            yourTeam: playerRole.metadata.alignment,
                                             winSound: WinSound.ImpostorWin,
                                             hasWon: false
                                         }
                                     ];
                                 } else {
                                     return [
-                                        player.playerId,
+                                        playerRole.player.playerId!,
                                         {
-                                            titleText: !player.isImpostor ? "Victory" : Palette.impostorRed.text("Defeat"),
+                                            titleText: playerRole instanceof Hider ? "Victory" : Palette.impostorRed.text("Defeat"),
                                             subtitleText: gameDuration === 0
                                                 ? `The ${hiderColor.text("Hiders")} hid from the ${seekerColor.text("Seekers")}`
                                                 : `The ${hiderColor.text("Hiders")} hid from the ${seekerColor.text("Seekers")} for ${gameDuration} minute${gameDuration === 1 ? "" : "s"}`,
                                             backgroundColor: Palette.crewmateBlue,
                                             yourTeam: RoleAlignment.Crewmate,
                                             winSound: WinSound.CrewmateWin,
-                                            hasWon: !player.isImpostor
+                                            hasWon: playerRole instanceof Hider
                                         }
                                     ];
                                 }
@@ -331,16 +331,16 @@ export class HideAndSeekGamemodePlugin extends BaseGamemodePlugin {
                 "seeker find all hiders",
                 GameOverReason.ImpostorByKill,
                 {
-                    endGameScreen: new Map(players.map<[number, EndGameScreen]>(player => {
+                    endGameScreen: new Map(players.map<[number, EndGameScreen]>(playerRole => {
                         return [
-                            player.playerId,
+                            playerRole.player.playerId!,
                             {
-                                titleText: player.isImpostor ? "Victory" : Palette.impostorRed.text("Defeat"),
+                                titleText: playerRole instanceof Seeker ? "Victory" : Palette.impostorRed.text("Defeat"),
                                 subtitleText: `The ${seekerColor.text("Seekers")} caught all of the ${hiderColor.text("Hiders")}`,
                                 backgroundColor: Palette.impostorRed,
                                 yourTeam: RoleAlignment.Impostor,
                                 winSound: WinSound.ImpostorWin,
-                                hasWon: player.isImpostor
+                                hasWon: playerRole instanceof Seeker
                             }
                         ];
                     }))
@@ -363,16 +363,16 @@ export class HideAndSeekGamemodePlugin extends BaseGamemodePlugin {
                         "hiders disconnected",
                         GameOverReason.HumansDisconnect,
                         {
-                            endGameScreen: new Map(players.map<[number, EndGameScreen]>(player => {
+                            endGameScreen: new Map(players.map<[number, EndGameScreen]>(playerRole => {
                                 return [
-                                    player.playerId,
+                                    playerRole.player.playerId!,
                                     {
-                                        titleText: player.isImpostor ? "Victory" : Palette.impostorRed.text("Defeat"),
+                                        titleText: playerRole instanceof Seeker ? "Victory" : Palette.impostorRed.text("Defeat"),
                                         subtitleText: `${hiderColor.text("Hiders")} disconnected`,
                                         backgroundColor: Palette.impostorRed,
                                         yourTeam: RoleAlignment.Impostor,
                                         winSound: WinSound.ImpostorWin,
-                                        hasWon: player.isImpostor
+                                        hasWon: playerRole instanceof Seeker
                                     }
                                 ];
                             }))
@@ -421,15 +421,15 @@ export class HideAndSeekGamemodePlugin extends BaseGamemodePlugin {
                         "hiders complete tasks",
                         GameOverReason.HumansByTask,
                         {
-                            endGameScreen: new Map(players.map<[number, EndGameScreen]>(player => {
+                            endGameScreen: new Map(players.map<[number, EndGameScreen]>(playerRole => {
                                 return [
-                                    player.playerId,
+                                    playerRole.player.playerId!,
                                     {
-                                        titleText: !player.isImpostor ? "Victory" : Palette.impostorRed.text("Defeat"),
+                                        titleText: playerRole instanceof Hider ? "Victory" : Palette.impostorRed.text("Defeat"),
                                         subtitleText: `The ${hiderColor.text("Hiders")} completed all of the tasks`,
                                         backgroundColor: Palette.crewmateBlue,
                                         winSound: WinSound.CrewmateWin,
-                                        hasWon: !player.isImpostor
+                                        hasWon: playerRole instanceof Hider
                                     }
                                 ];
                             }))
@@ -446,16 +446,16 @@ export class HideAndSeekGamemodePlugin extends BaseGamemodePlugin {
                     "seekers disconnected",
                     GameOverReason.ImpostorDisconnect,
                     {
-                        endGameScreen: new Map(players.map<[number, EndGameScreen]>(player => {
+                        endGameScreen: new Map(players.map<[number, EndGameScreen]>(playerRole => {
                             return [
-                                player.playerId,
+                                playerRole.player.playerId!,
                                 {
-                                    titleText: !player.isImpostor ? "Victory" : Palette.impostorRed.text("Defeat"),
+                                    titleText: playerRole instanceof Hider ? "Victory" : Palette.impostorRed.text("Defeat"),
                                     subtitleText: `${seekerColor.text("Seekers")} disconnected`,
                                     backgroundColor: Palette.crewmateBlue,
                                     yourTeam: RoleAlignment.Crewmate,
                                     winSound: WinSound.CrewmateWin,
-                                    hasWon: !player.isImpostor
+                                    hasWon: playerRole instanceof Hider
                                 }
                             ];
                         }))

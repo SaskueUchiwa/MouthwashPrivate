@@ -250,24 +250,15 @@ export class InfectionGamemodePlugin extends BaseGamemodePlugin {
 
     @EventListener("player.leave") 
     async onPlayerLeave(ev: PlayerLeaveEvent) {
-        const players = [];
-        for (const [ , player ] of this.room.players) {
-            players.push(player);
-            const playerRole = this.api.roleService.getPlayerRole(player);
-            if (playerRole && !(playerRole instanceof Infected)) {
-                return;
-            }
-        }
-        
+        const players = this.api.getEndgamePlayers();
         this.room.registerEndGameIntent(
             new EndGameIntent(
                 "crewmates disconnected",
                 GameOverReason.HumansDisconnect,
                 {
-                    endGameScreen: new Map(players.map<[number, EndGameScreen]>(player => {
-                        const playerRole = this.api.roleService.getPlayerRole(player);
+                    endGameScreen: new Map(players.map<[number, EndGameScreen]>(playerRole => {
                         return [
-                            player.playerId!,
+                            playerRole.player.playerId!,
                             {
                                 titleText: playerRole instanceof Infected && playerRole.didInfectPlayers() ? "Victory" : Palette.impostorRed.text("Defeat"),
                                 subtitleText: playerRole instanceof Infected && !playerRole.didInfectPlayers()
@@ -290,15 +281,15 @@ export class InfectionGamemodePlugin extends BaseGamemodePlugin {
         if (ev.intentName === MouthwashEndGames.ImpostorsDisconnected) {
             ev.cancel();
 
+            const players = this.api.getEndgamePlayers();
             this.room.registerEndGameIntent(
                 new EndGameIntent(
                     "infected disconnected",
                     GameOverReason.ImpostorDisconnect,
                     {
-                        endGameScreen: new Map([...this.room.players.values()].map<[number, EndGameScreen]>(player => {
-                            const playerRole = this.api.roleService.getPlayerRole(player);
+                        endGameScreen: new Map(players.map<[number, EndGameScreen]>(playerRole => {
                             return [
-                                player.playerId!,
+                                playerRole.player.playerId!,
                                 {
                                     titleText: playerRole instanceof Uninfected ? "Victory" : Palette.impostorRed.text("Defeat"),
                                     subtitleText: `${infectedColor.text("Infected")} disconnected`,
@@ -344,22 +335,22 @@ export class InfectionGamemodePlugin extends BaseGamemodePlugin {
         await Promise.all(players.map(player => this.api.hudService.setTaskCounts(player, totalTasks, completeTasks)));
 
         if (totalTasks > 0 && completeTasks >= totalTasks) {
+            const endGamePlayers = this.api.getEndgamePlayers();
             this.room.registerEndGameIntent(
                 new EndGameIntent(
                     "uninfected crewmates completed tasks",
                     GameOverReason.HumansByTask,
                     {
-                        endGameScreen: new Map(players.map<[number, EndGameScreen]>(player => {
-                            const playerRole = this.api.roleService.getPlayerRole(player);
+                        endGameScreen: new Map(endGamePlayers.map<[number, EndGameScreen]>(playerRole => {
                             return [
-                                player.playerId!,
+                                playerRole.player.playerId!,
                                 {
-                                    titleText: playerRole && !(playerRole instanceof Infected) && player !== justInfected
+                                    titleText: playerRole && !(playerRole instanceof Infected) && playerRole.player !== justInfected
                                         ? "Victory" : Palette.impostorRed.text("Defeat"),
                                     subtitleText: `The ${Palette.crewmateBlue.text("Crewmates")} completed all of the tasks`,
                                     backgroundColor: Palette.crewmateBlue,
                                     winSound: WinSound.CrewmateWin,
-                                    hasWon: !(playerRole instanceof Infected) && player !== justInfected
+                                    hasWon: !(playerRole instanceof Infected) && playerRole.player !== justInfected
                                 }
                             ];
                         }))
