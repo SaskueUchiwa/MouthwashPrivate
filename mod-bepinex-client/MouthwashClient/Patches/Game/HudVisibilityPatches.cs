@@ -55,7 +55,7 @@ namespace MouthwashClient.Patches.Game
             {
                 if (__instance == PlayerControl.LocalPlayer)
                 {
-                    
+                    hiddenItems.Clear();
                 }
             }
         }
