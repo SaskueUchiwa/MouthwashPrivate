@@ -138,7 +138,6 @@ export class ClickBehaviour extends Networkable<ClickBehaviourData, ClickBehavio
     }
 
     private async _handleClick(rpc: ClickMessage) {
-        console.log("got click behaviour click!!");
         await this.emit(
             new ClickBehaviourClickEvent(
                 this.room,

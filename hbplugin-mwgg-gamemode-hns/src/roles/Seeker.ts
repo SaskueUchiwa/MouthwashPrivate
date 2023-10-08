@@ -109,7 +109,6 @@ export class Seeker extends Impostor {
             if (this._killTarget.transform) {
                 this.player.transform?.snapTo(this._killTarget.transform.position);
             }
-            console.log("got seeker button click");
             await this.quietMurder(this._killTarget);
         });
     }
