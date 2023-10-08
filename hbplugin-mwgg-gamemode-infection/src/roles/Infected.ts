@@ -172,46 +172,49 @@ export class Infected extends Impostor {
         murdererPlayerControl["_checkMurderEndGame"](victim);
     }
 
-    async checkForAllInfectedEndGame(finalTarget: PlayerData<Room>) {
+    async checkForAllInfectedEndGame(lastTarget: PlayerData<Room>) {
         const players = this.api.getEndgamePlayers();
-        this.room.registerEndGameIntent(
-            new EndGameIntent(
-                "crewmates infected",
-                GameOverReason.ImpostorByKill,
-                {
-                    endGameScreen: new Map(players.map<[number, EndGameScreen]>(playerRole => {
-                        if (playerRole instanceof Infected) {
-                            return [
-                                playerRole.player.playerId!,
-                                {
-                                    titleText: playerRole._totalInfections > 0 ? "Victory" : Palette.impostorRed.text("Defeat"),
-                                    subtitleText: playerRole._totalInfections > 0
-                                        ? `All ${uninfectedColor.text("Crewmates")} were infected`
-                                        : `All ${uninfectedColor.text("Crewmates")} were infected, but you didn't pass on the infection`,
-                                    backgroundColor: Palette.impostorRed,
-                                    yourTeam: RoleAlignment.Impostor,
-                                    winSound: WinSound.ImpostorWin,
-                                    hasWon: playerRole._totalInfections > 0
-                                }
-                            ];
-                        } else {
-                            return [
-                                playerRole.player.playerId!,
-                                {
-                                    titleText: Palette.impostorRed.text("Defeat"),
-                                    subtitleText: `All ${uninfectedColor.text("Crewmates")} were infected`,
-                                    backgroundColor: Palette.impostorRed,
-                                    yourTeam: RoleAlignment.Impostor,
-                                    winSound: WinSound.ImpostorWin,
-                                    hasWon: false
-                                }
-                            ];
-                        }
-                    }))
-                }
-            )
-        );
-        return true;
+        if (players.every(playerRole => playerRole instanceof Infected || playerRole.player === lastTarget)) {
+            this.room.registerEndGameIntent(
+                new EndGameIntent(
+                    "crewmates infected",
+                    GameOverReason.ImpostorByKill,
+                    {
+                        endGameScreen: new Map(players.map<[number, EndGameScreen]>(playerRole => {
+                            if (playerRole instanceof Infected) {
+                                return [
+                                    playerRole.player.playerId!,
+                                    {
+                                        titleText: playerRole._totalInfections > 0 ? "Victory" : Palette.impostorRed.text("Defeat"),
+                                        subtitleText: playerRole._totalInfections > 0
+                                            ? `All ${uninfectedColor.text("Crewmates")} were infected`
+                                            : `All ${uninfectedColor.text("Crewmates")} were infected, but you didn't pass on the infection`,
+                                        backgroundColor: Palette.impostorRed,
+                                        yourTeam: RoleAlignment.Impostor,
+                                        winSound: WinSound.ImpostorWin,
+                                        hasWon: playerRole._totalInfections > 0
+                                    }
+                                ];
+                            } else {
+                                return [
+                                    playerRole.player.playerId!,
+                                    {
+                                        titleText: Palette.impostorRed.text("Defeat"),
+                                        subtitleText: `All ${uninfectedColor.text("Crewmates")} were infected`,
+                                        backgroundColor: Palette.impostorRed,
+                                        yourTeam: RoleAlignment.Impostor,
+                                        winSound: WinSound.ImpostorWin,
+                                        hasWon: false
+                                    }
+                                ];
+                            }
+                        }))
+                    }
+                )
+            );
+            return true;
+        }
+        return false;
     }
 
     didInfectPlayers() {
