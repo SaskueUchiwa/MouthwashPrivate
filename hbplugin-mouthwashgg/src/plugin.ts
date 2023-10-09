@@ -108,22 +108,25 @@ export class MouthwashPlugin extends WorkerPlugin {
         this.worker.pingInterval = setInterval(() => {
             const dateNow = Date.now();
             for (const [ , connection ] of this.worker.connections) {
-                if (connection.sentPackets.length === 8 && connection.sentPackets.every(packet => (dateNow - packet.sentAt) > 1500 && !packet.acked)) {
-                    this.logger.warn("%s failed to acknowledge any of the last 8 reliable packets sent, presumed dead",
-                        connection);
-    
-                    connection.disconnect();
-                    continue;
+                if (connection.unackedPackets.size > 8) {
+                    const allUnackedPackets = [...connection.unackedPackets.values()];
+                    if (allUnackedPackets[0].sentAt < dateNow - 8000) {
+                        this.logger.warn("%s failed to acknowledge a packet sent more than 8 seconds ago",
+                            connection);
+        
+                        connection.disconnect();
+                        continue;
+                    }
+                    const s = Math.floor((dateNow - allUnackedPackets[0].sentAt) / 1000);
+                    this.logger.warn("%s has not acked %s packet%s in the last %s second%s", connection, connection.unackedPackets.size,
+                        connection.unackedPackets.size === 1 ? "" : "s",
+                        s, s === 1 ? "" : "s");
                 }
 
                 connection.sendPacket(new PingPacket(connection.getNextNonce()));
-                for (let i = 0; i < connection.sentPackets.length; i++) {
-                    const sent = connection.sentPackets[i];
-                    if (!sent.acked) {
-                        if (Date.now() - sent.sentAt > 1500) {
-                            this.worker.sendRawPacket(connection.listenSocket, connection.remoteInfo, sent.buffer);
-                            sent.sentAt = Date.now();
-                        }
+                for (const [ , sentPacket ] of connection.unackedPackets) {
+                    if (Date.now() - sentPacket.sentAt > 1500) {
+                        this.worker.sendRawPacket(connection.listenSocket, connection.remoteInfo, sentPacket.buffer);
                     }
                 }
             }

@@ -139,10 +139,9 @@ export class Connection {
     private _incrNonce: number;
 
     /**
-     * An array of the 8 latest packets that were sent to this client. Used to
-     * re-send packets that have not been acknowledged.
+     * A set of packets sent to this client that have not been acknowledged.
      */
-    sentPackets: SentPacket[];
+    unackedPackets: Map<number, SentPacket>;
 
     /**
      * An array of the 8 latest packet nonces that were received from this client.
@@ -185,7 +184,7 @@ export class Connection {
          */
         public readonly listenSocket: dgram.Socket,
         /**
-         * Remote information about this client.
+     * Remote information about this client.
          */
         public readonly remoteInfo: dgram.RemoteInfo,
         /**
@@ -205,7 +204,7 @@ export class Connection {
         this.nextExpectedNonce = 0;
         this._incrNonce = 0;
 
-        this.sentPackets = [];
+        this.unackedPackets = new Map;
         this.receivedPackets = [];
 
         this.roundTripPing = 0;

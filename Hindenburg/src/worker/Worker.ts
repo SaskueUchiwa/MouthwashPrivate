@@ -934,12 +934,10 @@ export class Worker extends EventEmitter<WorkerEvents> {
             if (!sender)
                 return;
 
-            for (const sentPacket of sender.sentPackets) {
-                if (sentPacket.nonce === message.nonce) {
-                    sentPacket.acked = true;
-                    sender.roundTripPing = Date.now() - sentPacket.sentAt;
-                    break;
-                }
+            const sentPacket = sender.unackedPackets.get(message.nonce);
+            if (sentPacket) {
+                sender.unackedPackets.delete(message.nonce);
+                sender.roundTripPing = Date.now() - sentPacket.sentAt;
             }
         });
 
@@ -1323,26 +1321,25 @@ export class Worker extends EventEmitter<WorkerEvents> {
         const promises = [];
         const dateNow = Date.now();
         for (const [ , connection ] of this.connections) {
-            if (connection.sentPackets.length === 8 && connection.sentPackets.every(packet => (dateNow - packet.sentAt) > 1500 && !packet.acked)) {
-                this.logger.warn("%s failed to acknowledge any of the last 8 reliable packets sent, presumed dead",
-                    connection);
-
-                connection.disconnect();
-                continue;
+            if (connection.unackedPackets.size > 8) {
+                const allUnackedPackets = [...connection.unackedPackets.values()];
+                if (allUnackedPackets[0].sentAt < dateNow - 8000) {
+                    this.logger.warn("%s failed to acknowledge a packet sent more than 8 seconds ago",
+                        connection);
+    
+                    connection.disconnect();
+                    continue;
+                }
+                const s = Math.floor((dateNow - allUnackedPackets[0].sentAt) / 1000);
+                this.logger.warn("%s has not acked %s packet%s in the last %s second%s", connection, connection.unackedPackets.size,
+                    connection.unackedPackets.size === 1 ? "" : "s",
+                    s, s === 1 ? "" : "s");
             }
 
-            promises.push(connection.sendPacket(
-                new PingPacket(
-                    connection.getNextNonce()
-                )
-            ));
-            for (let i = 0; i < connection.sentPackets.length; i++) {
-                const sent = connection.sentPackets[i];
-                if (!sent.acked) {
-                    if (dateNow - sent.sentAt > 1500) {
-                        this.sendRawPacket(connection.listenSocket, connection.remoteInfo, sent.buffer);
-                        sent.sentAt = dateNow;
-                    }
+            connection.sendPacket(new PingPacket(connection.getNextNonce()));
+            for (const [ , sentPacket ] of connection.unackedPackets) {
+                if (Date.now() - sentPacket.sentAt > 1500) {
+                    promises.push(this.sendRawPacket(connection.listenSocket, connection.remoteInfo, sentPacket.buffer));
                 }
             }
         }
@@ -1509,15 +1506,13 @@ export class Worker extends EventEmitter<WorkerEvents> {
         }
 
         if (reliablePacket.nonce !== undefined && !(packet instanceof AcknowledgePacket)) {
-            connection.sentPackets.unshift(
-                new SentPacket(
-                    reliablePacket.nonce,
-                    writer.buffer,
-                    Date.now(),
-                    false
-                )
+            const sentPacket = new SentPacket(
+                reliablePacket.nonce,
+                writer.buffer,
+                Date.now(),
+                false
             );
-            connection.sentPackets.splice(8);
+            connection.unackedPackets.set(reliablePacket.nonce, sentPacket);
             await this.sendRawPacket(connection.listenSocket, connection.remoteInfo, writer.buffer);
         } else {
             await this.sendRawPacket(connection.listenSocket, connection.remoteInfo, writer.buffer);

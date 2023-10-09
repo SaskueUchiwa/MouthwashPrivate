@@ -387,7 +387,6 @@ export class MouthwashApiPlugin extends RoomPlugin {
         if (ev.player.isHost) {
             if (this.authApi) {
                 const keys = Object.keys(connectionUser.game_settings);
-                console.log(connectionUser.game_settings, keys);
                 for (let i = 0; i < keys.length; i++) {
                     const gameOptionPath = keys[i];
                     const gameOptionValue = connectionUser.game_settings[gameOptionPath];
