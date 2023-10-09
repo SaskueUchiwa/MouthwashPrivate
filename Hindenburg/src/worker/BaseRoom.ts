@@ -1443,8 +1443,12 @@ export class BaseRoom extends Hostable<RoomEvents> {
 
     async handleJoin(joinInfo: PlayerJoinData): Promise<PlayerData<this>> {
         const cachedPlayer = this.players.get(joinInfo.clientId);
-        if (cachedPlayer)
+        if (cachedPlayer) {
+            if (this.hostIsMe) {
+                this.spawnNecessaryObjects();
+            }
             return cachedPlayer;
+        }
 
         const player = new PlayerData(this, joinInfo.clientId, joinInfo.playerName, joinInfo.platform, joinInfo.playerLevel);
         this.players.set(joinInfo.clientId, player);

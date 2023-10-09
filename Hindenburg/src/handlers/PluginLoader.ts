@@ -819,7 +819,6 @@ export class PluginLoader {
             const fn = handler.bind(loadedPlugin.pluginInstance);
             if (options.override) {
                 const key = `${messageCtr.messageType}:${messageCtr.messageTag}` as const;
-                console.log(loadedPlugin.pluginInstance.meta.id, key, room, options);
 
                 if (options.attachTo === MessageHandlerAttach.Room && room) {
                     const listeners = room.decoder.listeners.get(key) || [];

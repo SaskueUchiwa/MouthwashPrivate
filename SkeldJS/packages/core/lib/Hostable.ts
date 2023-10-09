@@ -990,6 +990,10 @@ export class Hostable<
             this.meetingHud = undefined;
         }
 
+        if (component === this.gameManager) {
+            this.gameManager = undefined;
+        }
+
         component.Destroy();
 
         const objectIdx = this.objectList.indexOf(component);
