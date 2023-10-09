@@ -2,7 +2,7 @@ import { writable } from "svelte/store";
 
 export const loading = Symbol("loading");
 export const unavailable = Symbol("unavailable");
-export const accountUrl = writable("http://localhost:8000");
+export const accountUrl = writable(import.meta.env.VITE_MWGG_ACCOUNT_SERVER_BASE_URL);
 
 export interface UserLogin {
     id: string;

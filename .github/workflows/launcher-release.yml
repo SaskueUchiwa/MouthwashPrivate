@@ -46,6 +46,7 @@ jobs:
         env:
           TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
+          VITE_MWGG_ACCOUNT_SERVER_BASE_URL: ${{ vars.ACCOUNT_SERVER_BASE_URL }}
 
       - name: Publish release
         run: node createRelease.js
