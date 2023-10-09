@@ -92,7 +92,6 @@ import {
     getRegisteredRoles,
     isMouthwashGamemode,
     MouthwashEndGames,
-    MouthwashRole,
     RoleAlignment
 } from "./api";
 import { CosmeticsService } from "./services/cosmeticsService";
@@ -103,6 +102,7 @@ const mapNameToNumber = {
     "Mira HQ": GameMap.MiraHQ,
     "Polus": GameMap.Polus,
     "Airship": GameMap.Airship,
+    "Submerged": 5
 };
 
 const taskBarUpdateNameToNumber = {
@@ -185,7 +185,7 @@ export class MouthwashApiPlugin extends RoomPlugin {
 
     createDefaultOptions() {
         return new Map<string, GameOption>([
-            [DefaultRoomOptionName.Map, new GameOption(DefaultRoomCategoryName.None, DefaultRoomOptionName.Map, new EnumValue([ "The Skeld", "Polus", "Mira HQ", "Airship" ], 0), Priority.A)],
+            [DefaultRoomOptionName.Map, new GameOption(DefaultRoomCategoryName.None, DefaultRoomOptionName.Map, new EnumValue([ "The Skeld", "Polus", "Mira HQ", "Airship", "Submerged" ], 0), Priority.A)],
             [DefaultRoomOptionName.ImpostorCount, new GameOption(DefaultRoomCategoryName.None, DefaultRoomOptionName.ImpostorCount, new NumberValue(2, 1, 1, 3, false, "{0} Impostors"), Priority.A + 1)],
             [DefaultRoomOptionName.MaxPlayerCount, new GameOption(DefaultRoomCategoryName.None, DefaultRoomOptionName.MaxPlayerCount, new NumberValue(15, 1, 4, 15, false, "{0} Players"), Priority.A + 2)],
             [DefaultRoomOptionName.PlayerSpeed, new GameOption(DefaultRoomCategoryName.None, DefaultRoomOptionName.PlayerSpeed, new NumberValue(1.25, 0.25, 0.25, 3, false, "{0}x"), Priority.A + 3)],
