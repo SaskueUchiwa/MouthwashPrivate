@@ -1,6 +1,8 @@
-﻿using HarmonyLib;
+﻿using System.Linq;
+using HarmonyLib;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using ImaginationOverflow.UniversalDeepLinking;
+using Reactor.Utilities;
 using Reactor.Utilities.Extensions;
 
 namespace MouthwashClient.Patches.OnlinePlay
@@ -10,15 +12,12 @@ namespace MouthwashClient.Patches.OnlinePlay
     {
         public static bool Prefix(ServerManager __instance)
         {
-            DnsRegionInfo globalRegion = new DnsRegionInfo("region.mouthwash.midlight.studio", "Global",
-                StringNames.NoTranslation, "135.181.30.41", 22023, false);
-            DnsRegionInfo localHostRegion = new DnsRegionInfo("localhost", "Localhost",
-                StringNames.NoTranslation, "127.0.0.1", 22023, false);
-            __instance.AvailableRegions = new Il2CppReferenceArray<IRegionInfo>(new[]
-            {
-                globalRegion.TryCast<IRegionInfo>()!,
-                localHostRegion.TryCast<IRegionInfo>()!
-            });
+            __instance.AvailableRegions = new Il2CppReferenceArray<IRegionInfo>(
+                PluginSingleton<MouthwashClientPlugin>.Instance.runtimeConfig.ServerRegions.Select(x =>
+                {
+                    return new DnsRegionInfo(x.Domain, x.Name, StringNames.NoTranslation, x.Ip, x.Port, false)
+                        .TryCast<IRegionInfo>()!;
+                }).ToArray());
             __instance.CurrentRegion = __instance.AvailableRegions[0];
             __instance.CurrentUdpServer = __instance.CurrentRegion.Servers.Random();
             __instance.state = UpdateState.Success;

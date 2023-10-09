@@ -24,11 +24,27 @@ namespace MouthwashClient
         public ConfigEntry<string> ConfigName { get; private set; }
 
         public HttpClient httpClient;
+        public RuntimeConfiguration runtimeConfig;
 
         public override void Load()
         {
             Harmony.PatchAll();
             httpClient = new();
+
+            runtimeConfig = RuntimeConfigurationService.GetRuntimeConfiguration() ?? new RuntimeConfiguration()
+            {
+                AccountsUrl = "http://localhost:8000",
+                ServerRegions = new RuntimeConfigurationServerRegion[]
+                {
+                    new()
+                    {
+                        Name = "Localhost",
+                        Domain = "localhost",
+                        Ip = "127.0.0.1",
+                        Port = 22023
+                    }
+                }
+            };
         }
     }
 }

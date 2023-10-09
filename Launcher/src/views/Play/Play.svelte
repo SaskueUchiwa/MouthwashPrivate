@@ -13,6 +13,28 @@
 
     let playSettings: PlaySettings;
 
+    type GameServerRegionIPString = `${number}.${number}.${number}.${number}`
+    type GameServerRegionString = `${string};${string};${GameServerRegionIPString};${number};`;
+
+    function parseRegions(serverRegionsString: string) {
+        const serverRegionStrings = serverRegionsString.split(",") as GameServerRegionString[];
+        const serverRegions = [];
+        for (const serverRegionString of serverRegionStrings) {
+            const [ name, domain, ip, port ] = serverRegionString.split(";");
+            if (name && domain && ip && port && parseInt(port)) {
+                serverRegions.push({
+                    name,
+                    domain,
+                    ip,
+                    port: parseInt(port)
+                });
+            } else {
+                console.log("Invalid game region string: %s", serverRegionString);
+            }
+        }
+        return serverRegions;
+    }
+
     async function launchGame() {
         if ($gameInstalledPathState === unavailable || $gameInstalledPathState === loading)
             return;
@@ -32,8 +54,10 @@
         const command = new shell.Command("cmd", [ "/C", amongUsExe ], {
             env: {
                 MWGG_LOGIN_TOKEN: btoa(JSON.stringify(apiInfo || null)),
-                MWGG_ACCOUNTS_URL: $accountUrl,
-                MWGG_ASSETS_URL: "https://assets.mouthwash.midlight.studio"
+                MWGG_CONFIG: btoa(JSON.stringify({
+                    accounts_url: $accountUrl,
+                    server_regions: parseRegions(import.meta.env.VITE_MWGG_GAME_SERVER_REGIONS)
+                }))
             }
         });
         amongUsProcess.set(await command.spawn());

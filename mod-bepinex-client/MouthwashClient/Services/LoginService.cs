@@ -75,7 +75,7 @@ namespace MouthwashClient.Services
                 yield break;
             }
 
-            string url = $"{Environment.GetEnvironmentVariable("MWGG_ACCOUNTS_URL")!}/api/v2/auth/check";
+            string url = $"{PluginSingleton<MouthwashClientPlugin>.Instance.runtimeConfig.AccountsUrl}/api/v2/auth/check";
             PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage($"Authenticating with account server @ POST {url}");
 
             HttpRequestMessage request = new()

@@ -57,7 +57,7 @@ namespace MouthwashClient.Services
         public static IEnumerator CoLoadOwnedCosmetics()
         {
             PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage($"Loading cosmetics owned by user..");
-            string url = $"{Environment.GetEnvironmentVariable("MWGG_ACCOUNTS_URL")!}/api/v2/accounts/owned_items";
+            string url = $"{PluginSingleton<MouthwashClientPlugin>.Instance.runtimeConfig.AccountsUrl}/api/v2/accounts/owned_items";
             HttpRequestMessage ownedBundlesRequest = new()
             {
                 Method = HttpMethod.Get,
@@ -104,7 +104,7 @@ namespace MouthwashClient.Services
         public static IEnumerator CoSaveCosmetics(string cosmeticHat, string cosmeticPet, string cosmeticSkin, int cosmeticColor, string cosmeticVisor, string cosmeticNameplate)
         {
             PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage($"Saving cosmetics selected by user..");
-            string url = $"{Environment.GetEnvironmentVariable("MWGG_ACCOUNTS_URL")!}/api/v2/accounts/cosmetics";
+            string url = $"{PluginSingleton<MouthwashClientPlugin>.Instance.runtimeConfig.AccountsUrl}/api/v2/accounts/cosmetics";
             string requestContents = JsonSerializer.Serialize(new UserCosmeticInformation()
             {
                 cosmetic_hat = cosmeticHat,

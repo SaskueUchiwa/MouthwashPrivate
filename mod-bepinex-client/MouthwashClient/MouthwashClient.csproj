@@ -8,7 +8,6 @@
         <VersionSuffix>dev</VersionSuffix>
         <Description>Mouthwash Client Mod</Description>
         <Nullable>enable</Nullable>
-        <!-- <Authors>your name</Authors> -->
     </PropertyGroup>
 
     <Import Project="$(MSBuildThisFileDirectory)AmongUsPath.props" />
