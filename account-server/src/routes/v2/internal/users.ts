@@ -50,7 +50,7 @@ export class UsersRoute extends BaseRoute {
     @mediator.Middleware(express.json(), InternalController.validateInternalAccess)
     async updateGameSettings(transaction: mediator.Transaction<{ user_id: string }>) {
         const { user_id } = transaction.getParams();
-        const success = await this.server.accountsController.setPlayerGameSettings(user_id, transaction.getBody());
+        const success = await this.server.accountsController.setPlayerGameSettings(user_id, transaction.getBody().game_settings);
         if (!success) throw new UserNotFoundError({ id: user_id });
 
         transaction.respondJson({});
