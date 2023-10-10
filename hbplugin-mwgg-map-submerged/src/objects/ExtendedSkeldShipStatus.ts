@@ -1,4 +1,5 @@
 import {
+    BaseRpcMessage,
     DoorsSystem,
     HazelReader,
     Hostable,
@@ -18,6 +19,7 @@ import {
 import { SubmergedStatus } from "./SubmergedStatus";
 import { SubmergedSystemType } from "../enums";
 import {
+    PlayerFloor,
     SpawnInState,
     SubmarineBoxCatSystem,
     SubmarineElevatorSystem,
@@ -26,6 +28,7 @@ import {
     SubmarineSecuritySabotageSystem,
     SubmarineSpawnInSystem
 } from "../systems";
+import { AcknowledgeChangeFloorMessage } from "../packets";
 
 export class ExtendedSkeldShipStatus<RoomType extends Hostable<any>> extends SkeldShipStatus<RoomType> {
     submergedStatus: SubmergedStatus;
@@ -81,31 +84,31 @@ export class ExtendedSkeldShipStatus<RoomType extends Hostable<any>> extends Ske
         }));
 
         this.systems.set(SubmergedSystemType.ElevatorHallwayLeft as number, new SubmarineElevatorSystem(this, SubmergedSystemType.ElevatorHallwayLeft as number, {
-            upperDeckIsTargetFloor: false,
+            targetFloor: PlayerFloor.LowerDeck,
             moving: false,
             tandemElevator: SubmergedSystemType.ElevatorHallwayRight
         }));
 
         this.systems.set(SubmergedSystemType.ElevatorHallwayRight as number, new SubmarineElevatorSystem(this, SubmergedSystemType.ElevatorHallwayRight as number, {
-            upperDeckIsTargetFloor: true,
+            targetFloor: PlayerFloor.UpperDeck,
             moving: false,
             tandemElevator: SubmergedSystemType.ElevatorHallwayLeft
         }));
 
         this.systems.set(SubmergedSystemType.ElevatorLobbyLeft as number, new SubmarineElevatorSystem(this, SubmergedSystemType.ElevatorLobbyLeft as number, {
-            upperDeckIsTargetFloor: true,
+            targetFloor: PlayerFloor.UpperDeck,
             moving: false,
             tandemElevator: SubmergedSystemType.ElevatorLobbyRight
         }));
 
         this.systems.set(SubmergedSystemType.ElevatorLobbyRight as number, new SubmarineElevatorSystem(this, SubmergedSystemType.ElevatorLobbyRight as number, {
-            upperDeckIsTargetFloor: false,
+            targetFloor: PlayerFloor.LowerDeck,
             moving: false,
             tandemElevator: SubmergedSystemType.ElevatorLobbyLeft
         }));
 
         this.systems.set(SubmergedSystemType.ElevatorService as number, new SubmarineElevatorSystem(this, SubmergedSystemType.ElevatorService as number, {
-            upperDeckIsTargetFloor: false,
+            targetFloor: PlayerFloor.LowerDeck,
             moving: false,
             tandemElevator: SubmergedSystemType.Nil
         }));
@@ -131,5 +134,11 @@ export class ExtendedSkeldShipStatus<RoomType extends Hostable<any>> extends Ske
         this.systems.set(SystemType.Sabotage, new SabotageSystem(this, SystemType.Sabotage, {
             cooldown: 0
         }));
+    }
+    
+    async HandleRpc(rpc: BaseRpcMessage): Promise<void> {
+        if (rpc instanceof AcknowledgeChangeFloorMessage) {
+            
+        }
     }
 }

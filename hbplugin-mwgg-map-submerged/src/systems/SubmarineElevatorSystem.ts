@@ -12,6 +12,7 @@ import {
 } from "@skeldjs/core";
 import { ElevatorBounds } from "../data";
 import { SubmergedSystemType } from "../enums";
+import { PlayerFloor, SubmarinePlayerFloorSystem } from "./SubmarinePlayerFloorSystem";
 
 export enum ElevatorMovementStage {
     DoorsClosing,
@@ -25,7 +26,7 @@ export enum ElevatorMovementStage {
 }
 
 export interface SubmarineElevatorSystemData {
-    upperDeckIsTargetFloor: boolean;
+    targetFloor: PlayerFloor;
     moving: boolean;
     tandemElevator: SubmergedSystemType;
 }
@@ -51,13 +52,12 @@ export class SubmarineElevatorSystem<RoomType extends Hostable = Hostable> exten
         0.2
     ];
 
-    upperDeckIsTargetFloor: boolean;
+    targetFloor: PlayerFloor;
     moving: boolean;
     tandemElevator: SubmergedSystemType;
 
-    private lastStage: ElevatorMovementStage;
-    private lerpTimer: number;
-    private totalTimer: number;
+    lastStage: ElevatorMovementStage;
+    totalTimer: number;
 
     constructor(
         ship: InnerShipStatus<RoomType>,
@@ -66,13 +66,12 @@ export class SubmarineElevatorSystem<RoomType extends Hostable = Hostable> exten
     ) {
         super(ship, systemType, data);
 
-        this.upperDeckIsTargetFloor = false;
-        this.moving = false;
-        this.tandemElevator = SubmergedSystemType.Nil;
+        this.targetFloor ??= PlayerFloor.LowerDeck;
+        this.moving ??= false;
+        this.tandemElevator ??= SubmergedSystemType.Nil;
 
-        this.lastStage = ElevatorMovementStage.Complete;
-        this.lerpTimer = 0;
-        this.totalTimer = 0;
+        this.lastStage ??= ElevatorMovementStage.Complete;
+        this.totalTimer ??= 0;
     }
 
     get sabotaged() {
@@ -81,34 +80,44 @@ export class SubmarineElevatorSystem<RoomType extends Hostable = Hostable> exten
 
     /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
     Deserialize(reader: HazelReader, spawn: boolean) {
-        this.upperDeckIsTargetFloor = reader.bool();
+        this.targetFloor = reader.bool() ? PlayerFloor.UpperDeck : PlayerFloor.LowerDeck;
         this.moving = reader.bool();
         const lastStage = reader.uint8();
         if (this.lastStage !== lastStage) {
             this.lastStage = lastStage;
-            this.lerpTimer = 0;
         }
     }
 
     /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
     Serialize(writer: HazelWriter, spawn: boolean) {
-        writer.bool(this.upperDeckIsTargetFloor);
+        writer.bool(this.targetFloor === PlayerFloor.UpperDeck);
         writer.bool(this.moving);
         writer.uint8(this.lastStage);
     }
 
     async HandleRepair(player: PlayerData<RoomType>|undefined, amount: number, rpc: RepairSystemMessage|undefined) {
         switch (amount) {
-            case 2:
-                if (!this.moving) {
-                    this.moving = true;
-                    this.dirty = true;
-                    this.lerpTimer = 0;
-                    this.totalTimer = 0;
-                    this.lastStage = ElevatorMovementStage.Complete;
-                    this.upperDeckIsTargetFloor = !this.upperDeckIsTargetFloor;
+        case 2:
+            if (!this.moving) {
+                this.moving = true;
+                this.totalTimer = 0;
+                this.lastStage = ElevatorMovementStage.Complete;
+                this.targetFloor = this.targetFloor === PlayerFloor.LowerDeck ? PlayerFloor.UpperDeck : PlayerFloor.LowerDeck;
+                this.dirty = true;
+
+                if (this.tandemElevator !== SubmergedSystemType.Nil) {
+                    const otherElevator = this.ship.systems.get(this.tandemElevator as number);
+                    if (otherElevator instanceof SubmarineElevatorSystem) {
+                        otherElevator.moving = true;
+                        otherElevator.totalTimer = this.totalTimer;
+                        otherElevator.lastStage = this.lastStage;
+                        this.targetFloor = this.moving
+                            ? (this.targetFloor === PlayerFloor.LowerDeck ? PlayerFloor.UpperDeck : PlayerFloor.LowerDeck)
+                            : this.targetFloor;
+                    }
                 }
-                break;
+            }
+            break;
         }
     }
 
@@ -128,8 +137,6 @@ export class SubmarineElevatorSystem<RoomType extends Hostable = Hostable> exten
         const players = [];
         const bounds = ElevatorBounds[this.systemType as number as SubmergedSystemType];
 
-        const isUpper = !this.upperDeckIsTargetFloor;
-
         if (!bounds)
             throw new Error("No elevator bounds; systemType is " + this.systemType);
 
@@ -138,7 +145,7 @@ export class SubmarineElevatorSystem<RoomType extends Hostable = Hostable> exten
             if (!position)
                 continue;
 
-            if (isUpper) {
+            if (this.targetFloor === PlayerFloor.UpperDeck) {
                 if (bounds.upper.contains(position))
                     players.push(player);
             } else {
@@ -152,22 +159,25 @@ export class SubmarineElevatorSystem<RoomType extends Hostable = Hostable> exten
 
     Detoriorate(delta: number) {
         if (!this.moving) {
-            this.lerpTimer = 0;
             this.totalTimer = 0;
             this.lastStage = ElevatorMovementStage.Complete;
             return;
         }
         this.totalTimer += delta;
-        this.lerpTimer += delta;
         if (this.room.hostIsMe) {
             const nextStage = this.getNextStage();
             if (this.lastStage !== nextStage) {
                 if (nextStage > ElevatorMovementStage.ElevatorMovingIn) {
                     for (const player of this.getPlayersInside()) {
-                        // move player floor
+                        const floorSystem = this.ship.systems.get(SubmergedSystemType.Floor as number);
+                        if (floorSystem instanceof SubmarinePlayerFloorSystem) {
+                            floorSystem.setPlayerFloor(player, this.targetFloor as PlayerFloor);
+                        }
                     }
                 }
-                this.lerpTimer = 0;
+                if (nextStage === ElevatorMovementStage.DoorsOpening) {
+                    this.moving = false;
+                }
                 this.dirty = true;
             }
             this.lastStage = nextStage;

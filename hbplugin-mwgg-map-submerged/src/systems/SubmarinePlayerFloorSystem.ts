@@ -1,5 +1,5 @@
 import { HazelReader, HazelWriter } from "@skeldjs/util";
-import { SystemType } from "@skeldjs/constant";
+import { RootMessageTag, SystemType } from "@skeldjs/constant";
 import { RpcMessage } from "@skeldjs/protocol";
 import { ExtractEventTypes } from "@skeldjs/events";
 
@@ -14,7 +14,7 @@ import {
 import { AcknowledgeChangeFloorMessage } from "../packets";
 
 export interface SubmarinePlayerFloorSystemData {
-    playerFloors: Map<number, PlayerFloor>;
+    playerFloors: Map<PlayerData, PlayerFloor>;
 }
 
 export type SubmarinePlayerFloorSystemEvents<RoomType extends Hostable = Hostable> = SystemStatusEvents<RoomType> &
@@ -33,7 +33,7 @@ export class SubmarinePlayerFloorSystem<RoomType extends Hostable = Hostable> ex
     SubmarinePlayerFloorSystemEvents,
     RoomType
 > implements SubmarinePlayerFloorSystemData {
-    playerFloors: Map<number, PlayerFloor>;
+    playerFloors: Map<PlayerData<RoomType>, PlayerFloor>;
 
     constructor(
         ship: InnerShipStatus<RoomType>,
@@ -55,16 +55,19 @@ export class SubmarinePlayerFloorSystem<RoomType extends Hostable = Hostable> ex
         for (let i = 0; i < num; i++) {
             const playerId = reader.uint8();
             const floor = reader.uint8() as PlayerFloor;
+            const player = this.room.getPlayerByPlayerId(playerId);
 
-            this.playerFloors.set(playerId, floor);
+            if (player) {
+                this.playerFloors.set(player, floor);
+            }
         }
     }
 
     /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
     Serialize(writer: HazelWriter, spawn: boolean) {
         writer.uint8(this.playerFloors.size);
-        for (const [ playerId, floor ] of this.playerFloors) {
-            writer.uint8(playerId);
+        for (const [ player, floor ] of this.playerFloors) {
+            writer.uint8(player.playerId!);
             writer.uint8(floor);
         }
         this.dirty = spawn;
@@ -82,11 +85,15 @@ export class SubmarinePlayerFloorSystem<RoomType extends Hostable = Hostable> ex
         );
     }
 
-    respondToFloorChange(player: PlayerData, sequenceId: number) {
+    respondToFloorChange(player: PlayerData<RoomType>, sequenceId: number) {
         if (!player.physics)
             throw new Error("Player needs a physics component to change floors");
 
         this._rpcRespondToFloorChange(player.physics.netId, sequenceId);
+    }
+
+    setPlayerFloor(player: PlayerData<RoomType>, floor: PlayerFloor) {
+        this.playerFloors.set(player, floor);
     }
 
     Detoriorate(delta: number) {
@@ -96,8 +103,11 @@ export class SubmarinePlayerFloorSystem<RoomType extends Hostable = Hostable> ex
         if (this.playerFloors.size === this.room.gameData.players.size)
             return;
 
-        for (const [ playerId ] of this.room.gameData.players) {
-            this.playerFloors.set(playerId, PlayerFloor.LowerDeck);
+        for (const [ playerId, playerInfo ] of this.room.gameData.players) {
+            const player = playerInfo.getPlayer();
+            if (player) {
+                this.playerFloors.set(player, PlayerFloor.LowerDeck);
+            }
         }
     }
 }
