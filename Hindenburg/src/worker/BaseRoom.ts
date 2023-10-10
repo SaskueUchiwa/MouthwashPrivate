@@ -711,6 +711,9 @@ export class BaseRoom extends Hostable<RoomEvents> {
      * @param reason Reason for the destroying the room.
      */
     async destroy(reason = DisconnectReason.Destroy) {
+        if (this._destroyed)
+            return;
+
         const ev = await this.emit(new RoomBeforeDestroyEvent(this, reason));
 
         if (ev.canceled)
@@ -1840,15 +1843,11 @@ export class BaseRoom extends Hostable<RoomEvents> {
             if (this.gameData) this.gameData.dirtyBit = 2 ** 32 - 1;
             if (this.lobbyBehaviour) this.lobbyBehaviour.despawn();
 
-            const shipPrefabs = [
-                SpawnType.SkeldShipStatus,
-                SpawnType.MiraShipStatus,
-                SpawnType.Polus,
-                SpawnType.AprilShipStatus,
-                SpawnType.Airship
-            ];
-
-            this.spawnPrefabOfType(shipPrefabs[this.settings?.map] || 0, -2);
+            const shipPrefabId = this.shipPrefabIds.get(this.settings.map);
+            if (shipPrefabId === undefined) {
+                this.logger.error("Could not get ship status of id %s, using TheSkeld instead", this.settings.map);
+            }
+            this.spawnPrefabOfType(shipPrefabId || SpawnType.SkeldShipStatus, -2);
 
             await Promise.all([
                 Promise.race([
