@@ -44,32 +44,53 @@ const baseMouthwashDllPath = path.join(__dirname, "../MouthwashClient/bin/Releas
     console.log("  |- " + tagDescription.split("\n").join("\n  |- "));
 
     console.log("Fetching bepinex BepInEx-Unity.IL2CPP-win-x86-6.0.0-be.670..");
-    const bepinexInstallResponse = await got.get("https://builds.bepinex.dev/projects/bepinex_be/670/BepInEx-Unity.IL2CPP-win-x86-6.0.0-be.670%2B42a6727.zip", {
+    const bepinexInstallResponse = await got.get("https://builds.bepinex.dev/projects/bepinex_be/671/BepInEx-Unity.IL2CPP-win-x86-6.0.0-be.671%2B9caf61d.zip", {
         responseType: "buffer"
     });
 
-    const zip = new JSZip();
+    const bundleZip = new JSZip();
     console.log("|- Loading (%s MB)..", (bepinexInstallResponse.body.byteLength / 1024 / 1024).toFixed(2));
-    await zip.loadAsync(bepinexInstallResponse.body);
+    await bundleZip.loadAsync(bepinexInstallResponse.body);
 
     console.log("|- Adding pgg.dll..");
     const mouthwashClientData = await fs.readFile(baseMouthwashDllPath);
-    zip.file("BepInEx/plugins/pgg.dll", mouthwashClientData);
+    bundleZip.file("BepInEx/plugins/pgg.dll", mouthwashClientData);
     console.log("|- Added pgg.dll (%s MB)", (mouthwashClientData.byteLength / 1024 / 1024).toFixed(2));
 
     console.log("|- Adding Reactor.dll..");
     const reactorClientResponse = await got.get("https://github.com/NuclearPowered/Reactor/releases/download/2.2.0/Reactor.dll", { responseType: "buffer" });
-    zip.file("BepInEx/plugins/Reactor.dll", reactorClientResponse.body);
+    bundleZip.file("BepInEx/plugins/Reactor.dll", reactorClientResponse.body);
     console.log("|- Added Reactor.dll (%s MB)", (reactorClientResponse.body.byteLength / 1024 / 1024).toFixed(2));
 
     console.log("|- Adding Utf8Json.dll..");
     const utf8JsonResponse = await got.get("https://jhwupengaqaqjewreahz.supabase.co/storage/v1/object/public/Downloads/Utf8Json.dll", { responseType: "buffer" });
-    zip.file("BepInEx/plugins/Utf8Json.dll", utf8JsonResponse.body);
+    bundleZip.file("BepInEx/plugins/Utf8Json.dll", utf8JsonResponse.body);
     console.log("|- Added Ut8fJson.dll (%s MB)", (utf8JsonResponse.body.byteLength / 1024 / 1024).toFixed(2));
+    
+    console.log("|- Adding Submerged.dll..");
+    const submergedResponse = await got.get("https://github.com/SubmergedAmongUs/Submerged/releases/download/v2023.8.2/Submerged.dll", { responseType: "buffer" });
+    bundleZip.file("BepInEx/plugins/Submerged.dll", submergedResponse.body);
+    console.log("|- Added Submerged.dll (%s MB)", (submergedResponse.body.byteLength / 1024 / 1024).toFixed(2));
+
+    // console.log("|- Adding Submerged..");
+    // const submergedResponse = await got.get("https://jhwupengaqaqjewreahz.supabase.co/storage/v1/object/public/Downloads/Submerged.dll", { responseType: "buffer" });
+    // const submergedZip = new JSZip();
+    // await submergedZip.loadAsync(submergedResponse.body);
+    // for (const filePath in submergedZip.files) {
+    //     const file = submergedZip.files[filePath];
+    //     const data = await file.async();
+    //     bundleZip.file(filePath, data);
+    // }
+    // console.log("|- Added Submerged files (%s MB)", (utf8JsonResponse.body.byteLength / 1024 / 1024).toFixed(2));
 
     console.log("|- Generating .zip..");
-    const bundleFile = await zip.generateAsync({ type: "nodebuffer", compression: "DEFLATE" });
+    const bundleFile = await bundleZip.generateAsync({ type: "nodebuffer", compression: "DEFLATE" });
     const numBytes = bundleFile.byteLength;
+
+    if (process.argv.includes("--write") || process.argv.includes("-w")) {
+        await fs.writeFile(path.join(process.cwd(), "bundle.zip"), bundleFile);
+        return;
+    }
 
     console.log("|- calculating hash (%s MB)..", (numBytes / 1024 / 1024).toFixed(3));
     const hash = crypto.createHash("sha256").update(bundleFile).digest("hex").toUpperCase();
