@@ -29,7 +29,8 @@ import {
     GameState,
     RoleType,
     RoleTeamType,
-    GameMode
+    GameMode,
+    GameMap
 } from "@skeldjs/constant";
 
 import { EventEmitter, ExtractEventTypes } from "@skeldjs/events";
@@ -271,6 +272,8 @@ export class Hostable<
      */
     registeredPrefabs: Map<number, NetworkableConstructor<any>[]>;
 
+    shipPrefabIds: Map<number, number>;
+
     /**
      * All roles that can be assigned to players. See {@link Hostable.registerRole}.
      */
@@ -330,6 +333,14 @@ export class Hostable<
             [SpawnType.HideAndSeekManager, [ HideAndSeekManager ]],
             [SpawnType.NormalGameManager, [ NormalGameManager ]]
         ]);
+        
+        this.shipPrefabIds = new Map([
+            [ GameMap.TheSkeld, SpawnType.SkeldShipStatus ],
+            [ GameMap.MiraHQ, SpawnType.MiraShipStatus ],
+            [ GameMap.Polus, SpawnType.Polus ],
+            [ GameMap.AprilFoolsTheSkeld, SpawnType.AprilShipStatus ],
+            [ GameMap.Airship, SpawnType.Airship ],
+        ])
 
         this.registeredRoles = new Map([
             [ RoleType.Crewmate, CrewmateRole ],
@@ -790,15 +801,8 @@ export class Hostable<
             if (this.gameData) this.gameData.dirtyBit = 2 ** 32 - 1;
             if (this.lobbyBehaviour) this.lobbyBehaviour.despawn();
 
-            const shipPrefabs = [
-                SpawnType.SkeldShipStatus,
-                SpawnType.MiraShipStatus,
-                SpawnType.Polus,
-                SpawnType.AprilShipStatus,
-                SpawnType.Airship
-            ];
-
-            this.spawnPrefabOfType(shipPrefabs[this.settings?.map] || 0, -2);
+            const shipPrefabId = this.shipPrefabIds.get(this.settings.map);
+            this.spawnPrefabOfType(shipPrefabId || SpawnType.SkeldShipStatus, -2);
 
             await Promise.all([
                 Promise.race([

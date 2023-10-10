@@ -161,7 +161,7 @@ export abstract class InnerShipStatus<RoomType extends Hostable = Hostable> exte
     /* eslint-disable-next-line */
     Serialize(writer: HazelWriter, spawn: boolean = false) {
         for (const [, system ] of this.systems) {
-            if (system.dirty) {
+            if (system.dirty || spawn) {
                 writer.begin(system.systemType);
                 system.Serialize(writer, spawn);
                 writer.end();
