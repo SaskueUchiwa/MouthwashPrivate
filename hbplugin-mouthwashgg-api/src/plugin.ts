@@ -250,10 +250,7 @@ export class MouthwashApiPlugin extends RoomPlugin {
                 }
 
                 for (const [ , option ] of newGameOptions) {
-                    const cachedValue = this.gameOptions.getCachedValue(option);
-                    if (cachedValue) {
-                        option.setValue(cachedValue);
-                    }
+                    this.gameOptions.updateOptionFromCache(option);
                 }
 
                 if (!await this.gameOptions.transitionTo(newGameOptions))
@@ -411,7 +408,7 @@ export class MouthwashApiPlugin extends RoomPlugin {
                 }
             }
 
-            const gamemodeOption = await this.gameOptions.createOption(
+            const gamemodeOption = await this.gameOptions.createOptionWithCache(
                 new GameOption(
                     DefaultRoomCategoryName.None,
                     DefaultRoomOptionName.Gamemode,

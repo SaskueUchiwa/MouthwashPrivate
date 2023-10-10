@@ -78,36 +78,44 @@ export class GameOptionsService {
         this.cachedValues.set(option.category + "." + option.key, value);
     }
 
-    async createOption(option: GameOption) {
-        const cachedValue = this.getCachedValue(option);
-        if (cachedValue) {
-            if (cachedValue.optionType === GameOptionType.Boolean) {
-                const existingOption = option.getValue<BooleanValue>();
-                if (existingOption.optionType === GameOptionType.Boolean) {
-                    option.setValue(cachedValue);
-                }
-            } else if (cachedValue.optionType === GameOptionType.Enum) {
-                const existingOption = option.getValue<EnumValue<string>>();
-                if (existingOption.optionType === GameOptionType.Enum) {
-                    const selectedIdx = cachedValue.selectedIdx < 0
-                        ? 0
-                        : cachedValue.selectedIdx >= existingOption.options.length
-                            ? existingOption.options.length - 1
-                            : cachedValue.selectedIdx;
-                    option.setValue(new EnumValue(existingOption.options, selectedIdx));
-                }
-            } else if (cachedValue.optionType === GameOptionType.Number) {
-                const existingOption = option.getValue<NumberValue>();
-                if (existingOption.optionType === GameOptionType.Number) {
-                    const value = cachedValue.value < existingOption.lower
-                        ? existingOption.lower
-                        : cachedValue.value > existingOption.upper
-                            ? existingOption.upper
-                            : cachedValue.value;
-                    option.setValue(new NumberValue(value, existingOption.step, existingOption.lower, existingOption.upper, existingOption.zeroIsInfinity, existingOption.suffix));
-                }
+    updateOptionValue(option: GameOption, cachedValue: AnyGameOptionType) {
+        if (cachedValue.optionType === GameOptionType.Boolean) {
+            const existingOption = option.getValue<BooleanValue>();
+            if (existingOption.optionType === GameOptionType.Boolean) {
+                option.setValue(cachedValue);
+            }
+        } else if (cachedValue.optionType === GameOptionType.Enum) {
+            const existingOption = option.getValue<EnumValue<string>>();
+            if (existingOption.optionType === GameOptionType.Enum) {
+                const selectedIdx = cachedValue.selectedIdx < 0
+                    ? 0
+                    : cachedValue.selectedIdx >= existingOption.options.length
+                        ? existingOption.options.length - 1
+                        : cachedValue.selectedIdx;
+                option.setValue(new EnumValue(existingOption.options, selectedIdx));
+            }
+        } else if (cachedValue.optionType === GameOptionType.Number) {
+            const existingOption = option.getValue<NumberValue>();
+            if (existingOption.optionType === GameOptionType.Number) {
+                const value = cachedValue.value < existingOption.lower
+                    ? existingOption.lower
+                    : cachedValue.value > existingOption.upper
+                        ? existingOption.upper
+                        : cachedValue.value;
+                option.setValue(new NumberValue(value, existingOption.step, existingOption.lower, existingOption.upper, existingOption.zeroIsInfinity, existingOption.suffix));
             }
         }
+    }
+
+    updateOptionFromCache(option: GameOption) {
+        const cachedValue = this.getCachedValue(option);
+        if (cachedValue) {
+            this.updateOptionValue(option, cachedValue);
+        }
+    }
+
+    async createOptionWithCache(option: GameOption) {
+        this.updateOptionFromCache(option);
 
         this.gameOptions.set(option.key, option);
         await this.plugin.room.broadcast([], [
@@ -243,16 +251,21 @@ export class GameOptionsService {
 
         for (const message of diffOptions) {
             if (message.messageTag === MouthwashRootMessageTag.SetGameOption) {
-                this.gameOptions.set(message.option.key, message.option as any);
-                if (message.option) {
-                    const cachedValue = this.getCachedValue(message.option);
-                    try {
-                        if (!cachedValue) {
-                            this.updateCachedValue(message.option, message.option.getValue());
-                        }
-                        message.option.setValue(cachedValue || message.option.getValue(), true);
-                    } catch (e) {}
+                this.gameOptions.set(message.option.key, message.option);
+                const cachedValue = this.getCachedValue(message.option);
+                try {
+                    if (cachedValue) {
+                        this.updateOptionValue(message.option, cachedValue);
+                    } else {
+                        this.updateCachedValue(message.option, message.option.getValue());
+                    }
+                } catch (e: any) {
+                    this.plugin.logger.warn("Error updating option: %s", e);
                 }
+                try {
+                    if (!cachedValue) {
+                    }
+                } catch (e) {}
             } else if (message.messageTag === MouthwashRootMessageTag.DeleteGameOption) {
                 this.gameOptions.delete(message.optionKey);
             }
