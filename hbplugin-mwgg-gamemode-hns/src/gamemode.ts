@@ -133,7 +133,7 @@ export class HideAndSeekGamemodePlugin extends BaseGamemodePlugin {
 
     @EventListener("mwgg.gamemode.rolesassigned")
     async onInitialRolesAssigned(ev: GamemodeRolesAssignedEvent) {
-        const gameLevel = this.api.gameOptions.gameOptions.get(DefaultRoomOptionName.Map)?.getValue<EnumValue<"The Skeld"|"Polus"|"Mira HQ"|"Airship">>().selectedOption;
+        const gameLevel = this.api.gameOptions.gameOptions.get(DefaultRoomOptionName.Map)?.getValue<EnumValue<"The Skeld"|"Polus"|"Mira HQ"|"Airship"|"Submerged">>().selectedOption;
         const gameDuration = this.api.gameOptions.gameOptions.get(HnSOptionName.GameDuration)?.getValue<NumberValue>().value!;
         const taskCompletion = this.api.gameOptions.gameOptions.get(HnSOptionName.TaskCompletion)?.getValue<BooleanValue>().enabled!;
         const adminTable = this.api.gameOptions.gameOptions.get(HnSOptionName.AdminTable)?.getValue<BooleanValue>().enabled!;
