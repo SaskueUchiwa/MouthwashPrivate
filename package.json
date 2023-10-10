@@ -23,6 +23,7 @@
     "hbplugin-mouthwashgg-metrics",
     "hbplugin-mouthwashgg-master",
     "hbplugin-mwgg-map-submerged",
+    "hbplugin-mwgg-map-submerged-register",
     "hbplugin-mwgg-gamemode-hns",
     "hbplugin-mwgg-gamemode-infection",
     "hbplugin-mwgg-gamemode-town-of-polus",

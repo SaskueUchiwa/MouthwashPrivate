@@ -1,31 +1,32 @@
 import { BaseRpcMessage } from "@skeldjs/protocol";
 import { HazelReader, HazelWriter } from "@skeldjs/util";
 import { SubmergedRpcMessageTag } from "../enums";
+import { PlayerFloor } from "../systems";
 
 export class RequestChangeFloorMessage extends BaseRpcMessage {
     static messageTag = SubmergedRpcMessageTag.RequestChangeFloor as const;
     messageTag = SubmergedRpcMessageTag.RequestChangeFloor as const;
 
     constructor(
-        public readonly targetFloorIsUpper: boolean,
+        public readonly targetFloor: PlayerFloor,
         public readonly sequenceId: number
     ) {
         super();
     }
 
     static Deserialize(reader: HazelReader) {
-        const targetFloorIsUpper = reader.bool();
+        const targetFloor = reader.uint8();
         const sequenceId = reader.int32();
 
-        return new RequestChangeFloorMessage(targetFloorIsUpper, sequenceId);
+        return new RequestChangeFloorMessage(targetFloor, sequenceId);
     }
 
     Serialize(writer: HazelWriter) {
-        writer.bool(this.targetFloorIsUpper);
+        writer.bool(this.targetFloor === PlayerFloor.UpperDeck);
         writer.int32(this.sequenceId);
     }
 
     clone() {
-        return new RequestChangeFloorMessage(this.targetFloorIsUpper, this.sequenceId);
+        return new RequestChangeFloorMessage(this.targetFloor, this.sequenceId);
     }
 }

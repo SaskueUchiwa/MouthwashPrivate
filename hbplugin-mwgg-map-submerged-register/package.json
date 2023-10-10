@@ -1,5 +1,5 @@
 {
-  "name": "hbplugin-mwgg-map-submerged",
+  "name": "hbplugin-map-mwgg-submerged-register",
   "packageManager": "yarn@3.6.4",
   "version": "1.0.0",
   "description": "My cool Hindenburg plugin",
@@ -37,9 +37,10 @@
     "typescript": "latest"
   },
   "dependencies": {
-    "@skeldjs/hindenburg": "workspace:*"
+    "@skeldjs/hindenburg": "workspace:*",
+    "hbplugin-mwgg-map-submerged": "workspace:*"
   },
   "plugin": {
-    "loadOrder": "first"
+    "loadOrder": "none"
   }
 }

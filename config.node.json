@@ -43,6 +43,7 @@
         "hbplugin-mouthwashgg-api": true,
         "hbplugin-mouthwashgg-metrics": true,
         "hbplugin-mwgg-map-submerged": true,
+        "hbplugin-mwgg-map-submerged-register": true,
         "hbplugin-mwgg-gamemode-hns": false,
         "hbplugin-mwgg-gamemode-infected": false,
         "hbplugin-mwgg-gamemode-town-of-polus": false,

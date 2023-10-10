@@ -67,10 +67,10 @@ export class SubmarinePlayerFloorSystem<RoomType extends Hostable = Hostable> ex
     Serialize(writer: HazelWriter, spawn: boolean) {
         writer.uint8(this.playerFloors.size);
         for (const [ player, floor ] of this.playerFloors) {
+            console.log(player, PlayerFloor[floor]);
             writer.uint8(player.playerId!);
             writer.uint8(floor);
         }
-        this.dirty = spawn;
     }
 
     private _rpcRespondToFloorChange(physicsNetId: number, sequenceId: number) {
@@ -94,6 +94,7 @@ export class SubmarinePlayerFloorSystem<RoomType extends Hostable = Hostable> ex
 
     setPlayerFloor(player: PlayerData<RoomType>, floor: PlayerFloor) {
         this.playerFloors.set(player, floor);
+        this.dirty = true;
     }
 
     Detoriorate(delta: number) {
@@ -103,7 +104,7 @@ export class SubmarinePlayerFloorSystem<RoomType extends Hostable = Hostable> ex
         if (this.playerFloors.size === this.room.gameData.players.size)
             return;
 
-        for (const [ playerId, playerInfo ] of this.room.gameData.players) {
+        for (const [ , playerInfo ] of this.room.gameData.players) {
             const player = playerInfo.getPlayer();
             if (player) {
                 this.playerFloors.set(player, PlayerFloor.LowerDeck);

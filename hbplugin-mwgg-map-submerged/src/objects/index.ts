@@ -1,2 +1,2 @@
-export * from "./ExtendedSkeldShipStatus";
-export * from "./SubmergedStatus";
+export * from "./SubmergedPlayerPhysics";
+export * from "./SubmergedShipStatus";

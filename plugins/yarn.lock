@@ -64,6 +64,12 @@ __metadata:
   languageName: node
   linkType: soft
 
+"hbplugin-mwgg-map-submerged-register@link:../hbplugin-mwgg-map-submerged-register::locator=root-workspace-0b6124%40workspace%3A.":
+  version: 0.0.0-use.local
+  resolution: "hbplugin-mwgg-map-submerged-register@link:../hbplugin-mwgg-map-submerged-register::locator=root-workspace-0b6124%40workspace%3A."
+  languageName: node
+  linkType: soft
+
 "hbplugin-mwgg-map-submerged@link:../hbplugin-mwgg-map-submerged::locator=root-workspace-0b6124%40workspace%3A.":
   version: 0.0.0-use.local
   resolution: "hbplugin-mwgg-map-submerged@link:../hbplugin-mwgg-map-submerged::locator=root-workspace-0b6124%40workspace%3A."
@@ -85,5 +91,6 @@ __metadata:
     hbplugin-mwgg-gamemode-town-of-polus: "link:../hbplugin-mwgg-gamemode-town-of-polus"
     hbplugin-mwgg-gamemode-vanilla: "link:../hbplugin-mwgg-gamemode-vanilla"
     hbplugin-mwgg-map-submerged: "link:../hbplugin-mwgg-map-submerged"
+    hbplugin-mwgg-map-submerged-register: "link:../hbplugin-mwgg-map-submerged-register"
   languageName: unknown
   linkType: soft

@@ -12,12 +12,10 @@ import {
     SkeldShipStatus,
     SpawnType,
     SwitchSystem,
-    SystemStatus,
     SystemType
 } from "@skeldjs/hindenburg";
 
-import { SubmergedStatus } from "./SubmergedStatus";
-import { SubmergedSystemType } from "../enums";
+import { SubmergedRpcMessageTag, SubmergedSystemType } from "../enums";
 import {
     PlayerFloor,
     SpawnInState,
@@ -28,11 +26,8 @@ import {
     SubmarineSecuritySabotageSystem,
     SubmarineSpawnInSystem
 } from "../systems";
-import { AcknowledgeChangeFloorMessage } from "../packets";
 
-export class ExtendedSkeldShipStatus<RoomType extends Hostable<any>> extends SkeldShipStatus<RoomType> {
-    submergedStatus: SubmergedStatus;
-
+export class SubmergedShipStatus<RoomType extends Hostable<any>> extends SkeldShipStatus<RoomType> {
     constructor(
         room: RoomType,
         spawnType: SpawnType,
@@ -42,8 +37,6 @@ export class ExtendedSkeldShipStatus<RoomType extends Hostable<any>> extends Ske
         data?: HazelReader | ShipStatusData
     ) {
         super(room, spawnType, netId, ownerid, flags, data);
-
-        this.submergedStatus = new SubmergedStatus(this);
     }
 
     Setup() {
@@ -137,8 +130,11 @@ export class ExtendedSkeldShipStatus<RoomType extends Hostable<any>> extends Ske
     }
     
     async HandleRpc(rpc: BaseRpcMessage): Promise<void> {
-        if (rpc instanceof AcknowledgeChangeFloorMessage) {
-            
+        await super.HandleRpc(rpc);
+
+        switch (rpc.messageTag) {
+            case SubmergedRpcMessageTag.AcknowledgeChangeFloor:
+                break;
         }
     }
 }
