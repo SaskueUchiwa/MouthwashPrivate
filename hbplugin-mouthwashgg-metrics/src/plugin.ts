@@ -222,34 +222,36 @@ export class MouthwashggMetricsPlugin extends WorkerPlugin {
             RETURNING *
         `, [ gameId, lobbyId, hostConnectionUser ? hostConnectionUser.id : null, gameSettings ]);
 
-        const userIds = [];
-        const params = [];
-        for (const [ , connection ] of ev.room.connections) {
-            const connectionUser = await this.authApi?.getConnectionUser(connection);
-            if (!connectionUser) {
-                this.logger.warn("No connection user for client %s in room %s", connection, ev.room);
-                continue;
+        if (ev.room.connections.size > 0) {
+            const userIds = [];
+            const params = [];
+            for (const [ , connection ] of ev.room.connections) {
+                const connectionUser = await this.authApi?.getConnectionUser(connection);
+                if (!connectionUser) {
+                    this.logger.warn("No connection user for client %s in room %s", connection, ev.room);
+                    continue;
+                }
+                const playerId = crypto.randomUUID();
+                const player = ev.room.players.get(connection.clientId);
+                if (!player) {
+                    this.logger.warn("No player for client %s in room %s", connection, ev.room);
+                    continue;
+                }
+                const role = api.roleService.getPlayerRole(player);
+                if (player) {
+                    this.playerIds.set(player, playerId);
+                }
+                userIds.push(connectionUser.id);
+                const playerName = api.nameService.getPlayerName(player);
+                params.push(playerId, gameId, connectionUser.id, null, role?.metadata.roleName || null,
+                    player.playerInfo?.defaultOutfit.color || null, playerName || null, role ? RoleAlignment[role.metadata.alignment] : null);
             }
-            const playerId = crypto.randomUUID();
-            const player = ev.room.players.get(connection.clientId);
-            if (!player) {
-                this.logger.warn("No player for client %s in room %s", connection, ev.room);
-                continue;
-            }
-            const role = api.roleService.getPlayerRole(player);
-            if (player) {
-                this.playerIds.set(player, playerId);
-            }
-            userIds.push(connectionUser.id);
-            const playerName = api.nameService.getPlayerName(player);
-            params.push(playerId, gameId, connectionUser.id, null, role?.metadata.roleName || null,
-                player.playerInfo?.defaultOutfit.color || null, playerName || null, role ? RoleAlignment[role.metadata.alignment] : null);
+            await this.postgresClient.query(`
+                INSERT INTO player(id, game_id, user_id, did_win, role_name, cosmetic_color, cosmetic_name, role_alignment)
+                VALUES ${userIds.map((_, i) => `($${(i * 8) + 1}, $${(i * 8) + 2}, $${(i * 8) + 3}, $${(i * 8) + 4}, $${(i * 8) + 5}, $${(i * 8) + 6}, $${(i * 8) + 7}, $${(i * 8) + 8})`).join(",")}
+                RETURNING *
+            `, params);
         }
-        await this.postgresClient.query(`
-            INSERT INTO player(id, game_id, user_id, did_win, role_name, cosmetic_color, cosmetic_name, role_alignment)
-            VALUES ${userIds.map((_, i) => `($${(i * 8) + 1}, $${(i * 8) + 2}, $${(i * 8) + 3}, $${(i * 8) + 4}, $${(i * 8) + 5}, $${(i * 8) + 6}, $${(i * 8) + 7}, $${(i * 8) + 8})`).join(",")}
-            RETURNING *
-        `, params);
 
         this.lobbyCurrentGameIds.set(ev.room, gameId);
 
