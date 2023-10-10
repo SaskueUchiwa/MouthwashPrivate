@@ -5,6 +5,7 @@ using HarmonyLib;
 using Hazel;
 using InnerNet;
 using MouthwashClient.Enums;
+using Reactor.Utilities;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -476,7 +477,7 @@ namespace MouthwashClient.Patches.Lobby
                     return true;
 
                 uint previous = enumValue.SelectedIdx;
-                enumValue.SelectedIdx = (uint)Mathf.Clamp((float)enumValue.SelectedIdx + 1, 0, enumValue.Options.Length - 1);
+                enumValue.SelectedIdx = (uint)Math.Clamp(enumValue.SelectedIdx + 1, 0, enumValue.Options.Length - 1);
                 if (enumValue.SelectedIdx == previous)
                     return false;
                 __instance.ValueText.text = enumValue.Options[enumValue.SelectedIdx];
@@ -495,7 +496,7 @@ namespace MouthwashClient.Patches.Lobby
                     return true;
                 
                 uint previous = enumValue.SelectedIdx;
-                enumValue.SelectedIdx = (uint)Mathf.Clamp((float)enumValue.SelectedIdx - 1, 0, enumValue.Options.Length - 1);
+                enumValue.SelectedIdx = (uint)Math.Clamp(enumValue.SelectedIdx - 1, 0, enumValue.Options.Length - 1);
                 if (enumValue.SelectedIdx == previous)
                     return false;
                 __instance.ValueText.text = enumValue.Options[enumValue.SelectedIdx];
