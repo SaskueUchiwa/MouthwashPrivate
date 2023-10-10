@@ -114,7 +114,11 @@ export class SubmarineSpawnInSystem<RoomType extends Hostable = Hostable> extend
                     return; // set spawn in state to done once all players have spawned in
             }
         }
-        this.currentState = SpawnInState.Done;
+        if (this.currentState === SpawnInState.Spawning) {
+            this.currentState = SpawnInState.Done;
+        } else if (this.currentState === SpawnInState.Loading) {
+            this.currentState = SpawnInState.Spawning;
+        }
         this.players.clear();
         this.timer = 10;
         this.dirty = true;
