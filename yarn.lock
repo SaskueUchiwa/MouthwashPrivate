@@ -3799,6 +3799,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"hbplugin-map-mwgg-submerged@workspace:hbplugin-mwgg-map-submerged":
+  version: 0.0.0-use.local
+  resolution: "hbplugin-map-mwgg-submerged@workspace:hbplugin-mwgg-map-submerged"
+  dependencies:
+    "@skeldjs/hindenburg": "workspace:*"
+    "@types/node": latest
+    typescript: latest
+  languageName: unknown
+  linkType: soft
+
 "hbplugin-mouthwashgg-anti-cheat@workspace:*, hbplugin-mouthwashgg-anti-cheat@workspace:hbplugin-mouthwashgg-anti-cheat":
   version: 0.0.0-use.local
   resolution: "hbplugin-mouthwashgg-anti-cheat@workspace:hbplugin-mouthwashgg-anti-cheat"

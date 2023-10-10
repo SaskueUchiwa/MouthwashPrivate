@@ -39,12 +39,14 @@
         },
         "hbplugin-mouthwashgg-master": false,
         "hbplugin-mouthwashgg": true,
-        "hbplugin-mouthwashgg-anti-cheat": true,
+        "hbplugin-mouthwashgg-anti-cheat": false,
         "hbplugin-mouthwashgg-api": true,
         "hbplugin-mouthwashgg-metrics": true,
-        "hbplugin-mwgg-gamemode-hns": true,
-        "hbplugin-mwgg-gamemode-town-of-polus": true,
-        "hbplugin-mwgg-gamemode-vanilla": true
+        "hbplugin-mwgg-map-submerged": true,
+        "hbplugin-mwgg-gamemode-hns": false,
+        "hbplugin-mwgg-gamemode-infected": false,
+        "hbplugin-mwgg-gamemode-town-of-polus": false,
+        "hbplugin-mwgg-gamemode-vanilla": false
     },
     "anticheat": {
         "penalty": {

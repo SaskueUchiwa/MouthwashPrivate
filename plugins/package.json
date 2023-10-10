@@ -6,6 +6,7 @@
         "hbplugin-mouthwashgg-auth": "link:../hbplugin-mouthwashgg-auth",
         "hbplugin-mouthwashgg-master": "link:../hbplugin-mouthwashgg-master",
         "hbplugin-mouthwashgg-metrics": "link:../hbplugin-mouthwashgg-metrics",
+        "hbplugin-mwgg-map-submerged": "link:../hbplugin-mwgg-map-submerged",
         "hbplugin-mwgg-gamemode-hns": "link:../hbplugin-mwgg-gamemode-hns",
         "hbplugin-mwgg-gamemode-infection": "link:../hbplugin-mwgg-gamemode-infection",
         "hbplugin-mwgg-gamemode-town-of-polus": "link:../hbplugin-mwgg-gamemode-town-of-polus",
