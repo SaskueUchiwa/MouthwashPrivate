@@ -67,7 +67,6 @@ export class SubmarinePlayerFloorSystem<RoomType extends Hostable = Hostable> ex
     Serialize(writer: HazelWriter, spawn: boolean) {
         writer.uint8(this.playerFloors.size);
         for (const [ player, floor ] of this.playerFloors) {
-            console.log(player, PlayerFloor[floor]);
             writer.uint8(player.playerId!);
             writer.uint8(floor);
         }

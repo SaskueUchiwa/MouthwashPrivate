@@ -37,6 +37,8 @@ export class SubmarineSpawnInSystem<RoomType extends Hostable = Hostable> extend
     players: Set<PlayerData<RoomType>>;
     currentState: SpawnInState;
     timer: number;
+    
+    private timerUpdateDelay: number;
 
     constructor(
         ship: InnerShipStatus<RoomType>,
@@ -48,6 +50,7 @@ export class SubmarineSpawnInSystem<RoomType extends Hostable = Hostable> extend
         this.players ||= new Set;
         this.currentState ||= SpawnInState.Loading;
         this.timer ||= 10;
+        this.timerUpdateDelay = 0.5;
     }
 
     get sabotaged() {
@@ -105,8 +108,12 @@ export class SubmarineSpawnInSystem<RoomType extends Hostable = Hostable> extend
     Detoriorate(delta: number) {
         if (this.currentState === SpawnInState.Spawning) {
             this.timer -= delta;
+            this.timerUpdateDelay -= delta;
             if (this.timer < 0) this.timer = 0;
-            this.dirty = true;
+            if (this.timerUpdateDelay < 0) {
+                this.dirty = true;
+                this.timerUpdateDelay = 0.5;
+            }
         }
         if (this.room.gameData) {
             for (const [ , player ] of this.room.players) {
