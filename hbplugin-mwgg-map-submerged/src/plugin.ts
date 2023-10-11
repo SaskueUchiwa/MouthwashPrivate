@@ -5,10 +5,14 @@ import {
     RegisterPrefab,
     SpawnType,
     PlayerControl,
-    CustomNetworkTransform
+    CustomNetworkTransform,
+    EventListener,
+    MeetingHudCloseEvent
 } from "@skeldjs/hindenburg";
 
 import { SubmergedPlayerPhysics, SubmergedShipStatus } from "./objects";
+import { SubmergedSystemType } from "./enums";
+import { SubmarineBoxCatSystem } from "./systems";
 
 export interface MwggMapSubmergedPluginConfig {
 
@@ -28,5 +32,13 @@ export class MwggMapSubmergedPlugin extends RoomPlugin {
 
     onPluginUnload() {
         this.room.shipPrefabIds.delete(5);
+    }
+
+    @EventListener("meeting.close")
+    onMeetingHudClose(ev: MeetingHudCloseEvent<Room>) {
+        const boxCatSystem = this.room.shipStatus?.systems.get(SubmergedSystemType.BoxCat as number);
+        if (boxCatSystem instanceof SubmarineBoxCatSystem) {
+            boxCatSystem.moveCat();
+        }
     }
 }

@@ -35,15 +35,7 @@ export class SubmarineBoxCatSystem<RoomType extends Hostable = Hostable> extends
     ) {
         super(ship, systemType, data);
 
-        this.position ??= 0;
-    }
-
-    get sabotaged() {
-        return false;
-    }
-
-    patch(data: SubmarineBoxCatSystemData) {
-
+        this.position ??= 255;
     }
 
     /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
@@ -56,29 +48,12 @@ export class SubmarineBoxCatSystem<RoomType extends Hostable = Hostable> extends
         writer.uint8(this.position);
     }
 
-    async HandleSabotage(player: PlayerData|undefined, rpc: RepairSystemMessage|undefined) {
-
-    }
-
-    private async _repair(player: PlayerData|undefined, rpc: RepairSystemMessage|undefined) {
-
-    }
-
-    async repair() {
-        if (this.room.hostIsMe) {
-            await this._repair(this.room.myPlayer, undefined);
+    moveCat() {
+        if (this.position === 255) {
+            this.position = Math.floor(Math.random() * 2);
         } else {
-            await this._sendRepair(0);
+            this.position = (this.position + 1) % 2;
         }
-    }
-
-    async HandleRepair(player: PlayerData<RoomType>|undefined, amount: number, rpc: RepairSystemMessage|undefined) {
-        switch (amount) {
-
-        }
-    }
-
-    Detoriorate(delta: number) {
-
+        this.dirty = true;
     }
 }

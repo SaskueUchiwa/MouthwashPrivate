@@ -140,7 +140,7 @@ export class SubmergedShipStatus<RoomType extends Hostable<any>> extends SkeldSh
         }));
 
         this.systems.set(SubmergedSystemType.BoxCat as number, new SubmarineBoxCatSystem(this, SubmergedSystemType.BoxCat as number, {
-            position: 0
+            position: 255
         }));
 
         this.systems.set(SystemType.Sabotage, new SabotageSystem(this, SystemType.Sabotage, {
@@ -174,6 +174,9 @@ export class SubmergedShipStatus<RoomType extends Hostable<any>> extends SkeldSh
 
             doorSystem.doors.push(outerLower, innerLower, outerUpper, innerUpper);
         }
+
+        const boxCatSystem = this.systems.get(SubmergedSystemType.BoxCat as number) as SubmarineBoxCatSystem;
+        boxCatSystem.moveCat();
     }
     
     async HandleRpc(rpc: BaseRpcMessage): Promise<void> {
