@@ -7,12 +7,13 @@ import {
     PlayerControl,
     CustomNetworkTransform,
     EventListener,
-    MeetingHudCloseEvent
+    MeetingHudCloseEvent,
+    PlayerStartMeetingEvent
 } from "@skeldjs/hindenburg";
 
 import { SubmergedPlayerPhysics, SubmergedShipStatus } from "./objects";
 import { SubmergedSystemType } from "./enums";
-import { SubmarineBoxCatSystem } from "./systems";
+import { SpawnInState, SubmarineBoxCatSystem, SubmarineSpawnInSystem } from "./systems";
 
 export interface MwggMapSubmergedPluginConfig {
 
@@ -39,6 +40,14 @@ export class MwggMapSubmergedPlugin extends RoomPlugin {
         const boxCatSystem = this.room.shipStatus?.systems.get(SubmergedSystemType.BoxCat as number);
         if (boxCatSystem instanceof SubmarineBoxCatSystem) {
             boxCatSystem.moveCat();
+        }
+    }
+
+    @EventListener("player.startmeeting")
+    onMeetingStart(ev: PlayerStartMeetingEvent<Room>) {
+        const spawnInSystem = this.room.shipStatus?.systems.get(SubmergedSystemType.SpawnIn as number);
+        if (spawnInSystem instanceof SubmarineSpawnInSystem) {
+            spawnInSystem.resetSpawns();
         }
     }
 }

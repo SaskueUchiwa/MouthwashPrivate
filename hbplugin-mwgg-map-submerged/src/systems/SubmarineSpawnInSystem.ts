@@ -105,6 +105,13 @@ export class SubmarineSpawnInSystem<RoomType extends Hostable = Hostable> extend
         }
     }
 
+    resetSpawns() {
+        this.currentState = SpawnInState.Loading;
+        this.players.clear();
+        this.timer = 10;
+        this.dirty = true;
+    }
+
     Detoriorate(delta: number) {
         if (this.currentState === SpawnInState.Spawning) {
             this.timer -= delta;
