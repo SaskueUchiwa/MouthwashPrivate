@@ -104,17 +104,18 @@ export class SubmarineElevatorSystem<RoomType extends Hostable = Hostable> exten
                 this.lastStage = ElevatorMovementStage.Complete;
                 this.targetFloor = this.targetFloor === PlayerFloor.LowerDeck ? PlayerFloor.UpperDeck : PlayerFloor.LowerDeck;
                 this.dirty = true;
+            }
 
-                if (this.tandemElevator !== SubmergedSystemType.Nil) {
-                    const otherElevator = this.ship.systems.get(this.tandemElevator as number);
-                    if (otherElevator instanceof SubmarineElevatorSystem) {
-                        otherElevator.moving = true;
-                        otherElevator.totalTimer = this.totalTimer;
-                        otherElevator.lastStage = this.lastStage;
-                        this.targetFloor = this.moving
-                            ? (this.targetFloor === PlayerFloor.LowerDeck ? PlayerFloor.UpperDeck : PlayerFloor.LowerDeck)
-                            : this.targetFloor;
-                    }
+            if (this.tandemElevator !== SubmergedSystemType.Nil) {
+                const otherElevator = this.ship.systems.get(this.tandemElevator as number);
+                if (otherElevator instanceof SubmarineElevatorSystem) {
+                    otherElevator.moving = true;
+                    otherElevator.totalTimer = this.totalTimer;
+                    otherElevator.lastStage = this.lastStage;
+                    otherElevator.targetFloor = this.moving
+                        ? (this.targetFloor === PlayerFloor.LowerDeck ? PlayerFloor.UpperDeck : PlayerFloor.LowerDeck)
+                        : this.targetFloor;
+                    otherElevator.dirty = true;
                 }
             }
             break;
@@ -145,11 +146,11 @@ export class SubmarineElevatorSystem<RoomType extends Hostable = Hostable> exten
             if (!position)
                 continue;
 
-            if (this.targetFloor === PlayerFloor.UpperDeck) {
-                if (bounds.upper.contains(position))
+            if (this.targetFloor === PlayerFloor.UpperDeck) { // means it's coming from the lower elevator, so players will be there
+                if (bounds.lower.contains(position))
                     players.push(player);
             } else {
-                if (bounds.lower.contains(position))
+                if (bounds.upper.contains(position))
                     players.push(player);
             }
         }
@@ -165,18 +166,20 @@ export class SubmarineElevatorSystem<RoomType extends Hostable = Hostable> exten
         }
         this.totalTimer += delta;
         if (this.room.hostIsMe) {
+            if (this.lastStage === ElevatorMovementStage.DoorsOpening) {
+                this.moving = false;
+                return;
+            }
             const nextStage = this.getNextStage();
             if (this.lastStage !== nextStage) {
                 if (nextStage > ElevatorMovementStage.ElevatorMovingIn) {
-                    for (const player of this.getPlayersInside()) {
+                    const playersInside = this.getPlayersInside();
+                    for (const player of playersInside) {
                         const floorSystem = this.ship.systems.get(SubmergedSystemType.Floor as number);
                         if (floorSystem instanceof SubmarinePlayerFloorSystem) {
                             floorSystem.setPlayerFloor(player, this.targetFloor as PlayerFloor);
                         }
                     }
-                }
-                if (nextStage === ElevatorMovementStage.DoorsOpening) {
-                    this.moving = false;
                 }
                 this.dirty = true;
             }
