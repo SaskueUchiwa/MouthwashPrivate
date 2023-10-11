@@ -1,5 +1,5 @@
 import { HazelReader, HazelWriter } from "@skeldjs/util";
-import { SystemType } from "@skeldjs/constant";
+import { PlayerDataFlags, SystemType } from "@skeldjs/constant";
 import { RepairSystemMessage } from "@skeldjs/protocol";
 import { ExtractEventTypes } from "@skeldjs/events";
 
@@ -8,8 +8,10 @@ import {
     SystemStatus,
     SystemStatusEvents,
     PlayerData,
-    Hostable
+    Hostable,
+    Door
 } from "@skeldjs/core";
+
 import { ElevatorBounds } from "../data";
 import { SubmergedSystemType } from "../enums";
 import { PlayerFloor, SubmarinePlayerFloorSystem } from "./SubmarinePlayerFloorSystem";
@@ -56,6 +58,11 @@ export class SubmarineElevatorSystem<RoomType extends Hostable = Hostable> exten
     moving: boolean;
     tandemElevator: SubmergedSystemType;
 
+    upperDoorInner: Door|null;
+    upperDoorOuter: Door|null;
+    lowerDoorInner: Door|null;
+    lowerDoorOuter: Door|null;
+
     lastStage: ElevatorMovementStage;
     totalTimer: number;
 
@@ -72,6 +79,11 @@ export class SubmarineElevatorSystem<RoomType extends Hostable = Hostable> exten
 
         this.lastStage ??= ElevatorMovementStage.Complete;
         this.totalTimer ??= 0;
+
+        this.upperDoorInner ??= null;
+        this.upperDoorOuter ??= null;
+        this.lowerDoorInner ??= null;
+        this.lowerDoorOuter ??= null;
     }
 
     get sabotaged() {
@@ -158,12 +170,24 @@ export class SubmarineElevatorSystem<RoomType extends Hostable = Hostable> exten
         return players;
     }
 
+    updateDoors() {
+        this.upperDoorInner?.setOpen(this.targetFloor === PlayerFloor.UpperDeck);
+        this.upperDoorOuter?.setOpen(this.targetFloor === PlayerFloor.UpperDeck);
+        this.lowerDoorInner?.setOpen(this.targetFloor === PlayerFloor.LowerDeck);
+        this.lowerDoorOuter?.setOpen(this.targetFloor === PlayerFloor.LowerDeck);
+    }
+
     Detoriorate(delta: number) {
         if (!this.moving) {
             this.totalTimer = 0;
             this.lastStage = ElevatorMovementStage.Complete;
+            this.updateDoors();
             return;
         }
+        this.upperDoorInner?.setOpen(false);
+        this.upperDoorOuter?.setOpen(false);
+        this.lowerDoorInner?.setOpen(false);
+        this.lowerDoorOuter?.setOpen(false);
         this.totalTimer += delta;
         if (this.room.hostIsMe) {
             if (this.lastStage === ElevatorMovementStage.DoorsOpening) {

@@ -1,5 +1,6 @@
 import {
     BaseRpcMessage,
+    Door,
     DoorsSystem,
     HazelReader,
     Hostable,
@@ -28,6 +29,24 @@ import {
 } from "../systems";
 
 export class SubmergedShipStatus<RoomType extends Hostable<any>> extends SkeldShipStatus<RoomType> {
+    static roomDoors: Partial<Record<SystemType, number[]>> = {
+        [SubmergedSystemType.UpperLobby as number]: [0, 1],
+        [SystemType.Communications]: [2],
+        [SubmergedSystemType.Research as number]: [3],
+        [SystemType.Medical]: [4],
+        [SystemType.MeetingRoom]: [5, 6],
+        [SystemType.Administrator]: [7],
+        [SubmergedSystemType.Observatory as number]: [8],
+        [SystemType.Security]: [9],
+        [SystemType.Engine]: [10],
+        [SystemType.Storage]: [11, 12],
+        [SystemType.Electrical]: [13, 14],
+        [SystemType.Decontamination]: [15, 16],
+        [SystemType.Decontamination2]: [17, 18],
+        [SystemType.Hallway]: [19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34,
+            35, 36, 37, 38]
+    };
+
     constructor(
         room: RoomType,
         spawnType: SpawnType,
@@ -127,6 +146,34 @@ export class SubmergedShipStatus<RoomType extends Hostable<any>> extends SkeldSh
         this.systems.set(SystemType.Sabotage, new SabotageSystem(this, SystemType.Sabotage, {
             cooldown: 0
         }));
+        
+        const doorSystem = this.systems.get(SystemType.Doors)! as DoorsSystem;
+        doorSystem.doors = [];
+        let doorId = 0
+        for (; doorId < 19; doorId++) {
+            doorSystem.doors.push(new Door(doorSystem, doorId, true));
+        }
+
+        const elevators = [
+            this.systems.get(SubmergedSystemType.ElevatorHallwayLeft as number) as SubmarineElevatorSystem,
+            this.systems.get(SubmergedSystemType.ElevatorHallwayRight as number) as SubmarineElevatorSystem,
+            this.systems.get(SubmergedSystemType.ElevatorLobbyLeft as number) as SubmarineElevatorSystem,
+            this.systems.get(SubmergedSystemType.ElevatorLobbyRight as number) as SubmarineElevatorSystem,
+            this.systems.get(SubmergedSystemType.ElevatorService as number) as SubmarineElevatorSystem
+        ];
+        for (const elevator of elevators) {
+            const outerLower = new Door(doorSystem, doorId++, elevator.targetFloor === PlayerFloor.LowerDeck);
+            const innerLower = new Door(doorSystem, doorId++, elevator.targetFloor === PlayerFloor.LowerDeck);
+            const outerUpper = new Door(doorSystem, doorId++, elevator.targetFloor === PlayerFloor.UpperDeck);
+            const innerUpper = new Door(doorSystem, doorId++, elevator.targetFloor === PlayerFloor.UpperDeck);
+
+            elevator.lowerDoorOuter = outerLower;
+            elevator.lowerDoorInner = innerLower;
+            elevator.upperDoorOuter = outerUpper;
+            elevator.upperDoorInner = innerUpper;
+
+            doorSystem.doors.push(outerLower, innerLower, outerUpper, innerUpper);
+        }
     }
     
     async HandleRpc(rpc: BaseRpcMessage): Promise<void> {
@@ -136,5 +183,9 @@ export class SubmergedShipStatus<RoomType extends Hostable<any>> extends SkeldSh
             case SubmergedRpcMessageTag.AcknowledgeChangeFloor:
                 break;
         }
+    }
+
+    getDoorsInRoom(room: SystemType) {
+        return SubmergedShipStatus.roomDoors[room] || [];
     }
 }

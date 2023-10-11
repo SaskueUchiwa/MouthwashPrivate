@@ -93,11 +93,13 @@ export class SubmarineOxygenSystem<RoomType extends Hostable = Hostable> extends
     async HandleSabotage(player: PlayerData|undefined, rpc: RepairSystemMessage|undefined) {
         this.countdown = SubmarineOxygenSystem.duration;
         this.playersWithMask.clear();
+        this.dirty = true;
     }
 
     private async _repair(player: PlayerData|undefined, rpc: RepairSystemMessage|undefined) {
         this.countdown = 10000;
         this.playersWithMask.clear();
+        this.dirty = true;
     }
 
     async repair() {
