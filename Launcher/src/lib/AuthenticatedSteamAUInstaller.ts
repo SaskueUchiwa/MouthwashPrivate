@@ -15,21 +15,6 @@ export class AuthenticatedSteamAUInstaller extends AUInstaller {
         super();
     }
     
-    async moveFilesInFolder(originPath: string, destPath: string) {
-        const filesInOrigin = await fs.readDir(originPath);
-        await fs.createDir(destPath, { recursive: true });
-
-        for (const file of filesInOrigin) {
-            const subOriginPath = await path.join(originPath, file.name);
-            const subDestPath = await path.join(destPath, file.name);
-            if (Array.isArray(file.children)) {
-                await this.moveFilesInFolder(subOriginPath, subDestPath);
-            } else {
-                await fs.renameFile(subOriginPath, subDestPath);
-            }
-        }
-    }
-
     protected async done(depotDownloaderPath: string) {
         await this.depotDownloaderProcess.kill();
         await sleep(2000);
