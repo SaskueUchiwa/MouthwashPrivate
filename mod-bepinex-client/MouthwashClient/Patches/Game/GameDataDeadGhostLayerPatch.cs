@@ -9,7 +9,7 @@ namespace MouthwashClient.Patches.Game
         public static void Postfix(GameData.PlayerInfo __instance)
         {
             // Adapted from PlayerControl.cs
-            if (__instance.Object != null)
+            if (__instance.Object != null && ShipStatus.Instance != null)
             {
                 __instance.Object.gameObject.layer =
                     __instance.IsDead ? LayerMask.NameToLayer("Ghost") : LayerMask.NameToLayer("Players");
