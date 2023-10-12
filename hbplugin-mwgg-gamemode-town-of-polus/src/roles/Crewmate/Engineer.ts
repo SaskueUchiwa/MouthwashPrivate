@@ -21,10 +21,10 @@ import {
     RoleObjective
 } from "hbplugin-mouthwashgg-api";
 
+import { AnticheatExceptions, InfractionName } from "hbplugin-mouthwashgg-anti-cheat";
 import { EnumValue, GameOption, NumberValue, Palette, RGBA } from "mouthwash-types";
 
 import { TownOfPolusOptionName } from "../../gamemode";
-import { AnticheatExceptions, InfractionName } from "hbplugin-mouthwashgg-anti-cheat";
 
 const engineerColor = new RGBA(248, 191, 20, 255);
 const fixAsset = new AssetReference("PggResources/TownOfPolus", "Assets/Mods/TownOfPolus/Fix.png");
@@ -87,6 +87,16 @@ export class Engineer extends Crewmate {
             this._fixButton?.destroy();
             this._fixButton = undefined;
         });
+
+        if (this.room.shipStatus) {
+            for (const [ , system ] of this.room.shipStatus.systems) {
+                if (system.sabotaged) {
+                    this._lastSabotagedSystem = system;
+                    this._fixButton?.setSaturated(true);
+                    break;
+                }
+            }
+        }
     }
 
     async onRemove() {
