@@ -5,15 +5,18 @@
     import SteamDownloadSetup from "./SteamDownloadSetup.svelte";
     import SteamAuth from "./SteamAuth.svelte";
     import EpicGamesDownloadSetup from "./EpicGamesDownloadSetup.svelte";
+    import LocalInstallationSetup from "./LocalInstallationSetup.svelte";
 
     export let steamAuthModal: SteamAuth;
     export let isVisible = false;
 
     const dispatchEvent = createEventDispatcher();
 
-    const platforms = [ "Steam", "Epic Games", "Itch/Local Installation" ];
-    let selectedPlatformIdx = -1;
+    const platforms = [ "Steam", "Epic Games" ];
+    let selectedDownloadPlatformIdx = -1;
+    let selectedInstallationTypeIdx = -1;
 
+    let localInstallationSetup: LocalInstallationSetup|undefined = undefined;
     let steamDownloadSetup: SteamDownloadSetup|undefined = undefined;
     let epicGamesDownloadSetup: EpicGamesDownloadSetup|undefined = undefined;
 
@@ -27,7 +30,14 @@
     }
 
     async function validateAndGetInstaller() {
-        if (selectedPlatformIdx === 0) {
+        if (selectedInstallationTypeIdx === 0) {
+            if (!await localInstallationSetup.validate())
+                return undefined;
+
+            return localInstallationSetup.getInstaller();
+        }
+
+        if (selectedDownloadPlatformIdx === 0) {
             if (!steamDownloadSetup)
                 return undefined;
 
@@ -35,7 +45,7 @@
                 return undefined;
 
             return steamDownloadSetup.getInstaller();
-        } else if (selectedPlatformIdx === 1) {
+        } else if (selectedDownloadPlatformIdx === 1) {
             return epicGamesDownloadSetup.getInstaller();
         }
 
@@ -53,43 +63,45 @@
 </script>
 
 <div class="left-0 top-0 w-full h-full items-center justify-center bg-[#000000b5] z-10" class:flex={isVisible} class:hidden={!isVisible} class:fixed={isVisible}>
-    <div class="bg-surface-200 w-1/4 h-1/2 rounded-xl shadow-lg px-6 p-4">
+    <div class="bg-surface-200 w-1/4 h-4/7 rounded-xl shadow-lg px-6 p-4">
         <div class="flex flex-col h-full gap-2">
             <div class="flex items-center gap-2">
                 <Adjustments size={20}/>
                 <span class="text-lg">Download Setup</span>
             </div>
             <p class="text-text-300 italic text-xs">
-                To download PGG: Rewritten, the launcher will use the Steam or Epic Games servers to download
-                an older version of Among Us (2021.6.30s).
+                To download Polus.GG: Rewritten, you can either locate your existing installation from Steam,
+                Epic Games or Itch.io, or the launcher can download it for you.
             </p>
-            <span class="text-md">Where do you own Among Us?</span>
-            <DropDown items={platforms} bind:selectedIdx={selectedPlatformIdx}/>
-            {#if selectedPlatformIdx === 0}
-                <SteamDownloadSetup {steamAuthModal} bind:this={steamDownloadSetup}/>
-            {:else if selectedPlatformIdx === 1}
-                <EpicGamesDownloadSetup bind:this={epicGamesDownloadSetup}/>
-            {:else if selectedPlatformIdx === 2}
-                <p class="text-text-300 italic text-xs">
-                    Local game installations are not currently supported, check back later!
-                </p>
-            {:else}
-                <p class="text-text-300 italic text-xs">
-                    Select which platform you have purchased Among Us.
-                </p>
+            <span class="text-md">Do you have Among Us installed? (2023.7.11)</span>
+            <DropDown items={[ "Yes", "No" ]} bind:selectedIdx={selectedInstallationTypeIdx}/>
+            {#if selectedInstallationTypeIdx === 0}
+                <LocalInstallationSetup bind:this={localInstallationSetup}/>
+            {:else if selectedInstallationTypeIdx === 1}
+                <span class="text-md">Where do you own Among Us?</span>
+                <DropDown items={platforms} bind:selectedIdx={selectedDownloadPlatformIdx}/>
+                {#if selectedDownloadPlatformIdx === 0}
+                    <SteamDownloadSetup {steamAuthModal} bind:this={steamDownloadSetup}/>
+                {:else if selectedDownloadPlatformIdx === 1}
+                    <EpicGamesDownloadSetup bind:this={epicGamesDownloadSetup}/>
+                {:else}
+                    <p class="text-text-300 italic text-xs">
+                        Select which platform you have purchased Among Us.
+                    </p>
+                {/if}
             {/if}
-            <div class="mt-auto self-end flex gap-2">
-                <button class="rounded-lg border-2 bg-transparent border-card-200 px-4 py-1 hover:text-text-300 filter border-none font-inherit text-inherit cursor-pointer" on:click={hide}>
-                    Cancel
-                </button>
-                <button class="rounded-lg bg-card-200 px-4 py-1 hover:bg-card-300 hover:text-text-300 filter border-none font-inherit text-inherit cursor-pointer"
-                    class:grayscale={selectedPlatformIdx === -1}
-                    class:pointer-events-none={selectedPlatformIdx === -1}
-                    on:click={submit}
-                >
-                    Begin Download
-                </button>
-            </div>
+            {#if selectedInstallationTypeIdx !== -1}
+                <div class="mt-auto self-end flex gap-2">
+                    <button class="rounded-lg border-2 bg-transparent border-card-200 px-4 py-1 hover:text-text-300 filter border-none font-inherit text-inherit cursor-pointer" on:click={hide}>
+                        Cancel
+                    </button>
+                    <button class="rounded-lg bg-card-200 px-4 py-1 hover:bg-card-300 hover:text-text-300 filter border-none font-inherit text-inherit cursor-pointer"
+                        on:click={submit}
+                    >
+                        Begin Download
+                    </button>
+                </div>
+            {/if}
         </div>
     </div>
 </div>
