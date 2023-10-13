@@ -44,6 +44,7 @@ export class Impostor extends BaseRole {
     }
 
     async markImpostor() {
+        this.api.hudService.setTaskInteraction(this.player, false);
         this.giveFakeTasks();
         await this.room.broadcast([], [
             new SetRoleTeamMessage(RoleTeamType.Impostor)

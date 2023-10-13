@@ -701,6 +701,9 @@ export class Hostable<
         let totalImpostors = 0;
 
         for (const [ , playerInfo ] of this.gameData.players) {
+            if (playerInfo.isDisconnected)
+                continue;
+
             if (playerInfo.roleType?.roleMetadata.roleTeam === RoleTeamType.Impostor) {
                 totalImpostors++;
                 if (!playerInfo.isDead) {

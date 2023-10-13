@@ -1,5 +1,5 @@
-import { PlayerData, ReliablePacket, Room } from "@skeldjs/hindenburg";
-import { DisplayStartGameScreenMessage, HudLocation, NumberValue, Priority } from "mouthwash-types";
+import { PlayerData, ReliablePacket, RoleTeamType, Room } from "@skeldjs/hindenburg";
+import { DisplayStartGameScreenMessage, HudLocation, NumberValue, Priority, SetRoleTeamMessage } from "mouthwash-types";
 
 import { shuffleArray } from "../../util/shuffleArray";
 
@@ -153,6 +153,18 @@ export class RoleService {
                 Priority.A,
                 [ role.player ]
             );
+            const connection = this.plugin.room.getConnection(role.player);
+            if (connection) {
+                const roleTeam = role.metadata.alignment === RoleAlignment.Impostor
+                    ? RoleTeamType.Impostor
+                    : RoleTeamType.Crewmate;
+                if (role.player.playerInfo?.roleType?.roleMetadata) {
+                    role.player.playerInfo.roleType.roleMetadata.roleTeam = roleTeam;
+                }
+                this.plugin.room.broadcastMessages([],
+                    [ new SetRoleTeamMessage(roleTeam) ],
+                    [ connection ]);
+            }
             readyPromises.push(role.onReady());
         }
 

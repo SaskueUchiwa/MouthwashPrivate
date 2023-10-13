@@ -614,7 +614,7 @@ export class MouthwashApiPlugin extends RoomPlugin {
     @EventListener("room.assignroles") // we assign our own roles!
     onRoomAssignRoles(ev: RoomAssignRolesEvent<Room>) {
         for (const [ player ] of ev.roleAssignments) {
-            ev.setAssignment(player, BasicMouthwashRole /* skeldjs/among us crewmate role */);
+            ev.setAssignment(player, BasicMouthwashRole() /* skeldjs/among us crewmate role */);
         }
     }
 
@@ -653,6 +653,7 @@ export class MouthwashApiPlugin extends RoomPlugin {
                 )
             );
         } else if (ev.intentName === AmongUsEndGames.PlayersDisconnect) {
+            console.log("got players disconnect end game intent", ev.metadata);
             const metadata = ev.metadata as PlayersDisconnectEndgameMetadata;
             if (metadata.aliveImpostors === 0) {
                 this.room.registerEndGameIntent(
@@ -723,29 +724,8 @@ export class MouthwashApiPlugin extends RoomPlugin {
             );
         } else if (ev.intentName === AmongUsEndGames.PlayersVoteOut) {
             const metadata = ev.metadata as PlayersVoteOutEndgameMetadata;
-            if (metadata.exiled.playerInfo?.isImpostor) {
-                this.room.registerEndGameIntent(
-                    new EndGameIntent(
-                        MouthwashEndGames.CrewmateVotedOut,
-                        GameOverReason.ImpostorByVote,
-                        {
-                            endGameScreen: new Map(players.map<[number, EndGameScreen]>(playerRole => {
-                                return [
-                                    playerRole.player.playerId!,
-                                    {
-                                        titleText: playerRole.metadata.alignment === RoleAlignment.Impostor ? "Victory" : Palette.impostorRed.text("Defeat"),
-                                        subtitleText: `The ${Palette.impostorRed.text("Impostors")} voted out the last ${Palette.crewmateBlue.text("Crewmate")}`,
-                                        backgroundColor: Palette.impostorRed,
-                                        yourTeam: RoleAlignment.Impostor,
-                                        winSound: WinSound.ImpostorWin,
-                                        hasWon: playerRole.metadata.alignment === RoleAlignment.Impostor
-                                    }
-                                ];
-                            }))
-                        }
-                    )
-                );
-            } else {
+            const playerRole = this.roleService.getPlayerRole(metadata.exiled);
+            if (playerRole && playerRole.metadata.alignment === RoleAlignment.Impostor) {
                 this.room.registerEndGameIntent(
                     new EndGameIntent(
                         MouthwashEndGames.ImpostorVotedOut,
@@ -761,6 +741,28 @@ export class MouthwashApiPlugin extends RoomPlugin {
                                         yourTeam: RoleAlignment.Crewmate,
                                         winSound: WinSound.CrewmateWin,
                                         hasWon: playerRole.metadata.alignment === RoleAlignment.Crewmate
+                                    }
+                                ];
+                            }))
+                        }
+                    )
+                );
+            } else {
+                this.room.registerEndGameIntent(
+                    new EndGameIntent(
+                        MouthwashEndGames.CrewmateVotedOut,
+                        GameOverReason.ImpostorByVote,
+                        {
+                            endGameScreen: new Map(players.map<[number, EndGameScreen]>(playerRole => {
+                                return [
+                                    playerRole.player.playerId!,
+                                    {
+                                        titleText: playerRole.metadata.alignment === RoleAlignment.Impostor ? "Victory" : Palette.impostorRed.text("Defeat"),
+                                        subtitleText: `The ${Palette.impostorRed.text("Impostors")} voted out the last ${Palette.crewmateBlue.text("Crewmate")}`,
+                                        backgroundColor: Palette.impostorRed,
+                                        yourTeam: RoleAlignment.Impostor,
+                                        winSound: WinSound.ImpostorWin,
+                                        hasWon: playerRole.metadata.alignment === RoleAlignment.Impostor
                                     }
                                 ];
                             }))

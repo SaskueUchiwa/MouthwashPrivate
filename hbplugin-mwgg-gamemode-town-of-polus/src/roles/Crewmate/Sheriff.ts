@@ -103,25 +103,26 @@ export class Sheriff extends Crewmate {
             await this.quietMurder(target);
             await target.control?.murderPlayer(target);
 
-            if (target.playerInfo?.isImpostor) {
+            const targetRole = this.api.roleService.getPlayerRole(target);
+            if (targetRole && targetRole.metadata.alignment === RoleAlignment.Impostor) {
                 this._shootButton.setCurrentTime(this._shootButton.maxTimer);
                 this.checkMurderEndGame();
             } else {
                 await this.quietMurder(this.player);
 
-                const players = [];
+                const players = this.api.getEndgamePlayers();
                 let aliveCrewmates = 0;
                 let aliveImpostors = 0;
-                if (this.room.gameData) {
-                    for (const [, playerInfo] of this.room.gameData.players) {
-                        if (!playerInfo.isDisconnected && !playerInfo.isDead) {
-                            if (playerInfo.isImpostor) {
+                for (const [ , player ] of this.room.players) {
+                    if (player.playerInfo && !player.playerInfo.isDisconnected && !player.playerInfo.isDead) {
+                        const playerRole = this.api.roleService.getPlayerRole(player);
+                        if (playerRole) {
+                            if (playerRole.metadata.alignment === RoleAlignment.Impostor) {
                                 aliveImpostors++;
                             } else {
                                 aliveCrewmates++;
                             }
                         }
-                        players.push(playerInfo);
                     }
                 }
                 if (aliveImpostors >= aliveCrewmates) {
@@ -130,16 +131,16 @@ export class Sheriff extends Crewmate {
                             "sheriff misfire",
                             GameOverReason.None,
                             {
-                                endGameScreen: new Map(players.map<[number, EndGameScreen]>(playerInfo => {
+                                endGameScreen: new Map(players.map<[number, EndGameScreen]>(playerRole => {
                                     return [
-                                        playerInfo.playerId,
+                                        playerRole.player.playerId!,
                                         {
-                                            titleText: playerInfo.isImpostor ? "Victory" : Palette.impostorRed.text("Defeat"),
+                                            titleText: playerRole instanceof Sheriff ? "Victory" : Palette.impostorRed.text("Defeat"),
                                             subtitleText: `The ${Palette.impostorRed.text("Impostors")} won by ${sheriffColor.text("Sheriff")} misfire!`,
                                             backgroundColor: Palette.impostorRed,
                                             yourTeam: RoleAlignment.Impostor,
                                             winSound: WinSound.ImpostorWin,
-                                            hasWon: playerInfo.isImpostor
+                                            hasWon: playerRole instanceof Sheriff
                                         }
                                     ];
                                 }))

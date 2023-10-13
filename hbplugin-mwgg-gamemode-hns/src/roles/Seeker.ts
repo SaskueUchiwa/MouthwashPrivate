@@ -29,7 +29,7 @@ import {
     SetRoleTeamMessage
 } from "mouthwash-types";
 import { HnSOptionName } from "../gamemode";
-import { hiderColor } from "./Hider";
+import { Hider, hiderColor } from "./Hider";
 
 export const seekerColor = new RGBA(255, 25, 25, 255);
 
@@ -59,8 +59,7 @@ export class Seeker extends Impostor {
             if (roleAssignment.player === this.player)
                 return false;
 
-            const playerInfo = roleAssignment.player.playerInfo;
-            return playerInfo && !playerInfo.isImpostor;
+            return roleAssignment.role === Hider;
         }).length;
         
         const subtitleText = hiderCount === 1
@@ -78,10 +77,7 @@ export class Seeker extends Impostor {
     async onReady() {
         const chatAccess = this.api.gameOptions.gameOptions.get(HnSOptionName.ChatAccess)?.getValue<EnumValue<"Off"|"Hiders Only"|"Everyone">>().selectedOption;
 
-        this.api.hudService.setTaskInteraction(this.player, false);
-        await this.room.broadcast([], [
-            new SetRoleTeamMessage(RoleTeamType.Impostor)
-        ], [ this.player ]);
+        this.markImpostor();
         
         this.api.hudService.setHudItemVisibilityFor(HudItem.MapSabotageButtons, false, [ this.player ]);
         this.api.hudService.setHudItemVisibilityFor(HudItem.SabotageButton, true, [ this.player ]);

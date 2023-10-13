@@ -1932,7 +1932,7 @@ export class BaseRoom extends Hostable<RoomEvents> {
             new EndGameMessage(this.code, reason, false)
         ]);
 
-        this.logger.info("Game ended: %s", GameOverReason[ev.reason]);
+        this.logger.info("Game ended: %s (from intents '%s')", GameOverReason[ev.reason], intent?.name || "<no intent>");
 
         setImmediate(() => {
             this.logger.info("Clearing connections for clients to re-join");

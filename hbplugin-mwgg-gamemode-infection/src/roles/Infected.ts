@@ -3,6 +3,7 @@ import {
     GameOverReason,
     PlayerData,
     PlayerMurderEvent,
+    RoleTeamType,
     Room,
     RpcMessage
 } from "@skeldjs/hindenburg";
@@ -36,6 +37,7 @@ import {
     RGBA,
     SetPlayerSpeedModifierMessage,
     SetPlayerVisionModifierMessage,
+    SetRoleTeamMessage,
     WinSound
 } from "mouthwash-types";
 import { uninfectedColor } from "./Uninfected";
@@ -144,6 +146,15 @@ export class Infected extends Impostor {
             this.api.hudService.setTaskInteraction(role.player, false, false);
             // we probably dont need to add the emoji, as it's done in Infected.onReady
             // this.api.nameService.addEmojiFor(role.player, role.metadata.emoji, [ role.player ]);
+            if (this._killTarget.playerInfo?.roleType) {
+                const targetConnection = this.room.getConnection(this._killTarget);
+                if (targetConnection) {
+                    this._killTarget.playerInfo.roleType.roleMetadata.roleTeam = RoleTeamType.Impostor;
+                    this.api.room.broadcastMessages([],
+                        [ new SetRoleTeamMessage(RoleTeamType.Impostor) ],
+                        [ targetConnection ]);
+                }
+            }
             await role.onReady();
         });
 
