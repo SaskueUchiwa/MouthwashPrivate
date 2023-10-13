@@ -252,7 +252,6 @@ export class InfectionGamemodePlugin extends BaseGamemodePlugin {
     async onPlayerLeave(ev: PlayerLeaveEvent) {
         const players = this.api.getEndgamePlayers();
         for (const playerRole of players) {
-            console.log(playerRole, playerRole instanceof Uninfected);
             if (playerRole instanceof Uninfected)
                 return;
         }
@@ -283,7 +282,6 @@ export class InfectionGamemodePlugin extends BaseGamemodePlugin {
 
     @EventListener("room.endgameintent")
     onEndGameIntent(ev: RoomEndGameIntentEvent<Room>) {
-        console.log("got %s endgame, cancelled", ev.intentName, ev.canceled);
         if (ev.intentName === MouthwashEndGames.ImpostorsDisconnected) {
             ev.cancel();
 
@@ -314,7 +312,6 @@ export class InfectionGamemodePlugin extends BaseGamemodePlugin {
         } else if (ev.intentName === MouthwashEndGames.CrewmatesCompletedTasks) {
             ev.cancel(); // we handle our own task completion end game below
         }
-        console.log("got %s endgame, cancelled", ev.intentName, ev.canceled);
     }
     
     computeTaskCounts(justInfected?: PlayerData<Room>): { totalTasks: number; completeTasks: number; players: PlayerData<Room>[] } {

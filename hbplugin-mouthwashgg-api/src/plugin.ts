@@ -653,7 +653,6 @@ export class MouthwashApiPlugin extends RoomPlugin {
                 )
             );
         } else if (ev.intentName === AmongUsEndGames.PlayersDisconnect) {
-            console.log("got players disconnect end game intent", ev.metadata);
             const metadata = ev.metadata as PlayersDisconnectEndgameMetadata;
             if (metadata.aliveImpostors === 0) {
                 this.room.registerEndGameIntent(
