@@ -345,7 +345,7 @@ namespace MouthwashClient.Patches.Game
             }
         }
 
-        [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.Awake))]
+        [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.OnDisable))]
         public static class PlayerResetAnimationsPatch
         {
             public static void Postfix(PlayerControl __instance)
@@ -368,7 +368,7 @@ namespace MouthwashClient.Patches.Game
         {
             public static bool Prefix(AmongUsClient __instance)
             {
-                foreach ((byte playerId, PlayerAnimationKeyframe keyframe) in PlayerAnimationStates)
+                foreach ((byte playerId, PlayerAnimationKeyframe? keyframe) in PlayerAnimationStates)
                 {
                     PlayerControl? player = GetPlayerControlById(playerId);
                     if (player != null)

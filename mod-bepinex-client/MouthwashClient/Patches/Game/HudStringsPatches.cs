@@ -70,10 +70,7 @@ namespace MouthwashClient.Patches.Game
         {
             public static void Postfix(LobbyBehaviour __instance)
             {
-                if (__instance == PlayerControl.LocalPlayer)
-                {
-                    HudStrings.Clear();
-                }
+                HudStrings.Clear();
             }
         }
 
