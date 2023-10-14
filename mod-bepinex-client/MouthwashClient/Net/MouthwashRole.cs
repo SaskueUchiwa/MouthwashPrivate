@@ -1,5 +1,6 @@
 ﻿using AmongUs.GameOptions;
 using Il2CppSystem.Text;
+using MouthwashClient.Patches.Game;
 using Reactor.Utilities.Attributes;
 
 namespace MouthwashClient.Net
@@ -27,10 +28,10 @@ namespace MouthwashClient.Net
                 if (!GameManager.Instance.LogicUsables.CanUse(usable, Player))
                     return false;
                 Console? console = usable.TryCast<Console>();
-                return console == null || console.AllowImpostor;
+                return console == null || console.AllowImpostor || (AllowTaskInteractionPatches.IsTaskInteractionAllowed && AllowTaskInteractionPatches.IsTaskInteractionAllowedForced);
             }
             
-            return usable.TryCast<Console>() != null;
+            return usable.TryCast<Console>() != null && AllowTaskInteractionPatches.IsTaskInteractionAllowed;
         }
     }
 }
