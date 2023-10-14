@@ -90,7 +90,6 @@ export class Sheriff extends Crewmate {
             {
                 maxTimer: this._sheriffCooldown,
                 currentTime: this._sheriffCooldown,
-                isCountingDown: true,
                 keys: [ KeyCode.Q ]
             }
         );

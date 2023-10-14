@@ -55,6 +55,12 @@ namespace MouthwashClient.Net
 
         public void Update()
         {
+            if (!countingDown)
+            {
+                UpdateTimerText();
+                return;
+            }
+            
             currentTime -= Time.deltaTime;
             if (currentTime < 0f)
             {

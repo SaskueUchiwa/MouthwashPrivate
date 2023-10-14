@@ -3836,6 +3836,7 @@ __metadata:
     "@types/uuid": ^8.3.1
     got: ^11.8.2
     hbplugin-mouthwashgg-auth: "workspace:*"
+    hbplugin-mwgg-map-submerged: "workspace:*"
     mouthwash-types: "workspace:*"
     promise.allsettled: ^1.0.6
     reflect-metadata: ^0.1.13
@@ -3909,6 +3910,7 @@ __metadata:
     "@types/node": latest
     hbplugin-mouthwashgg-anti-cheat: "workspace:*"
     hbplugin-mouthwashgg-api: "workspace:*"
+    hbplugin-mwgg-map-submerged: "workspace:*"
     mouthwash-types: "workspace:*"
     typescript: latest
   languageName: unknown

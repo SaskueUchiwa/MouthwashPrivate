@@ -1,10 +1,11 @@
 import { AmongUsEndGames, PlayerData, PlayerMurderEvent, Room, Vector2 } from "@skeldjs/hindenburg";
 import { AnyGameOptionType, EdgeAlignment, GameOption, HudLocation, Palette, Priority } from "mouthwash-types";
-import { AssetReference, ButtonSpawnInfo, RoleAssignment } from "../services";
+import { SubmergedShipStatus, SubmergedSpawnInDoneEvent } from "hbplugin-mwgg-map-submerged";
+import { AssetReference, Button, ButtonSpawnInfo, RoleAssignment } from "../services";
 import { MouthwashApiPlugin } from "../plugin";
 import { RoleMetadata, StartGameScreen } from "./interfaces";
-import { RoleRegisteredEventListenerInfo } from "./hooks";
-import { RoleAlignment } from "./enums";
+import { EventListener, RoleRegisteredEventListenerInfo } from "./hooks";
+import { ListenerType, RoleAlignment } from "./enums";
 
 export class RoleGameOption {
     constructor(
@@ -27,6 +28,7 @@ export class BaseRole {
     api: MouthwashApiPlugin;
 
     registeredEventListeners: RoleRegisteredEventListenerInfo[];
+    buttonsCountdownWhenReady: Button[];
 
     constructor(
         public readonly player: PlayerData<Room>
@@ -35,6 +37,7 @@ export class BaseRole {
         this.api = player.room.loadedPlugins.get("hbplugin-mouthwashgg-api")?.pluginInstance as MouthwashApiPlugin;
 
         this.registeredEventListeners = [];
+        this.buttonsCountdownWhenReady = [];
 
         if (!this.api) {
             throw new Error("Mouthwash API was not loaded on room");
@@ -72,7 +75,7 @@ export class BaseRole {
             currentTime: 10,
             saturated: false,
             color: Palette.white,
-            isCountingDown: true,
+            isCountingDown: !(this.room.shipStatus instanceof SubmergedShipStatus),
             z: -9,
             attachedTo: -1,
             keys: [],
@@ -84,6 +87,11 @@ export class BaseRole {
             buttonId,
             spawnInfo
         );
+        if (buttonInfo.isCountingDown === undefined) {
+            if (this.room.shipStatus instanceof SubmergedShipStatus) {
+                this.buttonsCountdownWhenReady.push(button);
+            }
+        }
         return button;
     }
 
@@ -92,6 +100,14 @@ export class BaseRole {
             this.api.hudService.setTaskInteraction(this.player, false),
             this.api.hudService.setHudStringFor(HudLocation.TaskText, "fake-tasks", Palette.impostorRed.text("Fake tasks:"), Priority.Z, [ this.player ])
         ]);
+    }
+
+    @EventListener("mwgg.submerged.spawnIn.done", ListenerType.Room)
+    async onSubmergedSpawnIn(ev: SubmergedSpawnInDoneEvent) {
+        for (const button of this.buttonsCountdownWhenReady) {
+            button.setCountingDown(true);
+        }
+        this.buttonsCountdownWhenReady = [];
     }
 
     /**

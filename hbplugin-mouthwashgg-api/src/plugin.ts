@@ -81,6 +81,7 @@ import {
     ClientFetchResourceResponseEvent,
     GamemodeBeforeRolesAssignedEvent,
     GamemodeGameEndEvent,
+    GamemodeRolesAssignedEvent,
     MouthwashUpdateGameOptionEvent
 } from "./events";
 
@@ -880,14 +881,17 @@ export class MouthwashApiPlugin extends RoomPlugin {
 
     @EventListener("room.gameready")
     async onRoomGameReady(ev: RoomGameReadyEvent) {
-        const { totalTasks, completeTasks, players, numPlayersWithTasks } = this.computeTaskCounts();
-        await Promise.all(players.map(player => this.hudService.setTaskCounts(player, totalTasks, completeTasks, numPlayersWithTasks)));
-
         const roleAssignments = this.roleService.getRoleAssignments(this.gamemode?.getRoleCounts() || []);
         const ev2 = await this.room.emit(new GamemodeBeforeRolesAssignedEvent(roleAssignments));
         await this.roleService.assignAllRoles(ev2.alteredRolesAssigned);
     }
-    
+
+    @EventListener("mwgg.gamemode.rolesassigned")
+    async onRolesAssigned(ev: GamemodeRolesAssignedEvent) {
+        const { totalTasks, completeTasks, players, numPlayersWithTasks } = this.computeTaskCounts();
+        await Promise.all(players.map(player => this.hudService.setTaskCounts(player, totalTasks, completeTasks, numPlayersWithTasks)));
+    }
+
     computeTaskCounts(): { totalTasks: number; completeTasks: number; players: PlayerData<Room>[]; numPlayersWithTasks: number; } {
         let totalTasks = 0;
         let completeTasks = 0;

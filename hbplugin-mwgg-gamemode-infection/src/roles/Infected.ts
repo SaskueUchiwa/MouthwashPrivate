@@ -93,7 +93,6 @@ export class Infected extends Impostor {
             {
                 maxTimer: this._killCooldown,
                 currentTime: 20,
-                isCountingDown: true,
                 keys: [ KeyCode.Q ]
             }
         );

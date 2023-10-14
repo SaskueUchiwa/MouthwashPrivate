@@ -55,6 +55,9 @@ export class ClickBehaviour extends Networkable<ClickBehaviourData, ClickBehavio
     }
 
     FixedUpdate(deltaTime: number) {
+        if (!this.countingDown)
+            return;
+
         this.currentTime -= deltaTime;
         if (this.currentTime < 0) {
             this.currentTime = 0;

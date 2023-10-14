@@ -45,6 +45,8 @@ import {
     WinSound
 } from "mouthwash-types";
 
+import { SubmergedSpawnInDoneEvent } from "hbplugin-mwgg-map-submerged"; 
+
 import { Hider, Seeker, hiderColor, seekerColor } from "./roles";
 
 export const HnSOptionName = {
@@ -179,7 +181,24 @@ export class HideAndSeekGamemodePlugin extends BaseGamemodePlugin {
         this._currentFreezeTime = 15 + (gameLevel === "Airship" ? 10 : 0);
         this._currentGameTime = gameDuration * 60;
         this._aliveHiders = new Set(hiders);
-        await this.startSeekerFreeze(seekers, hiders);
+        if (gameLevel !== "Submerged") {
+            await this.startSeekerFreezeCountdown(seekers, hiders);
+        }
+    }
+
+    @EventListener("mwgg.submerged.spawnIn.done")
+    async onSubmergedSpawnInDone(ev: SubmergedSpawnInDoneEvent<Room>) {
+        const seekers = [];
+        const hiders = [];
+        for (const [ , player ] of this.room.players) {
+            const playerRole = this.api.roleService.getPlayerRole(player);
+            if (playerRole instanceof Seeker) {
+                seekers.push(player);
+            } else if (playerRole instanceof Hider) {
+                hiders.push(player);
+            }
+        }
+        await this.startSeekerFreezeCountdown(seekers, hiders)
     }
 
     async updateReleaseTime(seekers: PlayerData<Room>[], hiders: PlayerData<Room>[]) {
@@ -191,9 +210,9 @@ export class HideAndSeekGamemodePlugin extends BaseGamemodePlugin {
         ]);
     }
 
-    async startSeekerFreeze(seekers: PlayerData<Room>[], hiders: PlayerData<Room>[]) {
+    async startSeekerFreezeCountdown(seekers: PlayerData<Room>[], hiders: PlayerData<Room>[]) {
         if (this._freezeTimerInterval || this._gameTimerInterval)
-            throw new Error("Freeze already started; somehow the countdown interval on game start was called twice?");
+            throw new Error("Freeze countdown already started; somehow the countdown interval on game start was called twice?");
 
         await this.updateReleaseTime(seekers, hiders);
         this._freezeTimerInterval = setInterval(async () => {

@@ -93,7 +93,6 @@ export class Seeker extends Impostor {
             {
                 maxTimer: this._killCooldown,
                 currentTime: 10,
-                isCountingDown: true,
                 keys: [ KeyCode.Q ]
             }
         );

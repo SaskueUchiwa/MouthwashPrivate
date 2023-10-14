@@ -87,7 +87,6 @@ export class Grenadier extends Impostor {
             new AssetReference("PggResources/TownOfPolus", "Assets/Mods/TownOfPolus/Throw.png"),
             {
                 maxTimer: this._cooldownDuration,
-                isCountingDown: true,
                 saturated: true,
                 currentTime: 10,
                 keys: [ KeyCode.X ]

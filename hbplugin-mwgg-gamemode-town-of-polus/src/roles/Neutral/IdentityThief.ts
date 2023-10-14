@@ -94,7 +94,6 @@ export class IdentityThief extends BaseRole {
             new AssetReference("PggResources/TownOfPolus", "Assets/Mods/TownOfPolus/Steal.png"),
             {
                 maxTimer: 60,
-                isCountingDown: true,
                 saturated: false,
                 currentTime: 10,
                 keys: [ KeyCode.X ]

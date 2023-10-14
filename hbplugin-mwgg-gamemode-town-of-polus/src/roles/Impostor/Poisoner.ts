@@ -104,7 +104,6 @@ export class Poisoner extends Impostor {
             {
                 maxTimer: this._poisonerCooldown,
                 currentTime: this._poisonerCooldown,
-                isCountingDown: true,
                 keys: [ KeyCode.Q ]
             }
         );

@@ -58,7 +58,6 @@ export class Impostor extends BaseRole {
             {
                 maxTimer: this._killCooldown,
                 currentTime: 15,
-                isCountingDown: true,
                 keys: [ KeyCode.Q ]
             }
         );
