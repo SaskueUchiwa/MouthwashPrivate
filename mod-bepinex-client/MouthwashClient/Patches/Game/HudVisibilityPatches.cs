@@ -13,7 +13,8 @@ namespace MouthwashClient.Patches.Game
 {
     public static class HudVisibilityPatches
     {
-        public static HashSet<HudItem> hiddenItems = new();
+        public static HashSet<HudItem> HiddenItems = new();
+        public static ProgressTracker ProgressTrackerInstance;
 
         [HarmonyPatch(typeof(InnerNetClient), nameof(InnerNetClient.HandleMessage))]
         public static class SetHudVisibilityMessageHandlePatch
@@ -26,15 +27,15 @@ namespace MouthwashClient.Patches.Game
                     case (byte)MouthwashRootPacketTag.SetHudVisibility:
                         HudItem hudItem = (HudItem)reader.ReadByte();
                         bool isVisible = reader.ReadBoolean();
-                        lock (hiddenItems)
+                        lock (HiddenItems)
                         {
                             if (isVisible)
                             {
-                                hiddenItems.Remove(hudItem);
+                                HiddenItems.Remove(hudItem);
                             }
                             else
                             {
-                                hiddenItems.Add(hudItem);
+                                HiddenItems.Add(hudItem);
                             }
 
                         }
@@ -55,7 +56,7 @@ namespace MouthwashClient.Patches.Game
             {
                 if (__instance == PlayerControl.LocalPlayer)
                 {
-                    hiddenItems.Clear();
+                    HiddenItems.Clear();
                 }
             }
         }
@@ -68,6 +69,15 @@ namespace MouthwashClient.Patches.Game
                 //__instance.SetHudActive(true);
             }
         }
+        
+        [HarmonyPatch(typeof(ProgressTracker), nameof(ProgressTracker.Start))]
+        public static class AssignProgressTrackerSingletonPatch
+        {
+            public static void Postfix(ProgressTracker __instance)
+            {
+                ProgressTrackerInstance = __instance;
+            }
+        }
 
         [HarmonyPatch(typeof(HudManager), nameof(HudManager.SetHudActive), typeof(PlayerControl), typeof(RoleBehaviour), typeof(bool))]
         public static class HudActiveModificationPatch
@@ -77,10 +87,10 @@ namespace MouthwashClient.Patches.Game
                 [HarmonyArgument(2)] bool isActive)
             {
                 // Adapted from: HudManager.cs
-                lock (hiddenItems)
+                lock (HiddenItems)
                 {
-                    __instance.AbilityButton.ToggleVisible(isActive && !hiddenItems.Contains(HudItem.UseButton));
-                    if (isActive && !hiddenItems.Contains(HudItem.UseButton))
+                    __instance.AbilityButton.ToggleVisible(isActive && !HiddenItems.Contains(HudItem.UseButton));
+                    if (isActive && !HiddenItems.Contains(HudItem.UseButton))
                     {
                         __instance.UseButton.Refresh();
                         __instance.AbilityButton.Refresh(role.Ability);
@@ -91,12 +101,12 @@ namespace MouthwashClient.Patches.Game
                         __instance.PetButton.ToggleVisible(false);
                     }
                     bool flag = localPlayer.Data != null && localPlayer.Data.IsDead;
-                    __instance.ReportButton.ToggleVisible(isActive && !hiddenItems.Contains(HudItem.ReportButton) && !flag && GameManager.Instance.CanReportBodies() && ShipStatus.Instance != null);
+                    __instance.ReportButton.ToggleVisible(isActive && !HiddenItems.Contains(HudItem.ReportButton) && !flag && GameManager.Instance.CanReportBodies() && ShipStatus.Instance != null);
                     __instance.KillButton.ToggleVisible(false);
-                    __instance.SabotageButton.ToggleVisible(isActive && !hiddenItems.Contains(HudItem.SabotageButton) && role.IsImpostor);
-                    __instance.AdminButton.ToggleVisible(isActive && !hiddenItems.Contains(HudItem.AdminTable) && role.IsImpostor);
-                    __instance.ImpostorVentButton.ToggleVisible(isActive && !hiddenItems.Contains(HudItem.VentButton) && !flag && role.IsImpostor && GameOptionsManager.Instance.CurrentGameOptions.GameMode != GameModes.HideNSeek);
-                    __instance.TaskPanel.gameObject.SetActive(isActive && !hiddenItems.Contains(HudItem.TaskListPopup));
+                    __instance.SabotageButton.ToggleVisible(isActive && !HiddenItems.Contains(HudItem.SabotageButton) && role.IsImpostor);
+                    __instance.AdminButton.ToggleVisible(isActive && !HiddenItems.Contains(HudItem.AdminTable) && role.IsImpostor);
+                    __instance.ImpostorVentButton.ToggleVisible(isActive && !HiddenItems.Contains(HudItem.VentButton) && !flag && role.IsImpostor && GameOptionsManager.Instance.CurrentGameOptions.GameMode != GameModes.HideNSeek);
+                    __instance.TaskPanel.gameObject.SetActive(isActive && !HiddenItems.Contains(HudItem.TaskListPopup));
                     __instance.roomTracker.gameObject.SetActive(isActive);
                     if (__instance.joystick != null)
                     {
@@ -113,7 +123,7 @@ namespace MouthwashClient.Patches.Game
         {
             public static bool Prefix(SabotageButton __instance)
             {
-                if (hiddenItems.Contains(HudItem.SabotageButton))
+                if (HiddenItems.Contains(HudItem.SabotageButton))
                 {
                     __instance.ToggleVisible(false);
                     __instance.SetDisabled();
@@ -129,7 +139,7 @@ namespace MouthwashClient.Patches.Game
         {
             public static bool Prefix(ReportButton __instance)
             {
-                if (hiddenItems.Contains(HudItem.ReportButton))
+                if (HiddenItems.Contains(HudItem.ReportButton))
                 {
                     __instance.ToggleVisible(false);
                     __instance.SetDisabled();
@@ -145,7 +155,7 @@ namespace MouthwashClient.Patches.Game
         {
             public static bool Prefix(AdminButton __instance)
             {
-                if (hiddenItems.Contains(HudItem.AdminTable))
+                if (HiddenItems.Contains(HudItem.AdminTable))
                 {
                     __instance.ToggleVisible(false);
                     __instance.SetDisabled();
@@ -161,7 +171,7 @@ namespace MouthwashClient.Patches.Game
         {
             public static bool Prefix(MapConsole __instance, ref float __result)
             {
-                if (hiddenItems.Contains(HudItem.AdminTable))
+                if (HiddenItems.Contains(HudItem.AdminTable))
                 {
                     __result = 0f;
                     return false;
@@ -176,7 +186,7 @@ namespace MouthwashClient.Patches.Game
         {
             public static bool Prefix(HudManager __instance)
             {
-                if (hiddenItems.Contains(HudItem.UseButton))
+                if (HiddenItems.Contains(HudItem.UseButton))
                 {
                     __instance.UseButton.ToggleVisible(false);
                     __instance.PetButton.ToggleVisible(false);
@@ -192,13 +202,25 @@ namespace MouthwashClient.Patches.Game
         {
             public static bool Prefix(MapConsole __instance, ref float __result)
             {
-                if (hiddenItems.Contains(HudItem.VentButton))
+                if (HiddenItems.Contains(HudItem.VentButton))
                 {
                     __result = 0f; 
                     return false;
                 }
 
                 return true;
+            }
+        }
+
+        [HarmonyPatch(typeof(AmongUsClient), nameof(AmongUsClient.Update))]
+        public static class ShowOrHideProgressTrackerPatch
+        {
+            public static void Postfix(AmongUsClient __instance)
+            {
+                if (ProgressTrackerInstance != null)
+                {
+                    ProgressTrackerInstance.gameObject.SetActive(!HiddenItems.Contains(HudItem.TaskProgressBar));
+                }
             }
         }
     }
