@@ -10,15 +10,12 @@ namespace MouthwashClient.Patches.Game
     {
         public static float VisionModifier = 1f;
         
-        [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.Awake))]
+        [HarmonyPatch(typeof(LobbyBehaviour), nameof(LobbyBehaviour.Start))]
         public static class ResetPlayerVisionPatch
         {
-            public static void Postfix(PlayerControl __instance)
+            public static void Postfix(LobbyBehaviour __instance)
             {
-                if (__instance == PlayerControl.LocalPlayer)
-                {
-                    VisionModifier = 1f;
-                }
+                VisionModifier = 1f;
             }
         }
     

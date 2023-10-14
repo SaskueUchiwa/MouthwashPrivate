@@ -345,7 +345,7 @@ namespace MouthwashClient.Patches.Game
             }
         }
 
-        [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.OnDisable))]
+        [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.Awake))]
         public static class PlayerResetAnimationsPatch
         {
             public static void Postfix(PlayerControl __instance)

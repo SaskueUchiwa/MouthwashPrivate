@@ -11,15 +11,12 @@ namespace MouthwashClient.Patches.Game
     {
         public static Dictionary<byte, float> SpeedModifierPlayers = new();
         
-        [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.Awake))]
+        [HarmonyPatch(typeof(LobbyBehaviour), nameof(LobbyBehaviour.Start))]
         public static class ResetPlayerSpeedPatch
         {
-            public static void Postfix(PlayerControl __instance)
+            public static void Postfix(LobbyBehaviour __instance)
             {
-                if (__instance == PlayerControl.LocalPlayer)
-                {
-                    SpeedModifierPlayers.Clear();
-                }
+                SpeedModifierPlayers.Clear();
             }
         }
     

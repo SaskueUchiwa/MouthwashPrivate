@@ -49,10 +49,10 @@ namespace MouthwashClient.Patches.Game
             }
         }
         
-        [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.OnDisable))]
+        [HarmonyPatch(typeof(LobbyBehaviour), nameof(LobbyBehaviour.Start))]
         public static class PlayerResetAnimationsPatch
         {
-            public static void Postfix(PlayerControl __instance)
+            public static void Postfix(LobbyBehaviour __instance)
             {
                 if (__instance == PlayerControl.LocalPlayer)
                 {
@@ -200,7 +200,7 @@ namespace MouthwashClient.Patches.Game
         [HarmonyPatch(typeof(Vent), nameof(Vent.CanUse))]
         public static class VentConsolePatch
         {
-            public static bool Prefix(MapConsole __instance, ref float __result)
+            public static bool Prefix(Vent __instance, ref float __result)
             {
                 if (HiddenItems.Contains(HudItem.VentButton))
                 {
@@ -220,6 +220,19 @@ namespace MouthwashClient.Patches.Game
                 if (ProgressTrackerInstance != null)
                 {
                     ProgressTrackerInstance.gameObject.SetActive(!HiddenItems.Contains(HudItem.TaskProgressBar));
+                }
+            }
+        }
+
+        [HarmonyPatch(typeof(InfectedOverlay), nameof(InfectedOverlay.FixedUpdate))]
+        public static class HideSabotageButtonsPatch {
+            public static void Postfix(InfectedOverlay __instance) {
+                foreach (ButtonBehavior button in __instance.allButtons) {
+                                PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage($"Hidden: {string.Join(',', HiddenItems)}");
+                    PluginSingleton<MouthwashClientPlugin>.Instance.Log.LogMessage(
+                        $"Is visible? {button.gameObject.name} {HiddenItems.Contains(HudItem.MapDoorButtons)} {HiddenItems.Contains(HudItem.MapSabotageButtons)}");
+                    button.gameObject.SetActive(button.gameObject.name is "closeDoors" or "Doors"
+                        ? !HiddenItems.Contains(HudItem.MapDoorButtons) : !HiddenItems.Contains(HudItem.MapSabotageButtons));
                 }
             }
         }

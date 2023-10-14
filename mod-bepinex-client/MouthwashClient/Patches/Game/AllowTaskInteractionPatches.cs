@@ -27,10 +27,10 @@ namespace MouthwashClient.Patches.Game
             }
         }
         
-        [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.OnDisable))]
+        [HarmonyPatch(typeof(LobbyBehaviour), nameof(LobbyBehaviour.Start))]
         public static class PlayerResetAnimationsPatch
         {
-            public static void Postfix(PlayerControl __instance)
+            public static void Postfix(LobbyBehaviour __instance)
             {
                 IsTaskInteractionAllowed = true;
                 IsTaskInteractionAllowedForced = false;
