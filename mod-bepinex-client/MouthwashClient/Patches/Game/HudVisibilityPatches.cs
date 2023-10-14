@@ -187,7 +187,7 @@ namespace MouthwashClient.Patches.Game
             public static bool Prefix(SystemConsole __instance, ref float __result)
             {
                 EmergencyMinigame? minigame = __instance.MinigamePrefab.TryCast<EmergencyMinigame>();
-                if (minigame != null)
+                if (minigame != null && HiddenItems.Contains(HudItem.CallMeetingButton))
                 {
                     __result = 0f;
                     return false;
