@@ -1,5 +1,6 @@
 import {
     BaseRpcMessage,
+    DeconSystem,
     Door,
     DoorsSystem,
     HazelReader,
@@ -146,13 +147,28 @@ export class SubmergedShipStatus<RoomType extends Hostable<any>> extends SkeldSh
         this.systems.set(SystemType.Sabotage, new SabotageSystem(this, SystemType.Sabotage, {
             cooldown: 0
         }));
+
+        this.systems.set(SystemType.Decontamination, new DeconSystem(this, SystemType.Decontamination, {
+            timer: 0,
+            state: 0,
+        }));
+
+        this.systems.set(SystemType.Decontamination2, new DeconSystem(this, SystemType.Decontamination2, {
+            timer: 0,
+            state: 0,
+        }));
         
         const doorSystem = this.systems.get(SystemType.Doors)! as DoorsSystem;
         doorSystem.doors = [];
         let doorId = 0
-        for (; doorId < 19; doorId++) {
+        for (; doorId < 15; doorId++) {
             doorSystem.doors.push(new Door(doorSystem, doorId, true));
         }
+
+        doorSystem.doors.push(new Door(doorSystem, doorId++, false)); // decon 1
+        doorSystem.doors.push(new Door(doorSystem, doorId++, false)); // decon 1
+        doorSystem.doors.push(new Door(doorSystem, doorId++, false)); // decon 2
+        doorSystem.doors.push(new Door(doorSystem, doorId++, false)); // decon 2
 
         const elevators = [
             this.systems.get(SubmergedSystemType.ElevatorHallwayLeft as number) as SubmarineElevatorSystem,
