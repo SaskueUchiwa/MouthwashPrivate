@@ -64,6 +64,18 @@ namespace MouthwashClient.Patches.Game
                 return true;
             }
         }
+        
+        [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.OnDisable))]
+        public static class PlayerResetAnimationsPatch
+        {
+            public static void Postfix(PlayerControl __instance)
+            {
+                if (__instance == PlayerControl.LocalPlayer)
+                {
+                    HudStrings.Clear();
+                }
+            }
+        }
 
         [HarmonyPatch(typeof(GameStartManager), nameof(GameStartManager.Update))]
         public static class PlayerCounterTextPatch
