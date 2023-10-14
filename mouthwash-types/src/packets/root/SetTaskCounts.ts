@@ -7,19 +7,22 @@ export class SetTaskCountsMessage extends BaseRootMessage {
 
     constructor(
         public readonly totalTasks: number,
-        public readonly tasksCompleted: number
+        public readonly tasksCompleted: number,
+        public readonly numPlayersWithTasks: number
     ) {
         super();
     }
 
     static Deserialize(reader: HazelReader) {
-        const totalTasks = reader.int32();
-        const tasksCompleted = reader.int32();
-        return new SetTaskCountsMessage(totalTasks, tasksCompleted);
+        const totalTasks = reader.upacked();
+        const tasksCompleted = reader.upacked();
+        const numPlayersWithTasks = reader.upacked();
+        return new SetTaskCountsMessage(totalTasks, tasksCompleted, numPlayersWithTasks);
     }
 
     Serialize(writer: HazelWriter) {
-        writer.int32(this.totalTasks);
-        writer.int32(this.tasksCompleted);
+        writer.upacked(this.totalTasks);
+        writer.upacked(this.tasksCompleted);
+        writer.upacked(this.numPlayersWithTasks);
     }
 }

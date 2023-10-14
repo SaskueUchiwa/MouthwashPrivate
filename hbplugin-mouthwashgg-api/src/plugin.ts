@@ -879,21 +879,23 @@ export class MouthwashApiPlugin extends RoomPlugin {
 
     @EventListener("room.gameready")
     async onRoomGameReady(ev: RoomGameReadyEvent) {
-        const { totalTasks, completeTasks, players } = this.computeTaskCounts();
-        await Promise.all(players.map(player => this.hudService.setTaskCounts(player, totalTasks, completeTasks)));
+        const { totalTasks, completeTasks, players, numPlayersWithTasks } = this.computeTaskCounts();
+        await Promise.all(players.map(player => this.hudService.setTaskCounts(player, totalTasks, completeTasks, numPlayersWithTasks)));
 
         const roleAssignments = this.roleService.getRoleAssignments(this.gamemode?.getRoleCounts() || []);
         const ev2 = await this.room.emit(new GamemodeBeforeRolesAssignedEvent(roleAssignments));
         await this.roleService.assignAllRoles(ev2.alteredRolesAssigned);
     }
 
-    computeTaskCounts(): { totalTasks: number; completeTasks: number; players: PlayerData<Room>[] } {
+    computeTaskCounts(): { totalTasks: number; completeTasks: number; players: PlayerData<Room>[]; numPlayersWithTasks: number; } {
         let totalTasks = 0;
         let completeTasks = 0;
+        let numPlayersWithTasks = 0;
         const players = [];
         for (const [ , player ] of this.room.players) {
             const playerInfo = player.playerInfo;
             if (playerInfo && !playerInfo.isDisconnected && this.hudService.getPlayerHud(player).allowTaskInteraction) {
+                numPlayersWithTasks++;
                 for (const task of playerInfo.taskStates) {
                     totalTasks++;
                     if (task.completed) {
@@ -904,13 +906,13 @@ export class MouthwashApiPlugin extends RoomPlugin {
             players.push(player);
         }
 
-        return { totalTasks, completeTasks, players };
+        return { totalTasks, completeTasks, players, numPlayersWithTasks };
     }
 
     @EventListener("player.completetask")
     async onPlayerCompleteTask(ev: PlayerCompleteTaskEvent<Room>) {
-        const { totalTasks, completeTasks, players } = this.computeTaskCounts();
-        await Promise.all(players.map(player => this.hudService.setTaskCounts(player, totalTasks, completeTasks)));
+        const { totalTasks, completeTasks, players, numPlayersWithTasks } = this.computeTaskCounts();
+        await Promise.all(players.map(player => this.hudService.setTaskCounts(player, totalTasks, completeTasks, numPlayersWithTasks)));
 
         if (totalTasks > 0 && completeTasks >= totalTasks) {
             const players = this.getEndgamePlayers();

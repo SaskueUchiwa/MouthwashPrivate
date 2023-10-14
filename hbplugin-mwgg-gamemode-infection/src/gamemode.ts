@@ -10,6 +10,7 @@ import {
     PreventLoad,
     Room,
     RoomEndGameIntentEvent,
+    RoomGameReadyEvent,
     RpcMessage,
     Vector2
 } from "@skeldjs/hindenburg";
@@ -241,6 +242,8 @@ export class InfectionGamemodePlugin extends BaseGamemodePlugin {
                 }
             }, 5000);
         // }
+        
+        await this.checkTaskEndGame(undefined);
     }
 
     @EventListener("mwgg.deadbody.spawn")
@@ -252,8 +255,10 @@ export class InfectionGamemodePlugin extends BaseGamemodePlugin {
     async onPlayerLeave(ev: PlayerLeaveEvent) {
         const players = this.api.getEndgamePlayers();
         for (const playerRole of players) {
-            if (playerRole instanceof Uninfected)
+            if (playerRole instanceof Uninfected) {
+                await this.checkTaskEndGame(undefined);
                 return;
+            }
         }
         this.room.registerEndGameIntent(
             new EndGameIntent(
@@ -314,13 +319,15 @@ export class InfectionGamemodePlugin extends BaseGamemodePlugin {
         }
     }
     
-    computeTaskCounts(justInfected?: PlayerData<Room>): { totalTasks: number; completeTasks: number; players: PlayerData<Room>[] } {
+    computeTaskCounts(justInfected?: PlayerData<Room>): { totalTasks: number; completeTasks: number; players: PlayerData<Room>[]; numPlayersWithTasks: number; } {
         let totalTasks = 0;
         let completeTasks = 0;
+        let numPlayersWithTasks = 0;
         const players = [];
         for (const [ , player ] of this.room.players) {
             const playerInfo = player.playerInfo;
             if (playerInfo && !playerInfo.isDisconnected && (this.api.hudService.getPlayerHud(player).allowTaskInteraction && justInfected !== player)) {
+                numPlayersWithTasks++;
                 for (const task of playerInfo.taskStates) {
                     totalTasks++;
                     if (task.completed) {
@@ -331,12 +338,12 @@ export class InfectionGamemodePlugin extends BaseGamemodePlugin {
             players.push(player);
         }
 
-        return { totalTasks, completeTasks, players };
+        return { totalTasks, completeTasks, players, numPlayersWithTasks };
     }
 
     async checkTaskEndGame(justInfected?: PlayerData<Room>) {
-        const { totalTasks, completeTasks, players } = this.computeTaskCounts(justInfected);
-        await Promise.all(players.map(player => this.api.hudService.setTaskCounts(player, totalTasks, completeTasks)));
+        const { totalTasks, completeTasks, players, numPlayersWithTasks } = this.computeTaskCounts(justInfected);
+        await Promise.all(players.map(player => this.api.hudService.setTaskCounts(player, totalTasks, completeTasks, numPlayersWithTasks)));
 
         if (totalTasks > 0 && completeTasks >= totalTasks) {
             const endGamePlayers = this.api.getEndgamePlayers();
@@ -351,7 +358,7 @@ export class InfectionGamemodePlugin extends BaseGamemodePlugin {
                                 {
                                     titleText: playerRole && !(playerRole instanceof Infected) && playerRole.player !== justInfected
                                         ? "Victory" : Palette.impostorRed.text("Defeat"),
-                                    subtitleText: `The ${Palette.crewmateBlue.text("Crewmates")} completed all of the tasks`,
+                                    subtitleText: `The uninfected ${Palette.crewmateBlue.text("Crewmates")} completed all of the tasks`,
                                     backgroundColor: Palette.crewmateBlue,
                                     winSound: WinSound.CrewmateWin,
                                     hasWon: !(playerRole instanceof Infected) && playerRole.player !== justInfected
@@ -365,7 +372,7 @@ export class InfectionGamemodePlugin extends BaseGamemodePlugin {
         }
         return false;
     }
-    
+
     @EventListener("player.completetask")
     async onPlayerCompleteTask(ev: PlayerCompleteTaskEvent<Room>) {
         await this.checkTaskEndGame(undefined);

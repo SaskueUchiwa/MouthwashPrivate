@@ -412,7 +412,7 @@ export class HudService {
         }
     }
 
-    async setTaskCounts(player: PlayerData, totalTasks: number, tasksCompleted: number) {
+    async setTaskCounts(player: PlayerData, totalTasks: number, tasksCompleted: number, numPlayersWithTasks: number) {
         const hudManager = this.getPlayerHud(player);
         hudManager.totalTasks = totalTasks;
         hudManager.tasksCompleted = tasksCompleted;
@@ -423,7 +423,7 @@ export class HudService {
                 new ReliablePacket(
                     connection.getNextNonce(),
                     [
-                        new SetTaskCountsMessage(totalTasks, tasksCompleted)
+                        new SetTaskCountsMessage(totalTasks, tasksCompleted, numPlayersWithTasks)
                     ]
                 )
             );
