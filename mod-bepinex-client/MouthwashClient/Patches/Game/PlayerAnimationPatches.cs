@@ -183,13 +183,14 @@ namespace MouthwashClient.Patches.Game
         public static void PlayPlayerAnimation(PlayerControl? player, PlayerAnimationKeyframe[] keyframes)
         {
             List<IEnumerator> coroutines = GetPlayerAnimationCoroutines(player);
-            foreach (PlayerAnimationKeyframe keyframe in keyframes)
+            for (int i = 0; i < keyframes.Length; i++)
             {
-                coroutines.Add(player.StartCoroutine(CoPlayPlayerAnimationKeyframe(player, keyframe)));
+                PlayerAnimationKeyframe keyframe = keyframes[i];
+                coroutines.Add(player.StartCoroutine(CoPlayPlayerAnimationKeyframe(player, keyframe, i == keyframes.Length - 1)));
             }
         }
 
-        public static IEnumerator CoPlayPlayerAnimationKeyframe(PlayerControl? player, PlayerAnimationKeyframe keyframe)
+        public static IEnumerator CoPlayPlayerAnimationKeyframe(PlayerControl? player, PlayerAnimationKeyframe keyframe, bool isLastKeyframe)
         {
             for (float t = 0f; t <= keyframe.Offset; t += Time.deltaTime * 1000f)
             {
@@ -239,6 +240,33 @@ namespace MouthwashClient.Patches.Game
                 if (keyframe.IsPropertyEnabled(KeyframeEnabledProperties.Rotation))
                     currentState.Rotation = Mathf.Lerp(startRotation, keyframe.Rotation, x);
                 yield return null;
+            }
+
+            if (isLastKeyframe)
+            {
+                if (keyframe.IsPropertyEnabled(KeyframeEnabledProperties.Opacity))
+                    currentState.Opacity = keyframe.Opacity;
+                if (keyframe.IsPropertyEnabled(KeyframeEnabledProperties.HatOpacity))
+                    currentState.HatOpacity = keyframe.HatOpacity;
+                if (keyframe.IsPropertyEnabled(KeyframeEnabledProperties.PetOpacity))
+                    currentState.PetOpacity = keyframe.PetOpacity;
+                if (keyframe.IsPropertyEnabled(KeyframeEnabledProperties.SkinOpacity))
+                    currentState.SkinOpacity = keyframe.SkinOpacity;
+                if (keyframe.IsPropertyEnabled(KeyframeEnabledProperties.NameOpacity))
+                    currentState.NameOpacity = keyframe.NameOpacity;
+                if (keyframe.IsPropertyEnabled(KeyframeEnabledProperties.PrimaryColor) && keyframe.PrimaryColor != null)
+                    currentState.PrimaryColor = keyframe.PrimaryColor.Value;
+                if (keyframe.IsPropertyEnabled(KeyframeEnabledProperties.SecondaryColor) &&
+                    keyframe.SecondaryColor != null)
+                    currentState.SecondaryColor = keyframe.SecondaryColor.Value;
+                if (keyframe.IsPropertyEnabled(KeyframeEnabledProperties.VisorColor) && keyframe.VisorColor != null)
+                    currentState.VisorColor = keyframe.VisorColor;
+                if (keyframe.IsPropertyEnabled(KeyframeEnabledProperties.Scale))
+                    currentState.Scale = keyframe.Scale;
+                if (keyframe.IsPropertyEnabled(KeyframeEnabledProperties.Position))
+                    currentState.Position = keyframe.Position;
+                if (keyframe.IsPropertyEnabled(KeyframeEnabledProperties.Rotation))
+                    currentState.Rotation = keyframe.Rotation;
             }
         }
 

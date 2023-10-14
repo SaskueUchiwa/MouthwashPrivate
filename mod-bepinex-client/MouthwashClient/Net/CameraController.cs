@@ -129,11 +129,16 @@ namespace MouthwashClient.Net
 
         public void PlayAnimation(CameraAnimationKeyframe[] keyframes)
         {
-            foreach (CameraAnimationKeyframe keyframe in keyframes)
-                _activeAnimations.Add(gameObject.EnsureComponent<CoroutineManager>().StartCoroutine(CoPlayAnimationKeyframe(keyframe)));
+            for (int i = 0; i < keyframes.Length; i++)
+            {
+                foreach (CameraAnimationKeyframe keyframe in keyframes)
+                    _activeAnimations.Add(
+                        gameObject.EnsureComponent<CoroutineManager>()
+                            .StartCoroutine(CoPlayAnimationKeyframe(keyframe, i == keyframes.Length - 1)));
+            }
         }
 
-        public IEnumerator CoPlayAnimationKeyframe(CameraAnimationKeyframe keyframe)
+        public IEnumerator CoPlayAnimationKeyframe(CameraAnimationKeyframe keyframe, bool isLastKeyframe)
         {
             for (float t = 0f; t < keyframe.Offset; t += Time.deltaTime * 1000f)
                 yield return null;
@@ -160,6 +165,22 @@ namespace MouthwashClient.Net
                 }
 
                 yield return null;
+            }
+
+            if (isLastKeyframe)
+            {
+                AnimationFrameState = new AnimationState
+                {
+                    Position = keyframe.Position,
+                    Rotation = keyframe.Rotation,
+                    Color = keyframe.Color
+                };
+                DestroyableSingleton<HudManager>.Instance.FullScreen.gameObject.SetActive(true);
+                DestroyableSingleton<HudManager>.Instance.FullScreen.color = AnimationFrameState.Color;
+                if (AnimationFrameState.Color.a < 0.05f)
+                {
+                    DestroyableSingleton<HudManager>.Instance.FullScreen.gameObject.SetActive(false);
+                }
             }
         }
     }
