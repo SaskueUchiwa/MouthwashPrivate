@@ -3,6 +3,7 @@ import {
     EventListener,
     GameMap,
     GameOverReason,
+    GameState,
     HindenburgPlugin,
     PlayerCompleteTaskEvent,
     PlayerData,
@@ -10,7 +11,6 @@ import {
     PreventLoad,
     Room,
     RoomEndGameIntentEvent,
-    RoomGameReadyEvent,
     RpcMessage,
     Vector2
 } from "@skeldjs/hindenburg";
@@ -253,6 +253,9 @@ export class InfectionGamemodePlugin extends BaseGamemodePlugin {
 
     @EventListener("player.leave") 
     async onPlayerLeave(ev: PlayerLeaveEvent) {
+        if (this.room.gameState !== GameState.Started)
+            return;
+        
         const players = this.api.getEndgamePlayers();
         for (const playerRole of players) {
             if (playerRole instanceof Uninfected) {

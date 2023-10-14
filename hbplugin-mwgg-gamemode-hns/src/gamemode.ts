@@ -4,6 +4,7 @@ import {
     EventListener,
     GameDataSetTasksEvent,
     GameOverReason,
+    GameState,
     HindenburgPlugin,
     PlayerData,
     PlayerDieEvent,
@@ -407,6 +408,9 @@ export class HideAndSeekGamemodePlugin extends BaseGamemodePlugin {
 
     @EventListener("player.leave")
     onPlayerLeave(ev: PlayerLeaveEvent<Room>) {
+        if (this.room.gameState !== GameState.Started)
+            return;
+        
         this._removeHiderPlayer(ev.player, true);
     }
 

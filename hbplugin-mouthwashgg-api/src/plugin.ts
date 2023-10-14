@@ -886,7 +886,7 @@ export class MouthwashApiPlugin extends RoomPlugin {
         const ev2 = await this.room.emit(new GamemodeBeforeRolesAssignedEvent(roleAssignments));
         await this.roleService.assignAllRoles(ev2.alteredRolesAssigned);
     }
-
+    
     computeTaskCounts(): { totalTasks: number; completeTasks: number; players: PlayerData<Room>[]; numPlayersWithTasks: number; } {
         let totalTasks = 0;
         let completeTasks = 0;
