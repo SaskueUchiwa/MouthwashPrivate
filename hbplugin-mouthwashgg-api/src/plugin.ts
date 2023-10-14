@@ -797,6 +797,7 @@ export class MouthwashApiPlugin extends RoomPlugin {
             if (!playerRole)
                 continue;
             
+            rolePlayers[RoleAlignment.All].push(player.playerId);
             if (playerRole.metadata.alignment === RoleAlignment.Crewmate) {
                 rolePlayers[RoleAlignment.Crewmate].push(player.playerId);
             } else if (playerRole.metadata.alignment === RoleAlignment.Neutral) {

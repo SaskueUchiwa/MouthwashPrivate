@@ -294,7 +294,7 @@ export class HideAndSeekGamemodePlugin extends BaseGamemodePlugin {
                                             titleText: Palette.impostorRed.text("Defeat"),
                                             subtitleText: `No-one completed their objective in time`,
                                             backgroundColor: Palette.grey,
-                                            yourTeam: playerRole.metadata.alignment,
+                                            yourTeam: RoleAlignment.All,
                                             winSound: WinSound.ImpostorWin,
                                             hasWon: false
                                         }
