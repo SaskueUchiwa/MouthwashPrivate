@@ -89,6 +89,9 @@ export class Swooper extends Impostor {
         this.api.hudService.setHudItemVisibilityFor(HudItem.VentButton, true, [ this.player ]);
 
         this._invisibleButton?.on("mwgg.button.click", ev => {
+            if (!this._invisibleButton || this._invisibleButton.currentTime > 0 || this.player.playerInfo?.isDead)
+                return;
+
             this._remainingInvisibilityTime = this._invisibleDuration * 1000;
             this.animateGoInvisible();
             this._invisibleButton?.setSaturated(false);
