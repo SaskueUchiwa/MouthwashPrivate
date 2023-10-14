@@ -242,9 +242,8 @@ export class MouthwashggMetricsPlugin extends WorkerPlugin {
                     this.playerIds.set(player, playerId);
                 }
                 userIds.push(connectionUser.id);
-                const playerName = api.nameService.getPlayerName(player);
                 params.push(playerId, gameId, connectionUser.id, null, role?.metadata.roleName || null,
-                    player.playerInfo?.defaultOutfit.color || null, playerName || null, role ? RoleAlignment[role.metadata.alignment] : null);
+                    player.playerInfo?.defaultOutfit.color || null, connectionUser.display_name || null, role ? RoleAlignment[role.metadata.alignment] : null);
             }
             await this.postgresClient.query(`
                 INSERT INTO player(id, game_id, user_id, did_win, role_name, cosmetic_color, cosmetic_name, role_alignment)
