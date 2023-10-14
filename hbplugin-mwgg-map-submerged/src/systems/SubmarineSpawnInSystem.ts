@@ -10,6 +10,7 @@ import {
     PlayerData,
     Hostable
 } from "@skeldjs/core";
+import { SubmergedSpawnInDoneEvent, SubmergedSpawnInLoadEvent } from "../events";
 
 export interface SubmarineSpawnInSystemData {
     players: Set<PlayerData>;
@@ -24,7 +25,7 @@ export enum SpawnInState {
 }
 
 export type SubmarineSpawnInSystemEvents<RoomType extends Hostable = Hostable> = SystemStatusEvents<RoomType> &
-    ExtractEventTypes<[]>;
+    ExtractEventTypes<[ SubmergedSpawnInDoneEvent, SubmergedSpawnInLoadEvent ]>;
 
 /**
  * See {@link SubmarineSpawnInSystemEvents} for events to listen to.
@@ -112,7 +113,7 @@ export class SubmarineSpawnInSystem<RoomType extends Hostable = Hostable> extend
         this.dirty = true;
     }
 
-    Detoriorate(delta: number) {
+    async Detoriorate(delta: number) {
         if (this.currentState === SpawnInState.Spawning) {
             this.timer -= delta;
             this.timerUpdateDelay -= delta;
@@ -128,13 +129,15 @@ export class SubmarineSpawnInSystem<RoomType extends Hostable = Hostable> extend
                     return; // set spawn in state to done once all players have spawned in
             }
         }
-        if (this.currentState === SpawnInState.Spawning) {
-            this.currentState = SpawnInState.Done;
-        } else if (this.currentState === SpawnInState.Loading) {
-            this.currentState = SpawnInState.Spawning;
-        }
         this.players.clear();
         this.timer = 10;
+        if (this.currentState === SpawnInState.Spawning) {
+            const ev = await this.emit(new SubmergedSpawnInDoneEvent(this.room, this));
+            if (!ev.canceled) this.currentState = SpawnInState.Done;
+        } else if (this.currentState === SpawnInState.Loading) {
+            const ev = await this.emit(new SubmergedSpawnInLoadEvent(this.room, this));
+            if (!ev.canceled) this.currentState = SpawnInState.Spawning;
+        }
         this.dirty = true;
     }
 }

@@ -15,6 +15,7 @@
         "@skeldjs/hindenburg": "workspace:*",
         "hbplugin-mouthwashgg-anti-cheat": "workspace:*",
         "hbplugin-mouthwashgg-api": "workspace:*",
+        "hbplugin-mwgg-map-submerged": "workspace:*",
         "mouthwash-types": "workspace:*"
     }
 }

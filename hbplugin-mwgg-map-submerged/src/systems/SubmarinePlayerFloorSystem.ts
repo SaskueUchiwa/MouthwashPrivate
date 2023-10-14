@@ -41,7 +41,6 @@ export class SubmarinePlayerFloorSystem<RoomType extends Hostable = Hostable> ex
         data?: HazelReader | SubmarinePlayerFloorSystemData
     ) {
         super(ship, systemType, data);
-
         this.playerFloors = new Map;
     }
 

@@ -3922,6 +3922,7 @@ __metadata:
     "@types/node": latest
     hbplugin-mouthwashgg-anti-cheat: "workspace:*"
     hbplugin-mouthwashgg-api: "workspace:*"
+    hbplugin-mwgg-map-submerged: "workspace:*"
     mouthwash-types: "workspace:*"
     typescript: latest
   languageName: unknown

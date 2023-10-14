@@ -1,4 +1,5 @@
 import {
+    AirshipStatus,
     EndGameIntent,
     EventListener,
     GameMap,
@@ -43,6 +44,7 @@ import {
 } from "mouthwash-types";
 
 import { Infected, Uninfected, infectedColor, uninfectedColor } from "./roles";
+import { PlayerFloor, SubmarinePlayerFloorSystem, SubmergedShipStatus, SubmergedSpawnInDoneEvent, SubmergedSpawnInLoadEvent, SubmergedSystemType } from "hbplugin-mwgg-map-submerged";
 
 export type InfectionSpawnLocations = "Default"|"Reactor";
 
@@ -65,9 +67,11 @@ const infectedMapSpawnPositions: Record<GameMap, Vector2[]> = {
     [GameMap.AprilFoolsTheSkeld]: [ new Vector2(20.28, -5.29), new Vector2(21.44, -3.96), new Vector2(20.28, -6.62) ],
     [GameMap.Polus]: [ new Vector2(33.35, -6.12), new Vector2(36.31, -6.12), new Vector2(33.35, -7.92), new Vector2(36.31, -7.92) ],
     [GameMap.MiraHQ]: [ new Vector2(1.67, 11.33), new Vector2(2.59, 11.33), new Vector2(3.51, 11.33) ],
-    [GameMap.Airship]: [ ],
-    [5 as GameMap]: [ new Vector2(-11, -39.1), new Vector2(-7.55, -42.63), new Vector2(-7.55, -42.63) ]
-};
+    [GameMap.Airship]: [ ]
+}
+
+const submergedUpperSpawnPositions = [ new Vector2(-1.73, 31.85), new Vector2(-0.96, 30.13), new Vector2(2.71, 30.13) ];
+const submergedLowerSpawnPositions = [ new Vector2(-11, -39.1), new Vector2(-7.55, -42.63), new Vector2(-7.55, -42.63) ];
 
 @PreventLoad
 @GamemodePlugin({
@@ -131,17 +135,35 @@ export class InfectionGamemodePlugin extends BaseGamemodePlugin {
             }
         ];
     }
-    
-    getSpawnPosition(nonInfectedCount: number, isInfected: boolean, idx: number) {
-        if (!this.room.shipStatus)
-            return undefined;
 
-        if (isInfected) {
+    getInfectedAvailableSpawnPositions(player: PlayerData<Room>) {
+        if (this.room.settings.map === 5 as number /* submerged */) {
+            const floorSystem = this.room.shipStatus?.systems.get(SubmergedSystemType.Floor as number);
+            if (floorSystem instanceof SubmarinePlayerFloorSystem) {
+                const playerFloor = floorSystem.playerFloors.get(player);
+                if (playerFloor === undefined) return;
+                if (playerFloor === PlayerFloor.UpperDeck) {
+                    return submergedUpperSpawnPositions;
+                } else {
+                    return submergedLowerSpawnPositions;
+                }
+            }
+        } else {
             const infectedSpawnPositions = infectedMapSpawnPositions[this.room.settings.map];
             if (infectedSpawnPositions.length === 0) return undefined;
-
-            return infectedSpawnPositions[idx % infectedSpawnPositions.length];
+            return infectedSpawnPositions;
         }
+    }
+
+    getInfectedSpawnPosition(player: PlayerData<Room>, idx: number) {
+        const spawnPositions = this.getInfectedAvailableSpawnPositions(player);
+        if (spawnPositions === undefined) return undefined;
+        return spawnPositions[idx % spawnPositions.length];
+    }
+    
+    getSpawnPosition(nonInfectedCount: number, idx: number) {
+        if (!this.room.shipStatus)
+            return undefined;
 
         return Vector2.up
             .rotateDeg((idx - 1) * (360 / nonInfectedCount))
@@ -217,13 +239,13 @@ export class InfectionGamemodePlugin extends BaseGamemodePlugin {
         this.api.hudService.setHudItemVisibilityFor(HudItem.SabotageButton, canUninfectedCloseDoors, playersUninfected);
 
         const spawnLocation = this.api.gameOptions.gameOptions.get(InfectionOptionName.SpawnLocation)?.getValue<EnumValue<InfectionSpawnLocations>>();
-        // if (spawnLocation?.selectedOption === "Reactor" ) {
+        if (!(this.room.shipStatus instanceof AirshipStatus) && !(this.room.shipStatus instanceof SubmergedShipStatus)) {
             setTimeout(() => {
                 for (let i = 0; i < playersUninfected.length; i++) {
                     const player = playersUninfected[i];
-                    const position = this.getSpawnPosition(playersUninfected.length, false, i);
+                    const position = this.getSpawnPosition(playersUninfected.length, i);
                     if (position === undefined) continue;
-    
+        
                     const playerTransform = player.transform;
                     if (playerTransform) {
                         player.transform.seqId += 5;
@@ -232,9 +254,9 @@ export class InfectionGamemodePlugin extends BaseGamemodePlugin {
                 }
                 for (let i = 0; i < playersInfected.length; i++) {
                     const player = playersInfected[i];
-                    const position = this.getSpawnPosition(playersInfected.length, true, i);
+                    const position = this.getInfectedSpawnPosition(player, i);
                     if (position === undefined) continue;
-    
+        
                     const playerTransform = player.transform;
                     if (playerTransform) {
                         player.transform.seqId += 5;
@@ -242,9 +264,46 @@ export class InfectionGamemodePlugin extends BaseGamemodePlugin {
                     }
                 }
             }, 5000);
-        // }
+        }
         
         await this.checkTaskEndGame(undefined);
+    }
+
+    // @EventListener("mwgg.submerged.spawnIn.load")
+    // onSubmergedSpawnInLoad(ev: SubmergedSpawnInLoadEvent) {
+    //     const players: PlayerData<Room>[] = [];
+    //     for (const [ , player ] of this.room.players) {
+    //         const playerRole = this.api.roleService.getPlayerRole(player);
+    //         if (playerRole instanceof Infected) {
+    //             players.push(player);
+    //         }
+    //     }
+    //     for (let i = 0; i < players.length; i++) {
+    //         const player = players[i];
+    //         ev.spawnInSystem.players.add(player);
+    //     }
+    // }
+
+    @EventListener("mwgg.submerged.spawnIn.done")
+    onSubmergedSpawnInDone(ev: SubmergedSpawnInDoneEvent) {
+        const playersInfected: PlayerData<Room>[] = [];
+        for (const [ , player ] of this.room.players) {
+            const playerRole = this.api.roleService.getPlayerRole(player);
+            if (playerRole instanceof Infected) {
+                playersInfected.push(player);
+            }
+        }
+        for (let i = 0; i < playersInfected.length; i++) {
+            const player = playersInfected[i];
+            const position = this.getInfectedSpawnPosition(player, i);
+            if (position === undefined) continue;
+
+            const playerTransform = player.transform;
+            if (playerTransform) {
+                player.transform.seqId += 5;
+                player.transform.snapTo(position);
+            }
+        }
     }
 
     @EventListener("mwgg.deadbody.spawn")
