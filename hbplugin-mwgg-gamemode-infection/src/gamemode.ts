@@ -65,7 +65,8 @@ const infectedMapSpawnPositions: Record<GameMap, Vector2[]> = {
     [GameMap.AprilFoolsTheSkeld]: [ new Vector2(20.28, -5.29), new Vector2(21.44, -3.96), new Vector2(20.28, -6.62) ],
     [GameMap.Polus]: [ new Vector2(33.35, -6.12), new Vector2(36.31, -6.12), new Vector2(33.35, -7.92), new Vector2(36.31, -7.92) ],
     [GameMap.MiraHQ]: [ new Vector2(1.67, 11.33), new Vector2(2.59, 11.33), new Vector2(3.51, 11.33) ],
-    [GameMap.Airship]: [ ]
+    [GameMap.Airship]: [ ],
+    [5 as GameMap]: [ new Vector2(-11, -39.1), new Vector2(-7.55, -42.63), new Vector2(-7.55, -42.63) ]
 };
 
 @PreventLoad
