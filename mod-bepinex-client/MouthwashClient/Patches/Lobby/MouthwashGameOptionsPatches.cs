@@ -496,7 +496,7 @@ namespace MouthwashClient.Patches.Lobby
                     return true;
                 
                 uint previous = enumValue.SelectedIdx;
-                enumValue.SelectedIdx = (uint)Math.Clamp(enumValue.SelectedIdx - 1, 0, enumValue.Options.Length - 1);
+                enumValue.SelectedIdx = (uint)Math.Clamp((int)enumValue.SelectedIdx - 1, 0, enumValue.Options.Length - 1);
                 if (enumValue.SelectedIdx == previous)
                     return false;
                 __instance.ValueText.text = enumValue.Options[enumValue.SelectedIdx];
