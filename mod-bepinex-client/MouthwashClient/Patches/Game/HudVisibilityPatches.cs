@@ -181,6 +181,22 @@ namespace MouthwashClient.Patches.Game
             }
         }
 
+        [HarmonyPatch(typeof(SystemConsole), nameof(SystemConsole.CanUse))]
+        public static class HideEmergencyConsolePatch
+        {
+            public static bool Prefix(SystemConsole __instance, ref float __result)
+            {
+                EmergencyMinigame? minigame = __instance.MinigamePrefab.TryCast<EmergencyMinigame>();
+                if (minigame != null)
+                {
+                    __result = 0f;
+                    return false;
+                }
+
+                return true;
+            }
+        }
+
         [HarmonyPatch(typeof(HudManager), nameof(HudManager.ToggleUseAndPetButton))]
         public static class HideUseButtonPatch
         {
