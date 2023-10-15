@@ -482,7 +482,7 @@ export class MeetingHud<RoomType extends Hostable = Hostable> extends Networkabl
         );
     }
 
-    private _populateStates(states: PlayerVoteState<RoomType>[]) {
+    protected _populateStates(states: PlayerVoteState<RoomType>[]) {
         for (let i = 0; i < states.length; i++) {
             const state = this.voteStates.get(i);
             if (state) {
@@ -491,7 +491,7 @@ export class MeetingHud<RoomType extends Hostable = Hostable> extends Networkabl
         }
     }
 
-    private async _votingComplete(
+    protected async _votingComplete(
         tie: boolean,
         exiled?: PlayerData<RoomType>
     ) {
@@ -555,7 +555,7 @@ export class MeetingHud<RoomType extends Hostable = Hostable> extends Networkabl
             clearInterval(this.ranOutOfTimeTimeout);
     }
 
-    private _rpcVotingComplete(
+    protected _rpcVotingComplete(
         states: PlayerVoteState<RoomType>[],
         tie: boolean,
         exiled?: PlayerData<RoomType>

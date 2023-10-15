@@ -8,6 +8,7 @@ export * from "./LoadHat";
 export * from "./LoadPet";
 export * from "./ModstampSetString";
 export * from "./OverwriteGameOver";
+export * from "./OverwriteVotingComplete";
 export * from "./SetChatMessage";
 export * from "./SetGameOption";
 export * from "./SetHudString";

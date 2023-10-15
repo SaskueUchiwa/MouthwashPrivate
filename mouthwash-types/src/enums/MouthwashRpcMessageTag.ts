@@ -9,5 +9,6 @@ export enum MouthwashRpcMessageTag {
     SetCountingDown = 0x90,
     ReportDeadBody,
     SetPlayerSpeedModifier = 0x94,
-    SetPlayerVisionModifier
+    SetPlayerVisionModifier,
+    OverwriteVotingComplete = 0xa0
 }

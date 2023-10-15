@@ -5,11 +5,18 @@ import {
     MeetingHud,
     MeetingHudClearVoteEvent,
     MeetingHudVoteCastEvent,
+    MeetingHudVotingCompleteEvent,
     PlayerData,
+    PlayerDataResolvable,
     PlayerVoteArea,
+    PlayerVoteState,
+    RoleTeamType,
+    RpcMessage,
     SpawnType,
+    VoteState,
     VoteStateSpecialId
 } from "@skeldjs/hindenburg";
+import { OverwriteVotingCompleteMessage } from "../packets";
 
 export class MouthwashVoteState<RoomType extends Hostable = Hostable> extends PlayerVoteArea<RoomType> {
     constructor(
@@ -142,5 +149,58 @@ export class MouthwashMeetingHud<RoomType extends Hostable = Hostable> extends M
                 );
             }
         }
+    }
+
+    async votingComplete(tie = false, exiled?: PlayerDataResolvable) {
+        const _exiled = exiled ? this.room.resolvePlayer(exiled) : undefined;
+
+        if (!this.room.gameData)
+            return;
+
+        const voteStates: PlayerVoteState<RoomType>[] = new Array(this.room.gameData.players.size);
+        let i = 0;
+        for (const [ playerId, state ] of this.voteStates) {
+            voteStates[i] = new PlayerVoteState(this.room, playerId, state.votedForId);
+            i++;
+        }
+
+        let numImpostorsLeft = 0;
+        let totalImpostors = 0;
+        for (const [ , playerInfo ] of this.room.gameData.players) {
+            if (playerInfo.roleType && playerInfo.roleType.roleMetadata.roleTeam === RoleTeamType.Impostor) {
+                totalImpostors++;
+                if (!playerInfo.isDead && !playerInfo.isDisconnected) {
+                    numImpostorsLeft++;
+                }
+            }
+        }
+
+        this._populateStates(voteStates);
+        this.room.messageStream.push(
+            new RpcMessage(
+                this.netId,
+                new OverwriteVotingCompleteMessage(
+                    voteStates.map(state => new VoteState(state.playerId, state.votedForId)),
+                    _exiled ? _exiled.playerId ?? 0xff : 0xff,
+                    (_exiled && _exiled.playerInfo?.roleType && _exiled.playerInfo.roleType.roleMetadata.roleTeam === RoleTeamType.Impostor) || false,
+                    numImpostorsLeft,
+                    totalImpostors,
+                    tie
+                )
+            )
+        );
+        await this._votingComplete(tie, _exiled);
+
+        this.emitSync(
+            new MeetingHudVotingCompleteEvent(
+                this.room,
+                this,
+                undefined,
+                tie,
+                new Map(voteStates.map(vote =>
+                    [ vote.playerId, vote ])),
+                _exiled
+            )
+        );
     }
 }

@@ -40,6 +40,7 @@ import {
     MouthwashMeetingHud,
     MouthwashSpawnType,
     OverwriteGameOver,
+    OverwriteVotingCompleteMessage,
     ReportDeadBodyMessage,
     SetChatMessageMessage,
     SetChatVisibilityMessage,
@@ -84,6 +85,7 @@ import { MouthwashApiPlugin, ClientFetchResourceResponseEvent } from "hbplugin-m
 @RegisterMessage(AllowTaskInteractionMessage)
 @RegisterMessage(SetTaskCountsMessage)
 @RegisterMessage(SetRoleTeamMessage)
+@RegisterMessage(OverwriteVotingCompleteMessage)
 @RegisterPrefab(SpawnType.MeetingHud, [ MouthwashMeetingHud ])
 @RegisterPrefab(MouthwashSpawnType.Button, [ CustomNetworkTransformGeneric, Graphic, ClickBehaviour ] as typeof Networkable[])
 @RegisterPrefab(MouthwashSpawnType.DeadBody, [ DeadBody, CustomNetworkTransformGeneric ] as typeof Networkable[])
