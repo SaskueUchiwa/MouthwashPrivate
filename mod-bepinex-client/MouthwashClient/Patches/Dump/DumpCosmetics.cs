@@ -61,19 +61,19 @@ namespace MouthwashClient.Patches.Dump
         public static void Postfix(HatManager __instance)
         {
             ConfigEntry<bool> dumpsEnabledConfig = PluginSingleton<MouthwashClientPlugin>.Instance.Config.Bind(
-                "Dumps",
+                "Dumps.Cosmetics",
                 "Enabled",
                 false,
                 "Whether or not to dump assets from the game");
 
             ConfigEntry<string> destinationPathConfig = PluginSingleton<MouthwashClientPlugin>.Instance.Config.Bind(
-                "Dumps",
+                "Dumps.Cosmetics",
                 "DestinationPath",
                 "",
                 "The path to dump assets to");
             
             ConfigEntry<string> originPathConfig = PluginSingleton<MouthwashClientPlugin>.Instance.Config.Bind(
-                "Dumps",
+                "Dumps.Cosmetics",
                 "OriginPath",
                 "",
                 "The path to read sprites from, exported with AssetStudio");

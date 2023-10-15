@@ -38,7 +38,7 @@ export const SwooperOptionName = {
     SwooperDuration: `${swooperColor.text("Swooper")} Duration`
 } as const;
 
-@MouthwashRole("Swooper", RoleAlignment.Impostor, swooperColor, EmojiService.getEmoji("crewmate"))
+@MouthwashRole("Swooper", RoleAlignment.Impostor, swooperColor, EmojiService.getEmoji("swooper"))
 @RoleObjective(`Sabotage and kill the crewmates.
 Use the swoop ability to turn invisible.`)
 @AnticheatExceptions([ InfractionName.ForbiddenRpcSabotage, InfractionName.ForbiddenRpcVent, InfractionName.ForbiddenRpcCloseDoors ])
@@ -77,16 +77,13 @@ export class Swooper extends Impostor {
 
     async onReady() {
         await super.onReady();
+        await this.giveFakeTasks();
 
         this._invisibleButton = await this.spawnButton("invisible-button", new AssetReference("PggResources/TownOfPolus", "Assets/Mods/TownOfPolus/Swoop.png"), {
             maxTimer: this._invisibleCooldown,
             saturated: true,
             currentTime: this._invisibleCooldown
         });
-
-        this.giveFakeTasks();
-
-        this.api.hudService.setHudItemVisibilityFor(HudItem.VentButton, true, [ this.player ]);
 
         this._invisibleButton?.on("mwgg.button.click", ev => {
             if (!this._invisibleButton || this._invisibleButton.currentTime > 0 || this.player.playerInfo?.isDead)
@@ -131,6 +128,8 @@ export class Swooper extends Impostor {
         this.api.animationService.beginPlayerAnimation(this.player, [
             new PlayerAnimationKeyframe(0, 50, { opacity: 1, hatOpacity: 1, skinOpacity: 1, petOpacity: 1, nameOpacity: 1 })
         ], false);
+
+        this._remainingInvisibilityTime = undefined;
     }
 
     @EventListener("player.die", ListenerType.Player)

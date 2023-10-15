@@ -2140,9 +2140,9 @@ export class BaseRoom extends Hostable<RoomEvents> {
      * room.removeFakePlayer(player);
      * ```
      */
-    createFakePlayer(isNew = false, setCosmetics = true, isRecorded = false) {
+    createFakePlayer(isNew = false, setCosmetics = true, isRecorded = false, isBroadcasted = true, playerId?: number) {
         const fakePlayer = new PlayerData(this, this.worker.getNextClientId(), "dummy");
-        const playerControl = this.spawnPrefabOfType(SpawnType.Player, -2, undefined, !isNew ? [{ isNew: false }] : undefined, true, isRecorded) as PlayerControl<this>;
+        const playerControl = this.spawnPrefabOfType(SpawnType.Player, -2, undefined, !isNew ? [{ isNew: false, playerId }] : undefined, isBroadcasted, isRecorded) as PlayerControl<this>;
         playerControl.player = fakePlayer;
         fakePlayer.control = playerControl;
 

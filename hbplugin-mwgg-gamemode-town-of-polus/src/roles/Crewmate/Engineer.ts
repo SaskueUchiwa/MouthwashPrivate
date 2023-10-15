@@ -63,11 +63,21 @@ export class Engineer extends Crewmate {
     ) {
         super(player);
 
-        this._engineerUses = this.api.gameOptions.gameOptions.get(EngineerOptionName.EngineerUses)?.getValue<EnumValue<EngineerUses>>().selectedOption || EngineerUses.PerMatch;
+        this._engineerUses = this.api.gameOptions.gameOptions.get(EngineerOptionName.EngineerUses)?.getValue<EnumValue<EngineerUses>>().selectedOption || EngineerUses.PerRound;
     }
 
     async onReady() {
         await this.spawnFixButton();
+
+        if (this.room.shipStatus) {
+            for (const [ , system ] of this.room.shipStatus.systems) {
+                if (system.sabotaged) {
+                    this._lastSabotagedSystem = system;
+                    this._fixButton?.setSaturated(true);
+                    break;
+                }
+            }
+        }
     }
 
     async spawnFixButton() {
@@ -87,16 +97,6 @@ export class Engineer extends Crewmate {
             this._fixButton?.destroy();
             this._fixButton = undefined;
         });
-
-        if (this.room.shipStatus) {
-            for (const [ , system ] of this.room.shipStatus.systems) {
-                if (system.sabotaged) {
-                    this._lastSabotagedSystem = system;
-                    this._fixButton?.setSaturated(true);
-                    break;
-                }
-            }
-        }
     }
 
     async onRemove() {

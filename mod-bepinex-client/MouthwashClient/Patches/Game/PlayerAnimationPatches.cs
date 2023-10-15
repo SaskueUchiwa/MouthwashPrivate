@@ -371,7 +371,7 @@ namespace MouthwashClient.Patches.Game
                 foreach ((byte playerId, PlayerAnimationKeyframe? keyframe) in PlayerAnimationStates)
                 {
                     PlayerControl? player = GetPlayerControlById(playerId);
-                    if (player != null)
+                    if (player != null && keyframe != null)
                         UpdatePlayerAppearance(player, keyframe);
                 }
 
