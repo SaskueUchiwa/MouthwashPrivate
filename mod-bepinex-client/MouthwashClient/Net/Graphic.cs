@@ -18,6 +18,11 @@ namespace MouthwashClient.Net
             spriteRenderer = gameObject.EnsureComponent<SpriteRenderer>();
         }
 
+        void Update()
+        {
+            spriteRenderer.enabled = MeetingHud.Instance == null;
+        }
+
         public override void HandleRpc(byte callId, MessageReader reader)
         {
             
