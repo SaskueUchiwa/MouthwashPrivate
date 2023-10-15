@@ -1,20 +1,25 @@
 import {
     Color,
     ComponentSpawnData,
+    Hat,
     HazelWriter,
     MeetingHudCloseEvent,
+    Nameplate,
+    Pet,
     PlayerData,
     PlayerDieEvent,
     PlayerMoveEvent,
     PlayerStartMeetingEvent,
     Room,
     RoomFixedUpdateEvent,
+    Skin,
     SpawnFlag,
     SpawnMessage,
     SpawnType,
     SystemSabotageEvent,
     SystemStatus,
-    Vector2
+    Vector2,
+    Visor
 } from "@skeldjs/hindenburg";
 
 import {
@@ -135,7 +140,7 @@ export class Detective extends Crewmate {
     }
 
     async playbackRecording() {
-        if (this._playersRecording.length === 0)
+        if (this._playersRecordingStartFrame > this._playersRecording.length - 1)
             return;
 
         for (const player of this._fakeDummyPlayers) {
@@ -149,14 +154,16 @@ export class Detective extends Crewmate {
             if (players[frame.playerId])
                 continue;
 
-            const fakePlayer = this.room.createFakePlayer(false, true, false, false, 16); // dont broadcast, we only send these players to the detective
+            const fakePlayer = this.room.createFakePlayer(false, true, false, false); // dont broadcast, we only send these players to the detective
+
             if (fakePlayer.control) {
+                fakePlayer.transform?.snapTo(frame.position);
                 this.room.broadcast(
                     [
                         new SpawnMessage(
                             SpawnType.Player,
                             -2,
-                            SpawnFlag.IsClientCharacter,
+                            0,
                             fakePlayer.control.components.map((component) => {
                                 const writer = HazelWriter.alloc(512);
                                 writer.write(component, true);
@@ -172,14 +179,17 @@ export class Detective extends Crewmate {
                     undefined,
                     [ this.player ]
                 );
-                fakePlayer.control.playerId = 16;
-                fakePlayer.control.setColor(this._detectiveSeeColors ? frame.playerColor : Color.Gray);
-                fakePlayer.control.setName("???");
+                fakePlayer.control?.setName("???");
+                fakePlayer.control?.setHat(Hat.NoHat);
+                fakePlayer.control?.setColor(this._detectiveSeeColors ? frame.playerColor : Color.Gray);
+                fakePlayer.control?.setSkin(Skin.None);
+                fakePlayer.control?.setPet(Pet.EmptyPet);
+                fakePlayer.control?.setVisor(Visor.EmptyVisor);
+                fakePlayer.control?.setNameplate(Nameplate.NoPlate);
                 // this.api.animationService.beginPlayerAnimation(fakePlayer, [
                 //     new PlayerAnimationKeyframe(0, 10, { opacity: 0.6, hatOpacity: 0.6, skinOpacity: 0.6, petOpacity: 0.6, nameOpacity: 0.6 })
                 // ], false);
             }
-            fakePlayer.transform?.snapTo(frame.position);
             players[frame.playerId] = fakePlayer;
         }
 
@@ -228,6 +238,7 @@ export class Detective extends Crewmate {
                 this._playersRecordingStartFrame = 0;
                 this._playersPlaybackFrame = 0;
 
+                console.log("destroying fake players..");
                 for (const player of this._fakeDummyPlayers) {
                     if (player) player.destroy();
                 }
