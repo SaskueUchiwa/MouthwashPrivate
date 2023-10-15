@@ -1,4 +1,4 @@
-import { PlayerData, PlayerDieEvent, RoleTeamType, Room } from "@skeldjs/hindenburg";
+import { MeetingHudCloseEvent, PlayerData, PlayerDieEvent, RoleTeamType, Room } from "@skeldjs/hindenburg";
 import { EnumValue, KeyCode, NumberValue, Palette, SetRoleTeamMessage } from "mouthwash-types";
 
 import {
@@ -122,6 +122,11 @@ export class Impostor extends BaseRole {
         }
 
         this._killButton?.setSaturated(!!this._killTarget);
+    }
+
+    @EventListener("meeting.close", ListenerType.Room)
+    onMeetingEnd(ev: MeetingHudCloseEvent<Room>) {
+        this._killButton?.setCurrentTime(this._killButton.maxTimer);
     }
     
     @EventListener("player.die", ListenerType.Player)
