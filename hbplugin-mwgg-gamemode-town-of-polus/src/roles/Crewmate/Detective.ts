@@ -13,18 +13,14 @@ import {
     Room,
     RoomFixedUpdateEvent,
     Skin,
-    SpawnFlag,
     SpawnMessage,
     SpawnType,
-    SystemSabotageEvent,
-    SystemStatus,
     Vector2,
     Visor
 } from "@skeldjs/hindenburg";
 
 import {
     AssetReference,
-    BaseRole,
     Button,
     Crewmate,
     EmojiService,
@@ -37,7 +33,7 @@ import {
 } from "hbplugin-mouthwashgg-api";
 
 import { AnticheatExceptions, InfractionName } from "hbplugin-mouthwashgg-anti-cheat";
-import { BooleanValue, EnumValue, GameOption, NumberValue, PlayerAnimationKeyframe, RGBA } from "mouthwash-types";
+import { BooleanValue, GameOption, NumberValue, RGBA } from "mouthwash-types";
 
 import { TownOfPolusOptionName } from "../../gamemode";
 
@@ -261,7 +257,7 @@ export class Detective extends Crewmate {
 
     @EventListener("player.move", ListenerType.Room)
     async onPlayerMove(ev: PlayerMoveEvent<Room>) {
-        if (this._isPlayingBack || this._fakeDummyPlayersSet.has(ev.player))
+        if (this._isPlayingBack || this._fakeDummyPlayersSet.has(ev.player) || !this.api.targettableService.isTargettable(ev.player))
             return;
 
         if (ev.player.playerId !== undefined) {
