@@ -37,7 +37,7 @@ import { BooleanValue, GameOption, NumberValue, RGBA } from "mouthwash-types";
 
 import { TownOfPolusOptionName } from "../../gamemode";
 
-const detectiveColor = new RGBA(248, 191, 20, 255);
+const detectiveColor = new RGBA(47, 86, 150, 255);
 
 export const DetectiveOptionName = {
     DetectiveCooldown: `${detectiveColor.text("Detective")} Cooldown`,

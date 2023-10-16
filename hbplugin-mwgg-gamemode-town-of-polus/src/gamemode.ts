@@ -135,10 +135,6 @@ export class TownOfPolusGamemodePlugin extends BaseGamemodePlugin {
             {
                 role: Swooper,
                 playerCount: this.resolveChancePercentage(this.api.gameOptions.gameOptions.get(TownOfPolusOptionName.SwooperProbability)?.getValue<NumberValue>().value || 0)
-            },
-            {
-                role: Trapper,
-                playerCount: this.resolveChancePercentage(this.api.gameOptions.gameOptions.get(TownOfPolusOptionName.TrapperProbability)?.getValue<NumberValue>().value || 0)
             }
         ];
     }
