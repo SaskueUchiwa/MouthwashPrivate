@@ -110,10 +110,10 @@ export class AccountsController {
     async createUser(displayName: string, email: string, password: string, emailVerified: boolean) {
         const passwordHash = await bcrypt.hash(password, 12);
         const { rows: createdUsers } = await this.server.postgresClient.query(`
-            INSERT INTO users(id, email, password_hash, created_at, banned_until, muted_until, game_settings, email_verified, cosmetic_hat, cosmetic_pet, cosmetic_skin, display_name)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+            INSERT INTO users(id, email, password_hash, created_at, banned_until, muted_until, game_settings, email_verified, display_name, cosmetic_color, cosmetic_hat, cosmetic_pet, cosmetic_skin, cosmetic_visor, cosmetic_nameplate, stripe_customer_id)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
             RETURNING *
-        `, [ crypto.randomUUID(), email, passwordHash, new Date(), null, null, {}, emailVerified, 0, 0, 0, displayName ]);
+        `, [ crypto.randomUUID(), email, passwordHash, new Date(), null, null, {}, emailVerified, displayName, 0, "hat_NoHat", "pet_EmptyPet", "skin_None", "visor_EmptyVisor", "nameplate_NoPlate", null ]);
 
         return createdUsers[0] as User|undefined;
     }
