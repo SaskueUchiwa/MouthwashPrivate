@@ -52,7 +52,7 @@ export interface DetectiveRecordingFrame {
     position: Vector2;
 }
 
-@MouthwashRole("Detective", RoleAlignment.Crewmate, detectiveColor, EmojiService.getEmoji("impervious"))
+@MouthwashRole("Detective", RoleAlignment.Crewmate, detectiveColor, EmojiService.getEmoji("detective"))
 @RoleObjective("See the traces of players near your location")
 @AnticheatExceptions([ InfractionName.ForbiddenRpcRepair, InfractionName.ForbiddenRpcCompleteTask ])
 export class Detective extends Crewmate {
@@ -112,7 +112,7 @@ export class Detective extends Crewmate {
     async spawnInvestigateButton() {
         this._investigateButton = await this.spawnButton(
             "investigate-button",
-            new AssetReference("PggResources/TownOfPolus", "Assets/Mods/TownOfPolus/Swoop.png"),
+            new AssetReference("PggResources/TownOfPolus", "Assets/Mods/TownOfPolus/Trace.png"),
             {
                 maxTimer: this._detectiveCooldown,
                 currentTime: this._detectiveCooldown,

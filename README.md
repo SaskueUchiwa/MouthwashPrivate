@@ -1,35 +1,102 @@
-# Mouthwash.gg
-Mouthwash.gg is an _open source re-implementation_ of the Polus.gg backend, made with [Hindenburg](https://github.com/skeldjs/Hindenburg).
+# Mouthwash.GG
+Mouthwash.GG is the code-name for Polus.GG: Rewritten, a rewrite of the Polus.GG client _and_ server.
 
-![image](https://user-images.githubusercontent.com/60631511/140629842-4ef52dc1-cbef-4b50-8b4a-caef1f4d4350.png)
+The entire codebase has been completely revised with no stone left unturned. [SkeldJS](https://github.com/skeldjs/SkeldJS) was used for the Among Us implementation for the server, [Hindenburg](https://github.com/skeldjs/Hindenburg) for the server itself with support for SaaH (Server-as-a-Host) and [Reactor](https://github.com/NuclearPowered/Reactor) being used for the client mod.
 
-## Install
-Mouthwash.gg is still in development for the time being, check back later! (Or contribute!)
+# Setup Guide
 
-## Information
-### Why?
-After Polus.gg's closure, Mouthwash.gg was created to continue the potential that Polus.gg had, and to continue development in another, open-source form.
+## Files
+Create a `.env` in the root directory to store passwords and other credentials. It can be empty for now.
 
-### What's the goal?
-The goal of Mouthwash.gg is to be a complete replacement for the Polus.gg server, while remaining ([for the most part](#disclaimers)) open source.
+## Dependencies
+### Supabase (Required)
+**Website:** https://supabase.com
 
-Specifically, it hopes to rethink API decisions and remain consistent in order to make gamemode development as easy as possible.
+Supabase is a free Firebase alternative that has a CDN/file storage bucket feature. Mouthwash uses the storage bucket to host assets for peoplpe to download, for example assets relating to Town of Polus (custom buttons, audio, etc.), as well as Launcher and Client mod releases.
 
-### Is it legitimate?
-Mouthwash is supported by the original developers of Polus.gg, it is a completely legitimate software.
+It's very straight forward to create an account + project.
 
-### What about submerged?
-Unfortunately, as Submerged was developed by another team separate from Polus.gg, Submerged must be removed from all distributions of the Polus.gg client in relation to Mouthwash.gg.
+#### Storage Buckets
+Once you've made a project, you'll also need to create **2** storage buckets:
+![](<media/storage buckets.png>)
 
-## Legal Things
-#### Disclaimers
-##### Unfortunately, the development of Mouthwash.gg runs into some shaky legal and moral grounds, so there are a few disclaimers to be aware of.
+- `MouthwashAssets`
+- `Downloads` (for storing the Launcher + client releases).
 
-##### 1. Due to issues regarding how the original mod was distributed, and how it is seen in the eyes of the developers, steam and Innersloth, the client mod source cannot be made open source as this time, although it and its updates will be distributed as freely and as available as possible.
+> Make sure to create BOTH buckets as "public buckets":
 
-##### 2. The only open source guarantee of Mouthwash is the actual Polus.gg gamemode and role API reimplementation to build gamemodes out of. Personally, I have great respect for retaining the integrity of Mouthwash's open source nature, however I will take the opportunity to make my own gamemodes initially private before open sourcing them at a later date.
+![](<media/public bucket.png>)
 
-##### 3. While completely rewritten from the ground-up and using completely different server software, a substantial part of the development, as well as most art, was made previously by the rest of the Polus.gg developers. For this reason, the asset server (as well as raw asset files) is completely private-source and it should SOLELY be used to communicate with a Mouthwash.gg server.
+### Postgres (Required)
+Postgres is the database of choice for Mouthwash, used for accounts, logging and storing asset information.
 
-### Notes
-Mouthwash is _very strictly_ available under the [SSPL](https://www.mongodb.com/licensing/server-side-public-license) license. You hold no right to distribute private modifications of the software (Clause 5), or have any intention to make a revenue from selling the software or any modifications of it (Clause 13). Any code contributed to Mouthwash is automatically agreed to be held under the same license.
+#### Docker
+The recommended way to use Postgres locally (especially if you're on Windows) is to use it with [Docker](https://docker.com).
+
+In your `.env` file, choose a password for your database:
+```env
+POSTGRES_PASWORD=Mouthwash123
+```
+(Replacing `Mouthwash123` with your password)
+
+Create a folder `./data/pg` at the root of the repository.
+
+##### Docker Compose
+Using Docker compose, you can start the database with the following command in a terminal of your choice:
+```sh
+docker compose -f db.compose.yml -p mwgg-db up -d
+```
+
+Next, you'll need to setup the database with all of the tables and indexes that Mouthwash uses. You can use `docker exec` to run this inside the container for you:
+```sh
+cp misc/db.sql data/pg
+docker exec -e PGPASSWORD="Mouthwash123" -i mwgg-db-mwgg-postgres-1 psql --username=postgres -d Mouthwash -f /var/lib/postgresql/data/db.sql
+```
+
+> Remember to replace `Mouthwash123` in the `PGPASSWORD` parameter with your actual database password.
+
+##### Docker Run
+If you don't want to use Docker compose, you can start the database manually with:
+```sh
+docker run --network host --env-file ./.env -e POSTGRES_USER=postgres -e POSTGRES_DB=Mouthwash -d -v ./data/pg:/var/lib/postgresql/data --name mwgg-postgres postgres
+```
+
+Then, to setup the database you can use the following commands:
+```sh
+cp misc/db.sql data/pg
+docker exec -e PGPASSWORD="Mouthwash123" -i mwgg-postgres psql --username=postgres -d Mouthwash -f /var/lib/postgresql/data/db.sql
+```
+
+### Redis (Optional)
+Redis is entirely optional, however can be helpful if you want to have some basic metrics on the server, or if you want to use the Mouthwash load balancer for multiple nodes.
+
+Create a file in `redis-conf/redis.conf` with the following contents:
+```redis
+requirepass Mouthwash123
+```
+
+> Replace `Mouthwash123` with your own password to secure the database.
+
+#### Docker
+The recommended way to use Redis with Mouthwash is to use it with Docker.
+
+##### Docker
+```sh
+docker run --network host -v ./redis-conf:/usr/local/etc/redis -p 6379:6379/tcp -d --name mwgg-redis redis redis-server /usr/local/etc/redis/redis.conf
+```
+
+## Configure the Server
+### Asset Upload
+There are two assets that need to be uploaded to your Supabase storage bucket that are necessary for Mouthwash and its gamemodes to function: the Global asset and the Town Of Polus asset.
+
+All of these assets can be found at https://github.com/edqx/MouthwashUnity/releases (under gamemode-assets.zip).
+
+Simply upload all of the files in this zip file onto your MouthwashAssets bucket in your Supabase project.
+
+### Launcher
+#### Auto Updating Releases
+If you want 
+
+### Client
+
+### Node
