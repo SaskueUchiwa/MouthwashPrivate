@@ -198,7 +198,7 @@ export class AccountsController {
             RETURNING *
         `, [ gameSettings, userId ]);
 
-        return rowsUpdated.rowCount > 0;
+        return rowsUpdated.rowCount! > 0;
     }
 
     canValidatePasswordReset() {
