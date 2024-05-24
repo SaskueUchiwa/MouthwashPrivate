@@ -43,7 +43,7 @@ export class AccountServer {
     constructor(public readonly config: AccountServerConfig) {
         this.mediatorServer = new mediator.MediatorServer({
             development: process.env.NODE_ENV === "development",
-            crossDomains: ["*"],
+            crossDomains: ["http://localhost:8000", "http://127.0.0.1:1420"],
             allowedHeaders: ["Authorization", "Content-Type"],
             pathPrefix: config.path_prefix
         }, "account-server", this);

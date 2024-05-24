@@ -90,7 +90,7 @@ export class CosmeticsController {
             WHERE user_id = $1 AND bundle_Id = $2
         `, [ userId, bundleId ]);
 
-        return ownedBundleIds.rowCount > 0;
+        return ownedBundleIds.rowCount! > 0;
     }
 
     async getUserPerks(userId: string) {
@@ -111,7 +111,7 @@ export class CosmeticsController {
             RETURNING *
         `, [ userId, hatId, petId, skinId, colorId, visorId, nameplateId ]);
 
-        return rowsUpdated.rowCount > 0;
+        return rowsUpdated.rowCount! > 0;
     }
 
     async getAvailableBundleById(bundleId: string) {
